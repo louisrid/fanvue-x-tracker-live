@@ -6,6 +6,16 @@
   const total=output.querySelector('[data-discord-course-total]');
   const week=output.querySelector('[data-discord-course-week]');
   const info=output.querySelector('[data-discord-course-status]');
+  const cardTotal=document.querySelector('[data-discord-card-total]');
+  const cardWeek=document.querySelector('[data-discord-card-week]');
+  const dashboardClicks=document.querySelector('[data-discord-pill-clicks]');
+  const courseNote=document.querySelector('[data-discord-course-note]');
+  function syncDisplays(){
+    if(cardTotal)cardTotal.textContent=total.textContent;
+    if(cardWeek)cardWeek.textContent=week.textContent;
+    if(courseNote)courseNote.textContent=info.textContent;
+    if(dashboardClicks)dashboardClicks.textContent=total.textContent==='—'?'Clicks unavailable':total.textContent+' course clicks';
+  }
   const validClicks=data=>data?.ok===true&&Number.isSafeInteger(data.total)&&data.total>=0&&
     Number.isSafeInteger(data.last7Days)&&data.last7Days>=0&&data.last7Days<=data.total;
   let last=window.XTrackerLastGood?.read('discord-course-clicks',validClicks)?.payload||null;
@@ -15,8 +25,10 @@
     week.textContent=saved.last7Days.toLocaleString('en-GB');
     info.textContent='Saved click data · refreshing';
     output.dataset.source='ready';
+    syncDisplays();
   }
   if(last)display(last);
+  syncDisplays();
   async function refresh(){
     if(pending)return pending;
     pending=(async()=>{
@@ -30,12 +42,14 @@
         window.XTrackerLastGood?.write('discord-course-clicks',data,validClicks);
         display(data);
         info.textContent='Clicks recorded since dashboard tracking was connected';
+        syncDisplays();
       }catch(error){
         // Never replace an unavailable measurement with a made-up zero.
         if(output.dataset.source!=='ready'){
           total.textContent='—';week.textContent='—';
         }
         info.textContent=output.dataset.source==='ready'?'Last verified count · refresh unavailable':'Click data temporarily unavailable';
+        syncDisplays();
       }
     })();
     try{await pending;}finally{pending=null;}
@@ -45,5 +59,6 @@
   });
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh();});
   setInterval(()=>{if(!document.hidden)void refresh();},60000);
+  window.XTrackerDiscordCourse={refresh};
   void refresh();
 })();
