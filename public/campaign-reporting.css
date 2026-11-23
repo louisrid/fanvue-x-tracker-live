@@ -99,3 +99,27 @@
   #page-reporting .rpt-table{min-width:710px;}
   #page-reporting .rpt-expander summary{align-items:flex-start;flex-direction:column;}
 }
+
+/* GTA VI original-post drill-down follows the exact same high-contrast styling. */
+#page-gta-vi .rpt-quoted-note{font-size:13px;font-weight:800;color:#1b2b47;margin:8px 0 20px;line-height:1.5;}
+#page-gta-vi .rpt-quoted-warning{padding:12px 14px;border-radius:12px;background:#fff6e8;border:1px solid #f2cc8b;color:#6a4009;font-weight:850;font-size:13px;margin-bottom:18px;}
+#page-gta-vi .rpt-quoted-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:4px 0 28px;}
+#page-gta-vi .rpt-quoted-card{min-width:0;background:#fff;border:1px solid #ced9e8;border-radius:17px;padding:18px;box-shadow:0 3px 11px rgba(15,23,42,.05);}
+#page-gta-vi .rpt-quoted-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:15px;}
+#page-gta-vi .rpt-quoted-card h3{font-size:19px;font-weight:900;color:#101827;margin:0;letter-spacing:-.035em;}
+#page-gta-vi .rpt-quoted-card p{margin:6px 0 0;font-size:12px;font-weight:800;color:#233653;}
+#page-gta-vi .rpt-quoted-card a{color:#155be9;text-decoration:underline;text-underline-offset:3px;font-weight:850;}
+#page-gta-vi .rpt-quoted-counter{background:#edf2ff;border:1px solid #c8d7fa;color:#1741a0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:900;white-space:nowrap;}
+#page-gta-vi .rpt-quoted-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-block:1px solid #dce3ef;padding:14px 0;margin:0 0 12px;}
+#page-gta-vi .rpt-quoted-card dl div{min-width:0;}
+#page-gta-vi .rpt-quoted-card dt{font-weight:800;color:#31415e;font-size:11px;margin-bottom:4px;}
+#page-gta-vi .rpt-quoted-card dd{margin:0;font-weight:950;color:#0e172a;font-size:23px;letter-spacing:-.055em;font-variant-numeric:tabular-nums;}
+#page-gta-vi .rpt-quoted-card details{font-size:13px;font-weight:800;color:#142744;padding:2px 0;}
+#page-gta-vi .rpt-quoted-card summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+#page-gta-vi .rpt-quoted-card ul{list-style:disc;padding:5px 0 0 23px;margin:0;line-height:1.9;font-weight:750;}
+#page-gta-vi .rpt-quoted-card li{overflow-wrap:anywhere;}
+#page-gta-vi .rpt-quoted-card .rpt-quoted-updated{font-size:11px;color:#42526e;font-weight:750;margin-top:12px;}
+@media(max-width:760px){
+  #page-gta-vi .rpt-quoted-list{grid-template-columns:1fr;}
+  #page-gta-vi .rpt-quoted-card{padding:14px;}
+}
