@@ -9,7 +9,7 @@ export function parseQuotedPost(tweet,at=new Date().toISOString()){
   const id=String(quote.id??quote.id_str??'');
   const url=String(quote.url||'');
   const match=url.match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})\/status\/(\d+)(?:[/?#]|$)/i);
-  if(!/^\d{1,20}$/.test(id)||id==='0'||(match&&match[2]!==id))return null;
+  if(!/^\d{1,20}$/.test(id)||id==='0'||(url&&!match)||(match&&match[2]!==id))return null;
   const handle=String(quote.author?.screen_name||quote.author?.username||match?.[1]||'');
   if(!/^[A-Za-z0-9_]{1,15}$/.test(handle))return null;
   return {id,handle,url:`https://x.com/${handle}/status/${id}`,
