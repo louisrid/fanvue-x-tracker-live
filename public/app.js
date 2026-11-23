@@ -500,7 +500,7 @@ function renderKpis(){
   const live=placements.filter(isLive);
   const measuredViews=live.map(p=>number(p.xViews)).filter(v=>v!==null&&v>=0);
   const headline=[
-    {id:'money',label:'Paid spend',value:state.homeVerified?money(totalPaid):'—'},
+    {id:'money',label:'Known spend',value:state.homeVerified?money(totalPaid):'—'},
     {id:'clicks',label:'UTM clicks',value:weekClicks===null?'—':display(weekClicks)},
     {id:'articles',label:'Live posts',value:state.homeVerified?fmt(live.length):'—'},
     {id:'views',label:'X views',value:state.homeVerified&&measuredViews.length?fmt(measuredViews.reduce((a,b)=>a+b,0)):'—'}
