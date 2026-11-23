@@ -48,18 +48,18 @@
     const view=r=>r.views??r.xViews;
     const sourceLink=r=>r.postUrl?link(r.postUrl,'X post'):r.profileUrl?link(r.profileUrl,'X profile'):link('', 'X');
     const linkCell=r=>'<span class="rpt-links">'+sourceLink(r)+(r.trackingUrl?' · '+link(r.trackingUrl,'Tracking'): '')+'</span>';
-    return grid(['Publisher / activity','Paid?','Posted?','Paid cost','X views','Tracked clicks','Post-publication clicks','Links'],rows.map(r=>[
+    return grid(['Publisher / activity','Paid?','Posted?','Paid cost','X views','Tracked clicks','Post-publication clicks','Last X update','Links'],rows.map(r=>[
       '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong><small class="rpt-rowmeta">'+esc(r.sourceTab||r.campaign||'')+'</small>',
       r.paid?'<strong>Paid</strong>':'—',
       r.posted?'<strong>Posted</strong>':r.paid?'Pending':'Not confirmed',
       r.paid?usd(r.cost):'—',esc(format(view(r))),
-      esc(format(r.allTimeClicks??r.clicks??null)),esc(format(r.allTimeClicks!==undefined?r.clicks:null)),linkCell(r)
+      esc(format(r.allTimeClicks??r.clicks??null)),esc(format(r.allTimeClicks!==undefined?r.clicks:null)),esc(date(r.metricAt||r.xUpdated||r.metricLastVerifiedAt||null)),linkCell(r)
     ]));
   }
   function campaignPanel(id,sub){
     const c=item(id);
     if(!c)return empty('Campaign feed unavailable.');
-    return '<section class="rpt-campaign-panel">'+header(c.name,sub||'Lifetime results · '+viewStatus(c))+
+    return '<section class="rpt-campaign-panel">'+header(c.name,sub||'Lifetime results · '+viewStatus(c)+' · Source updated '+date(c.sourceVerifiedAt))+
       badge(c)+totals(c)+(c.unavailable?empty(c.unavailable===true?'No verified live source is connected.':txt(c.unavailable)):campaignRows(c))+
       (c.trackingWarning?'<p class="rpt-warning">'+esc(c.trackingWarning)+'</p>':'')+
       (c.classificationNote?'<p class="rpt-note">'+esc(c.classificationNote)+'</p>':'')+
