@@ -1181,8 +1181,49 @@ async function refreshXStats(){
     showXRefreshTime(result.lastSuccessfulAt);
     if(result.ok){status.className='x-refresh-status is-success';status.textContent=`Updated ${result.updated} of ${result.total} articles`;}
     else{status.className='x-refresh-status is-error';status.textContent=`Updated ${result.updated} of ${result.total} articles. ${result.errors?.length||0} could not be refreshed; last verified figures remain visible.`;}
-  }catch(error){status.className='x-refresh-status is-error';status.textContent=error.name==='TimeoutError'?'X stats refresh timed out. Please try again.':String(error.message||error);}
+    return result;
+  }catch(error){status.className='x-refresh-status is-error';status.textContent=error.name==='TimeoutError'?'X stats refresh timed out. Please try again.':String(error.message||error);return {ok:false,error:String(error.message||error)};}
   finally{button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');syncXRefreshControls();}
+}
+async function reloadAllData(){
+  const button=el('reloadAllButton'),status=el('reloadAllStatus');
+  if(!button||button.disabled||el('refreshXStats').disabled||gtaState.refreshing)return;
+  button.disabled=true;button.classList.add('is-refreshing');button.setAttribute('aria-busy','true');
+  const issues=new Set();
+  const progress=message=>{status.className='x-refresh-status';status.textContent=message;};
+  try{
+    // The existing dashboard refresh coordinates X Articles, OF Terms and X RTs
+    // as one server job. Reuse it instead of issuing duplicate provider POSTs.
+    progress('1/3 · Reloading X articles, OF Terms and X RTs…');
+    const x=await refreshXStats();
+    if(!x?.ok)issues.add('X article metrics');
+    if(!x||x.of?.error)issues.add('OF Terms X metrics');
+    if(!x||x.boosts?.error)issues.add('X RT metrics');
+    progress('2/3 · Reloading GTA VI, QRTs and boosted article views…');
+    await refreshGtaReport();
+    if(gtaState.error||el('gtaRefreshStatus').classList.contains('is-error'))issues.add('GTA VI metrics');
+    progress('3/3 · Reloading all campaign pages and saved totals…');
+    // These are GETs only. The X data providers were already refreshed above.
+    const results=await Promise.allSettled([
+      load(true),
+      loadOfReport(true,false),
+      loadBoosts(true),
+      window.XTrackerCampaignReporting?.reload?.()
+    ]);
+    if(results[0].status!=='fulfilled'||results[0].value!==true)issues.add('Dashboard');
+    if(results[1].status!=='fulfilled'||results[1].value!==true||state.ofError)issues.add('OF Terms');
+    if(results[2].status!=='fulfilled'||boostsState.error)issues.add('X RTs');
+    if(results[3].status!=='fulfilled'||results[3].value!==true)issues.add('Campaign reports');
+    status.className='x-refresh-status '+(issues.size?'is-error':'is-success');
+    status.textContent=issues.size
+      ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'
+      : 'All connected sources reloaded. Latest available X views, clicks and campaign data are shown.';
+  }catch(error){
+    status.className='x-refresh-status is-error';
+    status.textContent='Reload could not finish: '+String(error?.message||error)+'. Previously verified figures are preserved.';
+  }finally{
+    button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');
+  }
 }
 function applyDashboard(data){
     const signature=JSON.stringify([data.placements,data.campaigns,data.metricHistory,data.clickActivity,data.hourlyEvents,data.homePaidCodes,data.homeVerified,data.trackingReady]);
@@ -1585,6 +1626,7 @@ function initReorder(){
 function events(){
   document.querySelector('.of-promo-button').addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();route(state.page==='of'?'dashboard':'campaign-C001');});
   el('refreshXStats').addEventListener('click',refreshXStats);
+  el('reloadAllButton').addEventListener('click',reloadAllData);
   document.querySelectorAll('[data-refresh]').forEach(button=>button.addEventListener('click',button.dataset.refresh==='boosts'?refreshBoostStats:button.dataset.refresh==='of'?refreshOfReport:refreshXStats));
   document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>route(b.dataset.page)));
   document.querySelectorAll('[data-owner]').forEach(b=>b.addEventListener('click',()=>owner(b.dataset.owner)));
