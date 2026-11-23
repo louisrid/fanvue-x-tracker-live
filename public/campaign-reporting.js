@@ -27,11 +27,17 @@
   const published=c=>hasFeed(c)?format(c.published):'—';
   const viewStatus=c=>c?.source==='NOT_CONNECTED'?'No feed':c?.unavailable||c?.source==='UNAVAILABLE'?'Unavailable':c?.sourceStale||c?.dataWarning?'Saved data':'Connected';
   const badge=c=>'<span class="rpt-source rpt-source-'+(viewStatus(c)==='Connected'?'ok':viewStatus(c)==='Saved data'?'saved':'missing')+'">'+esc(viewStatus(c))+'</span>';
-  const metric=(label,value,sub='')=>'<div class="rpt-stat"><dt>'+esc(label)+'</dt><dd>'+esc(value)+'</dd>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div>';
+  const metric=(label,value,sub='')=>{
+    const colour=/^(Spend|Paid)/i.test(label)?'spend':/(Live|Published)/i.test(label)?'published':
+      /Views/i.test(label)?'seven':/(Clicks)/i.test(label)?'shortio':'seven';
+    return '<div class="daily-metric daily-metric-'+colour+' rpt-stat">'+
+      '<span class="daily-metric-label">'+esc(label)+'</span><strong>'+esc(value)+'</strong>'+
+      (sub?'<small>'+esc(sub)+'</small>':'')+'</div>';
+  };
   const clicks=c=>c?.allTimeHumanClicks??c?.trackedClicks??null;
   const note='<p class="rpt-note">All-time X counters, not unique reach. Clicks come from their named tracking source and are not interchangeable. Missing sign-ups, KYC and earning-creator metrics are shown as unavailable, never zero.</p>';
   function grid(columns,rows,classname='rpt-table'){
-    return '<div class="rpt-scroll"><table class="'+classname+'"><thead><tr>'+columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    return '<div class="rpt-scroll xt-table-scroll"><table class="'+classname+'"><thead><tr>'+columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }
   function empty(message){return '<div class="rpt-empty">'+esc(message)+'</div>';}
   function header(title){
@@ -39,12 +45,12 @@
   }
   function totals(c){
     if(!c)return '';
-    return '<dl class="rpt-stats">'+[
+    return '<div class="daily-overview-metrics campaign-metrics rpt-stats">'+[
       metric('Spend',usd(c.paidSpendKnown)),
       metric('Live posts',hasFeed(c)?format(c.published):'—'),
       metric('Views',format(c.views)),
       metric('Clicks',format(clicks(c)))
-    ].join('')+'</dl>';
+    ].join('')+'</div>';
   }
   function campaignRows(c){
     const rows=c?.rows||[];
