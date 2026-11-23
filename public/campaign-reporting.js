@@ -6,7 +6,11 @@
     ['guru','Guru X RTs'],['articles','X Articles'],['harness','AI Harness'],
     ['discord','Discord'],['other','Other Campaigns']
   ];
-  const state={tab:'all',data:null,loading:null,error:'',lastLoadAt:0};
+  // Paint the last verified report immediately, then refresh without clearing it.
+  const validOverview=data=>data?.ok===true&&Array.isArray(data.campaigns)&&data.campaigns.length>0&&
+    data.campaigns.every(c=>c&&typeof c==='object'&&typeof c.id==='string');
+  const cachedOverview=window.XTrackerLastGood?.read('campaign-overview',validOverview);
+  const state={tab:'all',data:cachedOverview?.payload||null,loading:null,error:'',lastLoadAt:0};
   const el=id=>document.getElementById(id);
   const txt=v=>String(v??'');
   const esc=v=>txt(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -174,8 +178,10 @@
       try{
         const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         const data=await res.json();
-        if(!res.ok||!data.ok||!Array.isArray(data.campaigns))throw Error(data.error||'Analytics unavailable');
+        if(!res.ok||!validOverview(data))throw Error(data.error||'Campaign reporting temporarily unavailable');
+        // A blank API response must never wipe a previously successful campaign report.
         state.data=data;state.error='';state.lastLoadAt=Date.now();
+        window.XTrackerLastGood?.write('campaign-overview',data,validOverview);
         return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!data.campaigns.some(c=>c.dataWarning||c.sourceStale);
       }catch(e){state.error=txt(e.message||e);return false;}
       finally{state.loading=null;render();}
