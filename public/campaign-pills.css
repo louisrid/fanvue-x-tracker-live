@@ -1,0 +1,156 @@
+/* Restore the original compact header. Campaign links are not header items. */
+:root .app-header .header-row,
+:root body.is-home .app-header .header-row {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  justify-items:center!important;
+  min-height:0!important;
+  gap:10px!important;
+  padding-top:15px!important;
+  padding-bottom:10px!important;
+}
+:root .app-header .header-row > .brand,
+:root body.is-home .app-header .header-row > .brand {
+  grid-column:1!important;
+  grid-row:1!important;
+  justify-self:center!important;
+  align-self:center!important;
+  margin:0 auto!important;
+}
+:root .app-header .header-row > .mobile-nav,
+:root body.is-home .app-header .header-row > .mobile-nav {
+  grid-column:1!important;
+  grid-row:2!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  justify-self:center!important;
+  width:min(700px,100%)!important;
+  max-width:700px!important;
+  margin:0 auto!important;
+  min-width:0!important;
+}
+
+/* Nine matching, colour-coded compact pills BELOW the header, not a second header. */
+.campaign-pill-region {
+  box-sizing:border-box;
+  margin:7px auto 0!important;
+  padding:0 1px!important;
+  min-width:0;
+}
+.campaign-pill-region .campaign-pills {
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  max-width:100%!important;
+  width:100%!important;
+  min-width:0;
+  margin:0!important;
+  padding:3px 1px 5px!important;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:#afbdd2 transparent;
+  overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;
+}
+.campaign-pill-region .campaign-pills > a,
+.campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {
+  position:static!important;
+  flex:1 0 121px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-sizing:border-box!important;
+  width:auto!important;
+  min-width:121px!important;
+  max-width:none!important;
+  height:37px!important;
+  min-height:37px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  border-radius:999px!important;
+  border:1px solid transparent!important;
+  box-shadow:none!important;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+  font-size:11.5px!important;
+  line-height:1.1!important;
+  letter-spacing:-.012em!important;
+  font-weight:850!important;
+  text-align:center!important;
+  text-decoration:none!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  transform:none!important;
+  opacity:1!important;
+  scroll-snap-align:start;
+  transition:filter .12s ease!important;
+}
+.campaign-pill-region .campaign-pills > a:hover {filter:brightness(.91)!important;}
+.campaign-pill-region .campaign-pills > a:focus-visible {
+  outline:3px solid #1d60f7!important;
+  outline-offset:2px!important;
+}
+.campaign-pill-region .campaign-pills > a[aria-current="page"] {
+  outline:2px solid #14233c!important;
+  outline-offset:2px!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-overview {
+  background:#1a2435!important;color:#fff!important;border-color:#1a2435!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-discord {
+  background:#5865f2!important;color:#fff!important;border-color:#5865f2!important;
+}
+.campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {
+  background:#ff008c!important;color:#fff!important;border-color:#ff008c!important;
+}
+.campaign-pill-region .campaign-pills > .of-promo-button {
+  background:#39ff14!important;color:#113500!important;border-color:#32de12!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-harness {
+  background:#087d73!important;color:#fff!important;border-color:#087d73!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-guru {
+  background:#703dd9!important;color:#fff!important;border-color:#703dd9!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-boosts {
+  background:#ffd229!important;color:#161616!important;border-color:#e6bd21!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-articles {
+  background:#1761f1!important;color:#fff!important;border-color:#1761f1!important;
+}
+.campaign-pill-region .campaign-pills > .campaign-report-button-other {
+  background:#ef6c25!important;color:#fff!important;border-color:#ef6c25!important;
+}
+
+@media(max-width:760px){
+  :root .app-header .header-row,
+  :root body.is-home .app-header .header-row {
+    padding-top:13px!important;
+    padding-bottom:8px!important;
+    gap:8px!important;
+  }
+  .campaign-pill-region {
+    width:100%!important;
+    margin-top:5px!important;
+    padding:0 12px!important;
+  }
+  .campaign-pill-region .campaign-pills {gap:6px!important;padding:3px 2px 7px!important;}
+  .campaign-pill-region .campaign-pills > a,
+  .campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {
+    flex:0 0 123px!important;
+    min-width:123px!important;
+    height:35px!important;
+    min-height:35px!important;
+    font-size:11.5px!important;
+    padding:0 10px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .campaign-pill-region .campaign-pills > a {transition:none!important;}
+}
