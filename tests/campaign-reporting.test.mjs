@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import ExcelJS from 'exceljs';
 import {parseQuotedPost} from '../netlify/lib/gta-x-metrics.mjs';
 import {summariseQuotedOriginals} from '../netlify/lib/quoted-originals.mjs';
-import {parseArticleRtWorkbook,assembleCampaignOverview} from '../netlify/functions/campaign-overview.mjs';
+import {parseArticleRtWorkbook,assembleCampaignOverview,enrichArticleRtMetrics} from '../netlify/functions/campaign-overview.mjs';
 
 const original={id:'2122103967551295552',url:'https://x.com/iluv_papi/status/2122103967551295552',
   author:{screen_name:'iluv_papi'},views:19906,likes:430,retweets:80,replies:12};
@@ -124,4 +124,27 @@ test('Reporting UI and original GTA tab exist without altering historic campaign
   assert.match(ui,/Not connected/);
   assert.match(ui,/sourceCampaigns/);
   assert.match(app,/xtracker-gta-report-qrts-v1/);
+});
+
+test('Article RT views reuse only an exact verified original X post and never duplicate source views',()=>{
+  const rows=[
+    {publisher:'Reposter A',postUrl:'https://x.com/original/status/2121000000000000000',paid:true,posted:true,cost:30},
+    {publisher:'Reposter B',postUrl:'https://x.com/original/status/2121000000000000000',paid:true,posted:true,cost:50},
+    {publisher:'Reposter C',postUrl:'https://x.com/other/status/999',paid:true,posted:true,cost:20}
+  ];
+  const feeds={boosts:{tweets:[{id:'2121000000000000000',handle:'original',views:15000,likes:200,
+    reposts:45,replies:10,at:'2026-11-23T17:00:00Z'}]}};
+  const linked=enrichArticleRtMetrics(rows,feeds);
+  assert.equal(linked[0].views,15000);
+  assert.equal(linked[1].views,15000);
+  assert.equal(linked[2].views,undefined);
+  assert.equal(linked[0].metricSource,'X_RTS');
+  const assembled=assembleCampaignOverview({
+    articleRts:{data:{rows,at:'2026-11-23T17:00:00Z',source:'GOOGLE_SHEETS_LIVE'}},
+    boosts:{data:{ok:true,tweets:feeds.boosts.tweets}}
+  });
+  const rts=assembled.campaigns.find(c=>c.id==='article-rts');
+  assert.equal(rts.paidSpendKnown,100);
+  assert.equal(rts.views,15000);
+  assert.equal(rts.coverage.withXMetrics,2);
 });
