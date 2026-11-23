@@ -162,3 +162,84 @@
 @media(prefers-reduced-motion:reduce){
   .campaign-pill-region .campaign-pills > a {transition:none!important;}
 }
+
+/* Final navigation refinement: five large, usable colour-coded campaign tabs. */
+.campaign-pill-region {
+  margin-top:12px!important;
+  padding:0 2px!important;
+}
+.campaign-pill-region .campaign-pills {
+  gap:12px!important;
+  padding:7px 3px 11px!important;
+  scrollbar-width:thin;
+}
+.campaign-pill-region .campaign-pills > a,
+.campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {
+  flex:1 0 0!important;
+  min-width:138px!important;
+  min-height:56px!important;
+  height:56px!important;
+  padding:12px 18px!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+  letter-spacing:-.015em!important;
+  border-radius:15px!important;
+  border-width:2px!important;
+  box-shadow:0 3px 9px rgba(15,23,42,.10)!important;
+  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease!important;
+  cursor:pointer!important;
+  touch-action:manipulation;
+}
+.campaign-pill-region .campaign-pills > a:hover,
+.campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button:hover {
+  filter:brightness(.94)!important;
+  transform:translateY(-2px)!important;
+  box-shadow:0 6px 14px rgba(15,23,42,.16)!important;
+}
+.campaign-pill-region .campaign-pills > a:active,
+.campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button:active {
+  transform:translateY(0)!important;
+  box-shadow:0 2px 5px rgba(15,23,42,.10)!important;
+}
+.campaign-pill-region .campaign-pills > a[aria-current="page"],
+.campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button[aria-current="page"] {
+  outline:3px solid #172033!important;
+  outline-offset:2px!important;
+}
+@media(max-width:900px) {
+  .campaign-pill-region .campaign-pills {
+    gap:10px!important;
+  }
+  .campaign-pill-region .campaign-pills > a,
+  .campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {
+    flex:0 0 auto!important;
+    min-width:153px!important;
+    min-height:54px!important;
+    height:54px!important;
+    font-size:13.5px!important;
+    padding:11px 16px!important;
+  }
+}
+@media(max-width:760px) {
+  .campaign-pill-region {
+    padding:0 12px!important;
+    margin-top:9px!important;
+  }
+  .campaign-pill-region .campaign-pills {
+    gap:9px!important;
+    padding:7px 3px 12px!important;
+  }
+  .campaign-pill-region .campaign-pills > a,
+  .campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {
+    min-width:145px!important;
+    min-height:52px!important;
+    height:52px!important;
+    font-size:13px!important;
+    border-radius:14px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .campaign-pill-region .campaign-pills > a,
+  .campaign-pill-region .campaign-pills > #gtaButton.gta-promo-button {transition:none!important;}
+}
