@@ -292,7 +292,8 @@ function renderDashboardWeekSelector(){
 function renderWeekLabels(){
   renderDashboardWeekSelector();
   const n=selectedDashboardWeek().number;
-  el('dashboardTitle').innerHTML=`Week ${n}<span class="heading-accent">.</span>`;
+  el('dashboardTitle').innerHTML='Overview<span class="heading-accent">.</span>';
+  if(el('homeWeekScope'))el('homeWeekScope').textContent='Week '+n;
   document.querySelector('.daily-eyebrow').textContent=`CAMPAIGN REPORT · WEEK ${n}`;
   document.querySelector('.daily-graph-head h3').innerHTML=`Week ${n} UTM clicks<span class="heading-accent">.</span>`;
   document.querySelector('.daily-graph-head p').textContent=`Verified hourly clicks · UK time · since ${weekStart(new Date())}`;
@@ -496,10 +497,13 @@ function renderKpis(){
   const placements=homePlacements(),paid=placements.filter(p=>p.paid===true);
   const totalPaid=paid.reduce((sum,p)=>sum+(number(p.cost)||0),0);
   const weekClicks=homeClickTotal();
+  const live=placements.filter(isLive);
+  const measuredViews=live.map(p=>number(p.xViews)).filter(v=>v!==null&&v>=0);
   const headline=[
-    {id:'money',label:'Paid total',value:state.homeVerified?money(totalPaid):'—'},
+    {id:'money',label:'Paid spend',value:state.homeVerified?money(totalPaid):'—'},
     {id:'clicks',label:'UTM clicks',value:weekClicks===null?'—':display(weekClicks)},
-    {id:'articles',label:'Live articles',value:state.homeVerified?fmt(placements.filter(isLive).length):'—'}
+    {id:'articles',label:'Live posts',value:state.homeVerified?fmt(live.length):'—'},
+    {id:'views',label:'X views',value:state.homeVerified&&measuredViews.length?fmt(measuredViews.reduce((a,b)=>a+b,0)):'—'}
   ];
   el('dashboardKpis').innerHTML=headline.map(kpiCard).join('');
   // Dashboard deliberately no longer hosts the Performance comparison or Daily Breakdown.
@@ -1216,15 +1220,15 @@ async function reloadAllData(){
   try{
     // The existing dashboard refresh coordinates X Articles, OF Terms and X RTs
     // as one server job. Reuse it instead of issuing duplicate provider POSTs.
-    progress('1/3 · Reloading X articles, OF Terms and X RTs…');
+    progress('Refreshing X stats…');
     const x=await refreshXStats();
     if(!x?.ok)issues.add('X article metrics');
     if(!x||x.of?.error)issues.add('OF Terms X metrics');
     if(!x||x.boosts?.error)issues.add('X RT metrics');
-    progress('2/3 · Reloading GTA VI, QRTs and boosted article views…');
+    progress('Refreshing GTA VI…');
     await refreshGtaReport();
     if(gtaState.error||el('gtaRefreshStatus').classList.contains('is-error'))issues.add('GTA VI metrics');
-    progress('3/3 · Reloading all campaign pages and saved totals…');
+    progress('Updating dashboard…');
     // These are GETs only. The X data providers were already refreshed above.
     const results=await Promise.allSettled([
       load(true),
@@ -1236,13 +1240,19 @@ async function reloadAllData(){
     if(results[1].status!=='fulfilled'||results[1].value!==true||state.ofError)issues.add('OF Terms');
     if(results[2].status!=='fulfilled'||boostsState.error)issues.add('X RTs');
     if(results[3].status!=='fulfilled'||results[3].value!==true)issues.add('Campaigns');
+    try{
+      if(typeof window.XTrackerHomeOverview?.refresh==='function'){
+        const pulse=await window.XTrackerHomeOverview.refresh(true);
+        if(pulse===false)issues.add('Campaign snapshot');
+      }
+    }catch{issues.add('Campaign snapshot');}
     status.className='x-refresh-status '+(issues.size?'is-error':'is-success');
-    status.textContent=issues.size
-      ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'
-      : 'All connected sources reloaded. Latest available X views, clicks and campaign data are shown.';
+    status.textContent=issues.size?'Some feeds unavailable · saved figures retained':'All stats updated';
+    status.title=issues.size?[...issues].join(', '):'';
   }catch(error){
     status.className='x-refresh-status is-error';
-    status.textContent='Reload could not finish: '+String(error?.message||error)+'. Previously verified figures are preserved.';
+    status.textContent='Refresh incomplete · saved figures retained';
+    status.title=String(error?.message||error);
   }finally{
     button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');
   }
@@ -1410,7 +1420,7 @@ function engagementSummary(rows){
 function renderEngagement(prefix,rows){
   const summary=engagementSummary(rows);
   el(prefix+'EngagementRate').textContent=summary.rate===null?'—':summary.rate.toFixed(2)+'%';
-  el(prefix+'EngagementDetails').textContent=`(Likes + reposts + replies) ÷ views × 100. ${summary.count} of ${summary.total} published posts have complete readings and positive views. ${summary.rate===null?'The rate appears when verified engagement and view counts are available. ':''}Uses the latest available readings; updates with the campaign report. Use Refresh X Stats to request updated figures.`;
+  el(prefix+'EngagementDetails').textContent=`(Likes + reposts + replies) ÷ views × 100. ${summary.count} of ${summary.total} published posts have complete readings and positive views. ${summary.rate===null?'The rate appears when verified engagement and view counts are available. ':''}Uses the latest available readings; updates with the campaign report. Use Refresh Stats to update figures.`;
 }
 // Measure the complete sticky navigation, including wrapped mobile rows.
 function updatePromoScrollOffset(){
