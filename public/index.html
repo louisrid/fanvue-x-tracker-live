@@ -15,14 +15,16 @@
   <link rel="stylesheet" href="/palette.css?v=20261116-neon-promo-colors">
   <link rel="stylesheet" href="/styles.css?v=5.0.40">
   <link rel="stylesheet" href="/discord-course.css?v=20261123-1">
-  <script src="/app.js?v=20261123-campaign-buttons-v1" defer></script>
-  <script src="/discord-course.js?v=20261123-2" defer></script>
-  <script src="/discord-members.js?v=20261123-1" defer></script>
+  <link rel="stylesheet" href="/last-good.css?v=20261123-1">
+  <script src="/last-good-cache.js?v=20261123-1" defer></script>
+  <script src="/app.js?v=20261123-lastgood-v1" defer></script>
+  <script src="/discord-course.js?v=20261123-lastgood-v1" defer></script>
+  <script src="/discord-members.js?v=20261123-lastgood-v1" defer></script>
 <link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/campaign-reporting.css?v=20261123-campaign-buttons-v1">
     <link rel="stylesheet" href="/campaign-pills.css?v=20261123-3">
-    <script src="/campaign-reporting.js?v=20261123-campaign-buttons-v2" defer></script>
+    <script src="/campaign-reporting.js?v=20261123-lastgood-v1" defer></script>
 </head>
 <body class="is-home">
   <header class="app-header">
@@ -63,7 +65,7 @@
             <span class="discord-course-stat">Daily change <strong data-discord-members-change>—</strong></span>
             <span class="discord-course-note" data-discord-members-status>Waiting for midday snapshot</span>
           </div>
-          <section class="discord-growth-chart" id="discordMemberGrowth" aria-labelledby="discordGrowthTitle">
+          <section class="discord-growth-chart is-pending" id="discordMemberGrowth" aria-labelledby="discordGrowthTitle">
             <div class="discord-growth-heading"><h2 id="discordGrowthTitle">Discord member growth<span class="heading-accent">.</span></h2>
               <span data-discord-chart-tip>Daily snapshots at 12:00 UK</span></div>
             <div class="discord-growth-plot" data-discord-chart role="group" aria-label="Daily member growth chart"></div>
