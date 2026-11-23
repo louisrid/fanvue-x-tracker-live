@@ -15,7 +15,7 @@
     if(cardMembers)cardMembers.textContent=amount.textContent;
     if(cardChange)cardChange.textContent=change.textContent;
     if(memberNote)memberNote.textContent=status.textContent;
-    if(dashboardMembers)dashboardMembers.textContent=amount.textContent==='—'?'Members unavailable':amount.textContent+' members';
+    if(dashboardMembers)dashboardMembers.textContent=amount.textContent==='—'?'Members unavailable':'≈'+amount.textContent+' members';
   }
   const canvas=chart.querySelector('[data-discord-chart]');
   const note=chart.querySelector('[data-discord-chart-note]');
