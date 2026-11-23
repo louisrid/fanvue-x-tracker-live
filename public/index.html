@@ -17,6 +17,8 @@
   <script src="/app.js?v=5.0.40-remove-link-breakdown" defer></script>
 <link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
+    <link rel="stylesheet" href="/campaign-reporting.css?v=20261123-lifetime-v1">
+    <script src="/campaign-reporting.js?v=20261123-lifetime-v1" defer></script>
 </head>
 <body class="is-home">
   <header class="app-header">
@@ -28,6 +30,7 @@
     <button class="mobile-nav-item" data-page="historical" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span>Historical</span></button>
   </nav>
       <nav class="campaign-nav" aria-label="Campaign reports">
+      <a class="reporting-nav-link" data-page="reporting" href="#reporting">Campaign Reports</a>
       <a class="of-promo-button" href="#campaign-C001">OF Terms X Promo</a>
       <a class="gta-promo-button" id="gtaButton" href="#gta-vi">GTA VI</a>
       </nav>
@@ -163,11 +166,12 @@
     </section>
       <section class="site-page key-stats-page of-report-page" id="page-gta-vi" aria-labelledby="gtaTitle" hidden>
       <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
-      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="gtaTitle">GTA VI<span class="heading-accent">.</span></h1><p id="gtaWeekLabel">Current week · UK time</p></div>
+      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="gtaTitle">GTA VI<span class="heading-accent">.</span></h1><p id="gtaWeekLabel">Lifetime campaign performance</p></div>
         <div class="x-refresh-controls"><button class="x-refresh-button" id="gtaRefreshButton" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><span class="x-refresh-status" id="gtaRefreshStatus" role="status" aria-live="polite"></span></div></div>
       <div class="gta-tabs" role="tablist" aria-label="GTA VI post type">
         <button id="gtaTabQrts" class="gta-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="gtaReportPanel" data-gta-tab="qrts">QRTs</button>
         <button id="gtaTabOriginals" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="originals">Original posts</button>
+        <button id="gtaTabQuoted" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="quoted">Boosted articles</button>
       </div>
       <div id="gtaReportPanel" role="tabpanel" aria-labelledby="gtaTabQrts">
       <section class="daily-overview" aria-labelledby="gtaBreakdownTitle">
@@ -178,6 +182,17 @@
       <p class="daily-graph-footnote">Human clicks · All-time and post-publication totals are reported separately.</p>
       <div id="gtaPublishers" tabindex="-1" aria-label="GTA VI publisher performance and click breakdown" aria-live="polite"></div>
       </div>
+    </section>
+
+    <section class="site-page key-stats-page" id="page-reporting" aria-labelledby="reportingTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
+      <div class="page-intro compact-intro refresh-page-intro">
+        <div class="refresh-heading-copy"><h1 id="reportingTitle">Campaign Reporting<span class="heading-accent">.</span></h1><p class="rpt-header-caption">All campaigns, lifetime performance, real data sources</p></div>
+        <div class="x-refresh-controls"><button class="rpt-refresh" id="reportingRefreshButton" type="button">Reload reporting data</button></div>
+      </div>
+      <p class="rpt-status" id="reportingStatus" role="status" aria-live="polite">Connecting campaign feeds</p>
+      <div class="rpt-tabs" id="reportingTabs" role="tablist" aria-label="Campaign reporting sections"></div>
+      <div id="reportingPanel" role="tabpanel" aria-live="polite"><div class="rpt-empty">Loading campaign data</div></div>
     </section>
 
   </main>
