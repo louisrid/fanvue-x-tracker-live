@@ -1,0 +1,393 @@
+/* Fanvue X Tracker: final shared visual system.
+   Presentation only. No figures, campaign states, data endpoints, or actions are changed. */
+
+:root { --ui-ink:#111827; --ui-border:#dbe3ef; --ui-canvas:#f7f9fd; --ui-pink:#ff008c; }
+:root body { background:var(--ui-canvas)!important; }
+:root body #mainContent { max-width:1360px!important; min-width:0; }
+:root body #mainContent > .site-page { min-width:0; padding-bottom:64px!important; }
+:root .campaign-pill-region .campaign-pills { max-width:1320px!important; margin:0 auto!important; }
+:root body #mainContent .site-page :is(button,a,select):focus-visible {
+  outline:3px solid #0055ff!important; outline-offset:3px!important;
+}
+
+/* One clear position and scale for every report page, including OF Terms and GTA VI. */
+:root body #mainContent .site-page > .subpage-back-row {
+  min-height:44px!important; margin:12px 0 5px!important; padding:0!important;
+}
+:root body #mainContent .site-page .subpage-back-row .page-back-button {
+  width:44px!important; height:44px!important; min-height:44px!important;
+  border-radius:12px!important;
+}
+:root body #mainContent .site-page > .refresh-page-intro,
+:root body #mainContent .site-page > .compact-intro.refresh-page-intro {
+  display:flex!important; align-items:center!important; justify-content:space-between!important;
+  flex-wrap:wrap!important; gap:12px 24px!important;
+  margin:0 0 17px!important; padding:10px 0 16px!important;
+  min-height:0!important; border-bottom:1px solid var(--ui-border)!important;
+}
+:root body #mainContent .site-page .refresh-heading-copy {
+  flex:1 1 280px!important; min-width:0!important;
+}
+:root body #mainContent .site-page .refresh-heading-copy h1 {
+  margin:0!important; font-size:clamp(30px,3vw,42px)!important;
+  letter-spacing:-.055em!important; line-height:1.1!important; color:var(--ui-ink)!important;
+}
+:root body #mainContent .site-page .refresh-heading-copy > p {
+  margin:6px 0 0!important; font-size:12px!important;
+  font-weight:750!important; line-height:1.4!important; color:#35445c!important;
+}
+:root body #mainContent .site-page .refresh-page-intro .x-refresh-controls {
+  display:flex!important; flex:0 0 auto!important; align-items:center!important;
+  justify-content:flex-end!important; gap:8px!important; flex-wrap:wrap!important;
+  max-width:100%!important;
+}
+:root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh) {
+  display:inline-flex!important; align-items:center!important; justify-content:center!important;
+  gap:9px!important; min-width:166px!important; min-height:46px!important;
+  height:46px!important; padding:0 17px!important;
+  border:1px solid var(--ui-pink)!important; border-radius:12px!important;
+  background:var(--ui-pink)!important; background-image:none!important;
+  color:#fff!important; -webkit-text-fill-color:#fff!important;
+  font:850 13px/1.15 Inter,system-ui,sans-serif!important;
+  box-shadow:0 3px 0 #ba0066,0 5px 12px rgba(255,0,140,.14)!important;
+  white-space:nowrap!important; cursor:pointer!important;
+}
+:root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh) .x-refresh-icon {
+  display:inline-block!important; flex:none!important; font-size:23px!important;
+  line-height:1!important; color:#fff!important; -webkit-text-fill-color:#fff!important;
+}
+:root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh):hover:not(:disabled) {
+  background:#e6007e!important; border-color:#e6007e!important;
+  box-shadow:0 3px 0 #a7005e,0 7px 16px rgba(255,0,140,.22)!important;
+}
+:root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh):disabled {
+  opacity:.68!important; cursor:wait!important;
+}
+:root body #mainContent .site-page .x-refresh-time {display:none!important;}
+:root body #mainContent .site-page .x-refresh-status:empty {display:none!important;}
+
+/* Dashboard: cohesive header with week selector and one reload-all action. */
+:root body #mainContent #page-dashboard > .dashboard-intro {
+  display:flex!important; align-items:center!important; justify-content:space-between!important;
+  flex-wrap:wrap!important; gap:14px 28px!important;
+  margin:18px 0 20px!important; padding:10px 0 20px!important;
+  min-height:0!important; border-bottom:1px solid var(--ui-border)!important;
+}
+:root body #mainContent #page-dashboard .dashboard-title-block {flex:1 1 260px;min-width:0;}
+:root body #mainContent #page-dashboard .dashboard-title-block h1 {
+  margin:0!important; color:var(--ui-ink)!important;
+  font-size:clamp(32px,3.4vw,46px)!important; letter-spacing:-.065em!important;
+  line-height:1.08!important;
+}
+:root body #mainContent #page-dashboard .dashboard-title-block > p {
+  margin:5px 0 0!important; color:#35445c!important; font-size:13px!important;
+  font-weight:750!important;
+}
+:root body #mainContent #page-dashboard .dashboard-intro-tools {
+  display:flex!important; flex:0 1 auto!important; align-items:flex-end!important;
+  justify-content:flex-end!important; gap:12px!important; flex-wrap:wrap!important;
+}
+:root body #mainContent #page-dashboard .dashboard-week-toolbar {
+  display:flex!important; flex-direction:column!important; align-items:flex-start!important;
+  margin:0!important; gap:5px!important;
+}
+:root body #mainContent #page-dashboard .dashboard-week-toolbar .select-control {
+  min-width:200px!important; height:50px!important; min-height:50px!important;
+  border:1px solid #cbd6e7!important; border-radius:12px!important;
+  padding:0 13px!important; background:#fff!important;
+}
+:root body #mainContent #page-dashboard .dashboard-week-toolbar .select-control > span {
+  color:#111827!important; font-size:12px!important; font-weight:850!important;
+}
+:root body #mainContent #page-dashboard .dashboard-week-toolbar select {
+  font-weight:850!important; font-size:13px!important; min-width:0!important;
+}
+:root body #mainContent #page-dashboard #dashboardWeekRange {
+  padding:0 0 0 4px!important; font-size:11px!important; font-weight:750!important;
+  color:#536078!important;
+}
+:root body #mainContent #page-dashboard .dashboard-intro .x-refresh-controls {
+  display:flex!important; align-items:center!important; flex-wrap:wrap!important;
+  justify-content:flex-end!important; gap:6px!important;
+}
+:root body #mainContent #page-dashboard #reloadAllButton {
+  height:53px!important; min-height:53px!important; min-width:176px!important;
+  padding:0 20px!important; font-size:15px!important; border-radius:13px!important;
+}
+:root body #mainContent #page-dashboard #reloadAllStatus {
+  flex:1 0 100%; max-width:400px; text-align:right!important;
+  margin:0!important; font-size:11px!important; line-height:1.35!important;
+}
+:root body #mainContent #page-dashboard #reloadAllStatus:empty {display:none!important;}
+
+/* Three measured, equal headline figures. No duplicate tiles or decorative blocks. */
+:root body #mainContent #page-dashboard #dashboardSections {
+  display:flex!important; flex-direction:column!important; gap:25px!important;
+}
+:root body #mainContent #page-dashboard #dashboardSections > .move-section {margin:0!important;}
+:root body #mainContent #page-dashboard .home-reorder-action,
+:root body #mainContent #page-dashboard .move-handle {display:none!important;}
+:root body #mainContent #page-dashboard #summarySection {
+  display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:15px!important; min-width:0!important; align-items:stretch!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis {
+  grid-column:1/-1!important; grid-row:1!important; display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:auto!important; grid-template-areas:"spend clicks live"!important;
+  gap:14px!important; width:100%!important; height:auto!important; min-height:0!important;
+  margin:0!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .kpi-card {
+  grid-column:auto!important; grid-row:auto!important; height:auto!important;
+  min-height:132px!important; padding:19px 20px!important; border:1px solid var(--ui-border)!important;
+  border-radius:16px!important; background:#fff!important; background-image:none!important;
+  box-shadow:0 3px 10px rgba(24,40,75,.035)!important;
+  display:flex!important; flex-direction:column!important; justify-content:space-between!important;
+  gap:11px!important; color:var(--ui-ink)!important; text-align:left!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .metric-money {grid-area:spend!important;}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .metric-clicks {grid-area:clicks!important;}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .metric-articles {grid-area:live!important;}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .kpi-card::before,
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .kpi-card::after {
+  display:none!important; content:none!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-icon,
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-bottom:empty {display:none!important;}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-label {
+  color:#283449!important; -webkit-text-fill-color:#283449!important;
+  font-size:13px!important; line-height:1.3!important; font-weight:850!important;
+  white-space:normal!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-value {
+  color:#111827!important; -webkit-text-fill-color:#111827!important;
+  background:none!important; background-image:none!important; background-clip:initial!important;
+  font-size:clamp(30px,3vw,43px)!important; font-weight:900!important; letter-spacing:-.055em!important;
+  line-height:1.05!important; white-space:normal!important; overflow-wrap:anywhere!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .metric-clicks .kpi-value {
+  color:#0055ff!important; -webkit-text-fill-color:#0055ff!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .metric-articles .kpi-value {
+  color:#e0007b!important; -webkit-text-fill-color:#e0007b!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-bottom {
+  color:#34445d!important; -webkit-text-fill-color:#34445d!important; min-height:0!important;
+}
+
+/* Discord Academy is a compact secondary section, not four competing dashboards. */
+:root body #mainContent #page-dashboard .dashboard-subsection-heading {
+  grid-column:1/-1!important; grid-row:2!important; margin:9px 0 -5px!important;
+}
+:root body #mainContent #page-dashboard .dashboard-subsection-heading h2 {
+  margin:0!important; font-size:clamp(19px,2vw,24px)!important;
+  line-height:1.2!important; font-weight:900!important; letter-spacing:-.045em!important;
+  color:#111827!important;
+}
+:root body #mainContent #page-dashboard #discordMemberHistory {
+  grid-column:1!important; grid-row:3!important; margin:0!important;
+}
+:root body #mainContent #page-dashboard #discordCourseClicks {
+  grid-column:2!important; grid-row:3!important; margin:0!important;
+}
+:root body #mainContent #page-dashboard :is(#discordMemberHistory,#discordCourseClicks) {
+  display:flex!important; flex-wrap:wrap!important; align-content:center!important; align-items:baseline!important;
+  min-height:113px!important; padding:16px 18px!important; gap:6px 18px!important;
+  border:1px solid var(--ui-border)!important; border-radius:15px!important;
+  background:#fff!important; box-shadow:none!important;
+}
+:root body #mainContent #page-dashboard .discord-course-title {
+  flex:1 0 100%!important; font-size:14px!important; font-weight:900!important;
+  color:#111827!important;
+}
+:root body #mainContent #page-dashboard .discord-course-stat {
+  display:inline-flex!important; gap:7px!important; align-items:baseline!important;
+  font-size:12px!important; font-weight:800!important; color:#34445d!important;
+}
+:root body #mainContent #page-dashboard .discord-course-stat strong {
+  color:#111827!important; font-size:clamp(19px,2vw,25px)!important;
+  font-weight:900!important; letter-spacing:-.045em!important;
+}
+:root body #mainContent #page-dashboard .discord-course-note {
+  flex:1 0 100%!important; margin:2px 0 0!important; min-width:0!important;
+  font-size:11px!important; font-weight:700!important; line-height:1.4!important;
+  text-align:left!important; color:#526178!important;
+}
+:root body #mainContent #page-dashboard #discordMemberGrowth {
+  grid-column:1/-1!important; grid-row:4!important; margin:0!important;
+  padding:17px 19px 11px!important; background:#fff!important;
+  border:1px solid var(--ui-border)!important; border-radius:15px!important;
+  box-shadow:none!important; min-width:0!important;
+}
+:root body #mainContent #page-dashboard #discordMemberGrowth .discord-growth-heading h2 {
+  font-size:18px!important; font-weight:900!important;
+}
+:root body #mainContent #page-dashboard #discordMemberGrowth .discord-growth-plot {min-height:138px!important;}
+:root body #mainContent #page-dashboard #discordMemberGrowth.is-pending .discord-growth-plot {min-height:65px!important;}
+:root body #mainContent #page-dashboard #discordMemberGrowth svg {max-height:230px!important;}
+:root body #mainContent #page-dashboard #discordMemberGrowth .discord-growth-note {
+  font-size:11px!important; margin:5px 0 0!important;
+}
+
+/* Keep the home article list dense and aligned, not a wall of oversized cards. */
+:root body #mainContent #page-dashboard #weeklySection .section-heading {
+  display:flex!important; align-items:center!important; margin:0 0 9px!important;
+}
+:root body #mainContent #page-dashboard #weeklySection .section-heading h2 {
+  color:#111827!important; font-size:clamp(20px,2.2vw,25px)!important;
+}
+:root body #mainContent #page-dashboard .home-filter-toolbar {
+  display:flex!important; justify-content:flex-end!important; margin:0 0 12px!important;
+  padding:0!important;
+}
+:root body #mainContent #page-dashboard .home-filter-select {
+  min-height:42px!important; height:42px!important;
+  border:1px solid var(--ui-border)!important; border-radius:10px!important;
+  padding:0 12px!important; background:#fff!important;
+}
+:root body #mainContent #page-dashboard #weeklyGrid {
+  display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:13px!important; grid-auto-rows:auto!important; height:auto!important;
+}
+:root body #mainContent #page-dashboard #weeklyGrid > .week-card,
+:root body #mainContent #page-dashboard #weeklyGrid > .week-card:first-child,
+:root body #mainContent #page-dashboard #weeklyGrid > .week-card:nth-child(2),
+:root body #mainContent #page-dashboard #weeklyGrid > .week-card:nth-child(3n+3) {
+  grid-column:auto!important; grid-row:auto!important;
+  min-height:165px!important; height:auto!important; padding:18px 20px!important;
+  border:1px solid var(--ui-border)!important; border-radius:15px!important;
+  box-shadow:none!important; background:#fff!important;
+}
+:root body #mainContent #page-dashboard #weeklyGrid > .week-card:hover {
+  box-shadow:0 5px 16px rgba(23,41,78,.07)!important; border-color:#9eb8e0!important;
+}
+
+/* OF Terms, GTA VI and X reporting now use matching KPI and section dimensions. */
+:root body #mainContent :is(#page-of,#page-gta-vi) > .daily-overview {
+  padding:0!important; margin:0 0 23px!important; min-height:0!important;
+  border:0!important; border-radius:0!important; box-shadow:none!important;
+  background:transparent!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-head {
+  display:flex!important; align-items:center!important; justify-content:space-between!important;
+  gap:10px 15px!important; margin:0 0 13px!important; padding:0!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-head h2 {
+  margin:0!important; font-size:clamp(19px,2vw,25px)!important;
+  line-height:1.15!important; color:#111827!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-head .daily-live {
+  max-width:100%!important; font-size:11px!important; line-height:1.35!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-metrics.campaign-metrics {
+  display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:stretch!important; gap:11px!important; margin:0 0 19px!important; padding:0!important;
+  border:0!important; background:transparent!important; box-shadow:none!important; min-width:0!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric {
+  min-width:0!important; width:100%!important;
+  min-height:116px!important; height:auto!important;
+  padding:16px 18px!important; border-radius:15px!important;
+  display:flex!important; flex-direction:column!important; align-items:flex-start!important;
+  justify-content:space-between!important; gap:9px!important;
+  box-shadow:none!important; box-sizing:border-box!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric-label {
+  font-size:11px!important; font-weight:850!important; line-height:1.3!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric strong {
+  font-size:clamp(27px,2.7vw,38px)!important; font-weight:900!important;
+  line-height:1.07!important; letter-spacing:-.045em!important;
+  overflow-wrap:anywhere!important; white-space:normal!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric small {
+  font-size:10px!important; line-height:1.35!important; font-weight:750!important;
+}
+:root body #mainContent #page-gta-vi .gta-tabs {
+  display:flex!important; align-items:center!important; margin:0 0 16px!important;
+  padding:4px!important; gap:5px!important; border-radius:13px!important;
+}
+:root body #mainContent #page-gta-vi .gta-tab {
+  min-height:42px!important; padding:8px 15px!important; font-size:12.5px!important;
+  font-weight:850!important; border-radius:10px!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-section {
+  margin:0 0 24px!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-section .result-line {
+  margin:0 0 12px!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi,#page-reporting) .result-line h2 {
+  font-size:clamp(19px,2vw,25px)!important; color:#111827!important;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-grid {gap:12px!important;}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-graph-card {
+  margin:13px 0 0!important; padding:17px!important;
+  border:1px solid var(--ui-border)!important; border-radius:15px!important; box-shadow:none!important;
+}
+:root body #mainContent .site-page :is(.xt-table-wrap,.xt-table-scroll,.rpt-scroll) {
+  max-width:100%!important; min-width:0!important; -webkit-overflow-scrolling:touch;
+}
+:root body #mainContent .site-page :is(.xt-data-table,.rpt-table) {
+  font-variant-numeric:tabular-nums;
+}
+:root body #mainContent #page-reporting .rpt-status:empty {display:none!important;}
+:root body #mainContent .site-page :is(.loading-card,.empty-state,.rpt-empty) {
+  color:#33445e!important; font-weight:750!important;
+}
+
+@media(max-width:1000px) {
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-metrics.campaign-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:760px) {
+  :root body #mainContent {width:calc(100% - 26px)!important;}
+  :root body #mainContent #page-dashboard > .dashboard-intro {margin:10px 0 17px!important;gap:13px!important;}
+  :root body #mainContent #page-dashboard .dashboard-intro-tools {width:100%;justify-content:space-between!important;align-items:flex-end!important;}
+  :root body #mainContent #page-dashboard .dashboard-week-toolbar {flex:1 1 155px;}
+  :root body #mainContent #page-dashboard .dashboard-week-toolbar .select-control {min-width:0!important;width:100%!important;}
+  :root body #mainContent #page-dashboard .dashboard-intro .x-refresh-controls {flex:0 0 auto!important;}
+  :root body #mainContent #page-dashboard #reloadAllButton {min-width:145px!important;font-size:13px!important;height:50px!important;min-height:50px!important;padding:0 14px!important;}
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis {gap:9px!important;}
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis > .kpi-card {
+    min-height:115px!important; padding:14px!important; border-radius:13px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-value {font-size:clamp(24px,5vw,36px)!important;}
+  :root body #mainContent #page-dashboard #summarySection {gap:10px!important;}
+  :root body #mainContent #page-dashboard #discordMemberGrowth {padding:15px 13px 10px!important;}
+  :root body #mainContent #page-dashboard #weeklyGrid {grid-template-columns:1fr!important;}
+  :root body #mainContent .site-page > .refresh-page-intro {gap:10px!important;}
+  :root body #mainContent .site-page .refresh-page-intro .x-refresh-controls {justify-content:flex-start!important;}
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-metrics.campaign-metrics {gap:9px!important;}
+  :root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric {
+    padding:13px!important; min-height:104px!important;
+  }
+  :root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric strong {font-size:clamp(24px,6vw,33px)!important;}
+}
+@media(max-width:590px) {
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-rows:auto auto!important;
+    grid-template-areas:"spend spend" "clicks live"!important;
+  }
+  :root body #mainContent #page-dashboard #discordMemberHistory {grid-column:1/-1!important;grid-row:3!important;}
+  :root body #mainContent #page-dashboard #discordCourseClicks {grid-column:1/-1!important;grid-row:4!important;}
+  :root body #mainContent #page-dashboard #discordMemberGrowth {grid-column:1/-1!important;grid-row:5!important;}
+  :root body #mainContent #page-dashboard .dashboard-intro-tools {gap:9px!important;}
+  :root body #mainContent .site-page .refresh-page-intro .x-refresh-controls {width:100%!important;}
+  :root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh) {min-width:155px!important;}
+}
+@media(max-width:390px) {
+  :root body #mainContent #page-dashboard .dashboard-intro-tools {flex-direction:column!important;align-items:stretch!important;}
+  :root body #mainContent #page-dashboard .dashboard-week-toolbar,
+  :root body #mainContent #page-dashboard .dashboard-intro .x-refresh-controls {width:100%!important;max-width:100%!important;}
+  :root body #mainContent #page-dashboard #reloadAllButton {width:100%!important;}
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-metrics.campaign-metrics {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  :root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh) {transition:none!important;}
+}
