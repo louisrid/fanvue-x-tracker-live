@@ -11,6 +11,7 @@ import {getStore} from '@netlify/blobs';
 import {campaignLinkClicks,trackingLink} from '../lib/gta-shortio.mjs';
 import {readGtaXMetric,gtaMetricStatus} from '../lib/gta-x-metrics.mjs';
 import {seed,seedVerifiedAt} from '../lib/gta-seed.mjs';
+import {summariseQuotedOriginals} from '../lib/quoted-originals.mjs';
 
 const SHEET_ID='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
 const SOURCE_TABS=[['X Accounts 15 (GTA VI QRTs)','GTAQ'],['X Accounts 12 (GTA)','GTA1'],['X Accounts 14 (GTA VI V2)','GTA2']];
@@ -124,7 +125,10 @@ export async function getReport(options={}){
     groupReport({...source,rows:source.rows.filter(p=>p.campaign==='GTAQ'&&p.sourceTab===SOURCE_TABS[0][0])},metric,options),
     groupReport({...source,rows:source.rows.filter(p=>SOURCE_TABS.slice(1).some(([tab,id])=>p.sourceTab===tab&&p.campaign===id))},metric,options)
   ]);
-  return {...qrts,originals:{...originals,scope:'published-originals-v1'}};
+  const quoteGroups=summariseQuotedOriginals(qrts.publishers,metric.metrics);
+  const paidOriginals=new Set(originals.publishers.filter(p=>p.posted&&p.paid).map(p=>xPost(p.postUrl)?.id).filter(Boolean));
+  quoteGroups.rows=quoteGroups.rows.map(row=>({...row,paidOriginalMatch:paidOriginals.has(row.originalPostId)}));
+  return {...qrts,originals:{...originals,scope:'published-originals-v1'},quotedOriginals:quoteGroups};
 }
 
 export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metricStore(),readSource=sourceRows,readReport=getReport}={}){
@@ -142,7 +146,12 @@ export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metr
       }catch(e){return {id:post.id,error:String(e.message||e),category:e.category||'api_failure'};}
     }));
     for(const item of batch){
-      if(item.metric){metrics[item.id]=item.metric;updated++;}
+      if(item.metric){
+        // Preserve a verified QRT-to-original relationship if the X provider temporarily omits quote data.
+        const oldQuote=metrics[item.id]?.quotedPost;
+        if(!item.metric.quotedPost&&oldQuote)item.metric.quotedPost=oldQuote;
+        metrics[item.id]=item.metric;updated++;
+      }
       else{metrics[item.id]={...(metrics[item.id]||{}),error:item.error,errorCategory:item.category,lastAttemptAt:new Date().toISOString()};errors.push({postId:item.id,error:item.error,category:item.category});}
     }
   }
