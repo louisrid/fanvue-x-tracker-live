@@ -68,7 +68,7 @@ export function summariseQuotedOriginals(publishers=[],metrics={}){
       unmatchedQrts:seenPromos.size-matched,
       quotedPostViews:rows.reduce((n,r)=>increment(n,r.views),null),
       qrtViews:rows.reduce((n,r)=>increment(n,r.qrtViews),null),
-      allocatedPaidSpend:rows.reduce((n,r)=>n+r.paidSpendKnown,0),
+      allocatedPaidSpend:rows.length?rows.reduce((n,r)=>n+r.paidSpendKnown,0):null,
       unknownPaidCosts:rows.reduce((n,r)=>n+r.unknownPaidCosts,0)
     },
     note:'All-time current X post counters, not unique reach. Each original is counted once; each unique paid QRT is counted once. Spend comes from the operations sheet, not from verified payment transfers.'
