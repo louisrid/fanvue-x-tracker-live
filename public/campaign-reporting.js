@@ -33,7 +33,7 @@
   function totals(c){
     if(!c)return '';
     return '<dl class="rpt-stats">'+[
-      metric('Paid spend',usd(c.paidSpendKnown),c.unknownPaidCosts?'Excludes '+c.unknownPaidCosts+' unknown cost(s)':'Known paid rows'),
+      metric('Paid spend',usd(c.paidSpendKnown),c.unknownPaidCosts?'Excludes '+c.unknownPaidCosts+' unknown cost(s)':c.paidCount?'Known paid rows':'No confirmed spend'),
       metric('Published',format(c.published),'Of '+format(c.placements)+' listed'),
       metric('X views',format(c.views),format(c.coverage?.withXMetrics)+' posts with readings'),
       metric('Tracked clicks',format(clicks(c)),c.id.startsWith('gta-')?'Short.io human clicks':'Source-specific'),
