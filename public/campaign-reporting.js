@@ -171,7 +171,6 @@
     if(state.loading)return state.loading;
     if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return true;}
     state.loading=(async()=>{
-      render();
       try{
         const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         const data=await res.json();
@@ -181,6 +180,8 @@
       }catch(e){state.error=txt(e.message||e);return false;}
       finally{state.loading=null;render();}
     })();
+    // Render after state.loading is assigned, so direct links never say "Not loaded".
+    queueMicrotask(render);
     return state.loading;
   }
   function changeTab(next){
