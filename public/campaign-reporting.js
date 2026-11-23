@@ -147,6 +147,51 @@
       ])
     )+'<p class="rpt-note">X post views include organic traffic. Effective cost per 1,000 is based on the full visible post views, not verified incremental paid reach. X RTs is the existing feed; Guru classification needs a confirmed campaign mapping.</p>';
   }
+  function discordContent(){
+    const course=state.discordClicks,members=state.discordMembers;
+    const latest=members?.latest||null;
+    const snapshot=latest&&Number.isSafeInteger(latest.memberCount)?format(latest.memberCount):'—';
+    const daily=members&&Number.isSafeInteger(members.dailyChange)?
+      (members.dailyChange>0?'+':'')+format(members.dailyChange):'—';
+    const counters='<dl class="rpt-stats">'+[
+      metric('Free-course button clicks',course?format(course.total):'—',course?'Recorded since click tracking began':'Waiting for verified click data'),
+      metric('Course clicks · 7 days',course?format(course.last7Days):'—','Same tracked Discord button'),
+      metric('Approx. server members',snapshot,latest?'Midday '+esc(latest.date)+' · UK time':'First midday snapshot not yet available'),
+      metric('Daily member change',daily,'Compared with previous midday reading')
+    ].join('')+'</dl>';
+    const connection='<p class="rpt-note"><strong>Discord First Earnings:</strong> no verified campaign posts linked. '+
+      'The creator sign-up, KYC and first-earnings feeds are not connected. This does not prove no posts exist.</p>';
+    return header('Fanvue AI Creator Academy','Verified Discord button clicks and daily server snapshots')+
+      counters+'<p class="rpt-note">Member counts are approximate. The daily history graph is on the Dashboard and starts after two recorded midday snapshots.</p>'+
+      connection;
+  }
+  async function refreshDiscordMetrics(force=false){
+    if(state.discordLoading)return state.discordLoading;
+    if(!force&&state.discordLastLoadAt&&Date.now()-state.discordLastLoadAt<60000)return true;
+    state.discordVisited=true;
+    state.discordLoading=(async()=>{
+      const endpoints=[
+        ['discord-course-clicks','discordClicks','discord-course-clicks',validClicks],
+        ['discord-members','discordMembers','discord-members',validMembers]
+      ];
+      const results=await Promise.allSettled(endpoints.map(async ([endpoint,field,key,valid])=>{
+        const res=await fetch('/.netlify/functions/'+endpoint,{cache:'no-store',signal:AbortSignal.timeout(12000)});
+        if(!res.ok)throw Error('Discord source unavailable');
+        const data=await res.json();
+        if(!valid(data))throw Error('Incomplete Discord source');
+        if(field==='discordMembers'&&state.discordMembers?.latest?.date&&
+           data.latest.date<state.discordMembers.latest.date)throw Error('Older member snapshot');
+        if(field==='discordClicks'&&state.discordClicks?.source===data.source&&
+           data.total<state.discordClicks.total)throw Error('Older click total');
+        state[field]=data;
+        window.XTrackerLastGood?.write(key,data,valid);
+      }));
+      state.discordLastLoadAt=Date.now();
+      if(state.tab==='discord')render();
+      return results.some(x=>x.status==='fulfilled');
+    })();
+    try{return await state.discordLoading;}finally{state.discordLoading=null;}
+  }
   function unconnectedContent(id,fields,reason){
     const c=item(id);
     if(!c)return empty('No campaign data source is connected.');
