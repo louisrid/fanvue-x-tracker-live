@@ -13,11 +13,16 @@
   const format=n=>new Intl.NumberFormat('en-GB',{maximumFractionDigits:0}).format(n);
   const label=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'})
     .format(new Date(d+'T12:00:00Z'));
+  const validMembers=data=>data?.ok===true&&Array.isArray(data.history)&&
+    data.latest&&Number.isSafeInteger(data.latest.memberCount)&&data.latest.memberCount>=0&&
+    /^\d{4}-\d{2}-\d{2}$/.test(data.latest.date);
+  let saved=window.XTrackerLastGood?.read('discord-members',validMembers)?.payload||null;
   let active=null,verified=false;
   function renderGrowth(history){
     const values=(Array.isArray(history)?history:[])
       .filter(p=>p&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)&&Number.isSafeInteger(p.memberCount)&&p.memberCount>=0)
       .sort((a,b)=>a.date.localeCompare(b.date)).slice(-60);
+    chart.classList.toggle('is-pending',values.length<2);
     if(values.length<2){
       canvas.replaceChildren();
       canvas.setAttribute('aria-label','Waiting for two daily member count snapshots to draw the growth graph');
@@ -66,26 +71,41 @@
     tip.textContent=`${label(values.at(-1).date)} · ${format(values.at(-1).memberCount)} members`;
     note.textContent=`${values.length} daily snapshots · 12:00 UK · approximate Discord member counts`;
   }
+  function display(data,fromCache=false){
+    renderGrowth(data.history);
+    const latest=data.latest;
+    if(!latest){
+      if(verified)return;
+      amount.textContent='—';change.textContent='—';
+      status.textContent='First reading scheduled for 12:00 UK time';
+      return;
+    }
+    amount.textContent=format(latest.memberCount);
+    change.textContent=Number.isSafeInteger(data.dailyChange)
+      ?(data.dailyChange>0?'+':'')+format(data.dailyChange):'—';
+    status.textContent=fromCache?'Saved midday reading · checking for updates':
+      `Approximate · 12:00 UK · ${label(latest.date)}`;
+    verified=true;
+  }
+  if(saved)display(saved,true);
+  else renderGrowth([]);
   async function refresh(){
     if(active)return active;
     active=(async()=>{
       try{
         const response=await fetch('/.netlify/functions/discord-members',{cache:'no-store',signal:AbortSignal.timeout(12000)});
         const data=await response.json();
-        if(!response.ok||data.ok!==true)throw Error('Unavailable');
-        renderGrowth(data.history);
-        const latest=data.latest;
-        if(!latest){
-          amount.textContent='—';change.textContent='—';
-          status.textContent='First reading scheduled for 12:00 UK time';
+        if(!response.ok||data.ok!==true||!Array.isArray(data.history))throw Error('Unavailable');
+        if(!data.latest){
+          if(saved)throw Error('Latest snapshot unavailable');
+          display(data);
           return;
         }
-        if(!Number.isSafeInteger(latest.memberCount)||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(latest.date))throw Error('Invalid');
-        amount.textContent=format(latest.memberCount);
-        change.textContent=Number.isSafeInteger(data.dailyChange)?
-          (data.dailyChange>0?'+':'')+format(data.dailyChange):'—';
-        status.textContent=`Approximate · 12:00 UK · ${label(latest.date)}`;
-        verified=true;
+        if(!validMembers(data))throw Error('Incomplete snapshot');
+        if(saved?.latest?.date&&data.latest.date<saved.latest.date)throw Error('Older snapshot');
+        saved=data;
+        window.XTrackerLastGood?.write('discord-members',data,validMembers);
+        display(data);
       }catch{
         if(!verified){amount.textContent='—';change.textContent='—';}
         status.textContent=verified?'Last recorded value · refresh unavailable':'Member history temporarily unavailable';
