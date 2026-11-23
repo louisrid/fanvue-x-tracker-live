@@ -149,7 +149,7 @@ export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metr
       if(item.metric){
         // Preserve a verified QRT-to-original relationship if the X provider temporarily omits quote data.
         const oldQuote=metrics[item.id]?.quotedPost;
-        if(!item.metric.quotedPost&&oldQuote)item.metric.quotedPost=oldQuote;
+        if(oldQuote&&(!item.metric.quotedPost||item.metric.quotedPost.id!==oldQuote.id||['views','likes','reposts','replies'].some(k=>oldQuote[k]>0&&item.metric.quotedPost[k]===0)))item.metric.quotedPost=oldQuote;
         metrics[item.id]=item.metric;updated++;
       }
       else{metrics[item.id]={...(metrics[item.id]||{}),error:item.error,errorCategory:item.category,lastAttemptAt:new Date().toISOString()};errors.push({postId:item.id,error:item.error,category:item.category});}
