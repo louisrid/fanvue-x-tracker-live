@@ -195,6 +195,10 @@
     el('reportingRefreshButton')?.addEventListener('click',()=>{void load(true);});
     document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(location.hash==='#reporting'||location.hash.startsWith('#report-')))void load();});
     setInterval(()=>{if(!document.hidden&&(location.hash==='#reporting'||location.hash.startsWith('#report-')))void load();},120000);
+    // app.js runs before this deferred module, so deep links need a first render here.
+    // Without this, direct campaign URLs can remain stuck on the loading placeholder.
+    const direct=location.hash.match(/^#report-(all|discord|gta|of|article-rt|guru|articles|harness|other)$/);
+    if(direct||location.hash==='#reporting')window.XTrackerCampaignReporting?.show(direct?.[1]||'all');
   }
   window.XTrackerCampaignReporting={show:(selected='all')=>{state.tab=tabs.some(([key])=>key===selected)?selected:'all';render();void load();},reload:()=>load(true)};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
