@@ -271,7 +271,19 @@
     el('reportingPanel')?.addEventListener('click',event=>{
       const btn=event.target.closest('[data-report-jump]');if(btn)changeTab(btn.dataset.reportJump);
     });
-    el('reportingRefreshButton')?.addEventListener('click',()=>{void window.XTrackerCampaignReporting?.reload?.();});
+    el('reportingRefreshButton')?.addEventListener('click',async()=>{
+      const button=el('reportingRefreshButton');
+      if(!button||button.disabled)return;
+      button.disabled=true;
+      button.classList.add('is-refreshing');
+      button.setAttribute('aria-busy','true');
+      try{await window.XTrackerCampaignReporting?.reload?.();}
+      finally{
+        button.disabled=false;
+        button.classList.remove('is-refreshing');
+        button.removeAttribute('aria-busy');
+      }
+    });
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden)return;
       if(state.data||location.hash==='#reporting'||location.hash.startsWith('#report-'))void load();
