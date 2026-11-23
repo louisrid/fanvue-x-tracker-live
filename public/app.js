@@ -1273,6 +1273,8 @@ async function loadOfReport(force=false,refreshMetrics=false){
   try{
     const response=await fetch('/.netlify/functions/of-report'+(force?'?refresh=1':''),{method:refreshMetrics?'POST':'GET',cache:'no-store',signal:AbortSignal.timeout(refreshMetrics?65000:30000)});
     const data=await response.json();if(!response.ok||!validReport(data,'publishers','ready'))throw new Error(data.error||'Campaign report unavailable');
+    if(!force&&state.ofCampaign?.publishers?.length&&data.publishers.length===0)
+      throw new Error('Source temporarily empty; preserving saved OF Terms publishers');
     state.ofError='';state.ofCampaign=retainCachedStats(data,state.ofCampaign);saveReportCache('xtracker-of-cache-v1',state.ofCampaign);
     const verifiedAt=validDate(data.checkedAt||data.cachedAt);
     el('ofRefreshTime').textContent='Updated: '+(verifiedAt?new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(verifiedAt)+' UK':'not yet available');return true;
@@ -1557,6 +1559,8 @@ async function loadGtaReport(force=false){
   gtaState.loading=(async()=>{
     try{const response=await fetch('/.netlify/functions/gta-report'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(30000)}),data=await response.json();
       if(!response.ok||!validReport(data,'publishers','ready'))throw new Error(data.error||'GTA VI report unavailable');
+      if(!force&&gtaState.report?.publishers?.length&&data.publishers.length===0)
+        throw new Error('Source temporarily empty; preserving saved GTA VI publishers');
       gtaState.report=data;gtaState.error='';saveReportCache('xtracker-gta-report-qrts-v1',gtaState.report);
     }catch(e){gtaState.error=String(e.message||e);}
     finally{gtaState.loading=null;preserveReadingPosition(renderGtaReport);}
@@ -1862,6 +1866,8 @@ async function loadBoosts(force=false){
   boostsState.loading=(async()=>{try{
     const r=await fetch('/.netlify/functions/boosts',{cache:'no-store',signal:AbortSignal.timeout(15000)}),data=await r.json();
     if(!r.ok||!validReport(data,'tweets','ok'))throw new Error('Saved readings are temporarily unavailable');
+    if(!force&&boostsState.loaded&&boostsState.tweets.length&&data.tweets.length===0)
+      throw new Error('Source temporarily empty; preserving saved X boost records');
     updateBoostCooldown(data);
     const changed=JSON.stringify(boostsState.tweets)!==JSON.stringify(data.tweets)||!boostsState.loaded||Boolean(boostsState.error);
     const merged=retainCachedStats(data,{tweets:boostsState.tweets});boostsState.tweets=merged.tweets;boostsState.loaded=true;boostsState.error='';saveReportCache('xtracker-boosts-v1',merged);
