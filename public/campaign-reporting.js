@@ -114,6 +114,33 @@
         usd(c.paidSpendKnown),format(c.xViews),format(c.trackedClicks)
       ]));
   }
+  function guruContent(){
+    const c=item('guru-rts');
+    if(!c)return empty('X RT boost feed is unavailable.');
+    const rows=c.rows||[];
+    const percent=v=>num(v)===null?'—':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
+    const summary=header('Guru X RTs and boosts','Current original-tweet performance · lifetime spend and exposure')+badge(c)+totals(c);
+    if(!rows.length)return summary+empty('No verified boosted X tweets currently recorded.');
+    return summary+grid(
+      ['Original tweet','Known spend','X views','Interactions','Engagement','Cost / 1K views','Views gained 24h','Live X link'],
+      rows.map(r=>[
+        '<strong>'+esc(r.name||r.publisher||r.handle)+'</strong><small class="rpt-rowmeta">@'+esc(r.handle||'')+'</small>',
+        usd(r.spend),esc(format(r.views)),
+        esc(format([r.likes,r.reposts,r.replies].every(v=>num(v)!==null)?
+          Number(r.likes)+Number(r.reposts)+Number(r.replies):null)),
+        esc(percent(r.engagement)),usd(r.efficiency),esc(format(r.growth24)),
+        link(r.postUrl,'Open post')
+      ])
+    )+'<p class="rpt-note">X post views include organic traffic. Effective cost per 1,000 is based on the full visible post views, not verified incremental paid reach. X RTs is the existing feed; Guru classification needs a confirmed campaign mapping.</p>';
+  }
+  function unconnectedContent(id,fields,reason){
+    const c=item(id);
+    if(!c)return empty('No campaign data source is connected.');
+    return header(c.name,'Dedicated campaign reporting · source connection required')+badge(c)+
+      '<div class="rpt-unconnected"><strong>Metrics not yet connected</strong><p>'+
+      esc(fields.join(' · '))+'</p><small>'+esc(reason)+'</small></div>'+
+      '<p class="rpt-note">The dashboard will not show fabricated figures, zero conversions or assumed placements. Existing campaign pages continue to work.</p>';
+  }
   function content(){
     switch(state.tab){
       case 'all': return renderOverview();
@@ -121,10 +148,10 @@
                           campaignPanel('gta-originals','Original and V2 posts · separate from paid QRTs');
       case 'of':return campaignPanel('of-terms');
       case 'article-rt':return campaignPanel('article-rts');
-      case 'guru':return campaignPanel('guru-rts');
+      case 'guru':return guruContent();
       case 'articles':return renderArticleGroups()+campaignPanel('x-articles');
-      case 'harness':return campaignPanel('ai-harness');
-      case 'discord':return campaignPanel('discord');
+      case 'harness':return unconnectedContent('ai-harness',['Angles and concepts','Spend by angle','Views and clicks','Sign-ups','KYC','Earning creators','Winning creative'],'Live creative-level campaign data and verified attribution are required to compare angles fairly.');
+      case 'discord':return unconnectedContent('discord',['Active creators','Weekly growth','Competitions','Prism credits','Sign-ups','KYC','First earning creators'],'The Discord membership and Fanvue creator conversion feeds are not yet linked.');
       case 'other':return header('Other activity','Cross-campaign status and source coverage')+
                         renderArticleGroups()+
                         '<p class="rpt-note">New campaign results appear here when their verified source is connected. Existing article reporting, redirect tracking and historic pages remain available unchanged.</p>';
