@@ -117,7 +117,7 @@ test('Reporting UI and original GTA tab exist without altering historic campaign
   assert.match(html,/id="page-reporting"/);
   assert.match(html,/campaign-reporting\.js/);
   assert.match(html,/data-gta-tab="quoted"/);
-  assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(\)/);
+  assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(reportCode\|\|'article-rt'\)/);
   assert.match(app,/Lifetime campaign performance/);
   assert.match(app,/data-page/);
   assert.match(ui,/postPublicationClicks/);
@@ -150,10 +150,12 @@ test('Article RT views reuse only an exact verified original X post and never du
 });
 
 
-test('dashboard has exactly one visible large Reload All control and keeps targeted refresh sources',()=>{
+test('dashboard has one prominent Refresh All button and all detail pages use Refresh Stats',()=>{
  const html=readFileSync('public/index.html','utf8');
  const app=readFileSync('public/app.js','utf8');
  const css=readFileSync('public/campaign-reporting.css','utf8');
+ const homeCss=readFileSync('public/home-command.css','utf8');
+ const reportCss=readFileSync('public/report-match.css','utf8');
  const reporting=readFileSync('public/campaign-reporting.js','utf8');
  assert.match(html,/id="reloadAllButton"[^>]*x-reload-all/);
  assert.match(html,/id="refreshXStats"[^>]*hidden/);
@@ -170,8 +172,12 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  assert.match(coordinator,/XTrackerCampaignReporting\?\.reload\?\.\(\)/);
  assert.doesNotMatch(coordinator,/refreshBoostStats\(\)|refreshOfReport\(\)/);
  assert.match(app,/el\('reloadAllButton'\)\.addEventListener\('click',reloadAllData\)/);
- assert.match(css,/#ff008c!important/);
- assert.match(css,/\.x-refresh-button,\.rpt-refresh/);
+ assert.match(homeCss,/#reloadAllButton/);
+ assert.match(homeCss,/background:#ff008c!important/);
+ assert.match(reportCss,/\.rpt-refresh/);
+ assert.match(html,/id="reportingRefreshButton"[^>]*>Refresh Stats<\/button>/);
+ assert.equal((html.match(/>Refresh X Stats<\/span>/g)||[]).length,0);
+ assert.match(html,/id="reloadAllButton"[\s\S]*?<span>Refresh All<\/span>/);
  assert.match(reporting,/\['article-rt','X Article Boosts'\]/);
 });
 

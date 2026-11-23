@@ -6,12 +6,16 @@ import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const js=fs.readFileSync(path.join(root,'public/app.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'public/styles.css'),'utf8');
-test('dashboard headline shows Week 2 figures without Total Placements',()=>{
+test('dashboard headline uses verified spend, clicks, live posts and measured views',()=>{
   const start=js.indexOf('function renderKpis(){');
   const block=js.slice(start,js.indexOf('function renderCampaignSelectors(){',start));
-  assert.match(block,/label:'Paid total'/);
+  assert.match(block,/label:'Known spend'/);
+  assert.match(block,/label:'UTM clicks'/);
+  assert.match(block,/label:'Live posts'/);
+  assert.match(block,/label:'X views'/);
   assert.doesNotMatch(block,/label:'Total placements'/);
   assert.match(block,/homePlacements\(\)/);
+  assert.match(block,/measuredViews/);
   assert.doesNotMatch(block,/badge:/);
   assert.doesNotMatch(block,/Paid total · estimate/);
 });
