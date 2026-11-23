@@ -1,0 +1,10 @@
+/* Shared palette for the tracker and click preferences. */
+:root {
+  --muted-text: #64748b;
+  --action-blue: #0055ff;
+  --border-subtle: #e7ebf4;
+}
+
+:root[data-theme="dark"] {
+  --muted-text: #a9b4c8;
+}

@@ -1,0 +1,38 @@
+✔ live parser needs only tab 15; source boundary excludes originals, drafts; published rows can lack X URLs (2.993526ms)
+✔ QRT-only source drives spend, views, interactions, human clicks and CPC (16.164267ms)
+✔ browser ignores legacy mixed caches and restores only the isolated QRT cache (1.722667ms)
+✔ ten published sheet placements retain nine links without column X and expose missing tracking URL (4.536595ms)
+✔ corrected live sheet keeps nine distinct QRTs, five posts and $350 paid spend (0.753886ms)
+✔ publication timestamp is exact and tracking links are never visited (16.648825ms)
+✔ provider failure, decreasing counts and invalid intervals preserve verified readings (3.298736ms)
+✔ unpublished and shared links are excluded; confirmed spend produces CPC (1.96229ms)
+✔ unavailable first reading and zero clicks remain distinct (0.577622ms)
+✔ sheet parser retains QRT display names, column D, and deduplicates X placements (1.982287ms)
+✔ campaign tables share column order with source-specific click labels (12.135765ms)
+✔ an overlapping failed refresh cannot erase a successful verified response (0.676314ms)
+✔ an unpublished row cannot suppress a live post sharing its tracking link (0.498106ms)
+✔ tracked original and V2 posts contribute while untracked posts do not dilute coverage (0.578655ms)
+✔ tracking links are read by column header from the QRT tab only (0.434778ms)
+✔ cached GTA reports render only live posts and exclude pending spend (2.101866ms)
+✔ legacy total-click cache cannot contaminate human-click readings or fallback (3.724228ms)
+✔ a missing or invalid humanClicks field never falls back to totalClicks (0.915633ms)
+✔ previous mixed campaign cache is not restored on the QRT-only page (1.371822ms)
+✔ all nine links use human clicks while only published placements contribute to performance (3.679051ms)
+✔ source parser includes tracking links with no payment or live post (0.358207ms)
+✔ existing Refresh button posts once and renders fresh human clicks without navigation (1.764397ms)
+✔ dashboard human totals ignore bot-inclusive cache and accept provider corrections (1.352075ms)
+✔ xtracker-dashboard-cache-v1 recovers from corrupt cache, rejects invalid reports and tolerates unavailable storage (2.488376ms)
+✔ xtracker-of-cache-v1 recovers from corrupt cache, rejects invalid reports and tolerates unavailable storage (0.628065ms)
+✔ xtracker-gta-report-human-clicks-v1 recovers from corrupt cache, rejects invalid reports and tolerates unavailable storage (0.573874ms)
+✔ xtracker-boosts-v1 recovers from corrupt cache, rejects invalid reports and tolerates unavailable storage (0.536714ms)
+✔ failed and malformed report refreshes retain verified campaign state (2.839914ms)
+✔ partial successful responses preserve cached metrics while accepting explicit zero and current status (0.953677ms)
+✔ cached link readings survive a partial report without mixing click definitions (0.867854ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 254.782114

@@ -1,0 +1,10 @@
+{
+  "name": "XTRACKER Unified Analytics Redesign",
+  "type": "production-source patch; not a standalone website",
+  "site_id": "3cfe75c9-5913-46a0-953f-eeae1a288a52",
+  "production_deploy_verified_before_patch": "6afafd9312cd6d1a5bba89ae",
+  "version": "20261116-unified-tables-v1",
+  "preserve": ["brand/logo font", "header structure", "redirects", "14 Netlify Functions", "env vars", "Google Sheets", "X metric history", "UTM attribution"],
+  "files_installed": ["xtracker-polish.css", "xtracker-polish.js", "xtracker-tables.js"],
+  "testing": "Local browser and installer checks passed; live deployment not performed"
+}

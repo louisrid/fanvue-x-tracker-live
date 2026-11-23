@@ -1,0 +1,6 @@
+Verified original site: https://elegant-swan-98c20a.netlify.app
+Version: v4.6.0
+Baseline source extracted from the maintained production archive, matching the live app.js and styles.css by character-level fingerprint on 2026-10-17.
+app.js sha256: ad7b31f818ecbedac52bd7f5a9818e6b59595f2cedd80013ca79d14a2a6a4626
+styles.css sha256: e73d9404f3742633402825c34eda10a087a2c0df29e7846696b8e87ad25c98fa
+This historic checksum describes v4.6.0 only, not the currently deployed v4.7.1 frontend. Do not blindly redeploy an old package over newer site assets.

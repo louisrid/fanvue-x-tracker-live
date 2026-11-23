@@ -1,0 +1,10 @@
+{
+  "url": "https://elegant-swan-98c20a.netlify.app",
+  "sha256": {
+    "index.html": "3320a53266277510b9fadc7033a4665173791ffcbb4ac49d8f14bc42c88dc7a4",
+    "app.js": "5417e977c407e9453ae871508adbdacf794e3b523730bf8c3371d64b3ae59498",
+    "xtracker-tables.js": "0994a21e5cd60bb33bb5c22fdab31b1f3af2d5e12914f8061414daada48e6022",
+    "gta-vi.css": "a54c69d2b65f32ef65a911097d32586a30ac7fdc209dfc27a77fa62fd7739ab7",
+    "gta-report": "eaae10a2381f935e640816f35ba882aa4232fa73d81b3970beaf2eb8830ebc06"
+  }
+}

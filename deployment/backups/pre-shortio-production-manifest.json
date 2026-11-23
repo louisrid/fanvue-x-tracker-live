@@ -1,0 +1,16 @@
+{
+  "productionDeploy": "6afb576227e92155193e8eed",
+  "productionUrl": "https://elegant-swan-98c20a.netlify.app",
+  "files": {
+    "gta-report.json": "fd22a1b46bf3e6ca30f271422c49fdc3c52695fed1d4ce208f63e42ff849f241",
+    "app.js": "b03b29c2708f12ac0e050da4dfaf3d654e149eacb94bfefc5be0cb94c4672791",
+    "palette.css": "a9d4980a1ebc2aec630b1c3dbc8cd629b8963de86928e72f8deb0d23bdf718fd",
+    "xtracker-polish.js": "4c5a68d6ac12ae721e8279b435c24bd4a533bcaa491b5af6fc6d76fcb1ed60b9",
+    "index.html": "e7e6925b4e55972ffcfb64fa0cb46b2f9fd9da6250f3831e92e948d106164076",
+    "xtracker-tables.js": "3c715fc8dfd35945b4d0ec84d95336a540cee84f6f31661268aea9e2a8e92868",
+    "styles.css": "9e9596d369f0276b847fbba883ab87af9e15d81cb5d47c0d3a7a83cdec0f0dce",
+    "gta-report-source.mjs": "6eb72d4e29589728945080999b00f4f3e174e1087c280afed31992cb16443d0d",
+    "xtracker-polish.css": "8b79246264f700c78b7b9424ed4ab9aa51203547202cb76e12be1d48b08cebdf",
+    "gta-vi.css": "653b82e23b689478da147d3d8839c55ad3431aa364d9619caea2866c354deba3"
+  }
+}

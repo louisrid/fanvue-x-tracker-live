@@ -1,0 +1,77 @@
+{
+  "method": "Local Netlify Dev UI using read-only Sheet-reconciled provider responses, not a hosted preview",
+  "results": [
+    {
+      "width": 1440,
+      "tab": "qrts",
+      "cards": 6,
+      "spend": "$1,840",
+      "status": "X: 13 of 13 posts · Short.io: 26 of 26 links · Latest available readings verified",
+      "sourceDetails": "Source details",
+      "overflow": false,
+      "colors": [
+        "rgb(0, 85, 255)",
+        "rgb(17, 19, 24)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(255, 255, 0)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(57, 255, 20)"
+      ],
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "tab": "originals",
+      "cards": 6,
+      "spend": "$2,600.85",
+      "status": "X: 18 of 22 posts · Short.io: 0 of 0 links · 1 saved X readings retained; 3 X posts unverified",
+      "sourceDetails": "Source detailsTheGTABase: X provider HTTP 404 · GTA_OOC: X provider HTTP 404 · arkavx: X provider HTTP 404 · billsyliamgta: X provider HTTP 404",
+      "overflow": false,
+      "colors": [
+        "rgb(0, 85, 255)",
+        "rgb(17, 19, 24)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(255, 255, 0)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(57, 255, 20)"
+      ],
+      "errors": []
+    },
+    {
+      "width": 390,
+      "tab": "qrts",
+      "cards": 6,
+      "spend": "$1,840",
+      "status": "X: 13 of 13 posts · Short.io: 26 of 26 links · Latest available readings verified",
+      "sourceDetails": "Source details",
+      "overflow": false,
+      "colors": [
+        "rgb(0, 85, 255)",
+        "rgb(17, 19, 24)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(255, 255, 0)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(57, 255, 20)"
+      ],
+      "errors": []
+    },
+    {
+      "width": 390,
+      "tab": "originals",
+      "cards": 6,
+      "spend": "$2,600.85",
+      "status": "X: 18 of 22 posts · Short.io: 0 of 0 links · 1 saved X readings retained; 3 X posts unverified",
+      "sourceDetails": "Source detailsTheGTABase: X provider HTTP 404 · GTA_OOC: X provider HTTP 404 · arkavx: X provider HTTP 404 · billsyliamgta: X provider HTTP 404",
+      "overflow": false,
+      "colors": [
+        "rgb(0, 85, 255)",
+        "rgb(17, 19, 24)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(255, 255, 0)",
+        "rgba(0, 0, 0, 0)",
+        "rgb(57, 255, 20)"
+      ],
+      "errors": []
+    }
+  ]
+}

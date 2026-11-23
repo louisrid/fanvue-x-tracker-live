@@ -1,0 +1,30 @@
+{
+  "index.html": {
+    "sha256": "e0a7e5ece6261dfdc06050cdd88cc69fad5752f48eb5b478af82abdb1bd1f811",
+    "matchesWorkspace": false
+  },
+  "app.js": {
+    "sha256": "08abb94df0306b3eb73c7d8b1224d0ff4563a7beea72e550faeaa9ff14d6999f",
+    "matchesWorkspace": false
+  },
+  "styles.css": {
+    "sha256": "9e9596d369f0276b847fbba883ab87af9e15d81cb5d47c0d3a7a83cdec0f0dce",
+    "matchesWorkspace": true
+  },
+  "gta-vi.css": {
+    "sha256": "c8277d7af15e84054637a1ae2fb82aeed91bc4f7205b218949b77689810b0de5",
+    "matchesWorkspace": true
+  },
+  "xtracker-polish.css": {
+    "sha256": "3207b93a95baa540160c8bd0d376b76e54c5dda9f36f1f19c34eda39126cd7d7",
+    "matchesWorkspace": true
+  },
+  "xtracker-polish.js": {
+    "sha256": "4c5a68d6ac12ae721e8279b435c24bd4a533bcaa491b5af6fc6d76fcb1ed60b9",
+    "matchesWorkspace": true
+  },
+  "palette.css": {
+    "sha256": "a9d4980a1ebc2aec630b1c3dbc8cd629b8963de86928e72f8deb0d23bdf718fd",
+    "matchesWorkspace": true
+  }
+}

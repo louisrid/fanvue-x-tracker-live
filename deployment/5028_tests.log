@@ -1,0 +1,190 @@
+
+> x-tracker-campaign-platform@5.0.28 test
+> node --test tests/aged-border-styling.test.mjs tests/daily-dashboard.test.mjs tests/utm3-implementation.test.mjs tests/apps-script-layout.test.mjs tests/click-baseline.test.mjs tests/home-scope.test.mjs tests/redirect-reliability.test.mjs
+
+TAP version 13
+# Subtest: older published articles use thick red orange gradient frames with white centres on every page
+ok 1 - older published articles use thick red orange gradient frames with white centres on every page
+  ---
+  duration_ms: 1.317163
+  type: 'test'
+  ...
+# Subtest: sparkles have a globally shared 10 percent relative opacity reduction
+ok 2 - sparkles have a globally shared 10 percent relative opacity reduction
+  ---
+  duration_ms: 1.32172
+  type: 'test'
+  ...
+# Subtest: views and likes are more visible on desktop and mobile
+ok 3 - views and likes are more visible on desktop and mobile
+  ---
+  duration_ms: 0.364779
+  type: 'test'
+  ...
+# Subtest: article status logic retains NEW before 48 hours and aged after
+ok 4 - article status logic retains NEW before 48 hours and aged after
+  ---
+  duration_ms: 0.166871
+  type: 'test'
+  ...
+# Subtest: prepared Apps Script editing bridge resolves both real column layouts without writing
+ok 5 - prepared Apps Script editing bridge resolves both real column layouts without writing
+  ---
+  duration_ms: 4.378942
+  type: 'test'
+  ...
+# Subtest: reporting excludes every event before the approved reset time
+ok 6 - reporting excludes every event before the approved reset time
+  ---
+  duration_ms: 2.292276
+  type: 'test'
+  ...
+# Subtest: new events at or after the reset time are countable
+ok 7 - new events at or after the reset time are countable
+  ---
+  duration_ms: 0.288524
+  type: 'test'
+  ...
+# Subtest: Dashboard starts with This week and original headline KPI cards; old Performance is gone
+ok 8 - Dashboard starts with This week and original headline KPI cards; old Performance is gone
+  ---
+  duration_ms: 2.482677
+  type: 'test'
+  ...
+# Subtest: Key Stats consists of the moved Daily Breakdown, three KPI tiles, graph, table and extra white space
+ok 9 - Key Stats consists of the moved Daily Breakdown, three KPI tiles, graph, table and extra white space
+  ---
+  duration_ms: 0.303677
+  type: 'test'
+  ...
+# Subtest: Daily seven-day totals exclude unowned codes and never invent spend dates
+ok 10 - Daily seven-day totals exclude unowned codes and never invent spend dates
+  ---
+  duration_ms: 2.476138
+  type: 'test'
+  ...
+# Subtest: Rolling 168 hourly buckets count genuine event timestamps by placement and exclude unowned codes
+ok 11 - Rolling 168 hourly buckets count genuine event timestamps by placement and exclude unowned codes
+  ---
+  duration_ms: 1.092494
+  type: 'test'
+  ...
+# Subtest: Without timestamped event history, never invent hourly clicks from daily totals
+ok 12 - Without timestamped event history, never invent hourly clicks from daily totals
+  ---
+  duration_ms: 0.859924
+  type: 'test'
+  ...
+# Subtest: Graph is a smooth red–orange SVG, uses hourly buckets and renders sharply at mobile widths
+ok 13 - Graph is a smooth red–orange SVG, uses hourly buckets and renders sharply at mobile widths
+  ---
+  duration_ms: 27.103949
+  type: 'test'
+  ...
+# Subtest: Chart reads the existing event feed without modifying tracking redirects
+ok 14 - Chart reads the existing event feed without modifying tracking redirects
+  ---
+  duration_ms: 0.3651
+  type: 'test'
+  ...
+# Subtest: Home only accepts verified selected rows with a genuine paid boolean
+ok 15 - Home only accepts verified selected rows with a genuine paid boolean
+  ---
+  duration_ms: 1.8669
+  type: 'test'
+  ...
+# Click event storage unavailable
+# Click event storage unavailable
+# Subtest: a delayed analytics write does not delay the production redirect
+ok 16 - a delayed analytics write does not delay the production redirect
+  ---
+  duration_ms: 29.67576
+  type: 'test'
+  ...
+# Subtest: analytics failure keeps the destination accessible and isolated writes stay verifiable
+ok 17 - analytics failure keeps the destination accessible and isolated writes stay verifiable
+  ---
+  duration_ms: 2.551421
+  type: 'test'
+  ...
+# Subtest: permanent path identity wins over extra query parameters and no browser features are needed
+ok 18 - permanent path identity wins over extra query parameters and no browser features are needed
+  ---
+  duration_ms: 1.618507
+  type: 'test'
+  ...
+# Subtest: browser exclusion preserves destinations without writing any click, with exact cookie matching
+ok 19 - browser exclusion preserves destinations without writing any click, with exact cookie matching
+  ---
+  duration_ms: 2.620665
+  type: 'test'
+  ...
+# Subtest: original site, Sheet ID, eight backend functions and redirect routes retained
+ok 20 - original site, Sheet ID, eight backend functions and redirect routes retained
+  ---
+  duration_ms: 1.64746
+  type: 'test'
+  ...
+# Subtest: frontend API and package versions match
+ok 21 - frontend API and package versions match
+  ---
+  duration_ms: 0.207142
+  type: 'test'
+  ...
+# Subtest: exact five sorts on each applicable page, default Most Recent
+ok 22 - exact five sorts on each applicable page, default Most Recent
+  ---
+  duration_ms: 1.197553
+  type: 'test'
+  ...
+# Subtest: sort controls are leftmost for Home, Accounts, Campaigns and legacy Tracker
+ok 23 - sort controls are leftmost for Home, Accounts, Campaigns and legacy Tracker
+  ---
+  duration_ms: 0.173091
+  type: 'test'
+  ...
+# Subtest: unwanted home controls and legacy equivalent article/search controls removed
+ok 24 - unwanted home controls and legacy equivalent article/search controls removed
+  ---
+  duration_ms: 0.24594
+  type: 'test'
+  ...
+# Subtest: Likes recorded cards exclusively use saturated green and white foreground
+ok 25 - Likes recorded cards exclusively use saturated green and white foreground
+  ---
+  duration_ms: 0.394033
+  type: 'test'
+  ...
+# Subtest: article ages use exact 48-hour boundary and no calendar-day rounding
+ok 26 - article ages use exact 48-hour boundary and no calendar-day rounding
+  ---
+  duration_ms: 0.681386
+  type: 'test'
+  ...
+# Subtest: article ageing never removes old live posts and keeps scheduled separate
+ok 27 - article ageing never removes old live posts and keeps scheduled separate
+  ---
+  duration_ms: 0.241854
+  type: 'test'
+  ...
+# Subtest: black headings with exactly blue heading accent styled across pages
+ok 28 - black headings with exactly blue heading accent styled across pages
+  ---
+  duration_ms: 1.294028
+  type: 'test'
+  ...
+# Subtest: all historic source records, payment statuses, and publisher tracking references remain external
+ok 29 - all historic source records, payment statuses, and publisher tracking references remain external
+  ---
+  duration_ms: 0.766594
+  type: 'test'
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 221.022614

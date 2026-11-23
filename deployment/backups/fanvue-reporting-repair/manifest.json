@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-11-20T19:45:42.175Z",
+  "site": "elegant-swan-98c20a.netlify.app",
+  "productionDeploy": "6afc941e3bc165793fbe7d41",
+  "productionCommit": "d30e3f3ca7cab37a9398f9bad45ce65b0a00922f",
+  "deployedAppMatchesSourceSnapshot": true,
+  "sha256": "bbe8bd5ab329636d42755cf606f62e4f3d881bb3d403a2f1c99d03c32ed10816",
+  "contents": [
+    "public",
+    "netlify",
+    "tests",
+    "package.json",
+    "netlify.toml"
+  ],
+  "restore": "Extract source-before.tar.gz into an isolated checkout, review, then use the existing Netlify deployment workflow. Existing site-level analytics stores are preserved; no data rollback is required."
+}

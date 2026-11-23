@@ -1,0 +1,164 @@
+[
+  {
+    "width": 1440,
+    "page": "dashboard",
+    "referenceCards": 3,
+    "restoredCards": 3,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "stats",
+    "referenceCards": 3,
+    "restoredCards": 3,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "historical",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "placements",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 23,
+    "restoredInitialRows": 23,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "accounts",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "campaigns",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 6,
+    "restoredInitialRows": 6,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "of",
+    "referenceCards": 6,
+    "restoredCards": 6,
+    "referenceInitialRows": 7,
+    "restoredInitialRows": 7,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "x-rts",
+    "referenceCards": 4,
+    "restoredCards": 4,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "page": "gta-vi",
+    "referenceCards": 6,
+    "restoredCards": 6,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 13,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "dashboard",
+    "referenceCards": 3,
+    "restoredCards": 3,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "stats",
+    "referenceCards": 3,
+    "restoredCards": 3,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "historical",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "placements",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 23,
+    "restoredInitialRows": 23,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "accounts",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "campaigns",
+    "referenceCards": 0,
+    "restoredCards": 0,
+    "referenceInitialRows": 6,
+    "restoredInitialRows": 6,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "of",
+    "referenceCards": 6,
+    "restoredCards": 6,
+    "referenceInitialRows": 7,
+    "restoredInitialRows": 7,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "x-rts",
+    "referenceCards": 4,
+    "restoredCards": 4,
+    "referenceInitialRows": 0,
+    "restoredInitialRows": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "page": "gta-vi",
+    "referenceCards": 6,
+    "restoredCards": 6,
+    "referenceInitialRows": 13,
+    "restoredInitialRows": 13,
+    "overflow": false
+  }
+]

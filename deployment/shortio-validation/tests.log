@@ -1,0 +1,28 @@
+✔ publication timestamp is exact and tracking links are never visited (20.740717ms)
+✔ provider failure, decreasing counts and invalid intervals preserve verified readings (1.846186ms)
+✔ unpublished and shared links are excluded; confirmed spend produces CPC (2.266389ms)
+✔ unavailable first reading and zero clicks remain distinct (0.874367ms)
+✔ sheet parser retains QRT display names, column D, and deduplicates X placements (2.096934ms)
+✔ existing GTA tables expose QRT clicks and CPC without changing OF columns (12.633879ms)
+✔ an overlapping failed refresh cannot erase a successful verified response (0.688308ms)
+✔ OF source uses specified columns; payment and live URL never imply posted (2.223016ms)
+✔ invalid identity and duplicate publisher code fail instead of inventing attribution (0.958866ms)
+✔ shared event merge preserves database identities, chronology, and existing article events without mirrored duplicates (5.928054ms)
+✔ safe browser exclusion never records OF clicks while preserving all ten exact redirects (16.469468ms)
+✔ campaign rate weights complete readings by views (0.660187ms)
+✔ missing metrics and zero views do not invent an engagement rate (0.132456ms)
+✔ a stale verified response returns without waiting for upstream refresh (3.660572ms)
+✔ failed refresh keeps the last verified snapshot (0.833682ms)
+✔ an unverified click outage never overwrites cached figures (0.942255ms)
+✔ public/xtracker-tables.js: totals and cost count likes, reposts and replies only (1.06119ms)
+✔ public/xtracker-tables.js: missing metrics remain unknown and zero totals have no cost ratio (0.328835ms)
+✔ deployment/redesign-package/source/xtracker-tables.js: totals and cost count likes, reposts and replies only (0.377436ms)
+✔ deployment/redesign-package/source/xtracker-tables.js: missing metrics remain unknown and zero totals have no cost ratio (0.131367ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 269.461244

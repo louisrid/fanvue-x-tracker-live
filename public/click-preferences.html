@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Your clicks | X Tracker</title>
+  <link rel="stylesheet" href="/palette.css?v=5.0.59-consistent-posts">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@650;700;800;850&amp;display=swap" rel="stylesheet">
+  <style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#10141c;background:#ffffff;color-scheme:light}
+  body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:20px;line-height:1.5;font-weight:650;-webkit-font-smoothing:antialiased}
+  .panel{width:min(100%,560px);background:#fff;border:1px solid var(--border-subtle);border-radius:23px;box-shadow:0 16px 42px rgba(28,49,81,.065);padding:clamp(22px,5vw,38px)}
+  .back{display:inline-flex;align-items:center;gap:5px;color:#1c2c45;font-size:12px;font-weight:780;text-decoration:none;min-height:36px;padding:7px 12px;margin-top:10px;border:1px solid #dae2ee;border-radius:11px;background:#fff;box-shadow:0 2px 8px rgba(31,50,80,.04)}
+  .back svg{height:15px;width:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .back:hover{border-color:#9ab4dd;background:#f8faff}
+  .back:focus-visible,button:focus-visible{outline:3px solid #2366ec;outline-offset:3px}
+  h1{font-size:clamp(27px,5vw,32px);line-height:1.13;letter-spacing:-.055em;margin:18px 0 11px;font-weight:850}
+  .description{margin:0 0 24px;color:var(--muted-text);font-size:14px}
+  #status{margin:0 0 20px;padding:16px 18px;border:1px solid #dce5f6;background:#f4f7ff;color:#132b4c;font-size:14px;font-weight:730;border-radius:15px;min-height:57px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{font:inherit;font-size:13px;font-weight:800;line-height:1.2;border-radius:13px;min-height:49px;padding:12px 15px;cursor:pointer;background:var(--action-blue);color:#fff;border:1px solid var(--action-blue);touch-action:manipulation}
+  button:hover{filter:brightness(.965)}
+  button.secondary{background:#fff;color:#151d2e;border-color:#cfd9e8}
+  .footnote{font-size:12px;color:var(--muted-text);margin:20px 0 0}
+  @media(max-width:390px){.actions{grid-template-columns:1fr}button{font-size:14px}.panel{padding:23px 18px}body{padding:14px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <a class="back" href="/?app=4.9.2#dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg><span>Back to X Tracker</span></a>
+    <h1>Exclude my clicks.</h1>
+    <p class="description">Keep visits from this browser out of campaign totals. Tracking links still open normally.</p>
+    <p id="status" role="status"></p>
+    <div class="actions">
+      <button id="exclude" type="button">Exclude my clicks</button>
+      <button id="include" class="secondary" type="button">Count my clicks</button>
+    </div>
+    <p class="footnote">Set this separately in every browser, including X’s in-app browser. Past clicks are unchanged.</p>
+  </main>
+  <script>
+const excluded=()=>document.cookie.split(';').some(x=>x.trim()==='fanvue_exclude_clicks=1');
+const render=()=>{document.getElementById('status').textContent=excluded()?'ON : your clicks are excluded in this browser.':'OFF : clicks from this browser are counted.';};
+document.getElementById('exclude').onclick=()=>{document.cookie='fanvue_exclude_clicks=1; Max-Age=31536000; Path=/; Secure; SameSite=Lax';render();if(!excluded())document.getElementById('status').textContent='Could not save the setting. Allow cookies for this site and try again.';};
+document.getElementById('include').onclick=()=>{document.cookie='fanvue_exclude_clicks=; Max-Age=0; Path=/; Secure; SameSite=Lax';render();};render();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+X Tracker v5.0.27: deploy to EXISTING project only
+
+Website: https://elegant-swan-98c20a.netlify.app/
+Netlify Site ID: 3cfe75c9-5913-46a0-953f-eeae1a288a52
+
+Use the EXISTING project's Deploys page manual drag-and-drop area. DO NOT use the generic new-site drop page. Before publishing, download and back up the current LIVE full source, compare all source files, and merge anything newer. This ZIP contains reconstructed live frontend v5.0.23 plus local 5.0.27 enhancements and an earlier backend base; full live backend has NOT been byte-compared. The provided ZIP MUST NOT simply overwrite a newer backend. Confirm the method builds and uploads all eight Netlify Functions and preserves schedule/environment vars. If drag-and-drop cannot deploy the complete Functions, stop rather than publish a static-only build.
+
+Requested checks: normal-weight readable graph axes; centred <=780px desktop graph; smooth thick red-orange clicks and blue spend curves; mobile 320/390px; no horizontal scroll. Retain Daily Breakdown, existing compact articles and details, colour rules, higher spacing, 48h NEW behaviour, historic and campaign pages, all UTM/click redirect behaviour.
+
+Do not open live /r/, /s/ or /p/ URLs. Preserve the click exclusion cutoff 2026-10-17T00:32:36Z and all archived and legitimate events. No changes to Sheets, other Netlify projects, tokens, secrets, or redirects. Report deployed production ID and verified functions.

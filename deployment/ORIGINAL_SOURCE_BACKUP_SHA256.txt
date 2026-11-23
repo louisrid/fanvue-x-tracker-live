@@ -1,0 +1,2 @@
+Original user-uploaded pre-UTM3 ZIP SHA-256: f366a6c901bb76fdb4f9ccd3dd8df3fee4aca8678d1bf97efeafe706504084a5
+Original bytes are kept separately and were never overwritten.

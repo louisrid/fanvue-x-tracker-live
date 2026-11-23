@@ -1,0 +1,154 @@
+
+> x-tracker-campaign-platform@5.0.24 test
+> node --test tests/daily-dashboard.test.mjs tests/utm3-implementation.test.mjs tests/apps-script-layout.test.mjs tests/click-baseline.test.mjs tests/home-scope.test.mjs tests/redirect-reliability.test.mjs
+
+TAP version 13
+# Subtest: prepared Apps Script editing bridge resolves both real column layouts without writing
+ok 1 - prepared Apps Script editing bridge resolves both real column layouts without writing
+  ---
+  duration_ms: 4.491731
+  type: 'test'
+  ...
+# Subtest: reporting excludes every event before the approved reset time
+ok 2 - reporting excludes every event before the approved reset time
+  ---
+  duration_ms: 0.815008
+  type: 'test'
+  ...
+# Subtest: new events at or after the reset time are countable
+ok 3 - new events at or after the reset time are countable
+  ---
+  duration_ms: 0.138689
+  type: 'test'
+  ...
+# Subtest: daily chart includes explicit axes, distinct strokes, red-orange and blue lines
+ok 4 - daily chart includes explicit axes, distinct strokes, red-orange and blue lines
+  ---
+  duration_ms: 2.789635
+  type: 'test'
+  ...
+# Subtest: daily click event total uses actual codes, dates, and verified event feed
+ok 5 - daily click event total uses actual codes, dates, and verified event feed
+  ---
+  duration_ms: 1.829257
+  type: 'test'
+  ...
+# Subtest: undated payments are not given invented daily spend
+ok 6 - undated payments are not given invented daily spend
+  ---
+  duration_ms: 1.063152
+  type: 'test'
+  ...
+# Subtest: recorded spend outside seven days remains recorded zero inside chart range
+ok 7 - recorded spend outside seven days remains recorded zero inside chart range
+  ---
+  duration_ms: 1.290681
+  type: 'test'
+  ...
+# Subtest: rendered daily chart contains both coloured paths, axes and real seven-day figures
+ok 8 - rendered daily chart contains both coloured paths, axes and real seven-day figures
+  ---
+  duration_ms: 26.879245
+  type: 'test'
+  ...
+# Subtest: Home only accepts verified selected rows with a genuine paid boolean
+ok 9 - Home only accepts verified selected rows with a genuine paid boolean
+  ---
+  duration_ms: 1.541774
+  type: 'test'
+  ...
+# Click event storage unavailable
+# Click event storage unavailable
+# Subtest: a delayed analytics write does not delay the production redirect
+ok 10 - a delayed analytics write does not delay the production redirect
+  ---
+  duration_ms: 29.826683
+  type: 'test'
+  ...
+# Subtest: analytics failure keeps the destination accessible and isolated writes stay verifiable
+ok 11 - analytics failure keeps the destination accessible and isolated writes stay verifiable
+  ---
+  duration_ms: 2.48809
+  type: 'test'
+  ...
+# Subtest: permanent path identity wins over extra query parameters and no browser features are needed
+ok 12 - permanent path identity wins over extra query parameters and no browser features are needed
+  ---
+  duration_ms: 1.752171
+  type: 'test'
+  ...
+# Subtest: browser exclusion preserves destinations without writing any click, with exact cookie matching
+ok 13 - browser exclusion preserves destinations without writing any click, with exact cookie matching
+  ---
+  duration_ms: 2.492898
+  type: 'test'
+  ...
+# Subtest: original site, Sheet ID, eight backend functions and redirect routes retained
+ok 14 - original site, Sheet ID, eight backend functions and redirect routes retained
+  ---
+  duration_ms: 1.645431
+  type: 'test'
+  ...
+# Subtest: frontend API and package versions match
+ok 15 - frontend API and package versions match
+  ---
+  duration_ms: 0.435506
+  type: 'test'
+  ...
+# Subtest: exact five sorts on each applicable page, default Most Recent
+ok 16 - exact five sorts on each applicable page, default Most Recent
+  ---
+  duration_ms: 1.586922
+  type: 'test'
+  ...
+# Subtest: sort controls are leftmost for Home, Accounts, Campaigns and legacy Tracker
+ok 17 - sort controls are leftmost for Home, Accounts, Campaigns and legacy Tracker
+  ---
+  duration_ms: 0.188314
+  type: 'test'
+  ...
+# Subtest: unwanted home controls and legacy equivalent article/search controls removed
+ok 18 - unwanted home controls and legacy equivalent article/search controls removed
+  ---
+  duration_ms: 0.219541
+  type: 'test'
+  ...
+# Subtest: Likes recorded cards exclusively use saturated green and white foreground
+ok 19 - Likes recorded cards exclusively use saturated green and white foreground
+  ---
+  duration_ms: 0.300773
+  type: 'test'
+  ...
+# Subtest: article ages use exact 48-hour boundary and no calendar-day rounding
+ok 20 - article ages use exact 48-hour boundary and no calendar-day rounding
+  ---
+  duration_ms: 0.408626
+  type: 'test'
+  ...
+# Subtest: article ageing never removes old live posts and keeps scheduled separate
+ok 21 - article ageing never removes old live posts and keeps scheduled separate
+  ---
+  duration_ms: 0.155895
+  type: 'test'
+  ...
+# Subtest: black headings with exactly blue heading accent styled across pages
+ok 22 - black headings with exactly blue heading accent styled across pages
+  ---
+  duration_ms: 0.609979
+  type: 'test'
+  ...
+# Subtest: all historic source records, payment statuses, and publisher tracking references remain external
+ok 23 - all historic source records, payment statuses, and publisher tracking references remain external
+  ---
+  duration_ms: 0.670591
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 226.144293

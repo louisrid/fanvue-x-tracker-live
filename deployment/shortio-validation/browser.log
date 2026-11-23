@@ -1,0 +1,165 @@
+viewport 1440 KPI Short.io Clicks
+61
+3 of 3 live QRTs · since publication
+QRT text [
+  'Account\tShort.io clicks\tCPC\tPost\tTotal interactions\tViews\tLikes\tRTs\tReplies\tPrice\tCost / interaction',
+  'QRT',
+  'QRT',
+  'QRT',
+  'Account\tShort.io clicks\tCPC\tPost\tTotal interactions\tViews\tLikes\tRTs\tReplies\tPrice\tCost / interaction',
+  'QRT',
+  'QRT'
+]
+page overflow false errors []
+metrics [
+  {
+    class: 'daily-metric daily-metric-spend',
+    width: 366.65625,
+    height: 110.8125,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-seven',
+    width: 366.671875,
+    height: 110.8125,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-published',
+    width: 366.65625,
+    height: 110.8125,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168))'
+  },
+  {
+    class: 'daily-metric daily-metric-interactions',
+    width: 366.65625,
+    height: 112.8125,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-shortio',
+    width: 366.671875,
+    height: 112.8125,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22))'
+  }
+]
+Sorted leading QRT iluv_papi
+QRT
+	31	$1.61	View post	—	—	—	—	—	$50	—
+click focuses breakdown true
+OF orange count 0
+viewport 390 KPI Short.io Clicks
+61
+3 of 3 live QRTs · since publication
+QRT text [
+  'Account\tShort.io clicks\tCPC\tPost\tTotal interactions\tViews\tLikes\tRTs\tReplies\tPrice\tCost / interaction',
+  'QRT',
+  'QRT',
+  'QRT',
+  'Account\tShort.io clicks\tCPC\tPost\tTotal interactions\tViews\tLikes\tRTs\tReplies\tPrice\tCost / interaction',
+  'QRT',
+  'QRT'
+]
+page overflow false errors []
+metrics [
+  {
+    class: 'daily-metric daily-metric-spend',
+    width: 174,
+    height: 110.734375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-seven',
+    width: 174,
+    height: 110.734375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-published',
+    width: 174,
+    height: 125.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168))'
+  },
+  {
+    class: 'daily-metric daily-metric-interactions',
+    width: 174,
+    height: 125.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-shortio',
+    width: 174,
+    height: 110.734375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22))'
+  }
+]
+Sorted leading QRT iluv_papi
+QRT
+	31	$1.61	View post	—	—	—	—	—	$50	—
+click focuses breakdown true
+OF orange count 0
+viewport 320 KPI Short.io Clicks
+61
+3 of 3 live QRTs · since publication
+QRT text [
+  'Account\tShort.io clicks\tCPC\tPost\tTotal interactions\tViews\tLikes\tRTs\tReplies\tPrice\tCost / interaction',
+  'QRT',
+  'QRT',
+  'QRT',
+  'Account\tShort.io clicks\tCPC\tPost\tTotal interactions\tViews\tLikes\tRTs\tReplies\tPrice\tCost / interaction',
+  'QRT',
+  'QRT'
+]
+page overflow false errors []
+metrics [
+  {
+    class: 'daily-metric daily-metric-spend',
+    width: 139,
+    height: 123.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-seven',
+    width: 139,
+    height: 123.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-published',
+    width: 139,
+    height: 125.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168))'
+  },
+  {
+    class: 'daily-metric daily-metric-interactions',
+    width: 139,
+    height: 125.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'none'
+  },
+  {
+    class: 'daily-metric daily-metric-shortio',
+    width: 139,
+    height: 123.859375,
+    font: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    bg: 'linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22))'
+  }
+]
+Sorted leading QRT iluv_papi
+QRT
+	31	$1.61	View post	—	—	—	—	—	$50	—
+click focuses breakdown true
+OF orange count 0

@@ -1,0 +1,233 @@
+{
+  "package_version": "4.9.1",
+  "distributed_filename": "X_Tracker_MASTER_2026-10-17_v4.7.0.zip",
+  "site_url": "https://elegant-swan-98c20a.netlify.app",
+  "site_id": "3cfe75c9-5913-46a0-953f-eeae1a288a52",
+  "source_base": "Prepared v4.9.0 full site source (logo and heading release), revised to read live CAMPAIGN and PAID DATE headers on Google Sheet. Last checked live site v4.8.8 already returned eight C002 assignments.",
+  "google_sheet_id": "1iaKTKoGf58i9uH5sT23r6vxX5XYVx3VfS8fLp-8xRbM",
+  "refresh": {
+    "sheet_cache_seconds": 45,
+    "dashboard_poll_seconds": 60,
+    "x_metrics_schedule_hours": 2
+  },
+  "navigation": [
+    "Dashboard",
+    "Key Stats",
+    "Historical"
+  ],
+  "key_stats": {
+    "default_week_label_2026_10_17": "This Week (Week 1)",
+    "next_week_label_2026_10_19": "This Week (Week 2)",
+    "week1_start_london": "2026-10-12",
+    "week_start_day": "Monday",
+    "data_scope": "cohort: matching WEEK N source tab; clicks: matching WEEK N cohort within selected calendar week",
+    "kpi_cards": [
+      "Live articles",
+      "Paid total",
+      "UTM clicks",
+      "Views recorded",
+      "Likes recorded"
+    ],
+    "leaderboard": "Top 5 published articles only, by clicks recorded during selected week",
+    "full_placements_location": "Historical > Week N, starts collapsed unless opened from Key Stats"
+  },
+  "historical": {
+    "source": "Google Sheets WEEK N - OWNER tabs, dynamically discovered when headers are ready",
+    "initially_collapsed": true,
+    "campaign_badges": "named campaign when assigned; otherwise tracking prefix A01 etc",
+    "summary_cards": [
+      "Live articles",
+      "Paid total",
+      "UTM clicks",
+      "Views recorded",
+      "Likes recorded"
+    ],
+    "weekly_clicks": "Recorded dated events for selected source week, not lifetime per-code clicks",
+    "x_metrics": "Most recent observation available on/before historical week end; display unavailable when missing",
+    "paid_cards": "All paid Historical placements use the existing pink source gradient; unpaid published posts remain white.",
+    "retains_inactive": true,
+    "excludes": "Unpaid and unposted Planned drafts. Groups composed exclusively of drafts are hidden.",
+    "included": "All published posts plus paid Scheduled placements, including later-inactive posts; week summaries reflect included placements.",
+    "weekly_kpi_colours": "Live articles uses the same vivid pink gradient as Dashboard. Paid total uses the same blue-to-navy gradient. Both use the same faded sparkle tile and white text."
+  },
+  "functions_included": [
+    "admin.mjs",
+    "dashboard.mjs",
+    "events.mjs",
+    "health.mjs",
+    "metrics.mjs",
+    "redirect.mjs",
+    "refresh-x-metrics.mjs",
+    "resolve.mjs"
+  ],
+  "backend_modified": [
+    "netlify/functions/dashboard.mjs: uiVersion now 4.9.1 only",
+    "netlify/lib/sheet-source.mjs: optional CAMPAIGN precedence and PAID DATE date mapping"
+  ],
+  "function_tracking_storage_changed": false,
+  "approved_click_cutoff": "2026-10-17T00:32:36.000Z",
+  "test_results": {
+    "automated_tests_passed": 102,
+    "npm_package_blocked_test_files": 3,
+    "failed_other_tests": 0,
+    "browser_tested_widths": [
+      320,
+      390,
+      768,
+      1440
+    ],
+    "browser_page_states_checked": 16,
+    "browser_overflow_errors": 0,
+    "browser_javascript_errors": 0,
+    "tracking_code_unchanged": true
+  },
+  "deploy": {
+    "deployed": false,
+    "requires_existing_site": true,
+    "no_github_or_new_netlify_site": true,
+    "next_action": "In existing Netlify project only, run npm ci && npm test, verify full 8 Functions and live Sheet read, preview pages, publish safely. Never visit live /r redirects during diagnostics."
+  },
+  "file_sha256": {
+    "public/app.js": "302b712f2d7da1999299f76756cc99497d7d0c5e911fa898b32ad85694b05ed1",
+    "public/styles.css": "7c3336af9b48f79057e4effe9cc5b4e454374a8a69a6486b02ab0c613c6126f8",
+    "public/index.html": "364234c33d5680a5b6fef6afa1f5fa12dab066b00bb5e5e4f28173c25cf01ef4",
+    "public/click-preferences.html": "e77eb4a1bb5c1cf5cc0c6a0c634e3fb67e1e6a8b5bcc2000a9fd70f2296e2d99",
+    "netlify/functions/dashboard.mjs": "14e810cee49e1bf469d6cafaa4528122209ff8e6ac0a46a9ba01ce25e5c4fde2",
+    "netlify/lib/sheet-source.mjs": "8eae4d261b3d6fb027ee7ba9a78e0c553d73e3772ad5cf2a68291e4fe9c0a1e6",
+    "netlify.toml": "001eee58212de31146985f07b1bb79712b3a6de81d4311611cf8f6793f13109d",
+    "package.json": "a5055f718bea28f52d417aae32213c6df80cf387513da5be97ea65aa35cd2347",
+    "package-lock.json": "13ef27bc91357a0db820051b0826c40e9ec59f093d5e80a0e93554297a904764"
+  },
+  "visual_484": {
+    "gradient": "vivid magenta -> pink -> coral -> orange",
+    "blue_card": "same money gradient on both Key Stats blue cards",
+    "sparkle_tile": "178x146px; 4 faded dots per tile, opacity 0.25 consistent across all coloured cards",
+    "initial_loading": "spinner for initial KPI and weekly chart fetch; unavailable values retain dash after failed/complete fetch"
+  },
+  "desktop_article_layout": {
+    "homepage_live": "centred one-column cards, max-width 960px",
+    "homepage_scheduled": "centred one-column cards, max-width 960px",
+    "historical": "centred one-column expanded cards, max-width 960px",
+    "mobile": "unchanged one-column cards"
+  },
+  "home_scheduled_heading": "Scheduled.",
+  "visual_485": {
+    "gradient": "pink-forward: #ff0b9e -> #ff3494 -> #ff576d -> narrow #ff9746 orange tail",
+    "sparkle_layer": "identical to v4.8.4",
+    "coloured_kpis": "unchanged blue/charcoal; live pink gradient shares same variable",
+    "screen_widths_checked": [
+      320,
+      390,
+      768,
+      1024,
+      1440
+    ]
+  },
+  "visual_486": {
+    "views_gradient": "purple, #a84afa through #511c9a; white text",
+    "likes_gradient": "yellow, #ffe77a through #f4a51c; accessible dark text",
+    "coloured_sparkles": "existing shared faded tile, 0.25 opacity; also on paid history cards",
+    "week_summary": "five figures before the visible published and paid-scheduled placements in each open Historical source week",
+    "excluded_click_controls": "link hidden; direct page and existing cookie logic preserved",
+    "account_comparison": "public CTA hidden, route inaccessible, compatibility internals retained",
+    "back_controls": "small padded buttons with SVG arrows"
+  },
+  "campaigns_487": {
+    "qualifies": "At least one paid and genuinely published X article",
+    "grouping": "Explicit Sheet campaign name/ID when assigned, else real attribution prefix A01/A02, never invented",
+    "display": "One blue-to-navy, sparkled details accordion per qualifying group, collapsed by default",
+    "expanded": [
+      "Published article count",
+      "Paid total",
+      "Lifetime verified UTM clicks",
+      "Latest recorded X views",
+      "Click-ranked published/paid placements and their detail controls"
+    ],
+    "hidden": "Inactive campaigns without qualifying paid published articles, empty campaigns and new-campaign button"
+  },
+  "historical_487": {
+    "keeps": "Default-collapsed weekly cohorts with five period-specific KPIs, excluding unpaid unpublished drafts",
+    "display": "White accordions; pink Live articles and blue Paid total summary cards with consistent faded sparkles; paid article cards pink, unpaid published cards white",
+    "complete_placements": false
+  },
+  "copy_487": {
+    "visible_em_dashes_remaining": 0,
+    "missing_metrics": "N/A, with existing initial loading spinners preserved"
+  },
+  "copy_488": {
+    "em_dash_remaining": 0,
+    "en_dash_remaining": 0,
+    "site_source_scanned": [
+      "public/app.js",
+      "public/index.html",
+      "public/styles.css",
+      "public/click-preferences.html",
+      "netlify/functions/dashboard.mjs"
+    ],
+    "date_labels": "Week ranges use plain `to`, account sorting says Account A to Z"
+  },
+  "historical_488": {
+    "exclude_unpaid_unposted_drafts": true,
+    "keep_paid_scheduled": true,
+    "keep_published_regardless_of_paid_or_active": true,
+    "empty_draft_only_weeks_hidden": true,
+    "per_week_header_count_matches_shown_records": true,
+    "colours": "Matching Dashboard pink and blue on first two Historical summary cards; remaining three neutral with category accent",
+    "sparkles": "Same shared background tile, tile size and 0.25 opacity as all coloured cards"
+  },
+  "stats_chart_488": {
+    "click_chart_date_label_gap_px": 16,
+    "click_chart_bottom_margin_px": 27,
+    "mobile_and_desktop_tested": true
+  },
+  "typography_489": {
+    "headings": "Primary and visible section/chart headings and KPI labels end with full stops. Black on white surfaces, existing accessible contrasts on coloured cards.",
+    "backend_changed": "Dashboard UI version only"
+  },
+  "wordmark_490": {
+    "text": "X TRACKER",
+    "font": "Unbounded (OFL) Google Fonts with system fallback",
+    "demo_fonts_bundled": false,
+    "alignment": "centred",
+    "blur": "subtle CSS shadow",
+    "max_growth_percent": 10,
+    "previous_baseline_px": {
+      "desktop": 32,
+      "mobile": 30,
+      "narrow": 29
+    },
+    "new_size_px": {
+      "desktop": 35,
+      "mobile": 33,
+      "narrow": 31
+    },
+    "browser_verified_widths": [
+      320,
+      390,
+      768,
+      1440
+    ]
+  },
+  "sheet_live_updates": {
+    "weekly_tabs": [
+      "WEEK 1 - LOUIS",
+      "WEEK 1 - CONNOR",
+      "WEEK X - TEMP"
+    ],
+    "added_fields": {
+      "W7": "CAMPAIGN",
+      "X7": "PAID DATE"
+    },
+    "assigned_range": "WEEK 1 - LOUIS!W8:W15",
+    "assigned_campaign_id": "C002",
+    "verified_paid_dates_added": 0,
+    "no_guessed_dates": true,
+    "production_api_campaign_assignment_verified": true
+  },
+  "backend_parser": {
+    "reads": "CAMPAIGN and PAID DATE columns by header on any compatible weekly tab",
+    "campaign_precedence": "weekly column, else legacy PROMO META, else UNASSIGNED",
+    "payment_date_precedence": "weekly PAID DATE, else legacy PROMO META, else blank",
+    "estimated_spend": "fallback when payment dates unavailable; not presented as verified monthly spend"
+  }
+}

@@ -1,0 +1,32 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/r/:code"
+  to = "/.netlify/functions/redirect?code=:code&cta=FANVUE"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/s/:code"
+  to = "/.netlify/functions/redirect?code=:code&cta=FANVUE"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/p/:code"
+  to = "/.netlify/functions/redirect?code=:code&cta=PRISM"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Cache-Control = "no-cache"

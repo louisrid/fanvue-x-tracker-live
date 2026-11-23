@@ -1,0 +1,30 @@
+✔ live parser needs only tab 15; source boundary excludes originals, drafts; published rows can lack X URLs (3.739943ms)
+✔ QRT-only source drives spend, views, interactions, human clicks and CPC (18.426633ms)
+✔ browser ignores legacy mixed caches and restores only the isolated QRT cache (1.734217ms)
+✔ ten published sheet placements retain nine links without column X and expose missing tracking URL (7.057984ms)
+✔ publication timestamp is exact and tracking links are never visited (18.323017ms)
+✔ provider failure, decreasing counts and invalid intervals preserve verified readings (3.177362ms)
+✔ unpublished and shared links are excluded; confirmed spend produces CPC (5.208937ms)
+✔ unavailable first reading and zero clicks remain distinct (0.803969ms)
+✔ sheet parser retains QRT display names, column D, and deduplicates X placements (2.672976ms)
+✔ campaign tables share column order with source-specific click labels (17.080219ms)
+✔ an overlapping failed refresh cannot erase a successful verified response (0.977147ms)
+✔ an unpublished row cannot suppress a live post sharing its tracking link (0.506455ms)
+✔ tracked original and V2 posts contribute while untracked posts do not dilute coverage (1.025766ms)
+✔ tracking links are read by column header from the QRT tab only (0.607535ms)
+✔ cached GTA reports render only live posts and exclude pending spend (2.15095ms)
+✔ legacy total-click cache cannot contaminate human-click readings or fallback (0.680631ms)
+✔ a missing or invalid humanClicks field never falls back to totalClicks (0.99375ms)
+✔ previous mixed campaign cache is not restored on the QRT-only page (1.472853ms)
+✔ all nine links use human clicks while only published placements contribute to performance (3.539823ms)
+✔ source parser includes tracking links with no payment or live post (0.358074ms)
+✔ existing Refresh button posts once and renders fresh human clicks without navigation (1.660585ms)
+✔ dashboard human totals ignore bot-inclusive cache and accept provider corrections (1.367489ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 290.859369

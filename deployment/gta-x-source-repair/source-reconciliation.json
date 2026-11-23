@@ -1,0 +1,68 @@
+{
+  "at": "2026-11-20T20:55:20.829Z",
+  "comparisons": [
+    {
+      "scope": "published-qrts-v1",
+      "sheetEligiblePosts": 13,
+      "paidSpend": 1840,
+      "xStatus": {
+        "total": 13,
+        "updated": 13,
+        "verified": 13,
+        "retained": 0,
+        "unverified": 0,
+        "errors": [],
+        "lastAttemptAt": null
+      },
+      "shortIo": {
+        "verified": 26,
+        "total": 26,
+        "errors": 0
+      }
+    },
+    {
+      "scope": "published-originals-v1",
+      "sheetEligiblePosts": 22,
+      "paidSpend": 2600.85,
+      "xStatus": {
+        "total": 22,
+        "updated": 18,
+        "verified": 19,
+        "retained": 1,
+        "unverified": 3,
+        "errors": [
+          {
+            "postId": "2115927144836776030",
+            "error": "X provider HTTP 404",
+            "category": "not_found",
+            "lastAttemptAt": "2026-11-20T20:55:17.669Z"
+          },
+          {
+            "postId": "2116154928033087526",
+            "error": "X provider HTTP 404",
+            "category": "not_found",
+            "lastAttemptAt": "2026-11-20T20:55:17.037Z"
+          },
+          {
+            "postId": "2116146620580647228",
+            "error": "X provider HTTP 404",
+            "category": "not_found",
+            "lastAttemptAt": "2026-11-20T20:55:17.625Z"
+          },
+          {
+            "postId": "2116219158211829872",
+            "error": "X provider HTTP 404",
+            "category": "not_found",
+            "lastAttemptAt": "2026-11-20T20:55:17.297Z"
+          }
+        ],
+        "lastAttemptAt": null
+      },
+      "shortIo": {
+        "verified": 0,
+        "total": 0,
+        "errors": 0
+      }
+    }
+  ]
+}

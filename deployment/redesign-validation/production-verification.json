@@ -1,0 +1,50 @@
+{
+  "site_id": "3cfe75c9-5913-46a0-953f-eeae1a288a52",
+  "deploy_id": "6afb12fc5559713aee8464c1",
+  "state": "ready",
+  "database_branch_id": "production",
+  "function_count": 14,
+  "schedules": [
+    {
+      "cron": "0 */2 * * *",
+      "name": "gta-refresh"
+    },
+    {
+      "cron": "0 */2 * * *",
+      "name": "refresh-x-metrics"
+    }
+  ],
+  "reports": [
+    {
+      "endpoint": "health",
+      "status": 200,
+      "ready": true,
+      "records": 23
+    },
+    {
+      "endpoint": "dashboard",
+      "status": 200,
+      "ready": true,
+      "records": 23
+    },
+    {
+      "endpoint": "of-report",
+      "status": 200,
+      "ready": true,
+      "records": 8
+    },
+    {
+      "endpoint": "gta-report",
+      "status": 200,
+      "ready": true,
+      "records": 24
+    },
+    {
+      "endpoint": "boosts",
+      "status": 200,
+      "ready": true,
+      "records": 4
+    }
+  ],
+  "assets_match": true
+}

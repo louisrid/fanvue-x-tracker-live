@@ -1,0 +1,7 @@
+{
+  "originalProductionDeploy": "6afbd57777ca0a9261b66d9d",
+  "backup": "deployment/gta-shortio-fix/production-before-fix.zip",
+  "sha256": "6684df6cdb699873e77971c1a1be97527cd599e09827de005795301427172e6e",
+  "preview": "https://6afc5a5472253b9b5ca820a0--elegant-swan-98c20a.netlify.app",
+  "unchanged": "All non-GTA production source files and both applied database migrations were preserved."
+}

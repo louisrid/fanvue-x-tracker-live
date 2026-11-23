@@ -1,0 +1,84 @@
+/* GTA VI reuses the OF Terms report components; these styles only define its CTA. */
+#gtaButton.gta-promo-button{
+  box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+  padding:0 14px;min-height:33px;border-radius:10px;
+  color:#fff;background:#ff008c;border:1px solid #ff008c;
+  font-family:inherit;font-size:13px;line-height:1.1;font-weight:850;
+  text-decoration:none;white-space:nowrap;z-index:2;
+}
+#gtaButton.gta-promo-button:hover{background:#ed0082;}
+#gtaButton.gta-promo-button:focus-visible{outline:3px solid #2563eb;outline-offset:3px;}
+/* Campaign links share one row at every viewport size. The header owns layout;
+   JavaScript never moves or measures individual navigation buttons. */
+:root .app-header .header-row,
+:root body.is-home .app-header .header-row {
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto;
+}
+:root .app-header .brand {grid-column:1 / -1!important;grid-row:1!important;}
+:root .app-header .campaign-nav {
+  grid-column:1 / -1;
+  grid-row:2;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  width:100%;
+  max-width:560px;
+  margin:0 auto;
+}
+:root .app-header .campaign-nav > a {
+  position:static!important;
+  grid-column:auto!important;
+  grid-row:auto!important;
+  justify-self:stretch!important;
+  align-self:stretch!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:auto!important;
+  min-height:44px!important;
+  padding:10px 8px!important;
+  margin:0!important;
+  border-radius:12px!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+  white-space:normal!important;
+  text-align:center;
+}
+:root .app-header .header-row .mobile-nav {grid-column:1 / -1!important;grid-row:3!important;}
+@media(max-width:760px){
+  :root .app-header .campaign-nav > a {font-size:12px!important;}
+  #page-gta-vi .of-publisher-grid{min-width:0;}
+}
+
+/* Engagement shares the daily performance tile layout on both promo pages. */
+.campaign-metric-values{display:contents;}
+.campaign-metrics .engagement-control{display:contents;}
+.campaign-metrics .engagement-button{width:100%;border:0;background:#39ff14;color:#08291b;font-family:inherit;text-align:left;align-items:flex-start;cursor:pointer;}
+.campaign-metrics .engagement-button:hover,.campaign-metrics .engagement-button[aria-expanded="true"]{background:#2aeb08;}
+.campaign-metrics .engagement-button:focus-visible{outline:3px solid #2563eb;outline-offset:3px;}
+.campaign-metrics .daily-metric-published{background:linear-gradient(135deg,#7e22ce,#6b21a8);color:#fff;}
+.engagement-details{grid-column:1/-1;margin:0;padding:14px 16px;border:1px solid #bbd6c5;border-radius:12px;color:#14532d;background:#f0fdf4;font-size:13px;line-height:1.6;}
+
+:root body #mainContent .campaign-metrics .engagement-button :is(.daily-metric-label,strong,small){color:#08291b!important;-webkit-text-fill-color:#08291b!important;opacity:1;}
+
+/* Both campaign click actions share dimensions, typography and interaction states. */
+.of-report-page .daily-metric-shortio{
+  width:100%;border:0;font-family:inherit;text-align:left;align-items:flex-start;
+  background:linear-gradient(135deg,#ffb347,#f97316);color:#351400;cursor:pointer;
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.of-report-page .daily-metric-shortio:hover{transform:translateY(-2px);box-shadow:0 8px 20px #c45b1426;}
+.of-report-page .daily-metric-shortio:active{transform:translateY(0);}
+.of-report-page .daily-metric-shortio:focus-visible{outline:3px solid #2563eb;outline-offset:3px;}
+:root body #mainContent .of-report-page .daily-metric-shortio :is(.daily-metric-label,strong,small){color:#351400!important;-webkit-text-fill-color:#351400!important;opacity:1;}
+.of-report-page :is(#gtaPublishers,#ofPublishers){scroll-margin-top:calc(var(--promo-nav-height, 200px) + 24px - var(--promo-scroll-padding, 0px));}
+@media(prefers-reduced-motion:reduce){.of-report-page .daily-metric-shortio{transition:none;}.of-report-page .daily-metric-shortio:hover{transform:none;}}
+
+/* Six summary tiles use the same responsive grid on both campaign pages. */
+.of-report-page .campaign-metrics{grid-template-columns:repeat(3,minmax(0,1fr));}
+@media(max-width:1000px){.of-report-page .campaign-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:600px){.of-report-page .campaign-metrics{grid-template-columns:minmax(0,1fr);}}

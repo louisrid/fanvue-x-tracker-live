@@ -1,0 +1,22 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+PASS desktop dashboard
+PASS desktop stats
+PASS desktop historical
+PASS desktop placements
+PASS desktop accounts
+PASS desktop campaigns
+PASS desktop of
+PASS desktop x-rts
+PASS desktop gta-vi
+PASS desktop all nine pages; real preview reports {'/.netlify/functions/of-report': 200, '/.netlify/functions/dashboard': 200, '/.netlify/functions/boosts': 200, '/.netlify/functions/gta-report': 200}
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+PASS iphone dashboard
+PASS iphone stats
+PASS iphone historical
+PASS iphone placements
+PASS iphone accounts
+PASS iphone campaigns
+PASS iphone of
+PASS iphone x-rts
+PASS iphone gta-vi
+PASS iphone all nine pages; real preview reports {'/.netlify/functions/of-report': 200, '/.netlify/functions/dashboard': 200, '/.netlify/functions/boosts': 200, '/.netlify/functions/gta-report': 200}

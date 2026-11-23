@@ -1,0 +1,700 @@
+/*
+ XTRACKER | Production-safe design refinement
+ Applies only to existing page content. Does not modify the XTRACKER logo,
+ global header layout, tracking routes, metrics, or any historical records.
+*/
+
+:root {
+  --xt-ink: #0d1625;
+  --xt-secondary: #27354a;
+  --xt-stroke: #dce5f2;
+  --xt-hover: #f4f8ff;
+  --xt-blue: #0863f7;
+  --xt-focus: #65a3ff;
+}
+
+/* 1. One readable typographic hierarchy across ALL nine pages. */
+.site-page {
+  color: var(--xt-ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-weight: 650;
+  -webkit-font-smoothing: antialiased;
+}
+.site-page :is(h1,h2,h3,h4) {
+  color: #060b12;
+  font-family: inherit;
+  font-weight: 900 !important;
+  letter-spacing: -0.035em;
+}
+.site-page :is(.account-mobile-name,.result-line h2) {
+  color: var(--xt-ink);
+  font-weight: 850 !important;
+}
+:is(#page-placements,#page-of,#page-gta-vi) :is(.article-publisher,.article-kpi-value) {
+  color: var(--xt-ink) !important;
+  font-weight: 850 !important;
+}
+.site-page :is(
+  .select-control > span,
+  .account-table thead th,.daily-totals-table thead th,
+  .section-count,.toolbar-summary,.tracker-filter-caption,
+  .filter-label,.account-mobile-card small,.of-last-click,
+  .daily-axis-label,.account-row small,.report-week-range
+) {
+  color: var(--xt-secondary) !important;
+  font-weight: 750 !important;
+}
+:is(#page-placements,#page-of,#page-gta-vi) .article-card-meta > span,
+:is(#page-placements,#page-of,#page-gta-vi) .article-card-meta > .article-campaign-chip {
+  color: var(--xt-secondary) !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+.site-page :is(input,select,textarea,button,.button) { font-family: inherit; }
+.site-page :is(input,select,textarea) {
+  color: var(--xt-ink);
+  font-weight: 750;
+}
+.site-page :is(input::placeholder,textarea::placeholder) {
+  color: #46556b;
+  opacity: 1;
+}
+.site-page :is(button,.button,summary) { font-weight: 800; }
+.site-page :is(a,button,[role='button']):focus-visible {
+  outline: 3px solid var(--xt-focus) !important;
+  outline-offset: 3px;
+}
+
+/* 2. Consistent breathing room immediately below the fixed site header.
+   Standalone pages already have a 45px back-row inset; retain it. */
+#page-dashboard,
+#page-stats,
+#page-historical { padding-top: 38px !important; }
+.site-page .page-intro { padding-bottom: 24px; }
+.site-page .result-line { padding-top: 12px; margin-bottom: 18px; }
+.site-page .subpage-back-row { margin-bottom: 22px; }
+
+/* 3. Proper visible, consistent back button, including GTA VI's missing SVG. */
+.site-page .page-back-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--xt-stroke) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  color: #101c31 !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+}
+.site-page .page-back-button svg {
+  display: block !important;
+  width: 25px !important;
+  height: 25px !important;
+  stroke: #101c31 !important;
+  stroke-width: 2.6px !important;
+  fill: none !important;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 1 !important;
+}
+.site-page .page-back-button:hover {
+  border-color: #8fb5ff !important;
+  background: #f3f8ff !important;
+}
+/* CSS-only fallback in case a back SVG is absent before JS runs. */
+.site-page .page-back-button:empty::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-left: 3px solid #101c31;
+  border-bottom: 3px solid #101c31;
+  transform: rotate(45deg) translate(2px, -2px);
+}
+
+/* 4. Controls look like one product, rather than different page templates. */
+.site-page :is(.x-refresh-button,.button,.filter-reset) {
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 13px;
+  letter-spacing: -0.008em;
+}
+.site-page .x-refresh-button {
+  background: var(--xt-blue) !important;
+  border: 1px solid var(--xt-blue) !important;
+  color: #fff !important;
+  padding-inline: 18px;
+  box-shadow: none !important;
+}
+.site-page .x-refresh-button:hover:not(:disabled) {
+  background: #0054e4 !important;
+  border-color: #0054e4 !important;
+}
+.site-page .x-refresh-button:disabled { opacity: .73; cursor: progress; }
+.site-page :is(.select-control,.home-filter-select,.tracker-filter-sort) {
+  border-radius: 13px;
+}
+.site-page :is(.select-control select,.home-filter-select select) {
+  min-height: 44px;
+  font-weight: 800;
+}
+/* Keep feedback about failed refreshes, but do not repeat raw timestamps. */
+.site-page .x-refresh-time { display: none !important; }
+.site-page .x-refresh-status:empty { display: none !important; }
+.site-page .x-refresh-status { font-weight: 750 !important; }
+
+/* 5. Compact, aligned KPIs. Preserve existing data values and blue palette. */
+.site-page .daily-overview-metrics {
+  align-items: stretch;
+  gap: 12px !important;
+}
+.site-page .daily-overview-metrics .daily-metric {
+  border-radius: 16px !important;
+  min-height: 124px;
+  padding: 20px !important;
+  box-shadow: none !important;
+}
+.site-page .daily-overview-metrics .daily-metric-label {
+  color: #fff !important;
+  font-size: 12px;
+  font-weight: 800 !important;
+  letter-spacing: 0;
+}
+.site-page .daily-overview-metrics .daily-metric strong {
+  color: #fff !important;
+  font-weight: 900 !important;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+}
+.site-page .daily-overview-metrics .daily-metric small {
+  color: #fff !important;
+  font-weight: 750 !important;
+  opacity: .94;
+}
+
+/* 6. Sleek individual outlined rows: X RTs and Accounts (desktop).
+   No filled grey strips, no heavy alternating row backgrounds. */
+#page-x-rts .account-table-wrap,
+#page-accounts #accountTableWrap {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 2px 2px !important;
+}
+#page-x-rts .account-table,
+#page-accounts #accountTableWrap .account-table {
+  border-collapse: separate !important;
+  border-spacing: 0 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#page-x-rts .account-table thead th,
+#page-accounts #accountTableWrap .account-table thead th {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--xt-secondary) !important;
+  padding: 7px 12px 11px !important;
+  font-size: 11px !important;
+  line-height: 1.25;
+  font-weight: 800 !important;
+}
+#page-x-rts .account-table tbody tr,
+#page-accounts #accountTableWrap .account-table tbody tr {
+  background: #fff !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+#page-x-rts .account-table tbody tr > td,
+#page-accounts #accountTableWrap .account-table tbody tr > td {
+  background: #fff !important;
+  border-top: 1px solid var(--xt-stroke) !important;
+  border-bottom: 1px solid var(--xt-stroke) !important;
+  border-left: none !important;
+  border-right: none !important;
+  color: var(--xt-ink) !important;
+  padding: 17px 12px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.3;
+  vertical-align: middle;
+  transition: background-color .12s ease;
+}
+#page-x-rts .account-table tbody tr > td:first-child,
+#page-accounts #accountTableWrap .account-table tbody tr > td:first-child {
+  border-left: 1px solid var(--xt-stroke) !important;
+  border-radius: 14px 0 0 14px !important;
+  padding-left: 17px !important;
+  font-weight: 900 !important;
+}
+#page-x-rts .account-table tbody tr > td:last-child,
+#page-accounts #accountTableWrap .account-table tbody tr > td:last-child {
+  border-right: 1px solid var(--xt-stroke) !important;
+  border-radius: 0 14px 14px 0 !important;
+  padding-right: 17px !important;
+}
+#page-x-rts .account-table tbody tr:hover > td,
+#page-accounts #accountTableWrap .account-table tbody tr:hover > td {
+  background: var(--xt-hover) !important;
+}
+#page-x-rts .account-table tbody tr:focus-visible > td,
+#page-accounts #accountTableWrap .account-table tbody tr:focus-visible > td {
+  background: var(--xt-hover) !important;
+  border-color: #7dabff !important;
+}
+
+/* 7. Same outlined-card language for mobile cards and article placements. */
+.site-page .account-mobile-list .account-mobile-card {
+  border: 1px solid var(--xt-stroke) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: var(--xt-ink) !important;
+  margin-bottom: 10px;
+}
+.site-page .account-mobile-list .account-mobile-card:hover {
+  border-color: #a4c4fb !important;
+  background: #fafdff !important;
+}
+#page-placements .tracker-list .placement-shell {
+  overflow: hidden;
+  border: 1px solid var(--xt-stroke) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  margin-bottom: 10px;
+}
+#page-placements .tracker-list .placement-shell:hover {
+  border-color: #a4c4fb !important;
+}
+#page-placements .tracker-list .article-card.tracker-article {
+  background: #fff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 15px !important;
+  color: var(--xt-ink) !important;
+}
+#page-placements .tracker-list .article-card.tracker-article :is(.article-publisher,.article-kpi-value) {
+  color: var(--xt-ink) !important;
+}
+#page-placements .tracker-list .article-card.tracker-article .article-card-meta > span {
+  color: var(--xt-secondary) !important;
+}
+
+/* 8. OF Terms and GTA VI use the identical publisher-card visual system. */
+:is(#page-of,#page-gta-vi) .of-publisher-grid { gap: 14px !important; }
+:is(#page-of,#page-gta-vi) .of-publisher-entry { min-width: 0; }
+:is(#page-of,#page-gta-vi) .of-post-card {
+  border: 1px solid var(--xt-stroke) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  color: var(--xt-ink) !important;
+  box-shadow: none !important;
+  padding: 17px !important;
+  transition: border-color .13s ease, background .13s ease;
+}
+:is(#page-of,#page-gta-vi) .of-post-card:hover {
+  border-color: #9dbffe !important;
+  background: #fafdff !important;
+}
+:is(#page-of,#page-gta-vi) .of-post-card :is(.article-publisher,.article-kpi-value) {
+  color: var(--xt-ink) !important;
+}
+:is(#page-of,#page-gta-vi) .of-post-card .article-card-meta > span {
+  color: var(--xt-secondary) !important;
+}
+:is(#page-of,#page-gta-vi) .of-publisher-links .button {
+  border: 1px solid var(--xt-stroke) !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  color: var(--xt-ink) !important;
+  box-shadow: none !important;
+  min-height: 38px;
+  font-weight: 800 !important;
+}
+:is(#page-of,#page-gta-vi) .of-publisher-links .button:hover {
+  background: var(--xt-hover) !important;
+}
+:is(#page-of,#page-gta-vi) .daily-eyebrow { display: none !important; }
+:is(#page-of,#page-gta-vi) .of-publisher-entry .xt-internal-code,
+#page-placements .xt-internal-code { display: none !important; }
+
+/* 9. Data tables also use the same fine borders, not grey row fills. */
+:is(#page-of,#page-gta-vi) .of-daily-table .account-table,
+#page-stats .daily-totals-table {
+  border-collapse: separate !important;
+  border-spacing: 0 7px !important;
+  border: none !important;
+  background: transparent !important;
+}
+:is(#page-of,#page-gta-vi) .of-daily-table .account-table tbody tr > :is(td,th),
+#page-stats .daily-totals-table tbody tr > :is(td,th) {
+  background: #fff !important;
+  border-block: 1px solid var(--xt-stroke) !important;
+  color: var(--xt-ink) !important;
+  font-weight: 750 !important;
+  padding-block: 14px !important;
+}
+:is(#page-of,#page-gta-vi) .of-daily-table .account-table tbody tr > :first-child,
+#page-stats .daily-totals-table tbody tr > :first-child {
+  border-left: 1px solid var(--xt-stroke) !important;
+  border-radius: 12px 0 0 12px;
+}
+:is(#page-of,#page-gta-vi) .of-daily-table .account-table tbody tr > :last-child,
+#page-stats .daily-totals-table tbody tr > :last-child {
+  border-right: 1px solid var(--xt-stroke) !important;
+  border-radius: 0 12px 12px 0;
+}
+:is(#page-of,#page-gta-vi) .of-daily-table .account-table th,
+#page-stats .daily-totals-table th { color: var(--xt-secondary); font-weight: 800; }
+
+/* 10. Dashboard + Historical share the same metric sizing and bordered card feel. */
+#page-dashboard .home-top-kpis .kpi-card {
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+#page-dashboard .home-top-kpis :is(.kpi-label,.kpi-value) {
+  font-weight: 900 !important;
+}
+#page-dashboard .weekly-grid .article-card,
+#page-historical .historical-cards .article-card {
+  border: 1px solid var(--xt-stroke) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+#page-historical .historical-panel-heading p {
+  color: var(--xt-secondary) !important;
+  font-weight: 750 !important;
+}
+#page-historical .historical-control-label { display: none !important; }
+#page-historical .historical-week-kpi :is(span,strong) {
+  font-weight: 850 !important;
+}
+#page-historical .historical-week-kpi strong { font-weight: 900 !important; }
+
+/* 11. No grey skinny captions in white panels; chart labels stay legible. */
+.site-page :is(.empty-state,.loading-card,.daily-description,.daily-subtitle,.week-range,.tracker-filter-caption) {
+  color: #27354a !important;
+  font-weight: 700 !important;
+}
+.site-page :is(.account-table thead,.daily-totals-table thead) { background: transparent !important; }
+:is(#page-placements,#page-of,#page-gta-vi) .article-kpi-label { color: var(--xt-secondary) !important; font-size: 11px; font-weight: 800 !important; }
+:is(#page-placements,#page-of,#page-gta-vi) .article-kpi-value { font-size: clamp(16px, 1.2vw, 21px) !important; font-weight: 900 !important; }
+.site-page :is(.state-pill,.status-pill) { font-weight: 850 !important; }
+
+@media (max-width: 900px) {
+  #page-dashboard,#page-stats,#page-historical { padding-top: 27px !important; }
+  .site-page .page-intro { padding-bottom: 18px; }
+  .site-page .subpage-back-row { margin-bottom: 16px; }
+  .site-page .daily-overview-metrics .daily-metric { padding: 18px !important; }
+  .site-page .account-mobile-list .account-mobile-card { padding: 18px !important; }
+  :is(#page-of,#page-gta-vi) .of-publisher-grid { gap: 11px !important; }
+}
+@media (max-width: 480px) {
+  #page-dashboard,#page-stats,#page-historical { padding-top: 22px !important; }
+  .site-page .page-back-button { width: 48px; height: 48px; border-radius: 13px !important; }
+  .site-page .daily-overview-metrics .daily-metric { min-width: 0; }
+  .site-page .x-refresh-button { min-height: 42px; padding-inline: 13px; }
+  .site-page :is(h1,h2,h3) { letter-spacing: -.028em; }
+  :is(#page-of,#page-gta-vi) .of-post-card { padding: 14px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-page * { scroll-behavior: auto !important; transition-duration: 0s !important; }
+}
+
+/* 12. Unified sortable publisher tables (source cards remain for existing actions). */
+.site-page .xt-source-hidden {display:none !important}
+.site-page .xt-table-wrap {margin:7px 0 24px; max-width:100%; min-width:0; color:#0d1625}
+.site-page .xt-table-scroll {width:100%;max-width:100%;overflow-x:auto;overflow-y:visible;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-color:#a8bfdc transparent;
+  border-radius:13px;padding-bottom:5px;outline-offset:3px}
+.site-page .xt-data-table {width:100%;min-width:810px;border-collapse:separate;border-spacing:0 7px;
+  table-layout:auto;background:transparent!important;color:#0c1525!important}
+.site-page #campaignGrid + .xt-table-wrap .xt-data-table {min-width:800px}
+.site-page .xt-data-table thead th {background:transparent!important;border:0!important;
+  color:#27354a!important;white-space:nowrap;font-size:11px!important;font-weight:850!important;
+  padding:4px 11px 10px!important;letter-spacing:.01em}
+.site-page .xt-data-table thead th:first-child{text-align:left}
+.site-page .xt-data-table thead th:nth-child(2){text-align:left}
+.site-page .xt-data-table thead th:not(:first-child):not(:nth-child(2)){text-align:right}
+.site-page .xt-data-table .xt-sort-button,
+.site-page .account-table thead .xt-sort-button,
+.site-page .daily-totals-table thead .xt-sort-button {display:inline-flex;align-items:center;gap:6px;
+  cursor:pointer;border:0!important;background:none!important;color:inherit!important;
+  font:inherit!important;line-height:1.24;padding:1px 0!important;
+  box-shadow:none!important;min-height:0!important;border-radius:0!important;text-align:inherit}
+.site-page .xt-data-table th .xt-sort-button{width:100%;justify-content:flex-end}
+.site-page .xt-data-table th:first-child .xt-sort-button,
+.site-page .xt-data-table th:nth-child(2) .xt-sort-button{justify-content:flex-start}
+.site-page .xt-sort-th .xt-sort-button::after {content:'↕';font-size:12px;line-height:1;
+  color:#49617b;font-weight:900;opacity:.75}
+.site-page .xt-sort-th[aria-sort='ascending'] .xt-sort-button::after {content:'↑';color:#0757ef;opacity:1}
+.site-page .xt-sort-th[aria-sort='descending'] .xt-sort-button::after {content:'↓';color:#0757ef;opacity:1}
+.site-page .xt-data-table tbody tr.xt-record-row > td {background:#fff!important;
+  color:#101928!important;white-space:nowrap;font-size:12.5px!important;font-weight:800!important;
+  vertical-align:middle;padding:12px 11px!important;line-height:1.38;
+  border-top:1px solid #dce5f2!important;border-bottom:1px solid #dce5f2!important;
+  border-left:0!important;border-right:0!important;
+  transition:background-color .12s ease,border-color .12s ease}
+.site-page .xt-data-table tbody tr.xt-record-row > td:first-child{border-left:1px solid #dce5f2!important;
+  border-radius:12px 0 0 12px!important;padding-left:16px!important}
+.site-page .xt-data-table tbody tr.xt-record-row > td:last-child{border-right:1px solid #dce5f2!important;
+  border-radius:0 12px 12px 0!important;padding-right:16px!important}
+.site-page .xt-data-table tbody tr.xt-record-row:hover > td,
+.site-page .xt-data-table tbody tr.xt-record-row:focus-visible > td {background:#f2f7ff!important;
+  border-color:#a7c4f6!important}
+.site-page .xt-data-table .xt-number{text-align:right!important;font-variant-numeric:tabular-nums}
+.site-page .xt-data-table .xt-text{text-align:left!important}
+.site-page .xt-data-table .xt-account-name,.site-page .xt-data-table .xt-title-cell,
+.site-page .xt-data-table .xt-row-name {color:#071120!important;font-weight:900!important;font-size:13px}
+.site-page .xt-data-table .xt-account-subtitle {display:block;margin-top:3px;color:#3d4f68!important;
+  font-weight:750!important;font-size:10.5px;line-height:1.1}
+.site-page .xt-data-table .xt-cell-link{display:inline-block;color:#0756ec!important;font-size:12.5px;
+  text-decoration:underline;font-weight:850!important;white-space:nowrap}
+.site-page .xt-data-table .xt-cell-link:hover{text-decoration:underline}
+.site-page .xt-data-table .xt-row-name{background:none!important;border:0!important;
+  padding:0!important;min-height:0!important;line-height:1.3;text-align:left;cursor:pointer}
+.site-page .xt-data-table .xt-row-name:hover{color:#0756ec!important}
+.site-page .xt-data-table .xt-missing{color:#475b72!important;font-weight:750!important}
+.site-page .xt-data-table .xt-state {display:inline-flex;align-items:center;white-space:nowrap;
+  border-radius:7px;padding:5px 8px;background:#ecf2f9;color:#0b2039;font-size:10px;font-weight:900!important}
+.site-page .xt-data-table .xt-state-posted{background:#e7f5ea;color:#12572a}
+.site-page .xt-data-table .xt-select-cell,
+.site-page .xt-data-table .xt-select-col {width:28px;max-width:28px;text-align:center!important}
+.site-page .xt-data-table .xt-row-select{width:16px;height:16px;accent-color:#0756ec;cursor:pointer}
+.site-page .xt-data-table tr.xt-row-open{cursor:pointer}
+.site-page .xt-data-table tr.xt-detail-row > td{background:#fff;border:1px solid #dce5f2;
+  padding:17px!important;border-radius:12px}
+.site-page .xt-data-table .xt-cloned-expansion{display:block!important;padding:3px!important}
+.site-page .xt-data-table .xt-cloned-expansion .campaign-entry {background:#fff!important;
+  border:1px solid #dce5f2!important;border-radius:10px!important;margin-bottom:7px!important}
+.site-page .xt-data-table .xt-empty{text-align:center;color:#253854!important;font-weight:750!important;
+  background:#fff;padding:25px;border:1px solid #dce5f2;border-radius:12px}
+.site-page .xt-search {display:flex;max-width:340px;margin-bottom:10px}
+.site-page .xt-search input {width:100%;height:42px;min-height:42px;border:1px solid #dce5f2!important;
+  border-radius:11px!important;background:#fff;padding:0 14px!important;
+  font-family:inherit;font-size:13px;font-weight:750!important;color:#111a2a!important;
+  box-shadow:none!important}
+.site-page .xt-search input::placeholder{color:#43546e!important;opacity:1}
+.site-page .xt-search input:focus-visible {outline:2px solid #8ab3ff;outline-offset:1px}
+.site-page .xt-visually-hidden {position:absolute;width:1px;height:1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap}
+/* Full source rows remain in the live DOM for bulk selection, existing detail modals,
+   tracking data, and app rerendering. Only their presentation is replaced. */
+
+/* 13. Make original data tables sortable and readable on phone as well as desktop. */
+#page-accounts #accountTableWrap,
+#page-x-rts .account-table-wrap {display:block!important;overflow-x:auto!important;max-width:100%;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-color:#a8bfdc transparent}
+#page-accounts #accountTableWrap .account-table,
+#page-x-rts .account-table-wrap .account-table {min-width:820px!important}
+#page-x-rts .account-table-wrap .account-table {min-width:1030px!important}
+#page-accounts #accountMobileList,
+#page-x-rts #boostMobile {display:none!important}
+#page-x-rts .xt-original-links {display:flex;gap:11px;margin-top:4px;white-space:nowrap}
+#page-x-rts .xt-original-links .xt-cell-link {font-size:10.5px;color:#0756ec!important;
+  font-weight:850!important;text-decoration:underline}
+#page-x-rts .xt-original-links .xt-cell-link:hover{text-decoration:underline}
+#page-accounts .account-table td,
+#page-x-rts .account-table td{font-size:12px!important;padding:11px 12px!important;color:#101928!important}
+#page-accounts .account-table tbody tr,
+#page-x-rts .account-table tbody tr{cursor:pointer}
+#page-accounts .account-table tbody tr:hover > td,
+#page-x-rts .account-table tbody tr:hover > td {background:#f2f7ff!important}
+
+/* 14. Compact KPIs: roughly 15-20% smaller than the original large dashboard cards. */
+#page-dashboard .home-top-kpis {gap:12px!important}
+#page-dashboard .home-top-kpis .kpi-card {padding:18px!important;min-height:136px!important;
+  border-radius:15px!important}
+#page-dashboard .home-top-kpis .kpi-card .kpi-label {font-size:11px!important;font-weight:850!important}
+#page-dashboard .home-top-kpis .kpi-card .kpi-value {font-size:clamp(26px,2.35vw,40px)!important;
+  font-weight:900!important;line-height:1.1!important;letter-spacing:-.035em!important}
+#page-dashboard .home-top-kpis .kpi-card .kpi-icon {transform:scale(.83);transform-origin:top right}
+.site-page .daily-overview-metrics {gap:10px!important}
+.site-page .daily-overview-metrics .daily-metric {min-height:104px!important;
+  padding:15px 17px!important;border-radius:15px!important}
+.site-page .daily-overview-metrics .daily-metric strong{font-size:clamp(27px,2.5vw,40px)!important}
+.site-page .daily-overview-metrics .daily-metric small {font-size:10.5px!important;line-height:1.25}
+.site-page .daily-overview-metrics .daily-metric-label {font-size:11px!important}
+.site-page :is(.historical-week-kpi,.daily-graph-card,.daily-overview){border-radius:15px}
+.site-page :is(.page-intro.compact-intro,.refresh-page-intro){padding-bottom:17px!important}
+.site-page .subpage-back-row {margin-bottom:11px!important}
+.site-page .result-line{padding-top:8px!important;margin-bottom:11px!important}
+.site-page :is(h1,h2,h3){letter-spacing:-.035em;font-weight:900!important}
+.site-page h1 {font-size:clamp(28px,2.8vw,42px)!important}
+.site-page h2 {font-size:clamp(19px,1.65vw,26px)!important}
+.site-page :is(.daily-eyebrow,.historical-control-label){display:none!important}
+.site-page :is(.daily-subtitle,.daily-description,.empty-state,.of-last-click,
+  .historical-week-name small,.account-table thead th){color:#27354a!important;font-weight:750!important}
+.site-page .of-last-click {font-size:11px!important}
+.site-page .xt-table-wrap + .of-publisher-section{margin-top:14px}
+#page-gta-vi .xt-table-wrap .xt-account-subtitle{color:#000!important}
+
+/* Black report copy on neutral surfaces; retain the coloured KPI treatments. */
+:root body #mainContent #page-gta-vi {
+  --text:#000;
+  --secondary:#000;
+  --muted:#000;
+  --muted-text:#000;
+  --xt-ink:#000;
+  --xt-secondary:#000;
+  color:#000;
+}
+:root body #mainContent #page-gta-vi :is(
+  h1,h2,h3,.page-intro p,.section-count,.of-last-click,
+  .x-refresh-time,.x-refresh-status:not(.is-success):not(.is-error),
+  .xt-table-wrap,.xt-data-table,.xt-data-table th,.xt-data-table td,
+  .xt-account-name,.xt-account-subtitle,.xt-missing,.xt-empty,
+  .xt-search input,.loading-card,.empty-state
+) {
+  color:#000!important;
+  -webkit-text-fill-color:#000!important;
+}
+:root body #mainContent #page-gta-vi .xt-search input::placeholder {
+  color:#000!important;
+  -webkit-text-fill-color:#000!important;
+  opacity:1;
+}
+:root body #mainContent #page-gta-vi .xt-sort-button::after {
+  color:#000;
+  opacity:1;
+}
+
+@media(max-width:800px){
+  .site-page .xt-table-wrap{margin-top:5px;margin-bottom:18px}
+  .site-page .xt-table-scroll {border-radius:10px;padding-bottom:8px}
+  .site-page .xt-data-table {min-width:815px}
+  .site-page .daily-overview-metrics .daily-metric {padding:14px!important;min-height:100px!important}
+  #page-dashboard .home-top-kpis .kpi-card {padding:16px!important;min-height:120px!important}
+  .site-page .page-intro.compact-intro {padding-bottom:14px!important}
+}
+@media(max-width:480px){
+  #page-dashboard .home-top-kpis .kpi-card{min-height:105px!important;padding:13px!important}
+  #page-dashboard .home-top-kpis .kpi-card .kpi-value{font-size:27px!important}
+  .site-page .daily-overview-metrics .daily-metric{min-height:94px!important;padding:13px!important}
+  .site-page .daily-overview-metrics .daily-metric strong{font-size:28px!important}
+  .site-page h1{font-size:31px!important}
+  .site-page .xt-data-table tbody tr.xt-record-row > td{font-size:12px!important;padding:11px 9px!important}
+  .site-page .xt-search{max-width:100%}
+}
+
+/* Solid neon-yellow engagement summary, sized to match the other report KPIs. */
+:root body #mainContent :is(#gtaMetrics,#boostKpis) {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+:root body #mainContent .daily-overview-metrics .daily-metric-interactions {
+  background:#ffff00!important;
+  color:#0d1625!important;
+  border:1px solid #ffff00!important;
+  box-shadow:none!important;
+}
+:root body #mainContent .daily-metric-interactions :is(.daily-metric-label,strong,small) {
+  color:#0d1625!important;
+  -webkit-text-fill-color:#0d1625!important;
+}
+@media(max-width:1000px){
+  :root body #mainContent :is(#gtaMetrics,#boostKpis) {grid-template-columns:repeat(2,minmax(0,1fr));}
+  :root body #mainContent :is(#gtaMetrics,#boostKpis) > .daily-metric:last-child {grid-column:auto;}
+}
+@media(max-width:420px){
+  :root body #mainContent :is(#gtaMetrics,#boostKpis) {grid-template-columns:minmax(0,1fr);}
+}
+
+/* Dashboard headlines use the report tile proportions, one small step larger. */
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis {
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:auto!important;
+  grid-template-areas:"spend clicks live"!important;
+  height:auto!important;
+  min-height:0!important;
+  gap:12px!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-card {
+  grid-column:auto!important;
+  grid-row:auto!important;
+  height:auto!important;
+  min-height:118px!important;
+  padding:18px 20px!important;
+  gap:7px!important;
+  border-radius:15px!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-card .kpi-value {
+  font-size:clamp(30px,2.7vw,42px)!important;
+  line-height:1.1!important;
+  letter-spacing:-.035em!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-label {
+  font-size:12px!important;
+  line-height:1.25!important;
+  white-space:normal!important;
+}
+@media(max-width:760px){
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-rows:auto auto!important;
+    grid-template-areas:"spend spend" "clicks live"!important;
+    gap:10px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-card {
+    min-height:108px!important;
+    padding:16px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard #dashboardKpis.home-top-kpis .kpi-card .kpi-value {
+    font-size:clamp(30px,7.5vw,38px)!important;
+  }
+}
+
+/* Both campaign reports use the same controls, including mobile overrides. */
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-links {
+  display:flex;flex-wrap:wrap;gap:8px!important;margin-top:10px;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-links .button {
+  box-sizing:border-box;display:inline-flex!important;align-items:center;justify-content:center;
+  flex:0 1 auto;min-height:38px!important;padding:8px 12px!important;
+  border-radius:11px!important;font-size:12px;line-height:1.35;
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-section {margin-bottom:32px;}
+:root body #mainContent :is(#page-of,#page-gta-vi) .of-last-click {
+  margin:12px 0 0;font-size:12px;font-weight:700;line-height:1.5;color:var(--secondary);
+}
+@media(max-width:760px){
+  :root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-grid {grid-template-columns:1fr;}
+  :root body #mainContent :is(#page-of,#page-gta-vi) .of-publisher-links .button {
+    min-height:44px!important;flex:1 1 auto;
+  }
+}
+
+/* Keep every table link distinct from black report copy, including visited links. */
+:root body #mainContent .site-page :is(table a[href],table a[href] *,table button.xt-row-name) {
+  color:#0055ff!important;
+  -webkit-text-fill-color:#0055ff!important;
+  text-decoration:underline!important;
+  text-underline-offset:2px;
+}
+
+/* Constrain campaign tables to their report; scroll only the table on phones. */
+:is(#page-gta-vi,#page-of) :is([id$="Publishers"],.of-publisher-section,.xt-table-wrap){min-width:0;max-width:100%;}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table{
+  table-layout:fixed;width:100%;min-width:820px;
+}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table thead th{
+  white-space:normal;padding:4px 6px 10px!important;
+}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table th .xt-sort-button{
+  white-space:normal;gap:3px;
+}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table tbody tr.xt-record-row > td{
+  padding:11px 6px!important;white-space:nowrap;
+}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table tbody tr.xt-record-row > td:first-child{padding-left:12px!important;}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table tbody tr.xt-record-row > td:last-child{padding-right:12px!important;}
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table .xt-account-name{white-space:normal;overflow-wrap:anywhere;}
+
+/* Names may wrap; metric values remain complete on one line. */
+.site-page :is(#gtaPublishers,#ofPublishers) .xt-data-table tbody tr.xt-record-row > td:first-child{white-space:normal;overflow-wrap:anywhere;}

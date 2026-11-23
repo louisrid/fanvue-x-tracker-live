@@ -1,0 +1,43 @@
+{
+  "targeted": {
+    "tests": 30,
+    "passed": 30
+  },
+  "regression": {
+    "tests": 106,
+    "passed": 82,
+    "failed": 24
+  },
+  "productionBaseline": {
+    "tests": 105,
+    "passed": 81,
+    "failed": 24
+  },
+  "newFailures": [],
+  "existingFailures": [
+    "older published articles use thick red orange gradient frames with white centres on every page",
+    "article status logic retains NEW before 48 hours and aged after",
+    "Projected is seven times VERIFIED today clicks and withholds unavailable estimates",
+    "All article cards have white fill and a shared vivid pink-red border with white click badge",
+    "Larger publisher names and Views / Likes retain mobile protections",
+    "Week 2 daily totals use only selected placement codes from 26 October",
+    "Week 2 hourly buckets count genuine timestamps from 26 October",
+    "Without timestamped event history, never invent hourly clicks from daily totals",
+    "Graph is a smooth red–orange SVG, uses hourly buckets and renders sharply at mobile widths",
+    "Equivalised Spend totals only Paid and Posted Week 2 articles",
+    "Equivalised Spend divides total costs by SEVEN days, not by article count",
+    "Equivalised Spend counts scoped publishers and shows zero with no eligible articles",
+    "current campaign week comes from the fixed London start, including the DST change",
+    "campaign weeks follow the Sheet tabs and real UK click dates",
+    "future weeks appear automatically and the UK DST change keeps the boundary correct",
+    "release cache keys and server UI version match",
+    "dashboard rolling clicks uses exact 168-hour event timestamps, not Monday start",
+    "article cards use one gradient border and keep the NEW badge legible",
+    "Unposted cards retain pink border and posted cards receive green border",
+    "NEW! is a tiny accent only, while data and recency logic remain intact",
+    "frontend API and package versions match",
+    "Likes recorded cards exclusively use saturated green and white foreground",
+    "black headings with exactly blue heading accent styled across pages",
+    "all historic source records, payment statuses, and publisher tracking references remain external"
+  ]
+}

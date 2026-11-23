@@ -1,0 +1,52 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {readGtaXMetric,gtaMetricStatus} from '../netlify/lib/gta-x-metrics.mjs';
+import {refreshGtaMetrics,groupReport} from '../netlify/functions/gta-report.mjs';
+const post={handle:'publisher',id:'1234'};
+const valid=()=>Response.json({tweet:{id:post.id,views:123,likes:10,retweets:2,replies:1}});
+const row={campaign:'GTA1',sourceTab:'X Accounts 12 (GTA)',publisher:'Publisher',posted:true,postUrl:'https://x.com/publisher/status/1234'};
+const saved={views:100,likes:8,reposts:2,replies:1,at:'2026-11-19T10:00:00.000Z'};
+const state={metrics:{1234:saved},history:[{id:'1234',bucket:1,at:'2025-11-19T10:00:00.000Z',views:100}],lastSuccessfulAt:saved.at};
+const storage=initial=>{let data=structuredClone(initial);return {get:async()=>data,setJSON:async(k,v)=>{data=v;},value:()=>data};};
+test('404 and 403 stay classified failures without repeated requests',async()=>{
+ for(const [status,category] of [[404,'not_found'],[403,'access_denied']]){let calls=0;await assert.rejects(readGtaXMetric(post,{fetcher:async()=>{calls++;return new Response('',{status});}}),e=>e.category===category);assert.equal(calls,1);}
+});
+test('retries timeout and 503 with bounded backoff, then verifies all metrics',async()=>{
+ let calls=0;const waits=[];const m=await readGtaXMetric(post,{fetcher:async()=>{calls++;if(calls===1)throw new DOMException('timeout','TimeoutError');if(calls===2)return new Response('',{status:503});return valid();},sleep:async ms=>waits.push(ms)});
+ assert.equal(m.views,123);assert.equal(calls,3);assert.deepEqual(waits,[300,600]);
+});
+test('honours short rate limits and stops on long cooldowns',async()=>{
+ for(const delay of [1,60]){let calls=0;const waits=[];const pending=readGtaXMetric(post,{fetcher:async()=>++calls===1?new Response('',{status:429,headers:{'retry-after':String(delay)}}):valid(),sleep:async ms=>waits.push(ms)});
+ if(delay===1){await pending;assert.deepEqual(waits,[1000]);assert.equal(calls,2);}else{await assert.rejects(pending,e=>e.category==='rate_limit');assert.equal(calls,1);assert.deepEqual(waits,[]);}}
+});
+test('missing fields and mismatched post identities cannot become successful readings',async()=>{
+ for(const tweet of [{id:'999',views:10},{id:post.id,views:10,likes:1,replies:0}])await assert.rejects(readGtaXMetric(post,{fetcher:async()=>Response.json({tweet})}),e=>e.category==='missing_data');
+});
+test('refresh retains verified metrics, timestamps and history on 404; deduplicates Sheet posts',async()=>{
+ const store=storage(state);let calls=0;
+ const result=await refreshGtaMetrics({storage:store,readSource:async()=>({rows:[row,{...row,publisher:'Second placement'}]}),fetcher:async()=>{calls++;return new Response('',{status:404});},readReport:async()=>({shortIo:{errors:0},originals:{shortIo:{errors:0}}})});
+ assert.equal(calls,1);assert.equal(result.total,1);assert.equal(result.updated,0);assert.equal(result.refreshed,false);
+ assert.equal(store.value().metrics['1234'].views,100);assert.equal(store.value().metrics['1234'].at,saved.at);assert.equal(store.value().lastSuccessfulAt,saved.at);assert.deepEqual(store.value().history,state.history);assert.equal(store.value().errors[0].category,'not_found');
+});
+test('suspicious zeros preserve previous readings and remain errors',async()=>{
+ const store=storage(state);await refreshGtaMetrics({storage:store,readSource:async()=>({rows:[row]}),fetcher:async()=>Response.json({tweet:{id:post.id,views:0,likes:0,retweets:0,replies:0}}),readReport:async()=>({shortIo:{errors:0},originals:{shortIo:{errors:0}}})});assert.equal(store.value().metrics['1234'].views,100);assert.equal(store.value().errors[0].category,'suspect_regression');
+});
+test('tab statuses exclude other tabs and removed records, retain errors without saved values',async()=>{
+ const metric={metrics:{1234:{...saved,error:'HTTP 404'},5678:{error:'HTTP 404',errorCategory:'not_found'},removed:{error:'old error'}}};
+ const rows=[row,{...row,postUrl:'https://x.com/other/status/5678'}];const status=gtaMetricStatus(rows,metric);
+ assert.deepEqual([status.total,status.updated,status.verified,status.retained,status.unverified,status.errors.length],[2,0,1,1,1,2]);assert.equal(gtaMetricStatus([],metric).errors.length,0);
+ const report=await groupReport({rows,source:'GOOGLE_SHEETS_LIVE'},metric,{clickOptions:{store:storage(null)}});
+ assert.equal(report.publishers[1].metricAt,null);assert.equal(report.publishers[1].metricError,'HTTP 404');assert.equal(report.publishers[0].views,100);
+});
+test('browser reports the selected tab counts and shows unresolved source failures',()=>{
+ const app=readFileSync('public/app.js','utf8'),context=vm.createContext({});vm.runInContext(app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaReport(')),context);
+ const result=context.gtaSourceStatus({xStatus:{updated:18,total:22,retained:1,unverified:3,errors:[{}]},shortIo:{refreshed:0,linkCount:0}});assert.equal(result.failed,true);assert.match(result.text,/18 of 22 posts/);assert.match(result.text,/1 saved X readings retained; 3 X posts unverified/);
+});
+
+test('cache read failures abort without requesting providers or writing an empty snapshot',async()=>{
+ let writes=0,calls=0;
+ await assert.rejects(refreshGtaMetrics({storage:{get:async()=>{throw Error('storage unavailable');},setJSON:async()=>writes++},fetcher:async()=>{calls++;return valid();}}),/storage unavailable/);
+ assert.equal(writes,0);assert.equal(calls,0);
+});

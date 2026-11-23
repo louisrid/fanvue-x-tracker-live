@@ -1,0 +1,287 @@
+{
+  "package_version": "5.0.32",
+  "distributed_filename": "X_Tracker_MASTER_2026-10-17_v4.7.0.zip",
+  "site_url": "https://elegant-swan-98c20a.netlify.app",
+  "site_id": "3cfe75c9-5913-46a0-953f-eeae1a288a52",
+  "source_base": "Complete recovered v5.0.31 source ZIP, then frontend-only v5.0.32 design+Projected update; site still requires production comparison before deployment.",
+  "google_sheet_id": "1iaKTKoGf58i9uH5sT23r6vxX5XYVx3VfS8fLp-8xRbM",
+  "refresh": {
+    "sheet_cache_seconds": 45,
+    "dashboard_poll_seconds": 60,
+    "x_metrics_schedule_hours": 2
+  },
+  "navigation": [
+    "Dashboard",
+    "Key Stats",
+    "Historical"
+  ],
+  "key_stats": {
+    "layout": "Replaced entire former Key Stats page with moved Daily Breakdown from Dashboard",
+    "sections": [
+      "Daily breakdown title and LIVE data badge",
+      "Three Daily Breakdown KPI columns: red UTM clicks today, purple 7-day clicks stacked under slim black Projected card, blue Equivalised Spend",
+      "168-hour verified UTM-clicks chart with real event timestamps",
+      "Last seven calendar dates daily totals table",
+      "Large blank white space below"
+    ],
+    "hourly_source": "Read-only existing /.netlify/functions/events CSV; no tracking URLs requested; no click events written",
+    "rolling_window": "Last 168 completed/current UTC hourly buckets, labelled by UK calendar days; today latest on right",
+    "unavailable_behaviour": "Show unavailable message instead of fabricating per-hour clicks",
+    "projected_metric": "Live UTM clicks today multiplied by seven; N/A when today is unverified, label makes clear this is projection and not observed traffic"
+  },
+  "historical": {
+    "source": "Google Sheets WEEK N - OWNER tabs, dynamically discovered when headers are ready",
+    "initially_collapsed": true,
+    "campaign_badges": "named campaign when assigned; otherwise tracking prefix A01 etc",
+    "summary_cards": [
+      "Live articles",
+      "Paid total",
+      "UTM clicks",
+      "Views recorded",
+      "Likes recorded"
+    ],
+    "weekly_clicks": "Recorded dated events for selected source week, not lifetime per-code clicks",
+    "x_metrics": "Most recent observation available on/before historical week end; display unavailable when missing",
+    "paid_cards": "All paid Historical placements use the existing pink source gradient; unpaid published posts remain white.",
+    "retains_inactive": true,
+    "excludes": "Unpaid and unposted Planned drafts. Groups composed exclusively of drafts are hidden.",
+    "included": "All published posts plus paid Scheduled placements, including later-inactive posts; week summaries reflect included placements.",
+    "weekly_kpi_colours": "Live articles uses the same vivid pink gradient as Dashboard. Paid total uses the same blue-to-navy gradient. Both use the same faded sparkle tile and white text."
+  },
+  "functions_included": [
+    "admin.mjs",
+    "dashboard.mjs",
+    "events.mjs",
+    "health.mjs",
+    "metrics.mjs",
+    "redirect.mjs",
+    "refresh-x-metrics.mjs",
+    "resolve.mjs"
+  ],
+  "backend_modified": [
+    "netlify/functions/dashboard.mjs: UI version string updated to 5.0.32 only; no data, storage or tracking logic changed"
+  ],
+  "function_tracking_storage_changed": false,
+  "approved_click_cutoff": "2026-10-17T00:32:36.000Z",
+  "test_results": {
+    "utm3_and_preserved_safety_tests": "18 passed with Node built-in test runner",
+    "browser": "Chromium test using mock verified click activity and FX: projected 441 for 63 clicks today; desktop article/KPI width match; 0 horizontal overflow at 6 widths, graph/table preserved.",
+    "legacy_tests": "Old suite contains obsolete assumptions about deleted filters, clicks-first defaults and pre-4.9.2 version checks; left intact under test:legacy (legacy suite currently not green).",
+    "dependency_limited": "Production credentials/build and live backend source differences are not verified by local tests; keep 8 functions and all env vars. No production publish performed.",
+    "maintained_suite": "44 tests passed (including new v5.0.32 regressions), plus Chromium verified 320/390/768/1100/1440/1920 layouts"
+  },
+  "deploy": {
+    "deployed": false,
+    "requires_existing_site": true,
+    "no_github_or_new_netlify_site": true,
+    "next_action": "Back up latest production full source, merge any newer backend changes, build all eight Functions, use existing-site Deploys drag-and-drop only if full source and Functions deploy correctly; do not click redirects.",
+    "latest_verified_production": "6ad61a3103957482d14f77f3 v5.0.26 Netlify existing project"
+  },
+  "file_sha256": {
+    "public/app.js": "2dfa71fca73cd819118f40f394893e8d70576f9ae58c65fb13597080cdcb23d5",
+    "public/styles.css": "f546dc323e0a801fa61b43231739b89d960d49c8d0fa6162149217033f88c701",
+    "public/index.html": "c5ddb8bb1333a28d92439d60b4cd68eb769438fd2cf52a05a4dbd97151f2d757",
+    "public/click-preferences.html": "b7e2b29702e3c6c7bea225b6ee916dacfe0592ae872f980809bd73417730e238",
+    "netlify/functions/dashboard.mjs": "66b69a0c57f1790fbf8c919e070885504856aa4714a73c7ea535b1c6fd8d2a58",
+    "netlify/lib/sheet-source.mjs": "8eae4d261b3d6fb027ee7ba9a78e0c553d73e3772ad5cf2a68291e4fe9c0a1e6",
+    "netlify.toml": "001eee58212de31146985f07b1bb79712b3a6de81d4311611cf8f6793f13109d",
+    "package.json": "bb2a19dd81ccfcebc839ab4485b8c6656a2bb5b2fcaa890b3e3b78f38e47a829",
+    "package-lock.json": "26dcafb31b2f6f56582ba6212ef344b83062cabe1529bf2a683b00e292fea770"
+  },
+  "visual_484": {
+    "gradient": "vivid magenta -> pink -> coral -> orange",
+    "blue_card": "same money gradient on both Key Stats blue cards",
+    "sparkle_tile": "178x146px; 4 faded dots per tile, opacity 0.25 consistent across all coloured cards",
+    "initial_loading": "spinner for initial KPI and weekly chart fetch; unavailable values retain dash after failed/complete fetch"
+  },
+  "desktop_article_layout": {
+    "homepage_live": "Same centred 1120px width as Dashboard KPI; live articles have compact left publisher/meta and right white UTM badge + bold Views/Likes",
+    "homepage_scheduled": "Existing scheduled article styling kept",
+    "historical": "Existing white centre gradient frame of aged articles preserved",
+    "mobile": "2-column compact design verified 320/390px with no overflow"
+  },
+  "home_scheduled_heading": "Scheduled.",
+  "visual_485": {
+    "gradient": "pink-forward: #ff0b9e -> #ff3494 -> #ff576d -> narrow #ff9746 orange tail",
+    "sparkle_layer": "identical to v4.8.4",
+    "coloured_kpis": "unchanged blue/charcoal; live pink gradient shares same variable",
+    "screen_widths_checked": [
+      320,
+      390,
+      768,
+      1024,
+      1440
+    ]
+  },
+  "visual_486": {
+    "views_gradient": "purple, #a84afa through #511c9a; white text",
+    "likes_gradient": "yellow, #ffe77a through #f4a51c; accessible dark text",
+    "coloured_sparkles": "existing shared faded tile, 0.25 opacity; also on paid history cards",
+    "week_summary": "five figures before the visible published and paid-scheduled placements in each open Historical source week",
+    "excluded_click_controls": "link hidden; direct page and existing cookie logic preserved",
+    "account_comparison": "public CTA hidden, route inaccessible, compatibility internals retained",
+    "back_controls": "small padded buttons with SVG arrows"
+  },
+  "campaigns_487": {
+    "qualifies": "At least one paid and genuinely published X article",
+    "grouping": "Explicit Sheet campaign name/ID when assigned, else real attribution prefix A01/A02, never invented",
+    "display": "One blue-to-navy, sparkled details accordion per qualifying group, collapsed by default",
+    "expanded": [
+      "Published article count",
+      "Paid total",
+      "Lifetime verified UTM clicks",
+      "Latest recorded X views",
+      "Click-ranked published/paid placements and their detail controls"
+    ],
+    "hidden": "Inactive campaigns without qualifying paid published articles, empty campaigns and new-campaign button"
+  },
+  "historical_487": {
+    "keeps": "Default-collapsed weekly cohorts with five period-specific KPIs, excluding unpaid unpublished drafts",
+    "display": "White accordions; pink Live articles and blue Paid total summary cards with consistent faded sparkles; paid article cards pink, unpaid published cards white",
+    "complete_placements": false
+  },
+  "copy_487": {
+    "visible_em_dashes_remaining": 0,
+    "missing_metrics": "N/A, with existing initial loading spinners preserved"
+  },
+  "copy_488": {
+    "em_dash_remaining": 0,
+    "en_dash_remaining": 0,
+    "site_source_scanned": [
+      "public/app.js",
+      "public/index.html",
+      "public/styles.css",
+      "public/click-preferences.html",
+      "netlify/functions/dashboard.mjs"
+    ],
+    "date_labels": "Week ranges use plain `to`, account sorting says Account A to Z"
+  },
+  "historical_488": {
+    "exclude_unpaid_unposted_drafts": true,
+    "keep_paid_scheduled": true,
+    "keep_published_regardless_of_paid_or_active": true,
+    "empty_draft_only_weeks_hidden": true,
+    "per_week_header_count_matches_shown_records": true,
+    "colours": "Matching Dashboard pink and blue on first two Historical summary cards; remaining three neutral with category accent",
+    "sparkles": "Same shared background tile, tile size and 0.25 opacity as all coloured cards"
+  },
+  "stats_chart_488": {
+    "click_chart_date_label_gap_px": 16,
+    "click_chart_bottom_margin_px": 27,
+    "mobile_and_desktop_tested": true
+  },
+  "typography_489": {
+    "headings": "Primary and visible section/chart headings and KPI labels end with full stops. Black on white surfaces, existing accessible contrasts on coloured cards.",
+    "backend_changed": "Dashboard UI version only"
+  },
+  "wordmark_490": {
+    "text": "X TRACKER",
+    "font": "Unbounded (OFL) Google Fonts with system fallback",
+    "demo_fonts_bundled": false,
+    "alignment": "centred",
+    "blur": "subtle CSS shadow",
+    "max_growth_percent": 10,
+    "previous_baseline_px": {
+      "desktop": 32,
+      "mobile": 30,
+      "narrow": 29
+    },
+    "new_size_px": {
+      "desktop": 35,
+      "mobile": 33,
+      "narrow": 31
+    },
+    "browser_verified_widths": [
+      320,
+      390,
+      768,
+      1440
+    ]
+  },
+  "sheet_live_updates": {
+    "weekly_tabs": [
+      "WEEK 1 - LOUIS",
+      "WEEK 1 - CONNOR",
+      "WEEK X - TEMP"
+    ],
+    "added_fields": {
+      "W7": "CAMPAIGN",
+      "X7": "PAID DATE"
+    },
+    "assigned_range": "WEEK 1 - LOUIS!W8:W15",
+    "assigned_campaign_id": "C002",
+    "verified_paid_dates_added": 0,
+    "no_guessed_dates": true,
+    "production_api_campaign_assignment_verified": true
+  },
+  "backend_parser": {
+    "reads": "CAMPAIGN and PAID DATE columns by header on any compatible weekly tab",
+    "campaign_precedence": "weekly column, else legacy PROMO META, else UNASSIGNED",
+    "payment_date_precedence": "weekly PAID DATE, else legacy PROMO META, else blank",
+    "estimated_spend": "fallback when payment dates unavailable; not presented as verified monthly spend"
+  },
+  "utm3_changes": [
+    "Green and white Likes Recorded on Key Stats and Historical",
+    "Exactly 48h fresh badge with accurate X snowflake timestamp validation; subtle older pink gradient and periodic in-page re-render",
+    "Removed homepage Search Articles, Recent 7 Days, All Articles controls; retired Article Tracker equivalent search/article filter also removed",
+    "Sort By first on Dashboard, Key Stats, Historical, Campaigns, Accounts, retired Tracker, exactly five shared ordered options with recent default",
+    "All static and dynamic page headings black with unmistakably blue one full stop"
+  ],
+  "production_deployed": false,
+  "current_update": {
+    "source_build": "5.0.30",
+    "date": "2026-10-19",
+    "changes": [
+      "Dashboard API uiVersion mismatch no longer forces repeated navigation",
+      "Daily verified KPI data no longer await hourly events endpoint",
+      "Preload spend tile never claims 0 verified articles without data",
+      "Secondary validated daily USD to GBP FX rate endpoint for resilient exchange rate refresh"
+    ],
+    "maintained_tests_passed": 38,
+    "backend_tracking_logic_changed": false,
+    "publication_status": "NOT DEPLOYED; compare complete latest production before publishing"
+  },
+  "dashboard_5028": {
+    "starts_with": "This week, then original campaign KPI section",
+    "removed": [
+      "Daily Breakdown section (moved to Key Stats)",
+      "Performance section and comparison chart"
+    ],
+    "reorder": "Headline figures always first, remaining sections preserve relative saved order"
+  },
+  "equivalised_spend_5029": {
+    "label": "Equivalised Spend",
+    "currency": "GBP",
+    "source_currency": "USD",
+    "formula": "SUM(cost_USD for Paid && Posted placements posted within today and previous 6 UK calendar days) * GBP_per_USD / 7",
+    "fx_source": "Frankfurter USD to GBP daily rate",
+    "refresh_fx_hours": 24,
+    "refresh_data_seconds": 60,
+    "date_scope": "UK time, rolling 7 calendar days",
+    "paidAt_required": false,
+    "no_eligible_spend": "£0.00",
+    "fx_unavailable": "£—"
+  },
+  "live_data_5030": {
+    "reported_live_api_uiVersion": "5.0.27",
+    "reported_live_api_verified_clicks": 75,
+    "reported_live_api_qualifying_paid_posted_articles": 6,
+    "reported_live_api_qualifying_cost_usd": 890,
+    "warning": "read-only observation; not hardcoded into app",
+    "regression_tests": 3,
+    "browser_viewports": [
+      390,
+      1440
+    ]
+  },
+  "design_release_5032": {
+    "summary": "Pending unapplied article redesign + projected daily KPI consolidated",
+    "publisher_name": "increased to 25-30px desktop, 20-25px phone",
+    "click_badge": "taller compact pure white pill; icy-blue gradient number",
+    "article_new_gradient": "identical CSS variable --xtracker-live-gradient as top-right Live Articles KPI",
+    "article_aged_gradient": "white centre with thick red-orange gradient sparkle border",
+    "view_likes": "large bold balanced metrics under UTM badge",
+    "projected": "black short card above compressed purple clicks tile with 10px gap and same column height as red and blue tiles",
+    "frontend_version": "5.0.32"
+  }
+}

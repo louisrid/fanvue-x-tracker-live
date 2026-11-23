@@ -1,0 +1,68 @@
+{
+  "qrts": {
+    "sheet": {
+      "totalSpend": 1940,
+      "paidSpend": 1840,
+      "publishedSpend": 1170,
+      "pendingPaidSpend": 670,
+      "publishedPosts": 13,
+      "paidCount": 26,
+      "unpaidCount": 1,
+      "missingPaidCosts": 0
+    },
+    "reportSummary": {
+      "totalSpend": 1940,
+      "paidSpend": 1840,
+      "publishedSpend": 1170,
+      "pendingPaidSpend": 670,
+      "publishedPosts": 13,
+      "paidCount": 26,
+      "unpaidCount": 1,
+      "missingPaidCosts": 0
+    },
+    "matches": true,
+    "source": "GOOGLE_SHEETS_LIVE",
+    "sourceVerifiedAt": "2026-11-20T20:08:00.668Z",
+    "shortIo": {
+      "metric": "humanClicks",
+      "total": 162,
+      "verified": 13,
+      "totalPublishers": 13,
+      "stale": false,
+      "lastSuccessfulAt": "2026-11-20T20:02:12.710Z"
+    }
+  },
+  "originals": {
+    "sheet": {
+      "totalSpend": 2600.85,
+      "paidSpend": 2600.85,
+      "publishedSpend": 2467,
+      "pendingPaidSpend": 133.85,
+      "publishedPosts": 22,
+      "paidCount": 23,
+      "unpaidCount": 73,
+      "missingPaidCosts": 0
+    },
+    "reportSummary": {
+      "totalSpend": 2600.85,
+      "paidSpend": 2600.85,
+      "publishedSpend": 2467,
+      "pendingPaidSpend": 133.85,
+      "publishedPosts": 22,
+      "paidCount": 23,
+      "unpaidCount": 73,
+      "missingPaidCosts": 0
+    },
+    "matches": true,
+    "source": "GOOGLE_SHEETS_LIVE",
+    "sourceVerifiedAt": "2026-11-20T20:08:00.668Z",
+    "shortIo": {
+      "metric": "humanClicks",
+      "total": null,
+      "verified": 0,
+      "totalPublishers": 0,
+      "stale": false,
+      "lastSuccessfulAt": null
+    }
+  }
+}

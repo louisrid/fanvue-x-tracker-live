@@ -1,0 +1,746 @@
+[
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "dashboard",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "stats",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "historical",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": [
+      "Week 1\n19 Oct \u2013 25 Oct",
+      "Week 2\n26 Oct \u2013 1 Nov",
+      "Week 3\n9 Nov \u2013 15 Nov",
+      "Week 4\nLIVE\n16 Nov \u2013 22 Nov",
+      "Week 5\n23 Nov \u2013 29 Nov"
+    ]
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "placements",
+    "overflow": false,
+    "cards": 0,
+    "rows": 23,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "accounts",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "campaigns",
+    "overflow": false,
+    "cards": 0,
+    "rows": 6,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "of",
+    "overflow": false,
+    "cards": 6,
+    "rows": 7,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "x-rts",
+    "overflow": false,
+    "cards": 4,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 1440,
+    "page": "gta-vi",
+    "overflow": false,
+    "cards": 6,
+    "rows": 0,
+    "tabs": [
+      "QRTs",
+      "Original posts"
+    ],
+    "gta": [
+      {
+        "tab": "qrts",
+        "cards": [
+          {
+            "label": "Confirmed QRT spend",
+            "value": "$1,170",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "X views",
+            "value": "93,379",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Published posts",
+            "value": "13",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Total interactions",
+            "value": "763",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 125.9375
+          },
+          {
+            "label": "Short.io all-time human clicks",
+            "value": "162",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 125.9375
+          },
+          {
+            "label": "Engagement rate",
+            "value": "0.82%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 125.9375
+          }
+        ]
+      },
+      {
+        "tab": "originals",
+        "cards": [
+          {
+            "label": "Confirmed post spend",
+            "value": "$2,467",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "X views",
+            "value": "547,023",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Published posts",
+            "value": "22",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Total interactions",
+            "value": "3,209",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 125.9375
+          },
+          {
+            "label": "Short.io all-time human clicks",
+            "value": "\u2014",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 125.9375
+          },
+          {
+            "label": "Engagement rate",
+            "value": "0.59%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 125.9375
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "dashboard",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "stats",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "historical",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": [
+      "Week 1\n19 Oct \u2013 25 Oct",
+      "Week 2\n26 Oct \u2013 1 Nov",
+      "Week 3\n9 Nov \u2013 15 Nov",
+      "Week 4\nLIVE\n16 Nov \u2013 22 Nov",
+      "Week 5\n23 Nov \u2013 29 Nov"
+    ]
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "placements",
+    "overflow": false,
+    "cards": 0,
+    "rows": 23,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "accounts",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "campaigns",
+    "overflow": false,
+    "cards": 0,
+    "rows": 6,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "of",
+    "overflow": false,
+    "cards": 6,
+    "rows": 7,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "x-rts",
+    "overflow": false,
+    "cards": 4,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "reference",
+    "width": 390,
+    "page": "gta-vi",
+    "overflow": false,
+    "cards": 6,
+    "rows": 13,
+    "tabs": [
+      "QRTs",
+      "Original posts"
+    ],
+    "gta": [
+      {
+        "tab": "qrts",
+        "cards": [
+          {
+            "label": "Confirmed QRT spend",
+            "value": "$1,170",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "X views",
+            "value": "93,379",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Published posts",
+            "value": "13",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Total interactions",
+            "value": "763",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 112.734375
+          },
+          {
+            "label": "Short.io all-time human clicks",
+            "value": "162",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 110.734375
+          },
+          {
+            "label": "Engagement rate",
+            "value": "0.82%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 97.609375
+          }
+        ]
+      },
+      {
+        "tab": "originals",
+        "cards": [
+          {
+            "label": "Confirmed post spend",
+            "value": "$2,467",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "X views",
+            "value": "547,023",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Published posts",
+            "value": "22",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Total interactions",
+            "value": "3,209",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 112.734375
+          },
+          {
+            "label": "Short.io all-time human clicks",
+            "value": "\u2014",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 110.734375
+          },
+          {
+            "label": "Engagement rate",
+            "value": "0.59%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 97.609375
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "dashboard",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "stats",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "historical",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": [
+      "Week 1\n19 Oct \u2013 25 Oct",
+      "Week 2\n26 Oct \u2013 1 Nov",
+      "Week 3\n9 Nov \u2013 15 Nov",
+      "Week 4\nLIVE\n16 Nov \u2013 22 Nov",
+      "Week 5\n23 Nov \u2013 29 Nov"
+    ]
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "placements",
+    "overflow": false,
+    "cards": 0,
+    "rows": 23,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "accounts",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "campaigns",
+    "overflow": false,
+    "cards": 0,
+    "rows": 6,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "of",
+    "overflow": false,
+    "cards": 6,
+    "rows": 7,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "x-rts",
+    "overflow": false,
+    "cards": 4,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 1440,
+    "page": "gta-vi",
+    "overflow": false,
+    "cards": 6,
+    "rows": 13,
+    "tabs": [
+      "QRTs",
+      "Original posts"
+    ],
+    "gta": [
+      {
+        "tab": "qrts",
+        "cards": [
+          {
+            "label": "Paid QRT Spend",
+            "value": "$1,840",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "X views",
+            "value": "93,379",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Published Posts",
+            "value": "13",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Total Interactions",
+            "value": "763",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 125.9375
+          },
+          {
+            "label": "Short.io Clicks",
+            "value": "162",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 125.9375
+          },
+          {
+            "label": "Engagement Rate",
+            "value": "0.82%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 125.9375
+          }
+        ]
+      },
+      {
+        "tab": "originals",
+        "cards": [
+          {
+            "label": "Paid Post Spend",
+            "value": "$2,600.85",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "X views",
+            "value": "547,023",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Published Posts",
+            "value": "22",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 110.8125
+          },
+          {
+            "label": "Total Interactions",
+            "value": "3,209",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 125.9375
+          },
+          {
+            "label": "Short.io Clicks",
+            "value": "\u2014",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 125.9375
+          },
+          {
+            "label": "Engagement Rate",
+            "value": "0.59%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 125.9375
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "dashboard",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "stats",
+    "overflow": false,
+    "cards": 3,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "historical",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": [
+      "Week 1\n19 Oct \u2013 25 Oct",
+      "Week 2\n26 Oct \u2013 1 Nov",
+      "Week 3\n9 Nov \u2013 15 Nov",
+      "Week 4\nLIVE\n16 Nov \u2013 22 Nov",
+      "Week 5\n23 Nov \u2013 29 Nov"
+    ]
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "placements",
+    "overflow": false,
+    "cards": 0,
+    "rows": 23,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "accounts",
+    "overflow": false,
+    "cards": 0,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "campaigns",
+    "overflow": false,
+    "cards": 0,
+    "rows": 6,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "of",
+    "overflow": false,
+    "cards": 6,
+    "rows": 7,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "x-rts",
+    "overflow": false,
+    "cards": 4,
+    "rows": 0,
+    "tabs": []
+  },
+  {
+    "variant": "restored",
+    "width": 390,
+    "page": "gta-vi",
+    "overflow": false,
+    "cards": 6,
+    "rows": 13,
+    "tabs": [
+      "QRTs",
+      "Original posts"
+    ],
+    "gta": [
+      {
+        "tab": "qrts",
+        "cards": [
+          {
+            "label": "Paid QRT Spend",
+            "value": "$1,840",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "X views",
+            "value": "93,379",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Published Posts",
+            "value": "13",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Total Interactions",
+            "value": "763",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 112.734375
+          },
+          {
+            "label": "Short.io Clicks",
+            "value": "162",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 110.734375
+          },
+          {
+            "label": "Engagement Rate",
+            "value": "0.82%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 97.609375
+          }
+        ]
+      },
+      {
+        "tab": "originals",
+        "cards": [
+          {
+            "label": "Paid Post Spend",
+            "value": "$2,600.85",
+            "bg": "rgb(0, 85, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "X views",
+            "value": "547,023",
+            "bg": "rgb(17, 19, 24) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Published Posts",
+            "value": "22",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(126, 34, 206), rgb(107, 33, 168)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(255, 255, 255)",
+            "height": 97.609375
+          },
+          {
+            "label": "Total Interactions",
+            "value": "3,209",
+            "bg": "rgb(255, 255, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(13, 22, 37)",
+            "height": 112.734375
+          },
+          {
+            "label": "Short.io Clicks",
+            "value": "\u2014",
+            "bg": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(255, 179, 71), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(53, 20, 0)",
+            "height": 110.734375
+          },
+          {
+            "label": "Engagement Rate",
+            "value": "0.59%",
+            "bg": "rgb(57, 255, 20) none repeat scroll 0% 0% / auto padding-box border-box",
+            "color": "rgb(8, 41, 27)",
+            "height": 97.609375
+          }
+        ]
+      }
+    ]
+  }
+]

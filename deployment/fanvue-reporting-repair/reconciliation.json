@@ -1,0 +1,57 @@
+{
+  "verifiedAt": "2026-11-20T19:48:23.780Z",
+  "sourceSummary": {
+    "totalSpend": 1940,
+    "paidSpend": 1840,
+    "publishedSpend": 1170,
+    "pendingPaidSpend": 670,
+    "publishedPosts": 13,
+    "paidCount": 26,
+    "unpaidCount": 1,
+    "missingPaidCosts": 0
+  },
+  "originalsSummary": {
+    "totalSpend": 2600.85,
+    "paidSpend": 2600.85,
+    "publishedSpend": 2467,
+    "pendingPaidSpend": 133.85,
+    "publishedPosts": 22,
+    "paidCount": 23,
+    "unpaidCount": 73,
+    "missingPaidCosts": 0
+  },
+  "refresh": {
+    "id": "49930f67-44e1-410f-b314-645b45c990a9",
+    "state": "complete",
+    "startedAt": "2026-11-20T19:44:08.767Z",
+    "expiresAt": 0,
+    "completedAt": "2026-11-20T19:47:39.884Z",
+    "errors": 3,
+    "updated": 32,
+    "total": 35
+  },
+  "shortIo": {
+    "linkCount": 26,
+    "allLinksVerified": 26,
+    "publishedLinksVerified": 13,
+    "providerErrors": 0,
+    "publishedAllTimeHumanClicks": 161,
+    "postPublicationClicks": 137,
+    "lastSuccessfulAt": "2026-11-20T19:47:22.879Z",
+    "redirectRequests": 0
+  },
+  "xProviderErrors": [
+    {
+      "postId": "2115927144836776030",
+      "error": "X provider HTTP 404"
+    },
+    {
+      "postId": "2116146620580647228",
+      "error": "X provider HTTP 404"
+    },
+    {
+      "postId": "2116219158211829872",
+      "error": "X provider HTTP 404"
+    }
+  ]
+}

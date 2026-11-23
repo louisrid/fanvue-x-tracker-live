@@ -1,0 +1,18 @@
+X TRACKER v5.0.29 | EXISTING PROJECT ONLY
+
+Netlify project: https://app.netlify.com/projects/elegant-swan-98c20a
+Site ID: 3cfe75c9-5913-46a0-953f-eeae1a288a52
+Production: https://elegant-swan-98c20a.netlify.app/
+
+Use ONLY the existing project's Deploys/manual drag-and-drop publishing workflow. First download and back up its ACTUAL LATEST COMPLETE production source. This ZIP was prepared from preserved earlier source, and newer live backend changes may exist. Compare and merge newer production files before deployment. If manual drag-and-drop would deploy static-only files or lose any Functions, STOP and report why.
+
+Verify the following change on the Key Stats page:
+1. Remove the visible undated-payments exclusion copy everywhere.
+2. Replace the Dated Spend tile label and N/A amount with "Equivalised Spend".
+3. Calculate total USD article costs for posts both Paid AND Posted, with posting dates in the last seven UK calendar days, inclusive of today, regardless of whether paidAt was recorded; exclude older/unpublished/unpaid/undated-posting rows. Convert to GBP using verified daily USD/GBP reference FX, then divide by seven. Example $350 at 0.8 GBP/USD => £40.00 per day. Source FX daily through Frankfurter and cache the rate; do not hard-code a guessed FX rate.
+4. Refresh the rolling 7-day average with the dashboard and refresh FX every 24h. With no qualifying spend, show £0.00. If valid GBP conversion cannot be verified, show £— rather than a misleading number.
+5. Preserve the current Key Stats 168-hour graph and daily table, Dashboard layout, all Historical content and styling. Do not change Google Sheets, UTM redirects or genuine event history.
+
+Before publishing, run npm test and verify desktop and mobile, eight existing Netlify Functions, scheduled refresh, environment variables and no tracking regression. Do not click /r/, /s/ or /p/ URLs.
+
+Do not use GitHub, paid Netlify Agent, or a new project. Publish to original site only when all checks pass. Report the actual new deployment ID; never claim success without deployment confirmation.

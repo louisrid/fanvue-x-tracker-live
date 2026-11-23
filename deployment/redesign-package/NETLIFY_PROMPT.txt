@@ -1,0 +1,7 @@
+Apply the attached XTRACKER redesign ZIP to my EXISTING Netlify site 3cfe75c9-5913-46a0-953f-eeae1a288a52. Do not create a site or use GitHub.
+
+Back up the LATEST production project/source first. Extract the ZIP into that source and run `python3 xtracker-redesign/install.py .`. Preserve logo/font, header, all functions, environment variables, Sheets, X metrics, redirects and history. Do not replace the project with the patch ZIP.
+
+Run the included checks and thoroughly verify all nine pages on desktop and iPhone, including sortable tables, filters, article modals, bulk select, X/profile links, GTA original/V2 data, OF clicks and X refresh. Never open `/r/` or `/of/` tracking redirects.
+
+If all tests pass, publish to the SAME site and give me the new production deployment ID. If not, keep production unchanged and report the specific failure.

@@ -1,0 +1,20 @@
+X TRACKER v5.0.30 – RESTORE LIVE KEY STATS – EXISTING NETLIFY PROJECT ONLY
+
+EXISTING SITE: https://elegant-swan-98c20a.netlify.app/
+SITE ID: 3cfe75c9-5913-46a0-953f-eeae1a288a52
+UPLOAD: X_Tracker_MASTER_2026-10-17_v4.7.0.zip (internal version 5.0.30)
+
+Use the ORIGINAL project's Deploys > manual drag-and-drop flow. First download/back up and compare the CURRENT complete production source, merging any newer backend work. Never create a new site or publish a static-only deployment without all eight Functions and the 2-hour scheduled refresh.
+
+The live dashboard API responds with genuine tracking data, but an old frontend used to force reload when uiVersion was different and never rendered the Key Stats cards. This update:
+1. Stops reloading just because the frontend says v5.0.30 while a compatible dashboard API reports v5.0.27 or v5.0.29.
+2. Renders valid verified click totals and paid/published article data immediately, without waiting for potentially slow hourly event history.
+3. Refreshes the rolling 7-day graph independently as event history arrives.
+4. Uses dated, verified daily USD/GBP rates with an alternative API fallback to avoid unnecessary GBP N/A.
+5. Keeps the complete Key Stats layout, three metric cards, rolling 168-hour graph, daily totals table, the Dashboard layout, Historical, spacing and all article visual styling unchanged.
+
+Validate: 38/38 maintained tests. Check Key Stats at 390px mobile and desktop: LIVE DATA appears if source is healthy, click metrics show actual verified values and Equivalised Spend is the total of Paid+Posted articles published in last seven UK calendar days converted USD to GBP / 7. Confirm non-hanging initial load, hover charts and continued hourly updates.
+
+Keep all environment variables, scheduled functions, click-reset cutoff 2026-10-17T00:32:36Z, genuine stored click events, article assignments and redirect destinations. Do not test /r/ /s/ /p/ tracking URLs. Stop rather than publishing if drag-drop cannot deploy Function bundles correctly.
+
+Publish only after comparing to and preserving the current complete live source. Report actual deployment ID and verification results. Never claim live success without production verification.

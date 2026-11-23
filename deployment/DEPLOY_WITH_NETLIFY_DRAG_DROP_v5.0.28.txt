@@ -1,0 +1,16 @@
+X TRACKER v5.0.28 - EXISTING NETLIFY SITE ONLY
+
+Original project: https://app.netlify.com/projects/elegant-swan-98c20a
+Site ID: 3cfe75c9-5913-46a0-953f-eeae1a288a52
+Original domain: https://elegant-swan-98c20a.netlify.app
+
+Deploy ONLY the attached full ZIP to the ORIGINAL site's Deploys/manual drag-and-drop workflow. Do NOT create a new site, use GitHub or use paid Netlify Agent features. Before deploying, download and back up the COMPLETE CURRENT production source and compare it to the attached ZIP; merge all newer production changes. This package preserves archived full source with all eight Netlify Functions, but the current production backend has not been compared byte for byte. Never overwrite newer backend code with older code.
+
+Requested release:
+- Dashboard no longer contains Performance comparison or Daily Breakdown; starts with This week and the original KPI figures plus extra top-heavy spacing.
+- Key Stats is completely emptied of old content and contains only the moved Daily Breakdown title, three coloured KPI tiles, wide red-orange verified hourly UTM click line (rolling 7 days, today latest), seven-day totals table and extensive white space below.
+- Preserve existing mobile and desktop styling, article colours and detailed modal, Historical, Campaigns, Accounts, all redirect event history and exact attribution links.
+
+Confirm drag-drop builds/functions as well as frontend. Require all eight Functions (admin, dashboard, events, health, metrics, redirect, refresh-x-metrics, resolve) and scheduled 2-hour refresh. If drag-drop would publish only static public/ content, STOP rather than destroy production Functions. Keep Netlify environment variables and tracking storage intact. Do not call live /r/, /s/ or /p/ links, which register clicks. No Sheets edits.
+
+Run tests and review desktop/390px layouts. Publish only after successful checks, then provide new Netlify deploy ID with confirmation Functions and endpoints operate.

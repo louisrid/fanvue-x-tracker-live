@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="X Tracker - live promotion performance.">
+  <title>X Tracker | Campaign performance</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232962ff'/%3E%3Cpath d='M17 43L43 19M26 19h17v17' stroke='white' stroke-width='6' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;650;700;750;800;850;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800;900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/palette.css?v=20261116-neon-promo-colors">
+  <link rel="stylesheet" href="/styles.css?v=5.0.40">
+  <script src="/app.js?v=5.0.40-remove-link-breakdown" defer></script>
+<link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
+    <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
+</head>
+<body class="is-home">
+  <header class="app-header">
+    <div class="page-shell header-row">
+      <a class="brand" href="#dashboard" aria-label="X Tracker Dashboard"><span class="brand-name">X TRACKER</span></a>
+  <nav class="mobile-nav" aria-label="Main pages">
+    <button class="mobile-nav-item is-active" data-page="dashboard" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></button>
+    <button class="mobile-nav-item" data-page="stats" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-7h4v7M10 20V8h4v12M16 20V4h4v16"/></svg><span>Key Stats</span></button>
+    <button class="mobile-nav-item" data-page="historical" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span>Historical</span></button>
+  </nav>
+      <nav class="campaign-nav" aria-label="Campaign reports">
+      <a class="of-promo-button" href="#campaign-C001">OF Terms X Promo</a>
+      <a class="gta-promo-button" id="gtaButton" href="#gta-vi">GTA VI</a>
+      </nav>
+    </div>
+  </header>
+  <div class="page-shell"><div class="feed-warning" id="feedWarning" role="status" hidden></div></div>
+  <main class="page-shell" id="mainContent">
+    <section class="site-page" id="page-dashboard" aria-labelledby="dashboardTitle">
+      <div class="dashboard-week-toolbar"><label class="select-control"><span>Select a week</span><select id="dashboardWeekSelect" aria-label="Dashboard campaign week"></select></label><span id="dashboardWeekRange"></span></div>
+      <div class="page-intro dashboard-intro"><h1 id="dashboardTitle">Week<span class="heading-accent">.</span></h1><div class="x-refresh-controls"><button id="refreshXStats" class="x-refresh-button" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span id="xRefreshTime">Checking refresh time…</span></details><span id="xRefreshStatus" class="x-refresh-status" role="status" aria-live="polite"></span></div></div>
+      <div class="reorder-zone home-dashboard-layout" id="dashboardSections">
+        <section class="move-section home-overview-section" id="summarySection" data-section="summary" aria-label="Campaign headline figures">
+          <div class="home-reorder-action"><button class="move-handle" type="button" aria-label="Move Headline figures section" title="Hold and drag to reorder" data-drag="summary"><svg viewBox="0 0 20 20"><circle cx="6" cy="4" r="1.4"/><circle cx="14" cy="4" r="1.4"/><circle cx="6" cy="10" r="1.4"/><circle cx="14" cy="10" r="1.4"/><circle cx="6" cy="16" r="1.4"/><circle cx="14" cy="16" r="1.4"/></svg></button></div>
+          <div class="kpi-grid home-top-kpis" id="dashboardKpis" aria-live="polite"></div>
+        </section>
+        <section class="move-section" id="weeklySection" data-section="articles" aria-labelledby="weeklyHeading">
+          <div class="section-heading"><div class="heading-group"><h2 id="weeklyHeading">Live articles<span class="heading-accent">.</span></h2><span class="section-count" id="weeklyCount">0</span></div>
+            <button class="move-handle" type="button" aria-label="Move Live articles section" title="Hold and drag to reorder" data-drag="articles"><svg viewBox="0 0 20 20"><circle cx="6" cy="4" r="1.4"/><circle cx="14" cy="4" r="1.4"/><circle cx="6" cy="10" r="1.4"/><circle cx="14" cy="10" r="1.4"/><circle cx="6" cy="16" r="1.4"/><circle cx="14" cy="16" r="1.4"/></svg></button>
+          </div>
+          <div class="home-filter-toolbar" aria-label="Sort published and scheduled articles"><label class="home-filter-select sort-by-control"><span>Sort By</span><select id="homeArticleSort" aria-label="Sort articles"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label></div>
+          <div class="weekly-grid" id="weeklyGrid"><div class="loading-card">Loading</div></div>
+        </section>
+        <section class="move-section home-upcoming-section" id="upcomingSection" data-section="upcoming" aria-labelledby="upcomingHeading">
+          <div class="section-heading"><div class="heading-group"><h2 id="upcomingHeading">Selected &amp; scheduled<span class="heading-accent">.</span></h2><span class="section-count" id="upcomingCount">0</span></div>
+            <button class="move-handle" type="button" aria-label="Move Scheduled section" title="Hold and drag to reorder" data-drag="upcoming"><svg viewBox="0 0 20 20"><circle cx="6" cy="4" r="1.4"/><circle cx="14" cy="4" r="1.4"/><circle cx="6" cy="10" r="1.4"/><circle cx="14" cy="10" r="1.4"/><circle cx="6" cy="16" r="1.4"/><circle cx="14" cy="16" r="1.4"/></svg></button>
+          </div>
+          <div class="weekly-grid" id="upcomingGrid"><div class="loading-card">Loading</div></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="site-page" id="page-placements" aria-labelledby="placementsTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="placementsTitle">Article Tracker<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <div class="page-toolbar">
+        <div class="toolbar-summary" id="placementsOverview"></div>
+        <button class="button button-primary" id="newPlacementButton" type="button">+ Placement</button>
+      </div>
+      <div class="tracker-controls" aria-label="Placement filters and sorting">
+        <div class="tracker-filter-strip" aria-label="Quick placement filters">
+        <label class="select-control tracker-filter-sort sort-by-control"><span>Sort By</span><select id="trackerSort"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label>
+        <label class="select-control tracker-filter-status"><span>Status</span><select id="trackerStatus"><option value="ALL">All</option><option value="LIVE">Published</option><option value="PLANNED">Not live</option><option value="UNAVAILABLE">Unavailable</option></select></label>
+        <label class="select-control tracker-filter-paid"><span>Payment</span><select id="trackerPaid"><option value="ALL">All</option><option value="PAID">Paid</option><option value="UNPAID">Unpaid</option></select></label>
+        <label class="select-control tracker-filter-campaign"><span>Campaign</span><select id="trackerCampaign"><option value="ALL">All campaigns</option></select></label>
+        <label class="select-control tracker-filter-platform"><span>Platform</span><select id="trackerPlatform"><option value="ALL">All</option><option value="X">X</option><option value="Instagram">Instagram</option></select></label>
+        </div>
+        <div class="tracker-filter-extras">
+        <details class="filter-details tracker-advanced" id="trackerAdvanced"><summary>More filters</summary><div class="tracker-advanced-fields">
+          <label>From posted date<input type="date" id="trackerFrom"></label><label>To posted date<input type="date" id="trackerTo"></label>
+          <label>Min UTM clicks<input id="trackerMinClicks" type="number" min="0" step="1" placeholder="Any"></label>
+          <label>Min views<input id="trackerMinViews" type="number" min="0" step="1" placeholder="Any"></label>
+          <label>Max spend ($)<input id="trackerMaxCost" type="number" min="0" step="0.01" placeholder="Any"></label>
+        </div></details>
+        <button class="filter-reset tracker-reset" id="resetTrackerFilters" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="result-line"><h2>Article placements<span class="heading-accent">.</span></h2><span class="section-count" id="resultCount">0</span></div>
+      <p class="tracker-filter-caption" id="trackerFilterSummary" aria-live="polite" hidden></p>
+      <div class="bulk-bar" id="bulkBar" hidden><strong id="bulkCount">0 selected</strong><select id="bulkStage" aria-label="Bulk stage"><option value="">Set stage</option><option value="planned">Planned</option><option value="contacted">Contacted</option><option value="booked">Booked</option><option value="published">Published</option></select><select id="bulkCampaign" aria-label="Bulk campaign"><option value="">Assign campaign</option></select><button class="button button-primary" id="bulkSave" type="button">Apply</button></div>
+      <div class="tracker-list" id="trackerList"><div class="loading-card">Loading</div></div>
+    </section>
+    <section class="site-page" id="page-accounts" aria-labelledby="accountsTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="accountsTitle">Accounts<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <div class="accounts-tools">
+        <label class="select-control sort-by-control"><span>Sort By</span><select id="accountSort"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label>
+        <label class="search-control"><span class="sr-only">Search accounts</span><input id="accountSearch" type="search" placeholder="Search accounts" autocomplete="off"></label>
+        <details class="filter-details" id="accountFilters"><summary>Filters</summary><div class="filter-grid">
+          <label>UTM clicks<input id="filterClicks" type="number" min="0" step="1" placeholder="Min"></label>
+          <label>UTM/$<input id="filterUtmDollar" type="number" min="0" step="0.01" placeholder="Min"></label>
+          <label>$ Spent<input id="filterSpent" type="number" min="0" step="1" placeholder="Min"></label>
+          <label>Views<input id="filterViews" type="number" min="0" step="1" placeholder="Min"></label>
+          <label>Likes<input id="filterLikes" type="number" min="0" step="1" placeholder="Min"></label>
+          <label>Engagement %<input id="filterEngagement" type="number" min="0" step="0.01" placeholder="Min"></label>
+          <label>Articles posted<input id="filterPosts" type="number" min="0" step="1" placeholder="Min"></label>
+          <label>Last used after<input id="filterLastUsed" type="date"></label>
+          <label>Last used before<input id="filterLastUsedTo" type="date"></label>
+          <label>Promotion after<input id="filterAccountFrom" type="date"></label>
+          <label>Promotion before<input id="filterAccountTo" type="date"></label>
+          <button class="button" id="resetAccountFilters" type="button">Reset filters</button>
+        </div></details>
+      </div>
+      <div class="result-line"><h2>Account performance<span class="heading-accent">.</span></h2><span class="section-count" id="accountCount">0</span></div>
+      <div class="account-table-wrap" id="accountTableWrap"><table class="account-table"><thead><tr><th>Account</th><th>UTM Clicks</th><th>UTM/$</th><th>$ Spent</th><th>Views</th><th>Likes</th><th>Engagement</th><th>Articles</th><th>Last Used</th></tr></thead><tbody id="accountTableBody"></tbody></table></div>
+      <div class="account-mobile-list" id="accountMobileList"></div>
+    </section>
+    <section class="site-page" id="page-campaigns" aria-labelledby="campaignsTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="campaignsTitle">Campaigns<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <div class="page-toolbar"><div class="toolbar-summary" id="campaignsOverview"></div><button class="button button-primary" type="button" id="newCampaignButton" hidden>+ Campaign</button></div>
+      <div class="report-navigation"><a class="button" href="#accounts">Accounts</a><a class="button" href="#placements">Article Tracker</a><a class="button" href="#campaign-C001">OF Terms X Promo</a></div><div class="tracker-controls campaign-controls"><label class="select-control sort-by-control"><span>Sort By</span><select id="campaignSort"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label><label class="search-control"><span class="sr-only">Search campaigns</span><input id="campaignSearch" type="search" placeholder="Search campaigns" autocomplete="off"></label></div>
+      <div class="campaign-grid" id="campaignGrid"></div>
+    </section>
+    <section class="site-page key-stats-page" id="page-stats" aria-labelledby="statsTitle" hidden>
+      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="statsTitle">Key Stats<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <section class="daily-overview" id="dailyOverview" aria-labelledby="dailyOverviewTitle">
+        <div class="daily-overview-head">
+          <div><div class="daily-eyebrow">GROKBOT · WEEK 2 - LOUIS</div><h2 id="dailyOverviewTitle">Daily breakdown<span class="heading-accent">.</span></h2></div>
+          <span class="daily-live" id="dailyLiveStatus" role="status"><span class="daily-live-dot" aria-hidden="true"></span><span id="dailyLiveLabel">Checking data</span></span>
+        </div>
+        <div class="daily-overview-metrics" id="dailyOverviewMetrics" aria-live="polite"></div>
+        <div class="daily-graph-card">
+          <div class="daily-graph-head">
+            <div><h3>Week 2 UTM clicks<span class="heading-accent">.</span></h3><p>Verified hourly clicks · UK time · since 26 October</p></div>
+            <div class="daily-chart-legend" aria-label="Chart series"><span class="legend-clicks"><i></i>UTM clicks</span><span class="daily-chart-now">LATEST →</span></div>
+          </div>
+          <div class="daily-graph" id="dailyTrendChart" role="region" aria-label="Week 2 placement clicks by hour, most recent hour at right"></div>
+          <div class="daily-graph-footnote" id="dailyTrendNote" aria-live="polite"></div>
+        </div>
+      </section>
+    </section>
+    <section class="site-page historical-page" id="page-historical" aria-label="Historical" hidden>
+      <div class="historical-toolbar"><div><span class="historical-control-label">SELECT A WEEK</span><div class="historical-tabs" id="historicalWeekTabs" role="tablist" aria-label="Historical campaign weeks"></div></div><label class="historical-sort"><span>Sort articles</span><select id="historicalSort"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label></div>
+      <div class="historical-list" id="historicalWeeks" aria-live="polite"><div class="loading-card">Loading</div></div>
+    </section>
+    <section class="site-page key-stats-page of-report-page" id="page-of" aria-labelledby="ofTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
+      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="ofTitle">OF Terms X Promo<span class="heading-accent">.</span></h1><p id="ofWeekLabel">Current week · UK time</p></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="of" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><span id="ofRefreshTime" hidden></span><span class="x-refresh-status" id="ofRefreshStatus" role="status" aria-live="polite"></span></div></div>
+      <section class="daily-overview" aria-labelledby="ofBreakdownTitle">
+        <div class="daily-overview-head"><div><div class="daily-eyebrow">C001 · X ACCOUNTS 13 (OF TERMS)</div><h2 id="ofBreakdownTitle">Campaign overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="ofLiveStatus" role="status">Checking data</span></div>
+        <details class="source-details"><summary>Source details</summary><p id="ofReportError" role="status" hidden></p></details>
+        <div class="daily-overview-metrics campaign-metrics"><div class="campaign-metric-values" id="ofMetrics" aria-live="polite"><div class="loading-card">Loading campaign data</div></div><div class="engagement-control"><button class="daily-metric engagement-button" id="ofEngagementButton" type="button" aria-expanded="false" aria-controls="ofEngagementDetails"><span class="daily-metric-label">Engagement rate</span><strong id="ofEngagementRate" aria-live="polite">—</strong><small>Latest verified readings · tap for details</small></button><p class="engagement-details" id="ofEngagementDetails" hidden></p></div></div>
+        <div class="daily-graph-card"><div class="daily-graph-head"><div><h3>This week's UTM clicks<span class="heading-accent">.</span></h3><p>Verified clicks · UK time</p></div></div><div class="daily-graph" id="ofChart"></div></div>
+      </section>
+      <div id="ofPublishers" tabindex="-1" aria-label="OF Terms publisher performance and click breakdown" aria-live="polite"></div>
+    </section>
+  <section class="site-page key-stats-page" id="page-x-rts" aria-labelledby="boostTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
+      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="boostTitle">X RTs<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="boosts" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><span class="x-refresh-status" id="boostRefreshStatus" role="status" aria-live="polite"></span><span class="x-refresh-status" id="boostRefreshCooldown"></span></div></div>
+      <div class="daily-overview-metrics" id="boostKpis" aria-live="polite"></div>
+      <p id="boostStatus" role="status"></p>
+      <div class="accounts-tools"><label class="select-control sort-by-control"><span>Sort By</span><select id="boostSort"><option value="recent">Most recently added</option><option value="spend">Spend</option><option value="views">Views</option><option value="engagement">Engagement</option><option value="efficiency">Efficiency · lowest cost first</option></select></label><button class="button" id="boostAdd" type="button">+ Add Tweet</button></div>
+      <div class="result-line"><h2>Tweet performance<span class="heading-accent">.</span></h2></div>
+      <div class="account-table-wrap"><table class="account-table"><thead><tr><th>Original tweet / @handle</th><th>Actual boost spend ($)</th><th>X views</th><th>Likes</th><th>Reposts</th><th>Replies</th><th>Engagement rate</th><th>Effective cost / 1K views</th><th>Views gained · 24h</th></tr></thead><tbody id="boostRows"></tbody></table></div>
+      <div class="account-mobile-list" id="boostMobile"></div>
+    </section>
+      <section class="site-page key-stats-page of-report-page" id="page-gta-vi" aria-labelledby="gtaTitle" hidden>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
+      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="gtaTitle">GTA VI<span class="heading-accent">.</span></h1><p id="gtaWeekLabel">Current week · UK time</p></div>
+        <div class="x-refresh-controls"><button class="x-refresh-button" id="gtaRefreshButton" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh X Stats</span></button><span class="x-refresh-status" id="gtaRefreshStatus" role="status" aria-live="polite"></span></div></div>
+      <div class="gta-tabs" role="tablist" aria-label="GTA VI post type">
+        <button id="gtaTabQrts" class="gta-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="gtaReportPanel" data-gta-tab="qrts">QRTs</button>
+        <button id="gtaTabOriginals" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="originals">Original posts</button>
+      </div>
+      <div id="gtaReportPanel" role="tabpanel" aria-labelledby="gtaTabQrts">
+      <section class="daily-overview" aria-labelledby="gtaBreakdownTitle">
+        <div class="daily-overview-head"><div><div class="daily-eyebrow"><span id="gtaScopeLabel">GTA VI · QRT PROMOTIONS</span></div><h2 id="gtaBreakdownTitle">Campaign overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="gtaLiveStatus" role="status">Checking data</span></div>
+        <details id="gtaReportError" class="source-details" hidden></details>
+        <div class="daily-overview-metrics campaign-metrics"><div class="campaign-metric-values" id="gtaMetrics" aria-live="polite"><div class="loading-card">Loading campaign data</div></div><div class="engagement-control"><button class="daily-metric engagement-button" id="gtaEngagementButton" type="button" aria-expanded="false" aria-controls="gtaEngagementDetails"><span class="daily-metric-label">Engagement Rate</span><strong id="gtaEngagementRate" aria-live="polite">—</strong><small>Latest verified readings · tap for details</small></button><p class="engagement-details" id="gtaEngagementDetails" hidden></p></div></div>
+      </section>
+      <p class="daily-graph-footnote">Human clicks · All-time and post-publication totals are reported separately.</p>
+      <div id="gtaPublishers" tabindex="-1" aria-label="GTA VI publisher performance and click breakdown" aria-live="polite"></div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <div class="modal-shade" id="articleModal" hidden><div class="article-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1"><div class="modal-top"><span class="modal-kicker" id="modalOwner"></span><button class="modal-close" id="modalClose" type="button" aria-label="Close details">×</button></div><div id="modalBody"></div></div></div>
+  <div class="modal-shade" id="editModal" hidden><div class="article-modal edit-modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" tabindex="-1"><div class="modal-top"><span class="modal-kicker">Campaign management</span><button class="modal-close" id="editClose" type="button" aria-label="Close editor">×</button></div><div id="editModalBody"></div></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="/xtracker-polish.js?v=20261116-unified-tables-v1" defer></script>
+  <script src="/xtracker-tables.js?v=20261117-layout-fix" defer></script>
+<script async src="/.netlify/scripts/ar" data-netlify-deploy-id="6afb0bea3bd570183052456c" data-netlify-site-id="3cfe75c9-5913-46a0-953f-eeae1a288a52" data-agent-runner-id="6afb0ac3bc1461e4f072af40"></script>
+</body>
+</html>
