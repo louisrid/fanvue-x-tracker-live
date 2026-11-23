@@ -1,0 +1,30 @@
+name: Discord course and membership QA
+on:
+  push:
+    branches: [feature/discord-course-clicks-dashboard-20261123]
+  pull_request:
+    paths: ['netlify/functions/discord-*','netlify/edge-functions/discord-*','public/discord-*','public/index.html','tests/discord-*']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: JS syntax
+        run: |
+          node --check netlify/functions/discord-course-clicks.mjs
+          node --check netlify/functions/discord-members-snapshot.mjs
+          node --check netlify/functions/discord-members.mjs
+          node --check public/discord-course.js
+          node --check public/discord-members.js
+          node --check netlify/edge-functions/discord-course-beacon.js
+      - name: Test Discord click and history
+        run: node --test tests/discord-course-clicks.test.mjs
+      - name: Regression suite
+        run: npm test
