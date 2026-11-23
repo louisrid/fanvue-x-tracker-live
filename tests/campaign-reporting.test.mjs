@@ -103,7 +103,7 @@ test('Unified lifetime report preserves separate campaign totals without invente
   assert.equal(rts.published,1);
   assert.equal(rts.coverage.withXMetrics,0);
   assert.equal(rts.views,null);
-  assert.match(rts.trackingWarning,/no live X link/);
+  assert.match(rts.trackingWarning,/no original X post URL/);
   assert.equal(discord.source,'NOT_CONNECTED');
   assert.equal(discord.earningCreators,null);
   assert.ok(!('totalReach' in result));
