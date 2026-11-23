@@ -17,14 +17,14 @@
   <link rel="stylesheet" href="/discord-course.css?v=20261123-1">
   <link rel="stylesheet" href="/last-good.css?v=20261123-1">
   <script src="/last-good-cache.js?v=20261123-1" defer></script>
-  <script src="/app.js?v=20261123-lastgood-v1" defer></script>
+  <script src="/app.js?v=20261123-compact-1" defer></script>
   <script src="/discord-course.js?v=20261123-lastgood-v1" defer></script>
   <script src="/discord-members.js?v=20261123-lastgood-v1" defer></script>
 <link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
-    <link rel="stylesheet" href="/campaign-reporting.css?v=20261123-campaign-buttons-v1">
+    <link rel="stylesheet" href="/campaign-reporting.css?v=20261123-compact-1">
     <link rel="stylesheet" href="/campaign-pills.css?v=20261123-3">
-    <script src="/campaign-reporting.js?v=20261123-lastgood-v1" defer></script>
+    <script src="/campaign-reporting.js?v=20261123-compact-1" defer></script>
 </head>
 <body class="is-home">
   <header class="app-header">
@@ -39,15 +39,11 @@
   </header>
   <div class="page-shell campaign-pill-region">
       <nav class="campaign-nav campaign-pills" aria-label="Campaign pages">
-        <a class="campaign-report-button campaign-report-button-overview" data-campaign-report="all" href="#report-all">All Campaigns</a>
-        <a class="campaign-report-button campaign-report-button-discord" data-campaign-report="discord" href="#report-discord">Discord</a>
         <a class="gta-promo-button" id="gtaButton" href="#gta-vi">GTA VI</a>
         <a class="of-promo-button" href="#campaign-C001" aria-label="OF Terms X Promo">OF Terms</a>
-        <a class="campaign-report-button campaign-report-button-harness" data-campaign-report="harness" href="#report-harness">AI Harness</a>
         <a class="campaign-report-button campaign-report-button-guru" data-campaign-report="guru" href="#report-guru">Guru X RTs</a>
         <a class="campaign-report-button campaign-report-button-boosts" data-campaign-report="article-rt" href="#report-article-rt">X Article Boosts</a>
         <a class="campaign-report-button campaign-report-button-articles" data-campaign-report="articles" href="#report-articles">X Articles</a>
-        <a class="campaign-report-button campaign-report-button-other" data-campaign-report="other" href="#report-other" aria-label="Other Campaigns">Other</a>
       </nav>
   </div>
   <div class="page-shell"><div class="feed-warning" id="feedWarning" role="status" hidden></div></div>
@@ -219,8 +215,8 @@
     <section class="site-page key-stats-page" id="page-reporting" aria-labelledby="reportingTitle" hidden>
       <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
       <div class="page-intro compact-intro refresh-page-intro">
-        <div class="refresh-heading-copy"><h1 id="reportingTitle">All Campaigns<span class="heading-accent">.</span></h1><p class="rpt-header-caption">Lifetime results from connected sources</p></div>
-        <div class="x-refresh-controls"><button class="rpt-refresh" id="reportingRefreshButton" type="button">Reload reporting data</button></div>
+        <div class="refresh-heading-copy"><h1 id="reportingTitle">X Article Boosts<span class="heading-accent">.</span></h1></div>
+        <div class="x-refresh-controls"><button class="rpt-refresh" id="reportingRefreshButton" type="button">Reload</button></div>
       </div>
       <p class="rpt-status" id="reportingStatus" role="status" aria-live="polite">Connecting campaign feeds</p>
       <div id="reportingPanel" role="region" aria-label="Selected campaign results" aria-live="polite"><div class="rpt-empty">Loading campaign data</div></div>
