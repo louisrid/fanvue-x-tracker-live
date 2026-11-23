@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const tabs = [
-    ['all','Overview'],['gta','GTA VI'],['of','OF Terms'],['article-rt','Article RTs'],
+    ['all','Overview'],['gta','GTA VI'],['of','OF Terms'],['article-rt','X Article Boosts'],
     ['guru','Guru RTs'],['articles','X Articles'],['harness','AI Harness'],
     ['discord','Discord'],['other','Other']
   ];
@@ -170,15 +170,16 @@
   }
   async function load(force=false){
     if(state.loading)return state.loading;
-    if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return;}
+    if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return true;}
     state.loading=(async()=>{
       render();
       try{
-        const res=await fetch('/.netlify/functions/campaign-overview',{cache:'no-store',signal:AbortSignal.timeout(35000)});
+        const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         const data=await res.json();
         if(!res.ok||!data.ok||!Array.isArray(data.campaigns))throw Error(data.error||'Campaign reporting unavailable');
         state.data=data;state.error='';state.lastLoadAt=Date.now();
-      }catch(e){state.error=txt(e.message||e);}
+        return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!data.campaigns.some(c=>c.dataWarning||c.sourceStale);
+      }catch(e){state.error=txt(e.message||e);return false;}
       finally{state.loading=null;render();}
     })();
     return state.loading;
