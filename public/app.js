@@ -296,7 +296,8 @@ function renderWeekLabels(){
   if(el('homeWeekScope'))el('homeWeekScope').textContent='Week '+n;
   document.querySelector('.daily-eyebrow').textContent=`CAMPAIGN REPORT · WEEK ${n}`;
   document.querySelector('.daily-graph-head h3').innerHTML=`Week ${n} UTM clicks<span class="heading-accent">.</span>`;
-  document.querySelector('.daily-graph-head p').textContent=`Verified hourly clicks · UK time · since ${weekStart(new Date())}`;
+  const graphSubtitle=document.querySelector('.daily-graph-head p');
+  if(graphSubtitle)graphSubtitle.textContent=`Verified hourly clicks · UK time · since ${weekStart(new Date())}`;
   el('dailyTrendChart').setAttribute('aria-label',`Week ${n} placement clicks by hour`);
 }
 function renderWeekly(){
