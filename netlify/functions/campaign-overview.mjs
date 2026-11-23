@@ -42,10 +42,10 @@ export function parseArticleRtWorkbook(workbook){
   }
   return rows;
 }
-export async function readArticleRts({fetcher=fetch,store=getStore({name:'fanvue-campaign-reporting-v1',consistency:'strong'}),now=Date.now()}={}){
+export async function readArticleRts({fetcher=fetch,store=getStore({name:'fanvue-campaign-reporting-v1',consistency:'strong'}),now=Date.now(),force=false}={}){
   let saved=null;
   try{saved=await store.get('article-rts-last-good',{type:'json'});}catch{}
-  if(Array.isArray(saved?.rows)&&now-Date.parse(saved.at)<120_000)return {...saved,cached:true,stale:false};
+  if(!force&&Array.isArray(saved?.rows)&&now-Date.parse(saved.at)<120_000)return {...saved,cached:true,stale:false};
   try{
     const url='https://docs.google.com/spreadsheets/d/'+SHEET+'/export?format=xlsx';
     const res=await fetcher(url,{cache:'no-store',signal:AbortSignal.timeout(19000)});
@@ -164,7 +164,7 @@ export function assembleCampaignOverview(sources){
   const linkedArticleRts=enrichArticleRtMetrics(article?.rows||[],{gta,of,boosts,dashboard});
   const campaigns=[
     gtaCampaign(gta,false),gtaCampaign(gta,true),ofCampaign(of),boostsCampaign(boosts),
-    normalCampaign('article-rts','Article RTs','rt',linkedArticleRts,{source:article?.source||'UNAVAILABLE',at:article?.at,warning:article?.warning,error:article?.error},{
+    normalCampaign('article-rts','X Article Boosts','rt',linkedArticleRts,{source:article?.source||'UNAVAILABLE',at:article?.at,warning:article?.warning,error:article?.error},{
       trackingWarning:linkedArticleRts.some(p=>p.posted&&!p.postUrl)?'Some posted RTs have no original X post URL in the operations sheet LINK column. Add the matching original X status URL to enable reuse of verified views.':null,
       sourceNote:'RTs share their original post views; each unique original is counted once, not once per paid retweet.'
     }),
@@ -177,24 +177,24 @@ export function assembleCampaignOverview(sources){
     campaigns,errors,sourceHealth:Object.fromEntries(Object.entries(src).map(([k,v])=>[k,{ok:!!v?.data&&!v.error,error:v?.error?diagnostic(v.error):null}])),
     note:'Lifetime campaign counters; no mandatory date windows. Published, paid, spend, X views and attributed clicks are separate. Missing sign-up, KYC and first-earnings integrations are unknown, never zero.'};
 }
-export async function readReportParts(origin,{fetcher=fetch,readRts=readArticleRts}={}){
+export async function readReportParts(origin,{fetcher=fetch,readRts=readArticleRts,force=false}={}){
   const paths={gta:'gta-report',of:'of-report',boosts:'boosts',dashboard:'dashboard'};
   const names=Object.keys(paths);
   const tasks=names.map(async name=>{
-    const url=new URL('/.netlify/functions/'+paths[name],origin);
+    const url=new URL('/.netlify/functions/'+paths[name]+(force&&name!=='boosts'?'?refresh=1':''),origin);
     const response=await fetcher(url,{cache:'no-store',signal:AbortSignal.timeout(24000)});
     if(!response.ok)throw Error(paths[name]+' HTTP '+response.status);
     const value=await response.json();
     if(!value?.ok)throw Error(value?.error||paths[name]+' returned no verified data');
     return value;
   });
-  const outcomes=await Promise.allSettled([...tasks,readRts()]);
+  const outcomes=await Promise.allSettled([...tasks,readRts({force})]);
   return Object.fromEntries([...names,'articleRts'].map((name,i)=>[name,outcomes[i].status==='fulfilled'?{data:outcomes[i].value}:{error:diagnostic(outcomes[i].reason)}]));
 }
 export default async function handler(request){
   if(!['GET','HEAD'].includes(request.method))return Response.json({ok:false,error:'METHOD_NOT_ALLOWED'},{status:405});
   try{
-    const parts=await readReportParts(request.url);
+    const parts=await readReportParts(request.url,{force:new URL(request.url).searchParams.has('refresh')});
     const result=assembleCampaignOverview(parts);
     return Response.json(result,{headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
   }catch{return Response.json({ok:false,error:'Reporting feed unavailable; existing campaigns remain accessible.'},{status:503});}
