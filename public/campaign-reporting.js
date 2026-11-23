@@ -1,18 +1,14 @@
 /* Fanvue X Tracker: lifetime campaign reporting, additive to existing pages. */
 (() => {
   'use strict';
-  const tabs = [
-    ['all','All Campaigns'],['gta','GTA VI'],['of','OF Terms X Promo'],['article-rt','X Article Boosts'],
-    ['guru','Guru X RTs'],['articles','X Articles'],['harness','AI Harness'],
-    ['discord','Discord'],['other','Other Campaigns']
-  ];
+  const tabs = [['article-rt','X Article Boosts'],['guru','Guru X RTs'],['articles','X Articles']];
   // Paint the last verified report immediately, then refresh without clearing it.
   const validOverview=data=>data?.ok===true&&Array.isArray(data.campaigns)&&data.campaigns.length>0&&
     data.campaigns.every(c=>c&&typeof c==='object'&&typeof c.id==='string');
   const cachedOverview=window.XTrackerLastGood?.read('campaign-overview',validOverview);
   const validClicks=d=>d?.ok===true&&Number.isSafeInteger(d.total)&&d.total>=0&&Number.isSafeInteger(d.last7Days)&&d.last7Days>=0&&d.last7Days<=d.total;
   const validMembers=d=>d?.ok===true&&Array.isArray(d.history)&&d.latest&&Number.isSafeInteger(d.latest.memberCount)&&d.latest.memberCount>=0;
-  const state={tab:'all',data:cachedOverview?.payload||null,loading:null,error:'',lastLoadAt:0,
+  const state={tab:'article-rt',data:cachedOverview?.payload||null,loading:null,error:'',lastLoadAt:0,
     discordClicks:window.XTrackerLastGood?.read('discord-course-clicks',validClicks)?.payload||null,
     discordMembers:window.XTrackerLastGood?.read('discord-members',validMembers)?.payload||null,
     discordLoading:null,discordLastLoadAt:0,discordVisited:false};
@@ -38,19 +34,16 @@
     return '<div class="rpt-scroll"><table class="'+classname+'"><thead><tr>'+columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }
   function empty(message){return '<div class="rpt-empty">'+esc(message)+'</div>';}
-  function header(title,sub){
-    return '<div class="rpt-section-title"><div><h2>'+esc(title)+'<span class="heading-accent">.</span></h2><p>'+esc(sub||'Lifetime campaign analytics')+'</p></div></div>';
+  function header(title){
+    return '<div class="rpt-section-title"><h2>'+esc(title)+'</h2></div>';
   }
   function totals(c){
     if(!c)return '';
     return '<dl class="rpt-stats">'+[
-      metric('Paid spend',usd(c.paidSpendKnown),c.unknownPaidCosts?'Excludes '+c.unknownPaidCosts+' unknown cost(s)':c.paidCount?'Known paid rows':'No confirmed spend'),
-      metric('Published',format(c.published),'Of '+format(c.placements)+' listed'),
-      metric('X views',format(c.views),format(c.coverage?.withXMetrics)+' posts with readings'),
-      metric('Tracked clicks',format(clicks(c)),c.id.startsWith('gta-')?'Short.io human clicks':'Source-specific'),
-      metric('Sign-ups','—','Not connected'),
-      metric('KYC','—','Not connected'),
-      metric('Earning creators','—','Not connected')
+      metric('Spend',usd(c.paidSpendKnown)),
+      metric('Live posts',hasFeed(c)?format(c.published):'—'),
+      metric('Views',format(c.views)),
+      metric('Clicks',format(clicks(c)))
     ].join('')+'</dl>';
   }
   function campaignRows(c){
@@ -59,21 +52,19 @@
     const view=r=>r.views??r.xViews;
     const sourceLink=r=>r.postUrl?link(r.postUrl,'X post'):r.profileUrl?link(r.profileUrl,'X profile'):link('', 'X');
     const linkCell=r=>'<span class="rpt-links">'+sourceLink(r)+(r.trackingUrl?' · '+link(r.trackingUrl,'Tracking'): '')+'</span>';
-    return grid(['Publisher / activity','Paid?','Posted?','Paid cost','X views','Tracked clicks','Post-publication clicks','Last X update','Links'],rows.map(r=>[
-      '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong><small class="rpt-rowmeta">'+esc(r.sourceTab||r.campaign||'')+'</small>',
-      r.paid?'<strong>Paid</strong>':'—',
-      r.posted?'<strong>Posted</strong>':r.paid?'Pending':'Not confirmed',
+    return grid(['Publisher','Status','Spend','Views','Clicks','Links'],rows.map(r=>[
+      '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>',
+      r.posted?'Live':r.paid?'Pending':'Unconfirmed',
       r.paid?usd(r.cost):'—',esc(format(view(r))),
-      esc(format(r.allTimeClicks??r.clicks??null)),esc(format(r.allTimeClicks!==undefined?r.clicks:null)),esc(date(r.metricAt||r.xUpdated||r.metricLastVerifiedAt||null)),linkCell(r)
+      esc(format(r.allTimeClicks??r.clicks??null)),linkCell(r)
     ]));
   }
   function campaignPanel(id,sub){
     const c=item(id);
     if(!c)return empty('Campaign feed unavailable.');
-    return '<section class="rpt-campaign-panel">'+header(c.name,sub||'Lifetime results · '+viewStatus(c)+' · Source updated '+date(c.sourceVerifiedAt))+
-      badge(c)+totals(c)+(c.unavailable?empty(c.unavailable===true?'No verified live source is connected.':txt(c.unavailable)):campaignRows(c))+
-      (c.trackingWarning?'<p class="rpt-warning">'+esc(c.trackingWarning)+'</p>':'')+
-      (c.classificationNote?'<p class="rpt-note">'+esc(c.classificationNote)+'</p>':'')+
+    return '<section class="rpt-campaign-panel">'+
+      (viewStatus(c)==='Connected'?'':badge(c))+
+      totals(c)+(c.unavailable?empty('Source unavailable'):campaignRows(c))+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
   }
   function articleSources(){
@@ -121,7 +112,7 @@
   function renderArticleGroups(){
     const campaign=item('x-articles'),groups=campaign?.sourceCampaigns||[];
     if(!groups.length)return empty('No historical article campaign groups returned.');
-    return header('Source campaign breakdown','Reported by the main Google Sheet, with lifetime totals.')+
+    return header('Campaigns')+
       grid(['Campaign','Status','Placements','Published','Paid spend','X views','Tracked clicks'],groups.map(c=>[
         '<strong>'+esc(c.name)+'</strong><small class="rpt-rowmeta">'+esc(c.id)+'</small>',
         esc(c.status||'Recorded'),format(c.placements),format(c.published),
@@ -133,7 +124,7 @@
     if(!c)return empty('X RT boost feed is unavailable.');
     const rows=c.rows||[];
     const percent=v=>num(v)===null?'—':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
-    const summary=header('Guru X RTs and boosts','Current original-tweet performance · lifetime spend and exposure')+badge(c)+totals(c);
+    const summary=(viewStatus(c)==='Connected'?'':badge(c))+totals(c);
     if(!rows.length)return summary+empty('No verified boosted X tweets currently recorded.');
     return summary+grid(
       ['Original tweet','Known spend','X views','Interactions','Engagement','Cost / 1K views','Views gained 24h','Live X link'],
@@ -145,7 +136,7 @@
         esc(percent(r.engagement)),usd(r.efficiency),esc(format(r.growth24)),
         link(r.postUrl,'Open post')
       ])
-    )+'<p class="rpt-note">X post views include organic traffic. Effective cost per 1,000 is based on the full visible post views, not verified incremental paid reach. X RTs is the existing feed; Guru classification needs a confirmed campaign mapping.</p>';
+    );
   }
   function discordContent(){
     const course=state.discordClicks,members=state.discordMembers;
@@ -202,35 +193,21 @@
   }
   function content(){
     switch(state.tab){
-      case 'all': return renderOverview();
-      case 'gta': return articleSources()+campaignPanel('gta-qrts','Published paid QRT promotions · lifetime')+
-                          campaignPanel('gta-originals','Original and V2 posts · separate from paid QRTs');
-      case 'of':return campaignPanel('of-terms');
-      case 'article-rt':return campaignPanel('article-rts')+'<p class="rpt-note">Where the operations sheet supplies an original X status URL, its views are pulled from matching verified posts already tracked by this website. Each original post is counted once, even if several paid accounts reposted it. A repost by itself has no separate measurable view counter in this report.</p>';
+      case 'article-rt':return campaignPanel('article-rts');
       case 'guru':return guruContent();
       case 'articles':return renderArticleGroups()+campaignPanel('x-articles');
-      case 'harness':return unconnectedContent('ai-harness',['Angles and concepts','Spend by angle','Views and clicks','Sign-ups','KYC','Earning creators','Winning creative'],'Live creative-level campaign data and verified attribution are required to compare angles fairly.');
-      case 'discord':return discordContent();
-      case 'other':return header('Other activity','An overview category, not a separate post campaign')+
-                        renderArticleGroups()+
-                        '<p class="rpt-note">Other Campaigns has no dedicated post feed. Historical article groups above are sourced from the existing X Articles report. New campaigns appear once their verified source is connected.</p>';
-      default:return renderOverview();
+      default:return empty('No report selected');
     }
   }
   function syncCampaignPillStatus(){
-    const feeds={harness:'ai-harness',discord:'discord',guru:'guru-rts','article-rt':'article-rts',articles:'x-articles'};
+    const feeds={guru:'guru-rts','article-rt':'article-rts',articles:'x-articles'};
     for(const [tab,id] of Object.entries(feeds)){
       const link=document.querySelector('[data-campaign-report="'+tab+'"]');
       if(!link)continue;
       const data=item(id);
       const label=link.textContent.trim();
-      const detail=tab==='discord'
-        ?'Course clicks and member counts tracked; First Earnings campaign post feed not connected'
-        :data&&!hasFeed(data)
-          ?'No verified posts linked; data feed not connected'
-          :data&&hasFeed(data)&&Number.isSafeInteger(data.published)
-            ?format(data.published)+' published posts in connected source'
-            :'Post status checking';
+      const detail=data&&!hasFeed(data)?'Source unavailable':
+        data&&hasFeed(data)&&Number.isSafeInteger(data.published)?format(data.published)+' live posts':'Updating';
       link.title=label+': '+detail;
       link.setAttribute('aria-label',label+'. '+detail);
     }
@@ -242,14 +219,11 @@
     if(!panel||!status)return;
     if(heading)heading.innerHTML=esc(tabs.find(([key])=>key===state.tab)?.[1]||'All Campaigns')+'<span class="heading-accent">.</span>';
     syncCampaignPillStatus();
-    const caption=document.querySelector('#page-reporting .rpt-header-caption');
-    if(caption)caption.textContent=state.tab==='harness'?'No verified campaign posts linked · source not connected':
-      state.tab==='discord'?'Tracked course clicks and server membership · First Earnings feed not connected':
-      state.tab==='other'?'Grouping only · no separate post feed':'Lifetime results from connected sources';
-    if(state.loading&&!state.data&&state.tab!=='discord'){status.textContent='Loading verified campaign feeds…';panel.innerHTML=empty('Loading data.');return;}
-    status.textContent=state.error?(state.data?'Saved readings · '+state.error:'Feed unavailable · '+state.error):
-      state.data?'Last checked '+date(state.data.checkedAt)+' · '+Object.values(state.data.sourceHealth||{}).filter(s=>s.ok).length+' connected feeds':'Not loaded';
-    panel.innerHTML=state.data||state.tab==='discord'?content():empty(state.error||'Campaign report not loaded.');
+
+    if(state.loading&&!state.data){status.textContent='Loading…';panel.innerHTML=empty('Loading…');return;}
+    status.textContent=state.error?(state.data?'Saved · refresh failed':'Unavailable'):
+      state.data?'Updated '+date(state.data.checkedAt):'';
+    panel.innerHTML=state.data?content():empty(state.error||'Loading…');
   }
   async function load(force=false){
     if(state.loading)return state.loading;
@@ -304,20 +278,16 @@
     },90000);
     // app.js runs before this deferred module, so deep links need a first render here.
     // Without this, direct campaign URLs can remain stuck on the loading placeholder.
-    const direct=location.hash.match(/^#report-(all|discord|gta|of|article-rt|guru|articles|harness|other)$/);
-    if(direct||location.hash==='#reporting')window.XTrackerCampaignReporting?.show(direct?.[1]||'all');
+    const direct=location.hash.match(/^#report-(article-rt|guru|articles)$/);
+    if(direct)window.XTrackerCampaignReporting?.show(direct[1]);
   }
   window.XTrackerCampaignReporting={
-    show:(selected='all')=>{
-      state.tab=tabs.some(([key])=>key===selected)?selected:'all';
+    show:(selected='article-rt')=>{
+      state.tab=tabs.some(([key])=>key===selected)?selected:'article-rt';
       render();
       void load();
-      if(state.tab==='discord')void refreshDiscordMetrics();
     },
-    reload:async()=>{
-      const [campaigns]=await Promise.all([load(true),refreshDiscordMetrics(true)]);
-      return campaigns;
-    }
+    reload:()=>load(true)
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
