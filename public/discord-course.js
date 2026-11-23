@@ -29,7 +29,7 @@
     try{await pending;}finally{pending=null;}
   }
   document.addEventListener('click',event=>{
-    if(event.target.closest('#refreshXStats,[data-refresh],[data-reload-all]'))void refresh();
+    if(event.target.closest('#reloadAllButton,#refreshXStats,[data-refresh],[data-reload-all]'))void refresh();
   });
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh();});
   setInterval(()=>{if(!document.hidden)void refresh();},60000);
