@@ -292,7 +292,7 @@ function renderDashboardWeekSelector(){
 function renderWeekLabels(){
   renderDashboardWeekSelector();
   const n=selectedDashboardWeek().number;
-  el('dashboardTitle').innerHTML=`Week ${n}<span class="heading-accent">.</span>`;
+  el('dashboardTitle').innerHTML='Dashboard<span class="heading-accent">.</span>';
   document.querySelector('.daily-eyebrow').textContent=`CAMPAIGN REPORT · WEEK ${n}`;
   document.querySelector('.daily-graph-head h3').innerHTML=`Week ${n} UTM clicks<span class="heading-accent">.</span>`;
   document.querySelector('.daily-graph-head p').textContent=`Verified hourly clicks · UK time · since ${weekStart(new Date())}`;
