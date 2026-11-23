@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/campaign-reporting.css?v=20261123-campaign-buttons-v1">
-    <link rel="stylesheet" href="/site-unified.css?v=20261123-v1">
+    <link rel="stylesheet" href="/campaign-pills.css?v=20261123-3">
     <script src="/campaign-reporting.js?v=20261123-campaign-buttons-v2" defer></script>
 </head>
 <body class="is-home">
@@ -33,19 +33,21 @@
     <button class="mobile-nav-item" data-page="stats" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-7h4v7M10 20V8h4v12M16 20V4h4v16"/></svg><span>Key Stats</span></button>
     <button class="mobile-nav-item" data-page="historical" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span>Historical</span></button>
   </nav>
-      <nav class="campaign-nav" aria-label="Campaign shortcuts">
-        <a class="of-promo-button" href="#campaign-C001">OF Terms X Promo</a>
-        <a class="gta-promo-button" id="gtaButton" href="#gta-vi">GTA VI</a>
-        <a class="campaign-report-button campaign-report-button-boosts" data-campaign-report="article-rt" href="#report-article-rt">X Article Boosts</a>
-        <a class="campaign-report-button campaign-report-button-guru" data-campaign-report="guru" href="#report-guru">Guru X RTs</a>
-        <a class="campaign-report-button campaign-report-button-discord" data-campaign-report="discord" href="#report-discord">Discord</a>
-        <a class="campaign-report-button campaign-report-button-articles" data-campaign-report="articles" href="#report-articles">X Articles</a>
-        <a class="campaign-report-button campaign-report-button-harness" data-campaign-report="harness" href="#report-harness">AI Harness</a>
-        <a class="campaign-report-button campaign-report-button-other" data-campaign-report="other" href="#report-other">Other Campaigns</a>
-        <a class="campaign-report-button campaign-report-button-overview" data-campaign-report="all" href="#report-all">All Campaigns</a>
-      </nav>
     </div>
   </header>
+  <div class="page-shell campaign-pill-region">
+      <nav class="campaign-nav campaign-pills" aria-label="Campaign pages">
+        <a class="campaign-report-button campaign-report-button-overview" data-campaign-report="all" href="#report-all">All Campaigns</a>
+        <a class="campaign-report-button campaign-report-button-discord" data-campaign-report="discord" href="#report-discord">Discord</a>
+        <a class="gta-promo-button" id="gtaButton" href="#gta-vi">GTA VI</a>
+        <a class="of-promo-button" href="#campaign-C001" aria-label="OF Terms X Promo">OF Terms</a>
+        <a class="campaign-report-button campaign-report-button-harness" data-campaign-report="harness" href="#report-harness">AI Harness</a>
+        <a class="campaign-report-button campaign-report-button-guru" data-campaign-report="guru" href="#report-guru">Guru X RTs</a>
+        <a class="campaign-report-button campaign-report-button-boosts" data-campaign-report="article-rt" href="#report-article-rt">X Article Boosts</a>
+        <a class="campaign-report-button campaign-report-button-articles" data-campaign-report="articles" href="#report-articles">X Articles</a>
+        <a class="campaign-report-button campaign-report-button-other" data-campaign-report="other" href="#report-other" aria-label="Other Campaigns">Other</a>
+      </nav>
+  </div>
   <div class="page-shell"><div class="feed-warning" id="feedWarning" role="status" hidden></div></div>
   <main class="page-shell" id="mainContent">
     <section class="site-page" id="page-dashboard" aria-labelledby="dashboardTitle">
