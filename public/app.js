@@ -1378,7 +1378,69 @@ function gtaSourceStatus(report){
   const text=`X: ${x.updated} of ${x.total} posts · Short.io: ${short?.refreshed||0} of ${short?.linkCount||0} links`+(failed?' · '+issues.join(' · '):' · Latest available readings verified');
   return {failed,text};
 }
+function renderGtaQuotedArticles(){
+  const report=gtaState.report;
+  const linked=report?.quotedOriginals;
+  const summaries=linked?.summary||{};
+  const rows=Array.isArray(linked?.rows)?linked.rows:[];
+  document.querySelectorAll('[data-gta-tab]').forEach(button=>{
+    const active=button.dataset.gtaTab==='quoted';
+    button.classList.toggle('is-active',active);
+    button.setAttribute('aria-selected',String(active));
+    button.tabIndex=active?0:-1;
+  });
+  el('gtaReportPanel').setAttribute('aria-labelledby','gtaTabQuoted');
+  el('gtaScopeLabel').textContent='GTA VI · ARTICLES BOOSTED BY QRTS';
+  el('gtaWeekLabel').textContent='Lifetime campaign performance';
+  const status=el('gtaLiveStatus');
+  status.textContent=report?.ready?(report.warning?'Saved campaign data · '+gtaUKDate(report.sourceVerifiedAt):
+    'Quote-linked articles · X metrics updated '+gtaUKDate(report.metricLastSuccessfulAt)):'Loading verified X data';
+  status.classList.toggle('is-live',!!report?.ready);
+  const diag=el('gtaReportError'),problems=report?.warning?[report.warning]:[];
+  diag.hidden=!problems.length;diag.innerHTML=problems.length?'<summary>Source details</summary><p>'+esc(problems.join(' · '))+'</p>':'';
+  const defs=[
+    ['spend','Known Paid QRT Spend',gtaMoney(summaries.allocatedPaidSpend),summaries.unknownPaidCosts?'Some payment amounts unknown':'Allocated to verified original posts'],
+    ['seven','Original Post Views',gtaNumber(summaries.quotedPostViews),'Views on quoted source X posts'],
+    ['published','Linked Source Posts',gtaNumber(summaries.originalPosts),'One count per original X post'],
+    ['interactions','Paid QRT Views',gtaNumber(summaries.qrtViews),'Separate from original X views']
+  ];
+  el('gtaMetrics').innerHTML=defs.map(([kind,title,value,sub])=>
+    '<div class="daily-metric daily-metric-'+kind+'"><span class="daily-metric-label">'+esc(title)+
+    '</span><strong>'+esc(value)+'</strong><small>'+esc(sub)+'</small></div>').join('');
+  el('gtaEngagementRate').textContent='—';
+  el('gtaEngagementDetails').textContent='Original posts and QRTs have different X engagement measures; they cannot be combined as unique reach.';
+  el('gtaEngagementButton').setAttribute('aria-expanded','false');
+  el('gtaEngagementDetails').hidden=true;
+  const safeLink=(value,label)=>{
+    const u=safeUrl(value);
+    return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':'<span>Link missing</span>';
+  };
+  const articles=rows.map(row=>{
+    const children=(row.qrts||[]).map(qrt=>
+      '<li><strong>'+esc(qrt.publisher)+'</strong> · '+esc(gtaNumber(qrt.views))+
+      ' QRT views · '+(qrt.paid?esc(gtaMoney(qrt.cost)):'Payment unverified')+
+      ' · '+safeLink(qrt.postUrl,'Live QRT')+'</li>').join('');
+    return '<article class="rpt-quoted-card"><div class="rpt-quoted-card-head"><div><h3>'+esc('@'+row.handle)+
+      '</h3><p>'+safeLink(row.originalUrl,'Open original article post')+'</p></div><span class="rpt-quoted-counter">'+
+      esc(gtaNumber(row.qrtCount))+' QRTs</span></div><dl><div><dt>Original views</dt><dd>'+
+      esc(gtaNumber(row.views))+'</dd></div><div><dt>QRT views</dt><dd>'+esc(gtaNumber(row.qrtViews))+
+      '</dd></div><div><dt>Known paid spend</dt><dd>'+esc(gtaMoney(row.paidSpendKnown))+
+      '</dd></div><div><dt>Human clicks</dt><dd>'+esc(gtaNumber(row.allTimeHumanClicks))+
+      '</dd></div></dl><details><summary>Show linked paid QRTs</summary><ul>'+children+
+      '</ul></details><p class="rpt-quoted-updated">X updated '+esc(gtaUKDate(row.metricAt))+
+      '</p></article>';
+  });
+  const missing=summaries.unmatchedQrts||0;
+  el('gtaPublishers').innerHTML=
+    '<p class="rpt-quoted-note">Lifetime views on the original X articles quoted by paid promotions. Source views include organic exposure and must not be added to QRT views as unique reach.</p>'+
+    (missing?'<p class="rpt-quoted-warning">'+esc(gtaNumber(missing))+
+      ' published QRTs are not yet matched to their original X posts. Their views remain in the QRT tab.</p>':'')+
+    (articles.length?'<div class="rpt-quoted-list">'+articles.join('')+'</div>':
+      '<div class="empty-state">No original article links verified yet. Refresh X Stats to retrieve the quoted-post relationships. Existing QRT metrics remain available.</div>');
+}
+
 function renderGtaReport(){
+  if(gtaState.tab==='quoted'){renderGtaQuotedArticles();return;}
   const originals=gtaState.tab==='originals';
   const report=originals?gtaState.report?.originals:gtaState.report,ready=report?.ready===true;
   const placements=ready?(report.publishers||[]).filter(p=>originals?['GTA1','GTA2'].includes(p.campaign):p.campaign==='GTAQ'):[];
@@ -1389,8 +1451,7 @@ function renderGtaReport(){
     button.classList.toggle('is-active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
     if(active)el('gtaReportPanel').setAttribute('aria-labelledby',button.id);
   });
-  const from=weekStart(new Date()),to=shift(from,6);
-  el('gtaWeekLabel').textContent=`${gtaDate(from)} – ${gtaDate(to)} · UK time`;
+  el('gtaWeekLabel').textContent='Lifetime campaign performance';
   const status=el('gtaLiveStatus');status.textContent=ready?(report.warning?'Saved campaign data · '+gtaUKDate(report.sourceVerifiedAt):report.statsCached?'Saved stats · refreshing when available':report.source==='GOOGLE_SHEETS_LIVE'?((report.cached?'Cached sheet · ':'Sheet verified · ')+gtaUKDate(report.sourceVerifiedAt)):'Verified snapshot'):gtaState.error?'Report unavailable':'Loading report…';
   status.classList.toggle('is-live',ready);
   if(!gtaState.refreshing){const sourceStatus=gtaSourceStatus(report);if(sourceStatus){el('gtaRefreshStatus').textContent=sourceStatus.text;el('gtaRefreshStatus').className='x-refresh-status '+(sourceStatus.failed?'is-error':'is-success');el('gtaRefreshStatus').title=[report.shortIo?.lastSuccessfulAt?'Short.io last successful: '+gtaUKDate(report.shortIo.lastSuccessfulAt):'',report.metricLastSuccessfulAt?'X last verified: '+gtaUKDate(report.metricLastSuccessfulAt):''].filter(Boolean).join(' · ');}}
@@ -1481,7 +1542,7 @@ function initGtaUi(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.page==='gta-vi')void loadGtaReport();});
 }
 
-function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=campaignRoute?'of':['dashboard','campaigns','stats','historical','accounts','placements','of','x-rts','gta-vi'].includes(page)?page:'dashboard';state.page=pg;document.title=pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
+function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=campaignRoute?'of':['dashboard','campaigns','stats','historical','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;document.title=pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?'Campaign Reporting · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
   document.body.classList.toggle('is-home',pg==='dashboard');
   document.querySelectorAll('.site-page').forEach(e=>e.hidden=e.id!=='page-'+pg);
   document.querySelectorAll('[data-page]').forEach(e=>{const is=e.dataset.page===pg||(e.closest('.mobile-nav')&&e.dataset.page==='stats'&&pg==='campaigns');e.classList.toggle('is-active',is);e.setAttribute('aria-current',is?'page':'false');});
@@ -1490,6 +1551,7 @@ function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';clos
   const gtaCTA=el('gtaButton');if(gtaCTA){gtaCTA.href=pg==='gta-vi'?'#dashboard':'#gta-vi';gtaCTA.setAttribute('aria-current',pg==='gta-vi'?'page':'false');}
   if(pg==='x-rts'){renderBoosts();void loadBoosts();}
   if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
+  if(pg==='reporting')window.XTrackerCampaignReporting?.show();
   if(pg==='dashboard'){state.statsWeek='current';renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
   if(pg==='of'){renderOfReport();if(!state.ofLoading&&Date.now()-(state.ofLastLoadedAt||0)>45000)void loadOfReport();}if(pg==='stats')renderCharts();window.scrollTo({top:0,behavior:'instant'});
 }
