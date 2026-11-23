@@ -58,7 +58,9 @@
     const view=r=>r.views??r.xViews;
     const sourceLink=r=>r.postUrl?link(r.postUrl,'X post'):r.profileUrl?link(r.profileUrl,'X profile'):link('', 'X');
     const linkCell=r=>'<span class="rpt-links">'+sourceLink(r)+(r.trackingUrl?' · '+link(r.trackingUrl,'Tracking'): '')+'</span>';
-    return grid(['Publisher','Status','Spend','Views','Clicks','Links'],rows.map(r=>[
+    return '<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+
+      format(rows.filter(r=>r.posted).length)+'</span></div>'+
+      grid(['Publisher','Status','Spend','Views','Clicks','Links'],rows.map(r=>[
       '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>',
       r.posted?'Live':r.paid?'Pending':'Unconfirmed',
       r.paid?usd(r.cost):'—',esc(format(view(r))),
@@ -132,7 +134,7 @@
     const percent=v=>num(v)===null?'—':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
     const summary=(viewStatus(c)==='Connected'?'':badge(c))+totals(c);
     if(!rows.length)return summary+empty('No verified boosted X tweets currently recorded.');
-    return summary+grid(
+    return summary+'<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+format(c.published)+'</span></div>'+grid(
       ['Original tweet','Known spend','X views','Interactions','Engagement','Cost / 1K views','Views gained 24h','Live X link'],
       rows.map(r=>[
         '<strong>'+esc(r.name||r.publisher||r.handle)+'</strong><small class="rpt-rowmeta">@'+esc(r.handle||'')+'</small>',
@@ -201,7 +203,7 @@
     switch(state.tab){
       case 'article-rt':return campaignPanel('article-rts');
       case 'guru':return guruContent();
-      case 'articles':return renderArticleGroups()+campaignPanel('x-articles');
+      case 'articles':return campaignPanel('x-articles');
       default:return empty('No report selected');
     }
   }
