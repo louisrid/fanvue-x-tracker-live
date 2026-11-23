@@ -217,10 +217,31 @@
       default:return renderOverview();
     }
   }
+  function syncCampaignPillStatus(){
+    const feeds={harness:'ai-harness',discord:'discord',guru:'guru-rts','article-rt':'article-rts',articles:'x-articles'};
+    for(const [tab,id] of Object.entries(feeds)){
+      const link=document.querySelector('[data-campaign-report="'+tab+'"]');
+      if(!link)continue;
+      const data=item(id);
+      const label=link.textContent.trim();
+      const detail=tab==='discord'
+        ?'Course clicks and member counts tracked; First Earnings campaign post feed not connected'
+        :data&&!hasFeed(data)
+          ?'No verified posts linked; data feed not connected'
+          :data&&hasFeed(data)&&Number.isSafeInteger(data.published)
+            ?format(data.published)+' published posts in connected source'
+            :'Post status checking';
+      link.title=label+': '+detail;
+      link.setAttribute('aria-label',label+'. '+detail);
+    }
+    const other=document.querySelector('[data-campaign-report="other"]');
+    if(other){other.title='Other is a grouping, not a separate post feed';other.setAttribute('aria-label','Other Campaigns. Grouping only; no separate post feed');}
+  }
   function render(){
     const panel=el('reportingPanel'),status=el('reportingStatus'),heading=el('reportingTitle');
     if(!panel||!status)return;
     if(heading)heading.innerHTML=esc(tabs.find(([key])=>key===state.tab)?.[1]||'All Campaigns')+'<span class="heading-accent">.</span>';
+    syncCampaignPillStatus();
     const caption=document.querySelector('#page-reporting .rpt-header-caption');
     if(caption)caption.textContent=state.tab==='harness'?'No verified campaign posts linked · source not connected':
       state.tab==='discord'?'Tracked course clicks and server membership · First Earnings feed not connected':
