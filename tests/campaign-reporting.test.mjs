@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import ExcelJS from 'exceljs';
 import {parseQuotedPost} from '../netlify/lib/gta-x-metrics.mjs';
 import {summariseQuotedOriginals} from '../netlify/lib/quoted-originals.mjs';
-import {parseArticleRtWorkbook,assembleCampaignOverview,enrichArticleRtMetrics} from '../netlify/functions/campaign-overview.mjs';
+import {parseArticleRtWorkbook,assembleCampaignOverview,enrichArticleRtMetrics,readReportParts} from '../netlify/functions/campaign-overview.mjs';
 
 const original={id:'2122103967551295552',url:'https://x.com/iluv_papi/status/2122103967551295552',
   author:{screen_name:'iluv_papi'},views:19906,likes:430,retweets:80,replies:12};
@@ -147,4 +147,45 @@ test('Article RT views reuse only an exact verified original X post and never du
   assert.equal(rts.paidSpendKnown,100);
   assert.equal(rts.views,15000);
   assert.equal(rts.coverage.withXMetrics,2);
+});
+
+
+test('dashboard has exactly one visible large Reload All control and keeps targeted refresh sources',()=>{
+ const html=readFileSync('public/index.html','utf8');
+ const app=readFileSync('public/app.js','utf8');
+ const css=readFileSync('public/campaign-reporting.css','utf8');
+ const reporting=readFileSync('public/campaign-reporting.js','utf8');
+ assert.match(html,/id="reloadAllButton"[^>]*x-reload-all/);
+ assert.match(html,/id="refreshXStats"[^>]*hidden/);
+ assert.match(html,/id="reloadAllStatus"/);
+ assert.equal((html.match(/id="reloadAllButton"/g)||[]).length,1);
+ const start=app.indexOf('async function reloadAllData()');
+ const end=app.indexOf('function applyDashboard(data)',start);
+ assert.ok(start>0&&end>start);
+ const coordinator=app.slice(start,end);
+ assert.match(coordinator,/await refreshXStats\(\)/);
+ assert.match(coordinator,/await refreshGtaReport\(\)/);
+ assert.match(coordinator,/loadOfReport\(true,false\)/);
+ assert.match(coordinator,/loadBoosts\(true\)/);
+ assert.match(coordinator,/XTrackerCampaignReporting\?\.reload\?\.\(\)/);
+ assert.doesNotMatch(coordinator,/refreshBoostStats\(\)|refreshOfReport\(\)/);
+ assert.match(app,/el\('reloadAllButton'\)\.addEventListener\('click',reloadAllData\)/);
+ assert.match(css,/#ff008c!important/);
+ assert.match(css,/\.x-refresh-button,\.rpt-refresh/);
+ assert.match(reporting,/\['article-rt','X Article Boosts'\]/);
+});
+
+test('manual reporting force-refresh bypasses Sheet and report caching without POSTing to X',async()=>{
+ const calls=[];let sheetForce;
+ const values=await readReportParts('https://example.netlify.app/',{
+   force:true,
+   fetcher:async (url,opts)=>{calls.push({url:String(url),options:opts});return Response.json({ok:true});},
+   readRts:async ({force})=>{sheetForce=force;return {rows:[]};}
+ });
+ assert.equal(sheetForce,true);
+ assert.equal(calls.length,4);
+ assert.equal(calls.filter(r=>r.url.includes('?refresh=1')).length,3);
+ assert.ok(calls.every(r=>r.options.cache==='no-store'));
+ assert.ok(calls.every(r=>!r.options.method||r.options.method==='GET'));
+ assert.equal(values.articleRts.data.rows.length,0);
 });
