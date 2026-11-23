@@ -10,7 +10,7 @@ const responseHeaders={'cache-control':'no-store, max-age=0'};
 
 export const isCourseBeacon=req=>new URL(req.url).searchParams.get('source')===SOURCE;
 export const isTrustedCourseBeacon=req=>
-  ['GET','HEAD'].includes(req.method)&&TRUSTED_AGENT.test(req.headers.get('user-agent')||'');
+  req.method==='HEAD'&&TRUSTED_AGENT.test(req.headers.get('user-agent')||'');
 
 export function summariseCourseBeaconKeys(keys,now=Date.now()){
   let total=0,last7Days=0;
@@ -32,7 +32,7 @@ export function makeCourseClicksHandler({
 }={}){
   return async req=>{
     if(isCourseBeacon(req)){
-      if(!['GET','HEAD'].includes(req.method))return new Response(null,{status:405,headers:responseHeaders});
+      if(req.method!=='HEAD')return Response.redirect(new URL('/',req.url),302);
       // Do not treat a browser visit, crawler, or API stats request as a click.
       if(!isTrustedCourseBeacon(req))return Response.redirect(new URL('/',req.url),302);
       try{
@@ -50,7 +50,7 @@ export function makeCourseClicksHandler({
       for await(const page of storage().list({paginate:true})){
         for(const blob of page.blobs||[])keys.push(blob.key);
       }
-      return Response.json({ok:true,source:'DISCORD_COURSE_BEACON',period:'since-counter-enabled',
+      return Response.json({ok:true,source:'DISCORD_COURSE_HEAD_BEACON',period:'since-counter-enabled',
         ...summariseCourseBeaconKeys(keys,clock()),checkedAt:new Date(clock()).toISOString()},
         {headers:responseHeaders});
     }catch(error){
