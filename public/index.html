@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="/campaign-reporting.css?v=20261123-compact-1">
     <link rel="stylesheet" href="/campaign-pills.css?v=20261123-final-tabs-1">
     <link rel="stylesheet" href="/report-match.css?v=20261123-1">
-    <link rel="stylesheet" href="/final-ui.css?v=20261123-final-polish-1">
+    <link rel="stylesheet" href="/final-ui.css?v=20261123-gta-position-2">
     <script src="/campaign-reporting.js?v=20261123-compact-2" defer></script>
 </head>
 <body class="is-home">
@@ -218,14 +218,16 @@
       <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
       <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="gtaTitle">GTA VI<span class="heading-accent">.</span></h1><p id="gtaWeekLabel">All-time</p></div>
         <div class="x-refresh-controls"><button class="x-refresh-button" id="gtaRefreshButton" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><span class="x-refresh-status" id="gtaRefreshStatus" role="status" aria-live="polite"></span></div></div>
-      <div class="gta-tabs" role="tablist" aria-label="GTA VI post type">
+      <div class="gta-report-toolbar">
+        <div class="daily-overview-head"><div><div class="daily-eyebrow"><span id="gtaScopeLabel">GTA VI · QRT PROMOTIONS</span></div><h2 id="gtaBreakdownTitle">Campaign overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="gtaLiveStatus" role="status">Checking data</span></div>
+        <div class="gta-tabs" role="tablist" aria-label="GTA VI post type">
         <button id="gtaTabQrts" class="gta-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="gtaReportPanel" data-gta-tab="qrts">QRTs</button>
         <button id="gtaTabOriginals" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="originals">Original posts</button>
         <button id="gtaTabQuoted" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="quoted">Boosted articles</button>
       </div>
+      </div>
       <div id="gtaReportPanel" role="tabpanel" aria-labelledby="gtaTabQrts">
       <section class="daily-overview" aria-labelledby="gtaBreakdownTitle">
-        <div class="daily-overview-head"><div><div class="daily-eyebrow"><span id="gtaScopeLabel">GTA VI · QRT PROMOTIONS</span></div><h2 id="gtaBreakdownTitle">Campaign overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="gtaLiveStatus" role="status">Checking data</span></div>
         <details id="gtaReportError" class="source-details" hidden></details>
         <div class="daily-overview-metrics campaign-metrics"><div class="campaign-metric-values" id="gtaMetrics" aria-live="polite"><div class="loading-card">Loading campaign data</div></div><div class="engagement-control"><button class="daily-metric engagement-button" id="gtaEngagementButton" type="button" aria-expanded="false" aria-controls="gtaEngagementDetails"><span class="daily-metric-label">Engagement Rate</span><strong id="gtaEngagementRate" aria-live="polite">—</strong><small>Latest verified readings · tap for details</small></button><p class="engagement-details" id="gtaEngagementDetails" hidden></p></div></div>
       </section>
