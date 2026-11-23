@@ -216,25 +216,33 @@
       <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
       <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="discordTitle">Discord Stats<span class="heading-accent">.</span></h1><p>Academy members, daily growth and free-course clicks</p></div><div class="x-refresh-controls"><button class="x-refresh-button" id="discordRefreshButton" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><span id="discordRefreshStatus" class="x-refresh-status" role="status" aria-live="polite"></span></div></div>
       <div class="discord-stat-layout">
-        <div class="discord-course-summary" id="discordMemberHistory" aria-label="Discord member history">
+        <div class="discord-highlight-grid" aria-label="Discord Academy tracking summary">
+          <article class="discord-highlight-card discord-highlight-members"><span class="discord-highlight-label">Server members</span><strong data-discord-card-members aria-live="polite">—</strong><small>Latest recorded midday count</small></article>
+          <article class="discord-highlight-card discord-highlight-change"><span class="discord-highlight-label">Daily growth</span><strong data-discord-card-change aria-live="polite">—</strong><small>Since the previous reading</small></article>
+          <article class="discord-highlight-card discord-highlight-total"><span class="discord-highlight-label">Course clicks</span><strong data-discord-card-total aria-live="polite">—</strong><small>Since tracking was connected</small></article>
+          <article class="discord-highlight-card discord-highlight-week"><span class="discord-highlight-label">Last 7 days</span><strong data-discord-card-week aria-live="polite">—</strong><small>Verified course clicks</small></article>
+        </div>
+        <div class="discord-source-summaries" hidden aria-hidden="true">
+          <div class="discord-course-summary" id="discordMemberHistory" aria-label="Discord member history">
             <span class="discord-course-title">Discord server members</span>
             <span class="discord-course-stat">Approx. total <strong data-discord-members>—</strong></span>
             <span class="discord-course-stat">Daily change <strong data-discord-members-change>—</strong></span>
             <span class="discord-course-note" data-discord-members-status>Waiting for midday snapshot</span>
           </div>
-          <section class="discord-growth-chart is-pending" id="discordMemberGrowth" aria-labelledby="discordGrowthTitle">
-            <div class="discord-growth-heading"><h2 id="discordGrowthTitle">Discord member growth<span class="heading-accent">.</span></h2>
-              <span data-discord-chart-tip>Daily snapshots at 12:00 UK</span></div>
-            <div class="discord-growth-plot" data-discord-chart role="group" aria-label="Daily member growth chart"></div>
-            <p class="discord-growth-note" data-discord-chart-note>Waiting for the first daily snapshot</p>
-          </section>
           <div class="discord-course-summary" id="discordCourseClicks" aria-label="Discord free course tracking">
             <span class="discord-course-title">Discord free course clicks</span>
             <span class="discord-course-stat">Total <strong data-discord-course-total>—</strong></span>
             <span class="discord-course-stat">Last 7 days <strong data-discord-course-week>—</strong></span>
             <span class="discord-course-note" data-discord-course-status>Connecting tracking</span>
           </div>
-
+        </div>
+        <section class="discord-growth-chart is-pending" id="discordMemberGrowth" aria-labelledby="discordGrowthTitle">
+            <div class="discord-growth-heading"><h2 id="discordGrowthTitle">Discord member growth<span class="heading-accent">.</span></h2>
+              <span data-discord-chart-tip>Daily snapshots at 12:00 UK</span></div>
+            <div class="discord-growth-plot" data-discord-chart role="group" aria-label="Daily member growth chart"></div>
+            <p class="discord-growth-note" data-discord-chart-note>Waiting for the first daily snapshot</p>
+          </section>
+        <div class="discord-source-status" aria-live="polite"><span data-discord-member-note>Checking midday member readings</span><span data-discord-course-note>Checking tracked course clicks</span></div>
       </div>
     </section>
 
