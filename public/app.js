@@ -1601,7 +1601,7 @@ function initGtaUi(){
     const button=el(prefix+'EngagementButton'),expanded=button.getAttribute('aria-expanded')==='true';
     button.setAttribute('aria-expanded',String(!expanded));el(prefix+'EngagementDetails').hidden=expanded;
   });
-  setInterval(()=>{if(!document.hidden&&state.page==='gta-vi')void loadGtaReport();},60000);
+  setInterval(()=>{if(!document.hidden&&(state.page==='gta-vi'||gtaState.report?.ready))void loadGtaReport();},60000);
   el('gtaRefreshButton').addEventListener('click',refreshGtaReport);
   const gtaTabs=[...document.querySelectorAll('[data-gta-tab]')];
   gtaTabs.forEach((button,index)=>{
@@ -1613,7 +1613,7 @@ function initGtaUi(){
       gtaTabs[next].click();gtaTabs[next].focus();
     });
   });
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.page==='gta-vi')void loadGtaReport();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(state.page==='gta-vi'||gtaState.report?.ready))void loadGtaReport();});
 }
 
 function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';const reportCode=String(page||'').match(/^report-(all|discord|gta|of|article-rt|guru|articles|harness|other)$/)?.[1]||null;state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=reportCode?'reporting':campaignRoute?'of':['dashboard','campaigns','stats','historical','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;const reportNames={all:'All Campaigns',discord:'Discord',gta:'GTA VI',of:'OF Terms','article-rt':'X Article Boosts',guru:'Guru X RTs',articles:'X Articles',harness:'AI Harness',other:'Other Campaigns'};document.title=pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?(reportNames[reportCode]||'All Campaigns')+' · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
@@ -1923,8 +1923,8 @@ function initBoosts(){
   document.addEventListener('click',e=>{const row=e.target.closest('[data-boost]');if(row)showBoostDetails(row.dataset.boost);const edit=e.target.closest('[data-boost-edit]');if(edit)openEditor('boost',edit.dataset.boostEdit);if(e.target.id==='boostRemove'){const label=el('boostRemoveConfirm');label.hidden=false;if(label.querySelector('input').checked)void saveBoostForm(el('boostForm'),true);else el('boostFormStatus').textContent='Confirm removal, then press Remove tweet again.';}});
   document.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.matches('tr[data-boost]')){e.preventDefault();showBoostDetails(e.target.dataset.boost);}});
   document.addEventListener('submit',e=>{if(e.target.id==='boostForm'){e.preventDefault();void saveBoostForm(e.target);}});
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.page==='x-rts')void loadBoosts();});
-  setInterval(()=>{if(!document.hidden&&state.page==='x-rts')void loadBoosts();},60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(state.page==='x-rts'||boostsState.loaded))void loadBoosts();});
+  setInterval(()=>{if(!document.hidden&&(state.page==='x-rts'||boostsState.loaded))void loadBoosts();},60000);
   renderBoosts();
 }
 
