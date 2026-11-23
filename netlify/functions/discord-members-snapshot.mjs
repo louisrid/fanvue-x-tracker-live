@@ -4,7 +4,11 @@ import {getStore} from '@netlify/blobs';
 // Only the run whose local hour is 12 records a snapshot.
 export const config={schedule:'0 11,12 * * *'};
 const STORE='fanvue-discord-member-history-v1';
-const INVITE='fanvue';
+// Confirm the exact Academy guild for every public invite response.
+// Older valid Fanvue invite codes are fallbacks; an override is supported.
+const INVITES=[process.env.DISCORD_ACADEMY_INVITE_CODE,'u4Ds98zhDX','NWdzrN7Se','J7dNpYCeQ']
+  .filter(code=>typeof code==='string'&&/^[A-Za-z0-9_-]{2,32}$/.test(code))
+  .filter((code,i,all)=>all.indexOf(code)===i);
 const EXPECTED_GUILD_ID='1427337798104383694';
 export function londonParts(instant){
   const values=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{
@@ -26,13 +30,23 @@ export async function captureMemberCount({
   const key='day-'+date;
   const old=await storage.get(key,{type:'json'});
   if(old?.date===date&&Number.isSafeInteger(old.memberCount))return {ok:true,skipped:'already-recorded',date};
-  const request=await fetcher('https://discord.com/api/v10/invites/'+INVITE+'?with_counts=true',{
-    headers:{accept:'application/json','user-agent':'Fanvue-Tracker/1.0 (daily member count)'},
-    signal:AbortSignal.timeout(10000),cache:'no-store'
-  });
-  if(!request.ok)throw Error('Discord invite API returned HTTP '+request.status);
-  const data=await request.json();
-  const memberCount=validateInvite(data);
+  let memberCount=null;
+  for(const code of INVITES){
+    try{
+      const request=await fetcher('https://discord.com/api/v10/invites/'+code+'?with_counts=true',{
+        headers:{accept:'application/json','user-agent':'Fanvue-Tracker/1.0 (daily member count)'},
+        signal:AbortSignal.timeout(9000),cache:'no-store'
+      });
+      if(request.status===429)throw Error('Discord API rate limited');
+      if(!request.ok)continue;
+      memberCount=validateInvite(await request.json());
+      break;
+    }catch(error){
+      if(error.message==='Discord API rate limited')throw error;
+      // A revoked invite or invite for a different guild must not create a false reading.
+    }
+  }
+  if(memberCount===null)throw Error('No verified Fanvue Academy invite returned member counts');
   const value={date,memberCount,source:'DISCORD_INVITE_APPROXIMATE',capturedAt:now.toISOString()};
   await storage.setJSON(key,value);
   return {ok:true,...value};
