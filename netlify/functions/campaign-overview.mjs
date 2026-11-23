@@ -112,6 +112,33 @@ function boostsCampaign(data){
     reposts:num(t.reposts),replies:num(t.replies),metricAt:t.at||null}));
   return {...normalCampaign('guru-rts','Guru RTs / X Boosts','boost',rows,{source:'X_RTS',at:rows.map(t=>t.metricAt).filter(Boolean).sort().at(-1)||null}),classificationNote:'Currently showing the existing X RT boosts source; individual tweets are not tagged as Guru/non-Guru.'};
 }
+// Match Article RT placements to already monitored original X posts by exact status ID.
+// These are ORIGINAL post views, not individual RT impressions. Reuse provider readings;
+// never fetch X again or allocate the same article views once per paid reposter.
+export function enrichArticleRtMetrics(articleRows=[],feeds={}){
+  const known=new Map();
+  const candidates=[];
+  for(const p of [...(feeds.gta?.publishers||[]),...(feeds.gta?.originals?.publishers||[])])
+    candidates.push({p,source:'GTA_X',at:p.metricAt,views:p.views,likes:p.likes,reposts:p.reposts,replies:p.replies});
+  for(const p of feeds.of?.publishers||[])
+    candidates.push({p,source:'OF_X',at:p.xUpdated||p.metricLastVerifiedAt,views:p.xViews??p.views,likes:p.xLikes??p.likes,reposts:p.xShares??p.reposts,replies:p.xComments??p.replies});
+  for(const p of feeds.dashboard?.placements||[])
+    candidates.push({p,source:'ARTICLE_X',at:p.xUpdated||p.metricLastVerifiedAt,views:p.xViews,likes:p.xLikes,reposts:p.xShares,replies:p.xComments});
+  for(const p of feeds.boosts?.tweets||[])
+    candidates.push({p:{postUrl:'https://x.com/'+p.handle+'/status/'+p.id},source:'X_RTS',at:p.at,views:p.views,likes:p.likes,reposts:p.reposts,replies:p.replies});
+  for(const candidate of candidates){
+    const id=xPost(candidate.p.postUrl);
+    if(!id||num(candidate.views)===null)continue;
+    const prior=known.get(id),date=Date.parse(candidate.at||'')||0;
+    if(!prior||date>(Date.parse(prior.metricAt||'')||0))
+      known.set(id,{views:num(candidate.views),likes:num(candidate.likes),reposts:num(candidate.reposts),replies:num(candidate.replies),metricAt:candidate.at||null,metricSource:candidate.source});
+  }
+  return articleRows.map(p=>{
+    const metric=p.posted&&xPost(p.postUrl)?known.get(xPost(p.postUrl)):null;
+    return metric?{...p,...metric,sourceViews:true}:{...p,sourceViews:false};
+  });
+}
+
 function dashboardCampaigns(data){
   if(!data?.ok||!Array.isArray(data.placements))return [{...normalCampaign('x-articles','X Articles','article',[],{source:'UNAVAILABLE',error:'Article tracker unavailable'}),unavailable:true}];
   const rows=data.placements.map(p=>({...p,views:num(p.xViews),likes:num(p.xLikes),
@@ -134,10 +161,12 @@ export function assembleCampaignOverview(sources){
   const src=sources||{},errors=[];
   for(const [name,v] of Object.entries(src))if(v?.error)errors.push(name+': '+diagnostic(v.error));
   const gta=src.gta?.data,of=src.of?.data,boosts=src.boosts?.data,dashboard=src.dashboard?.data,article=src.articleRts?.data;
+  const linkedArticleRts=enrichArticleRtMetrics(article?.rows||[],{gta,of,boosts,dashboard});
   const campaigns=[
     gtaCampaign(gta,false),gtaCampaign(gta,true),ofCampaign(of),boostsCampaign(boosts),
-    normalCampaign('article-rts','Article RTs','rt',article?.rows||[],{source:article?.source||'UNAVAILABLE',at:article?.at,warning:article?.warning,error:article?.error},{
-      trackingWarning:(article?.rows||[]).some(p=>p.posted&&!p.postUrl)?'Some posted RTs have no live X link in the operations sheet. X views cannot be independently verified.':null
+    normalCampaign('article-rts','Article RTs','rt',linkedArticleRts,{source:article?.source||'UNAVAILABLE',at:article?.at,warning:article?.warning,error:article?.error},{
+      trackingWarning:linkedArticleRts.some(p=>p.posted&&!p.postUrl)?'Some posted RTs have no original X post URL in the operations sheet LINK column. Add the matching original X status URL to enable reuse of verified views.':null,
+      sourceNote:'RTs share their original post views; each unique original is counted once, not once per paid retweet.'
     }),
     ...dashboardCampaigns(dashboard),
     {...normalCampaign('ai-harness','AI Harness','planned',[],{source:'NOT_CONNECTED',error:'No live campaign-specific feed linked'}),unavailable:true},
