@@ -7,6 +7,16 @@
   const amount=box.querySelector('[data-discord-members]');
   const change=box.querySelector('[data-discord-members-change]');
   const status=box.querySelector('[data-discord-members-status]');
+  const cardMembers=document.querySelector('[data-discord-card-members]');
+  const cardChange=document.querySelector('[data-discord-card-change]');
+  const dashboardMembers=document.querySelector('[data-discord-pill-count]');
+  const memberNote=document.querySelector('[data-discord-member-note]');
+  function syncDisplays(){
+    if(cardMembers)cardMembers.textContent=amount.textContent;
+    if(cardChange)cardChange.textContent=change.textContent;
+    if(memberNote)memberNote.textContent=status.textContent;
+    if(dashboardMembers)dashboardMembers.textContent=amount.textContent==='—'?'Members unavailable':amount.textContent+' members';
+  }
   const canvas=chart.querySelector('[data-discord-chart]');
   const note=chart.querySelector('[data-discord-chart-note]');
   const tip=chart.querySelector('[data-discord-chart-tip]');
@@ -78,6 +88,7 @@
       if(verified)return;
       amount.textContent='—';change.textContent='—';
       status.textContent='First reading scheduled for 12:00 UK time';
+      syncDisplays();
       return;
     }
     amount.textContent=format(latest.memberCount);
@@ -86,9 +97,11 @@
     status.textContent=fromCache?'Saved midday reading · checking for updates':
       `Approximate · 12:00 UK · ${label(latest.date)}`;
     verified=true;
+    syncDisplays();
   }
   if(saved)display(saved,true);
   else renderGrowth([]);
+  syncDisplays();
   async function refresh(){
     if(active)return active;
     active=(async()=>{
@@ -110,6 +123,7 @@
         if(!verified){amount.textContent='—';change.textContent='—';}
         status.textContent=verified?'Last recorded value · refresh unavailable':'Member history temporarily unavailable';
         if(!verified)note.textContent='Graph temporarily unavailable';
+        syncDisplays();
       }
     })();
     try{await active;}finally{active=null;}
@@ -119,5 +133,6 @@
   });
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh();});
   setInterval(()=>{if(!document.hidden)void refresh();},60000);
+  window.XTrackerDiscordMembers={refresh};
   void refresh();
 })();
