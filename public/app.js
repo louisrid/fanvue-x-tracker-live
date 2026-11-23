@@ -320,7 +320,7 @@ function dailySeries(now=new Date()){
   });
   return {daily:daily.filter(x=>x.date<=today),hasClicks:state.activityReady};
 }
-// Article cost is recorded in USD in the source Sheet. Equivalised Spend
+// Article cost is recorded in USD in the source Sheet. Avg. Daily Spend
 // measures the average GBP per day over the seven UK calendar days ending today:
 // sum(price in USD for paid + published articles in that window) × USD/GBP ÷ 7.
 // Payment dates are not required: the user-defined criterion is Paid status
@@ -423,13 +423,22 @@ function renderDailyOverview(){
   const totalClicks=hasClicks?daily.reduce((s,d)=>s+d.clicks,0):null;
   const spend=equivalisedSpendUsd(),fx=state.fxRateGbp;
   const spendGbp=fx!==null?spend.totalUsd*fx/7:null;
+  // Use verified published articles from the current reporting week only.
+  const scope=selectedStatsWeek('current');
+  const liveArticles=scope.placements.filter(p=>weeklyLive(p,scope));
+  const views=liveArticles.map(p=>recordedMetricFor(p,'xViews',scope)).filter(v=>v!==null);
+  const hasPlacements=state.initialLoadSettled&&(!state.loadError||state.placements.length);
+  const chartHeading=el('statsChartTitle');
+  if(chartHeading)chartHeading.innerHTML='Week '+currentStatsWeekNumber()+' UTM clicks<span class="heading-accent">.</span>';
   const connected=state.initialLoadSettled&&state.trackingReady&&hasClicks;
   status.classList.toggle('is-live',connected);
   el('dailyLiveLabel').textContent=connected?'LIVE DATA':'DATA UNAVAILABLE';
   const defs=[
     {kind:'click',label:'UTM clicks today',value:hasClicks?fmt(today.clicks):'—',sub:`Week ${currentStatsWeekNumber()} placements`},
     {kind:'seven',label:`Week ${currentStatsWeekNumber()} clicks`,value:hasClicks?fmt(totalClicks):'—',sub:''},
-    {kind:'spend',label:'Equivalised Spend',value:state.initialLoadSettled&&(!state.loadError||state.placements.length)?(spend.totalUsd===0?gbp(0):spendGbp!==null?gbp(spendGbp):'£—'):'£—',sub:state.initialLoadSettled&&(!state.loadError||state.placements.length)?`${spend.articles} paid & published ${spend.articles===1?'article':'articles'} · 7-day daily average${fx!==null?' · FX '+state.fxRateDate:''}`:'Waiting for verified article data'}
+    {kind:'spend',label:'Avg. Daily Spend',value:state.initialLoadSettled&&(!state.loadError||state.placements.length)?(spend.totalUsd===0?gbp(0):spendGbp!==null?gbp(spendGbp):'£—'):'£—',sub:state.initialLoadSettled&&(!state.loadError||state.placements.length)?`${spend.articles} paid & published ${spend.articles===1?'article':'articles'} · 7-day daily average${fx!==null?' · FX '+state.fxRateDate:''}`:'Waiting for verified article data'},
+    {kind:'articles',label:'Live articles',value:hasPlacements?fmt(liveArticles.length):'—',sub:'Published in the current reporting week'},
+    {kind:'views',label:'X views',value:hasPlacements&&views.length?fmt(views.reduce((sum,n)=>sum+n,0)):'—',sub:hasPlacements?views.length+' of '+liveArticles.length+' posts with verified views':'Waiting for source data'}
   ];
   // Projected weekly clicks are an extrapolation, not recorded clicks.
   // Keep it visually attached to the seven-day KPI and make it strictly
@@ -583,7 +592,7 @@ function renderHistorical(){
     groups.get(key).push(p);
   }
   const current=currentStatsWeekNumber();
-  const lastVisible=current+1;
+  const lastVisible=Math.max(1,current);
   const selected=state.historicalWeek==='other'?'other':state.historicalWeek==='current'||!state.historicalWeek?current:Math.max(1,Math.min(lastVisible,Number(state.historicalWeek)||current));
   const dateLabel=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
   const fullDateLabel=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
@@ -1616,7 +1625,7 @@ function initGtaUi(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(state.page==='gta-vi'||gtaState.report?.ready))void loadGtaReport();});
 }
 
-function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(page==='report-gta'){page='gta-vi';updateUrl=true;}if(page==='report-of'){page='campaign-C001';updateUrl=true;}if(['report-all','report-harness','report-other','report-discord','reporting'].includes(page)){page='dashboard';updateUrl=true;}closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';const reportCode=String(page||'').match(/^report-(article-rt|guru|articles)$/)?.[1]||null;state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=reportCode?'reporting':campaignRoute?'of':['dashboard','campaigns','stats','historical','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;const reportNames={'article-rt':'X Article Boosts',guru:'Guru X RTs',articles:'X Articles'};document.title=pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?(reportNames[reportCode]||'X Article Boosts')+' · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
+function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(page==='report-gta'){page='gta-vi';updateUrl=true;}if(page==='report-of'){page='campaign-C001';updateUrl=true;}if(['report-all','report-harness','report-other','report-discord','reporting'].includes(page)){page='dashboard';updateUrl=true;}closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';const reportCode=String(page||'').match(/^report-(article-rt|guru|articles)$/)?.[1]||null;state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=reportCode?'reporting':campaignRoute?'of':['dashboard','campaigns','stats','historical','discord','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;const reportNames={'article-rt':'X Article Boosts',guru:'Guru X RTs',articles:'X Articles'};document.title=pg==='discord'?'Discord Stats · '+defaultPageTitle:pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?(reportNames[reportCode]||'X Article Boosts')+' · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
   document.body.classList.toggle('is-home',pg==='dashboard');
   document.querySelectorAll('.site-page').forEach(e=>e.hidden=e.id!=='page-'+pg);
   document.querySelectorAll('[data-page]').forEach(e=>{const is=e.dataset.page===pg||(e.closest('.mobile-nav')&&e.dataset.page==='stats'&&pg==='campaigns');e.classList.toggle('is-active',is);e.setAttribute('aria-current',is?'page':'false');});
@@ -1661,6 +1670,16 @@ function events(){
   document.querySelector('.of-promo-button').addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();route(state.page==='of'?'dashboard':'campaign-C001');});
   el('refreshXStats').addEventListener('click',refreshXStats);
   el('reloadAllButton').addEventListener('click',reloadAllData);
+  el('discordRefreshButton').addEventListener('click',async()=>{
+    const button=el('discordRefreshButton'),status=el('discordRefreshStatus');
+    if(button.disabled)return;
+    button.disabled=true;button.setAttribute('aria-busy','true');
+    status.textContent='Checking Discord sources…';
+    try{
+      await Promise.allSettled([window.XTrackerDiscordMembers?.refresh?.(),window.XTrackerDiscordCourse?.refresh?.()]);
+      status.textContent='Sources checked · latest available readings shown below';
+    }finally{button.disabled=false;button.removeAttribute('aria-busy');}
+  });
   document.querySelectorAll('[data-refresh]').forEach(button=>button.addEventListener('click',button.dataset.refresh==='boosts'?refreshBoostStats:button.dataset.refresh==='of'?refreshOfReport:refreshXStats));
   document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>route(b.dataset.page)));
   document.querySelectorAll('[data-owner]').forEach(b=>b.addEventListener('click',()=>owner(b.dataset.owner)));
