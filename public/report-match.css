@@ -1,0 +1,120 @@
+/* Report pages: mirror GTA VI / OF Terms without touching those pages. */
+:root body #mainContent #page-reporting .page-intro {
+  padding-top:24px!important;padding-bottom:12px!important;margin-bottom:4px!important;
+}
+:root body #mainContent #page-reporting .refresh-heading-copy h1 {
+  color:#0b111f!important;letter-spacing:-.055em;font-size:clamp(31px,3vw,42px)!important;
+}
+:root body #mainContent #page-reporting .rpt-status {
+  font-size:11px!important;color:#3b4d67!important;font-weight:750!important;margin:0 0 9px!important;
+}
+:root body #mainContent #page-reporting .rpt-campaign-panel {
+  margin:0 0 20px!important;padding:0!important;border:0!important;
+}
+:root body #mainContent #page-reporting .rpt-stats.daily-overview-metrics {
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:11px!important;align-items:stretch!important;min-width:0!important;
+  margin:10px 0 24px!important;padding:0!important;background:transparent!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;
+}
+:root body #mainContent #page-reporting .rpt-stats > .rpt-stat.daily-metric {
+  display:flex!important;flex-direction:column!important;justify-content:space-between!important;
+  min-width:0!important;min-height:114px!important;box-sizing:border-box!important;
+  padding:16px 18px!important;margin:0!important;border:0!important;
+  border-radius:15px!important;box-shadow:none!important;overflow:hidden!important;
+  gap:10px!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .daily-metric-spend {
+  background:var(--xtracker-money-gradient,#0654ef)!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .daily-metric-published {
+  background:linear-gradient(135deg,#7e22ce,#6b21a8)!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .daily-metric-seven {
+  background:var(--xtracker-clicks-gradient,#0654ef)!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .daily-metric-shortio {
+  background:linear-gradient(135deg,#ffb347,#f97316)!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat .daily-metric-label {
+  font-size:11px!important;line-height:1.3!important;font-weight:850!important;letter-spacing:0!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat strong {
+  font-size:clamp(26px,2.5vw,37px)!important;line-height:1.05!important;
+  font-weight:900!important;letter-spacing:-.045em!important;font-variant-numeric:tabular-nums!important;
+  overflow-wrap:anywhere!important;white-space:normal!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat:not(.daily-metric-shortio) :is(.daily-metric-label,strong,small) {
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat.daily-metric-shortio :is(.daily-metric-label,strong,small) {
+  color:#351400!important;-webkit-text-fill-color:#351400!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat small {
+  font-size:10px!important;opacity:.9!important;
+}
+/* Same clean, individually outlined publisher rows as the X RTs / Accounts tables. */
+:root body #mainContent #page-reporting .rpt-scroll {
+  width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;
+  padding:0 2px 2px!important;margin:8px 0 18px!important;background:transparent!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  -webkit-overflow-scrolling:touch;
+}
+:root body #mainContent #page-reporting .rpt-table {
+  border-collapse:separate!important;border-spacing:0 8px!important;
+  width:100%!important;min-width:650px!important;background:transparent!important;
+  color:#0f172a!important;font-size:12px!important;
+}
+:root body #mainContent #page-reporting .rpt-table thead th {
+  background:transparent!important;border:0!important;position:static!important;
+  text-align:left!important;color:#263956!important;padding:5px 12px 7px!important;
+  font-size:11px!important;line-height:1.3!important;font-weight:850!important;
+  text-transform:none!important;letter-spacing:0!important;
+}
+:root body #mainContent #page-reporting .rpt-table tbody tr {background:#fff!important;}
+:root body #mainContent #page-reporting .rpt-table tbody td {
+  background:#fff!important;color:#101827!important;border:0!important;
+  border-top:1px solid #dce5f0!important;border-bottom:1px solid #dce5f0!important;
+  padding:15px 12px!important;font-size:12px!important;line-height:1.35!important;
+  font-weight:800!important;vertical-align:middle!important;
+}
+:root body #mainContent #page-reporting .rpt-table tbody td:first-child {
+  border-left:1px solid #dce5f0!important;border-radius:13px 0 0 13px!important;
+}
+:root body #mainContent #page-reporting .rpt-table tbody td:last-child {
+  border-right:1px solid #dce5f0!important;border-radius:0 13px 13px 0!important;
+}
+:root body #mainContent #page-reporting .rpt-table tbody tr:hover td {
+  background:#f5f8ff!important;
+}
+:root body #mainContent #page-reporting .rpt-section-title {
+  padding:8px 0 3px!important;margin:0 0 9px!important;align-items:center!important;
+}
+:root body #mainContent #page-reporting .rpt-section-title h2 {
+  font-size:clamp(19px,1.7vw,25px)!important;line-height:1.15!important;
+  letter-spacing:-.045em!important;color:#111827!important;margin:0!important;
+}
+:root body #mainContent #page-reporting .rpt-posts-heading {
+  padding-top:8px!important;margin-bottom:10px!important;
+}
+:root body #mainContent #page-reporting .rpt-posts-heading h2 {
+  font-size:clamp(19px,1.7vw,25px)!important;color:#111827!important;
+  font-weight:900!important;letter-spacing:-.045em!important;
+}
+:root body #mainContent #page-reporting .rpt-refresh {
+  background:#ff008c!important;color:#fff!important;border-color:#ff008c!important;
+  font-weight:900!important;border-radius:12px!important;
+}
+@media(max-width:950px) {
+  :root body #mainContent #page-reporting .rpt-stats.daily-overview-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;
+  }
+}
+@media(max-width:570px) {
+  :root body #mainContent #page-reporting .page-intro {padding-top:12px!important;}
+  :root body #mainContent #page-reporting .rpt-stats > .rpt-stat.daily-metric {
+    min-height:101px!important;padding:14px!important;
+  }
+  :root body #mainContent #page-reporting .rpt-stats .rpt-stat strong {font-size:clamp(25px,7vw,33px)!important;}
+  :root body #mainContent #page-reporting .rpt-table {min-width:580px!important;}
+}

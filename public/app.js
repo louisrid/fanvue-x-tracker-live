@@ -1601,7 +1601,7 @@ function initGtaUi(){
     const button=el(prefix+'EngagementButton'),expanded=button.getAttribute('aria-expanded')==='true';
     button.setAttribute('aria-expanded',String(!expanded));el(prefix+'EngagementDetails').hidden=expanded;
   });
-  setInterval(()=>{if(!document.hidden&&state.page==='gta-vi')void loadGtaReport();},60000);
+  setInterval(()=>{if(!document.hidden&&(state.page==='gta-vi'||gtaState.report?.ready))void loadGtaReport();},60000);
   el('gtaRefreshButton').addEventListener('click',refreshGtaReport);
   const gtaTabs=[...document.querySelectorAll('[data-gta-tab]')];
   gtaTabs.forEach((button,index)=>{
@@ -1613,10 +1613,10 @@ function initGtaUi(){
       gtaTabs[next].click();gtaTabs[next].focus();
     });
   });
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.page==='gta-vi')void loadGtaReport();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(state.page==='gta-vi'||gtaState.report?.ready))void loadGtaReport();});
 }
 
-function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';const reportCode=String(page||'').match(/^report-(all|discord|gta|of|article-rt|guru|articles|harness|other)$/)?.[1]||null;state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=reportCode?'reporting':campaignRoute?'of':['dashboard','campaigns','stats','historical','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;const reportNames={all:'All Campaigns',discord:'Discord',gta:'GTA VI',of:'OF Terms','article-rt':'X Article Boosts',guru:'Guru X RTs',articles:'X Articles',harness:'AI Harness',other:'Other Campaigns'};document.title=pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?(reportNames[reportCode]||'All Campaigns')+' · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
+function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(page==='report-gta'){page='gta-vi';updateUrl=true;}if(page==='report-of'){page='campaign-C001';updateUrl=true;}if(['report-all','report-harness','report-other','report-discord','reporting'].includes(page)){page='dashboard';updateUrl=true;}closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';const reportCode=String(page||'').match(/^report-(article-rt|guru|articles)$/)?.[1]||null;state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=reportCode?'reporting':campaignRoute?'of':['dashboard','campaigns','stats','historical','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;const reportNames={'article-rt':'X Article Boosts',guru:'Guru X RTs',articles:'X Articles'};document.title=pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?(reportNames[reportCode]||'X Article Boosts')+' · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
   document.body.classList.toggle('is-home',pg==='dashboard');
   document.querySelectorAll('.site-page').forEach(e=>e.hidden=e.id!=='page-'+pg);
   document.querySelectorAll('[data-page]').forEach(e=>{const is=e.dataset.page===pg||(e.closest('.mobile-nav')&&e.dataset.page==='stats'&&pg==='campaigns');e.classList.toggle('is-active',is);e.setAttribute('aria-current',is?'page':'false');});
@@ -1626,7 +1626,7 @@ function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';clos
   const gtaCTA=el('gtaButton');if(gtaCTA){gtaCTA.href=pg==='gta-vi'?'#dashboard':'#gta-vi';gtaCTA.setAttribute('aria-current',pg==='gta-vi'?'page':'false');}
   if(pg==='x-rts'){renderBoosts();void loadBoosts();}
   if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
-  if(pg==='reporting')window.XTrackerCampaignReporting?.show(reportCode||'all');
+  if(pg==='reporting')window.XTrackerCampaignReporting?.show(reportCode||'article-rt');
   if(pg==='dashboard'){renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
   if(pg==='of'){renderOfReport();if(!state.ofLoading&&Date.now()-(state.ofLastLoadedAt||0)>45000)void loadOfReport();}if(pg==='stats')renderCharts();window.scrollTo({top:0,behavior:'instant'});
 }
@@ -1923,8 +1923,8 @@ function initBoosts(){
   document.addEventListener('click',e=>{const row=e.target.closest('[data-boost]');if(row)showBoostDetails(row.dataset.boost);const edit=e.target.closest('[data-boost-edit]');if(edit)openEditor('boost',edit.dataset.boostEdit);if(e.target.id==='boostRemove'){const label=el('boostRemoveConfirm');label.hidden=false;if(label.querySelector('input').checked)void saveBoostForm(el('boostForm'),true);else el('boostFormStatus').textContent='Confirm removal, then press Remove tweet again.';}});
   document.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.matches('tr[data-boost]')){e.preventDefault();showBoostDetails(e.target.dataset.boost);}});
   document.addEventListener('submit',e=>{if(e.target.id==='boostForm'){e.preventDefault();void saveBoostForm(e.target);}});
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.page==='x-rts')void loadBoosts();});
-  setInterval(()=>{if(!document.hidden&&state.page==='x-rts')void loadBoosts();},60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(state.page==='x-rts'||boostsState.loaded))void loadBoosts();});
+  setInterval(()=>{if(!document.hidden&&(state.page==='x-rts'||boostsState.loaded))void loadBoosts();},60000);
   renderBoosts();
 }
 
