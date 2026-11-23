@@ -1,0 +1,49 @@
+name: Fanvue X Tracker reporting QA
+on:
+  push:
+    branches:
+      - feature/article-qrt-lifetime-reporting-20261123
+  pull_request:
+    paths:
+      - 'netlify/functions/campaign-overview.mjs'
+      - 'netlify/functions/gta-report.mjs'
+      - 'netlify/lib/quoted-originals.mjs'
+      - 'netlify/lib/gta-x-metrics.mjs'
+      - 'public/**'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  reporting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install existing project dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify JavaScript and Netlify function syntax
+        run: |
+          node --check public/app.js
+          node --check public/campaign-reporting.js
+          node --check netlify/functions/gta-report.mjs
+          node --check netlify/functions/campaign-overview.mjs
+          node --check netlify/lib/quoted-originals.mjs
+          node --check netlify/lib/gta-x-metrics.mjs
+      - name: Run new reporting, GTA, X and integrity tests
+        run: node --test tests/campaign-reporting.test.mjs tests/gta-x-metrics.test.mjs tests/gta-qrts.test.mjs tests/reporting-integrity.test.mjs tests/boosts.test.mjs
+      - name: Compare full regression suite against untouched production main
+        shell: bash
+        run: |
+          set -uo pipefail
+          npm test > /tmp/reporting-branch-suite.log 2>&1 || true
+          git fetch origin main --depth=1
+          git worktree add --detach /tmp/xtracker-main-reference origin/main
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/xtracker-main-reference/node_modules
+          (cd /tmp/xtracker-main-reference && npm test > /tmp/reporting-main-suite.log 2>&1) || true
+          node scripts/compare-baseline-tests.mjs /tmp/reporting-main-suite.log /tmp/reporting-branch-suite.log

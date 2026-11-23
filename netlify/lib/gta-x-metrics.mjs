@@ -1,6 +1,20 @@
 // Provider failures never establish that a Sheet placement should be removed.
 const number=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
 const failure=(category,message,extra={})=>Object.assign(new Error(message),{category,...extra});
+// Quote data belongs to the source X post, not to the paid QRT itself.
+// Only a provider-confirmed status ID can establish this relationship.
+export function parseQuotedPost(tweet,at=new Date().toISOString()){
+  const quote=tweet?.quote;
+  if(!quote||typeof quote!=='object')return null;
+  const id=String(quote.id??quote.id_str??'');
+  const url=String(quote.url||'');
+  const match=url.match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})\/status\/(\d+)(?:[/?#]|$)/i);
+  if(!/^\d{1,20}$/.test(id)||id==='0'||(url&&!match)||(match&&match[2]!==id))return null;
+  const handle=String(quote.author?.screen_name||quote.author?.username||match?.[1]||'');
+  if(!/^[A-Za-z0-9_]{1,15}$/.test(handle))return null;
+  return {id,handle,url:`https://x.com/${handle}/status/${id}`,
+    views:number(quote.views),likes:number(quote.likes),reposts:number(quote.retweets),replies:number(quote.replies),at};
+}
 export async function readGtaXMetric(post,{fetcher=fetch,sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
   for(let attempt=0;attempt<3;attempt++){
     try{
@@ -17,7 +31,7 @@ export async function readGtaXMetric(post,{fetcher=fetch,sleep=ms=>new Promise(r
       if(String(tweet?.id??tweet?.id_str??'')!==post.id)throw failure('missing_data','Provider returned no matching X post');
       const metric={views:number(tweet.views),likes:number(tweet.likes),reposts:number(tweet.retweets),replies:number(tweet.replies)};
       if(Object.values(metric).some(v=>v===null))throw failure('missing_data','X provider did not return all four metrics');
-      return {...metric,at:new Date().toISOString(),error:'',lastAttemptAt:new Date().toISOString()};
+      const at=new Date().toISOString();return {...metric,at,error:'',lastAttemptAt:at,quotedPost:parseQuotedPost(tweet,at)};
     }catch(error){
       if(!error.category)error=failure(['TimeoutError','AbortError'].includes(error.name)?'timeout':'api_failure','X provider '+(['TimeoutError','AbortError'].includes(error.name)?'timeout':'network failure'));
       const transient=error.category==='timeout'||error.category==='rate_limit'||(error.category==='api_failure'&&(!error.status||error.status>=500));
