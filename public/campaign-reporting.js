@@ -10,7 +10,12 @@
   const validOverview=data=>data?.ok===true&&Array.isArray(data.campaigns)&&data.campaigns.length>0&&
     data.campaigns.every(c=>c&&typeof c==='object'&&typeof c.id==='string');
   const cachedOverview=window.XTrackerLastGood?.read('campaign-overview',validOverview);
-  const state={tab:'all',data:cachedOverview?.payload||null,loading:null,error:'',lastLoadAt:0};
+  const validClicks=d=>d?.ok===true&&Number.isSafeInteger(d.total)&&d.total>=0&&Number.isSafeInteger(d.last7Days)&&d.last7Days>=0&&d.last7Days<=d.total;
+  const validMembers=d=>d?.ok===true&&Array.isArray(d.history)&&d.latest&&Number.isSafeInteger(d.latest.memberCount)&&d.latest.memberCount>=0;
+  const state={tab:'all',data:cachedOverview?.payload||null,loading:null,error:'',lastLoadAt:0,
+    discordClicks:window.XTrackerLastGood?.read('discord-course-clicks',validClicks)?.payload||null,
+    discordMembers:window.XTrackerLastGood?.read('discord-members',validMembers)?.payload||null,
+    discordLoading:null,discordLastLoadAt:0,discordVisited:false};
   const el=id=>document.getElementById(id);
   const txt=v=>String(v??'');
   const esc=v=>txt(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -22,7 +27,9 @@
   const link=(u,label)=>{const href=url(u);return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':'<span class="rpt-missing">Not supplied</span>';};
   const item=id=>state.data?.campaigns?.find(c=>c.id===id);
   const list=()=>state.data?.campaigns||[];
-  const viewStatus=c=>c?.source==='NOT_CONNECTED'?'Not connected':c?.unavailable||c?.source==='UNAVAILABLE'?'Unavailable':c?.sourceStale||c?.dataWarning?'Saved data':'Connected';
+  const hasFeed=c=>!!c&&c.source!=='NOT_CONNECTED'&&c.source!=='UNAVAILABLE'&&!c.unavailable;
+  const published=c=>hasFeed(c)?format(c.published):'—';
+  const viewStatus=c=>c?.source==='NOT_CONNECTED'?'No feed':c?.unavailable||c?.source==='UNAVAILABLE'?'Unavailable':c?.sourceStale||c?.dataWarning?'Saved data':'Connected';
   const badge=c=>'<span class="rpt-source rpt-source-'+(viewStatus(c)==='Connected'?'ok':viewStatus(c)==='Saved data'?'saved':'missing')+'">'+esc(viewStatus(c))+'</span>';
   const metric=(label,value,sub='')=>'<div class="rpt-stat"><dt>'+esc(label)+'</dt><dd>'+esc(value)+'</dd>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div>';
   const clicks=c=>c?.allTimeHumanClicks??c?.trackedClicks??null;
@@ -101,11 +108,14 @@
       '<p class="rpt-note">Original-post views include organic exposure. QRT views reflect only the separate posts quoted by each publisher. They must not be added together as unique reach.</p>';
   }
   function renderOverview(){
+    const unlinked=list().filter(c=>!hasFeed(c));
+    const sourceNote=unlinked.length?'<p class="rpt-note"><strong>No verified campaign posts linked:</strong> '+
+      esc(unlinked.map(c=>c.name).join(', '))+'. Their feeds are not connected; this does not prove that no posts exist. Other Campaigns is a grouping, not a separate post feed.</p>':'';
     return header('Campaign overview','All available campaigns · lifetime totals without date filters')+
-      '<p class="rpt-note">Each source is shown separately to avoid double-counting shared campaigns and article views.</p>'+
+      sourceNote+'<p class="rpt-note">Each source is shown separately to avoid double-counting shared campaigns and article views.</p>'+
       grid(['Campaign','Data source','Paid spend','Published','X views','Tracked clicks','Conversions'],list().map(c=>[
         '<button class="rpt-rowbutton" data-report-jump="'+esc(c.id.startsWith('gta-')?'gta':c.id==='of-terms'?'of':c.id==='article-rts'?'article-rt':c.id==='guru-rts'?'guru':c.id==='ai-harness'?'harness':c.id==='discord'?'discord':'articles')+'">'+esc(c.name)+'</button>',
-        badge(c),usd(c.paidSpendKnown),format(c.published),format(c.views),format(clicks(c)),'<span class="rpt-missing">Not connected</span>'
+        badge(c),usd(c.paidSpendKnown),published(c),hasFeed(c)?format(c.views):'—',hasFeed(c)?format(clicks(c)):'—','<span class="rpt-missing">Not connected</span>'
       ]))+note;
   }
   function renderArticleGroups(){
@@ -140,10 +150,10 @@
   function unconnectedContent(id,fields,reason){
     const c=item(id);
     if(!c)return empty('No campaign data source is connected.');
-    return header(c.name,'Dedicated campaign analytics · source connection required')+badge(c)+
-      '<div class="rpt-unconnected"><strong>Metrics not yet connected</strong><p>'+
+    return header(c.name,'No verified campaign posts linked · Source not connected')+badge(c)+
+      '<div class="rpt-unconnected"><strong>No verified posts linked to this campaign</strong><p>'+
       esc(fields.join(' · '))+'</p><small>'+esc(reason)+'</small></div>'+
-      '<p class="rpt-note">The dashboard will not show fabricated figures, zero conversions or assumed placements. Existing campaign pages continue to work.</p>';
+      '<p class="rpt-note">The source is not connected. This does not mean no posts exist. No estimated zeroes or fabricated figures are shown.</p>';
   }
   function content(){
     switch(state.tab){
@@ -155,10 +165,10 @@
       case 'guru':return guruContent();
       case 'articles':return renderArticleGroups()+campaignPanel('x-articles');
       case 'harness':return unconnectedContent('ai-harness',['Angles and concepts','Spend by angle','Views and clicks','Sign-ups','KYC','Earning creators','Winning creative'],'Live creative-level campaign data and verified attribution are required to compare angles fairly.');
-      case 'discord':return unconnectedContent('discord',['Active creators','Weekly growth','Competitions','Prism credits','Sign-ups','KYC','First earning creators'],'Fanvue creator conversion feeds are not yet linked.');
-      case 'other':return header('Other activity','Cross-campaign status and source coverage')+
+      case 'discord':return discordContent();
+      case 'other':return header('Other activity','An overview category, not a separate post campaign')+
                         renderArticleGroups()+
-                        '<p class="rpt-note">New campaign results appear here when their verified source is connected. Existing article reporting, redirect tracking and historic pages remain available unchanged.</p>';
+                        '<p class="rpt-note">Other Campaigns has no dedicated post feed. Historical article groups above are sourced from the existing X Articles report. New campaigns appear once their verified source is connected.</p>';
       default:return renderOverview();
     }
   }
