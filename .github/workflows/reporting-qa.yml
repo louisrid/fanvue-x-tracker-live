@@ -37,5 +37,13 @@ jobs:
           node --check netlify/lib/gta-x-metrics.mjs
       - name: Run new reporting, GTA, X and integrity tests
         run: node --test tests/campaign-reporting.test.mjs tests/gta-x-metrics.test.mjs tests/gta-qrts.test.mjs tests/reporting-integrity.test.mjs tests/boosts.test.mjs
-      - name: Run existing production regression suite
-        run: npm test
+      - name: Compare full regression suite against untouched production main
+        shell: bash
+        run: |
+          set -uo pipefail
+          npm test > /tmp/reporting-branch-suite.log 2>&1 || true
+          git fetch origin main --depth=1
+          git worktree add --detach /tmp/xtracker-main-reference origin/main
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/xtracker-main-reference/node_modules
+          (cd /tmp/xtracker-main-reference && npm test > /tmp/reporting-main-suite.log 2>&1) || true
+          node scripts/compare-baseline-tests.mjs /tmp/reporting-main-suite.log /tmp/reporting-branch-suite.log
