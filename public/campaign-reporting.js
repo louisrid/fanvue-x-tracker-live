@@ -221,10 +221,14 @@
     const panel=el('reportingPanel'),status=el('reportingStatus'),heading=el('reportingTitle');
     if(!panel||!status)return;
     if(heading)heading.innerHTML=esc(tabs.find(([key])=>key===state.tab)?.[1]||'All Campaigns')+'<span class="heading-accent">.</span>';
-    if(state.loading&&!state.data){status.textContent='Loading verified campaign feeds…';panel.innerHTML=empty('Loading data.');return;}
+    const caption=document.querySelector('#page-reporting .rpt-header-caption');
+    if(caption)caption.textContent=state.tab==='harness'?'No verified campaign posts linked · source not connected':
+      state.tab==='discord'?'Tracked course clicks and server membership · First Earnings feed not connected':
+      state.tab==='other'?'Grouping only · no separate post feed':'Lifetime results from connected sources';
+    if(state.loading&&!state.data&&state.tab!=='discord'){status.textContent='Loading verified campaign feeds…';panel.innerHTML=empty('Loading data.');return;}
     status.textContent=state.error?(state.data?'Saved readings · '+state.error:'Feed unavailable · '+state.error):
       state.data?'Last checked '+date(state.data.checkedAt)+' · '+Object.values(state.data.sourceHealth||{}).filter(s=>s.ok).length+' connected feeds':'Not loaded';
-    panel.innerHTML=state.data?content():empty(state.error||'Campaign report not loaded.');
+    panel.innerHTML=state.data||state.tab==='discord'?content():empty(state.error||'Campaign report not loaded.');
   }
   async function load(force=false){
     if(state.loading)return state.loading;
@@ -234,10 +238,20 @@
         const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         const data=await res.json();
         if(!res.ok||!validOverview(data))throw Error(data.error||'Campaign reporting temporarily unavailable');
-        // A blank API response must never wipe a previously successful campaign report.
-        state.data=data;state.error='';state.lastLoadAt=Date.now();
-        window.XTrackerLastGood?.write('campaign-overview',data,validOverview);
-        return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!data.campaigns.some(c=>c.dataWarning||c.sourceStale);
+        // When a source fails, preserve that campaign's last verified rows.
+        // Successful source updates, including legitimate removals, remain authoritative.
+        const prior=new Map((state.data?.campaigns||[]).map(c=>[c.id,c]));
+        const safe={...data,campaigns:data.campaigns.map(current=>{
+          const saved=prior.get(current.id);
+          const failure=current.unavailable||current.sourceStale||current.dataWarning||current.source==='UNAVAILABLE';
+          if(failure&&hasFeed(saved)&&saved.rows?.length&&!current.rows?.length){
+            return {...saved,sourceStale:true,dataWarning:'Source unavailable; showing last verified campaign posts'};
+          }
+          return current;
+        })};
+        state.data=safe;state.error='';state.lastLoadAt=Date.now();
+        window.XTrackerLastGood?.write('campaign-overview',safe,validOverview);
+        return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!safe.campaigns.some(c=>c.dataWarning||c.sourceStale);
       }catch(e){state.error=txt(e.message||e);return false;}
       finally{state.loading=null;render();}
     })();
@@ -254,15 +268,36 @@
     el('reportingPanel')?.addEventListener('click',event=>{
       const btn=event.target.closest('[data-report-jump]');if(btn)changeTab(btn.dataset.reportJump);
     });
-    el('reportingRefreshButton')?.addEventListener('click',()=>{void load(true);});
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(location.hash==='#reporting'||location.hash.startsWith('#report-')))void load();});
-    setInterval(()=>{if(!document.hidden&&(location.hash==='#reporting'||location.hash.startsWith('#report-')))void load();},120000);
+    el('reportingRefreshButton')?.addEventListener('click',()=>{void window.XTrackerCampaignReporting?.reload?.();});
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden)return;
+      if(state.data||location.hash==='#reporting'||location.hash.startsWith('#report-'))void load();
+      if(state.discordVisited)void refreshDiscordMetrics();
+    });
+    // Refresh all previously loaded campaign results, not just the visible category.
+    // GET only; the live providers and paid refresh actions are not invoked.
+    setInterval(()=>{
+      if(document.hidden)return;
+      if(state.data||location.hash==='#reporting'||location.hash.startsWith('#report-'))void load();
+      if(state.discordVisited)void refreshDiscordMetrics();
+    },90000);
     // app.js runs before this deferred module, so deep links need a first render here.
     // Without this, direct campaign URLs can remain stuck on the loading placeholder.
     const direct=location.hash.match(/^#report-(all|discord|gta|of|article-rt|guru|articles|harness|other)$/);
     if(direct||location.hash==='#reporting')window.XTrackerCampaignReporting?.show(direct?.[1]||'all');
   }
-  window.XTrackerCampaignReporting={show:(selected='all')=>{state.tab=tabs.some(([key])=>key===selected)?selected:'all';render();void load();},reload:()=>load(true)};
+  window.XTrackerCampaignReporting={
+    show:(selected='all')=>{
+      state.tab=tabs.some(([key])=>key===selected)?selected:'all';
+      render();
+      void load();
+      if(state.tab==='discord')void refreshDiscordMetrics();
+    },
+    reload:async()=>{
+      const [campaigns]=await Promise.all([load(true),refreshDiscordMetrics(true)]);
+      return campaigns;
+    }
+  };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
