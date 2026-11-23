@@ -32,7 +32,8 @@ export function makeCourseClicksHandler({
 }={}){
   return async req=>{
     if(isCourseBeacon(req)){
-      if(req.method!=='HEAD')return Response.redirect(new URL('/',req.url),302);
+      if(req.method==='GET')return new Response(null,{status:200,headers:responseHeaders});
+      if(req.method!=='HEAD')return new Response(null,{status:405,headers:responseHeaders});
       // Do not treat a browser visit, crawler, or API stats request as a click.
       if(!isTrustedCourseBeacon(req))return Response.redirect(new URL('/',req.url),302);
       try{
