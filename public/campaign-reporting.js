@@ -28,7 +28,7 @@
   }
   function empty(message){return '<div class="rpt-empty">'+esc(message)+'</div>';}
   function header(title,sub){
-    return '<div class="rpt-section-title"><div><h2>'+esc(title)+'<span class="heading-accent">.</span></h2><p>'+esc(sub||'Lifetime campaign reporting')+'</p></div></div>';
+    return '<div class="rpt-section-title"><div><h2>'+esc(title)+'<span class="heading-accent">.</span></h2><p>'+esc(sub||'Lifetime campaign analytics')+'</p></div></div>';
   }
   function totals(c){
     if(!c)return '';
@@ -136,7 +136,7 @@
   function unconnectedContent(id,fields,reason){
     const c=item(id);
     if(!c)return empty('No campaign data source is connected.');
-    return header(c.name,'Dedicated campaign reporting · source connection required')+badge(c)+
+    return header(c.name,'Dedicated campaign analytics · source connection required')+badge(c)+
       '<div class="rpt-unconnected"><strong>Metrics not yet connected</strong><p>'+
       esc(fields.join(' · '))+'</p><small>'+esc(reason)+'</small></div>'+
       '<p class="rpt-note">The dashboard will not show fabricated figures, zero conversions or assumed placements. Existing campaign pages continue to work.</p>';
@@ -151,7 +151,7 @@
       case 'guru':return guruContent();
       case 'articles':return renderArticleGroups()+campaignPanel('x-articles');
       case 'harness':return unconnectedContent('ai-harness',['Angles and concepts','Spend by angle','Views and clicks','Sign-ups','KYC','Earning creators','Winning creative'],'Live creative-level campaign data and verified attribution are required to compare angles fairly.');
-      case 'discord':return unconnectedContent('discord',['Active creators','Weekly growth','Competitions','Prism credits','Sign-ups','KYC','First earning creators'],'The Discord membership and Fanvue creator conversion feeds are not yet linked.');
+      case 'discord':return unconnectedContent('discord',['Active creators','Weekly growth','Competitions','Prism credits','Sign-ups','KYC','First earning creators'],'Fanvue creator conversion feeds are not yet linked.');
       case 'other':return header('Other activity','Cross-campaign status and source coverage')+
                         renderArticleGroups()+
                         '<p class="rpt-note">New campaign results appear here when their verified source is connected. Existing article reporting, redirect tracking and historic pages remain available unchanged.</p>';
@@ -176,7 +176,7 @@
       try{
         const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         const data=await res.json();
-        if(!res.ok||!data.ok||!Array.isArray(data.campaigns))throw Error(data.error||'Campaign reporting unavailable');
+        if(!res.ok||!data.ok||!Array.isArray(data.campaigns))throw Error(data.error||'Analytics unavailable');
         state.data=data;state.error='';state.lastLoadAt=Date.now();
         return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!data.campaigns.some(c=>c.dataWarning||c.sourceStale);
       }catch(e){state.error=txt(e.message||e);return false;}
