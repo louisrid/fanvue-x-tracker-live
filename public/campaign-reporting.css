@@ -1,14 +1,29 @@
-/* Additive, high-contrast lifetime reporting; all original page styles remain untouched. */
-:root .app-header .campaign-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;max-width:680px!important;}
-:root .app-header .campaign-nav > a.reporting-nav-link{
-  background:#111827!important;color:#fff!important;border:1px solid #111827!important;
-  border-radius:12px!important;text-decoration:none!important;font-weight:900!important;
-  box-shadow:0 2px 0 #020617!important;letter-spacing:-.025em!important;
+/* Direct campaign buttons. No extra Analytics or reporting navigation tab. */
+:root .app-header .campaign-nav{
+  display:flex!important;flex-wrap:wrap!important;justify-content:center!important;
+  grid-template-columns:none!important;max-width:1080px!important;width:100%!important;
+  gap:9px!important;margin:4px auto 6px!important;
 }
-:root .app-header .campaign-nav > a.reporting-nav-link:hover,
-:root .app-header .campaign-nav > a.reporting-nav-link[aria-current="page"]{
-  background:#2255e8!important;border-color:#2255e8!important;color:#fff!important;
+:root .app-header .campaign-nav > a{
+  flex:0 1 193px!important;min-width:0!important;min-height:45px!important;
+  padding:9px 12px!important;border-radius:12px!important;font-size:13px!important;
+  line-height:1.18!important;font-weight:900!important;letter-spacing:-.025em!important;
+  text-align:center!important;text-decoration:none!important;
+  box-shadow:0 2px 0 rgba(8,16,32,.12)!important;
+  transition:transform .15s ease,filter .15s ease!important;
 }
+:root .app-header .campaign-nav > a:hover{transform:translateY(-1px);filter:brightness(.96);}
+:root .app-header .campaign-nav > a:focus-visible{outline:3px solid #175af3!important;outline-offset:3px!important;}
+:root .app-header .campaign-nav > a[aria-current="page"]{outline:3px solid #175af3!important;outline-offset:2px!important;}
+:root .app-header .campaign-nav > a.of-promo-button{background:#39ff14!important;border:1px solid #31db17!important;color:#103500!important;}
+:root .app-header .campaign-nav > a.gta-promo-button{background:#ff008c!important;border:1px solid #f30082!important;color:#fff!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-boosts{background:#ffd22f!important;border:1px solid #e8b913!important;color:#151515!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-guru{background:#7446ec!important;border:1px solid #7446ec!important;color:#fff!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-discord{background:#5865f2!important;border:1px solid #5865f2!important;color:#fff!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-articles{background:#175af3!important;border:1px solid #175af3!important;color:#fff!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-harness{background:#17212f!important;border:1px solid #17212f!important;color:#fff!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-other{background:#fff!important;border:2px solid #17212f!important;color:#17212f!important;}
+:root .app-header .campaign-nav > a.campaign-report-button-overview{background:#fff!important;border:2px solid #175af3!important;color:#175af3!important;}
 #page-reporting{--rpt-ink:#0a1020;--rpt-stroke:#d3ddeb;--rpt-sub:#1c2840;--rpt-blue:#205bf0;max-width:100%;}
 #page-reporting .page-intro{min-height:0;padding-top:40px;padding-bottom:18px;}
 #page-reporting .page-intro h1{font-weight:900;letter-spacing:-.055em;}
@@ -83,8 +98,8 @@
   #page-reporting .rpt-stat:nth-child(n+5){border-top:1px solid var(--rpt-stroke);}
 }
 @media(max-width:760px){
-  :root .app-header .campaign-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;max-width:100%!important;}
-  :root .app-header .campaign-nav > a{font-size:11px!important;padding:8px 6px!important;line-height:1.2;}
+  :root .app-header .campaign-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;max-width:100%!important;gap:7px!important;}
+  :root .app-header .campaign-nav > a{flex:none!important;font-size:11.5px!important;padding:8px 5px!important;line-height:1.2!important;min-height:46px!important;}
   #page-reporting .page-intro{padding-top:26px;min-height:0;}
   #page-reporting .page-intro h1{font-size:30px;}
   #page-reporting .rpt-tabs{gap:6px;}

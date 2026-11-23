@@ -2,9 +2,9 @@
 (() => {
   'use strict';
   const tabs = [
-    ['all','Overview'],['gta','GTA VI'],['of','OF Terms'],['article-rt','X Article Boosts'],
-    ['guru','Guru RTs'],['articles','X Articles'],['harness','AI Harness'],
-    ['discord','Discord'],['other','Other']
+    ['all','All Campaigns'],['gta','GTA VI'],['of','OF Terms X Promo'],['article-rt','X Article Boosts'],
+    ['guru','Guru X RTs'],['articles','X Articles'],['harness','AI Harness'],
+    ['discord','Discord'],['other','Other Campaigns']
   ];
   const state={tab:'all',data:null,loading:null,error:'',lastLoadAt:0};
   const el=id=>document.getElementById(id);
@@ -159,10 +159,9 @@
     }
   }
   function render(){
-    const nav=el('reportingTabs'),panel=el('reportingPanel'),status=el('reportingStatus');
-    if(!nav||!panel||!status)return;
-    nav.innerHTML=tabs.map(([key,label])=>
-      '<button type="button" class="rpt-tab'+(state.tab===key?' is-active':'')+'" data-report-tab="'+key+'" role="tab" aria-selected="'+String(state.tab===key)+'">'+esc(label)+'</button>').join('');
+    const panel=el('reportingPanel'),status=el('reportingStatus'),heading=el('reportingTitle');
+    if(!panel||!status)return;
+    if(heading)heading.innerHTML=esc(tabs.find(([key])=>key===state.tab)?.[1]||'All Campaigns')+'<span class="heading-accent">.</span>';
     if(state.loading&&!state.data){status.textContent='Loading verified campaign feeds…';panel.innerHTML=empty('Loading data.');return;}
     status.textContent=state.error?(state.data?'Saved readings · '+state.error:'Feed unavailable · '+state.error):
       state.data?'Last checked '+date(state.data.checkedAt)+' · '+Object.values(state.data.sourceHealth||{}).filter(s=>s.ok).length+' connected feeds':'Not loaded';
@@ -172,7 +171,6 @@
     if(state.loading)return state.loading;
     if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return true;}
     state.loading=(async()=>{
-      render();
       try{
         const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         const data=await res.json();
@@ -182,24 +180,28 @@
       }catch(e){state.error=txt(e.message||e);return false;}
       finally{state.loading=null;render();}
     })();
+    // Render after state.loading is assigned, so direct links never say "Not loaded".
+    queueMicrotask(render);
     return state.loading;
   }
   function changeTab(next){
     if(!tabs.some(([key])=>key===next))return;
+    if(location.hash!=='#report-'+next){location.hash='report-'+next;return;}
     state.tab=next;render();
   }
   function init(){
-    el('reportingTabs')?.addEventListener('click',event=>{
-      const btn=event.target.closest('[data-report-tab]');if(btn)changeTab(btn.dataset.reportTab);
-    });
     el('reportingPanel')?.addEventListener('click',event=>{
       const btn=event.target.closest('[data-report-jump]');if(btn)changeTab(btn.dataset.reportJump);
     });
     el('reportingRefreshButton')?.addEventListener('click',()=>{void load(true);});
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&location.hash==='#reporting')void load();});
-    setInterval(()=>{if(!document.hidden&&location.hash==='#reporting')void load();},120000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(location.hash==='#reporting'||location.hash.startsWith('#report-')))void load();});
+    setInterval(()=>{if(!document.hidden&&(location.hash==='#reporting'||location.hash.startsWith('#report-')))void load();},120000);
+    // app.js runs before this deferred module, so deep links need a first render here.
+    // Without this, direct campaign URLs can remain stuck on the loading placeholder.
+    const direct=location.hash.match(/^#report-(all|discord|gta|of|article-rt|guru|articles|harness|other)$/);
+    if(direct||location.hash==='#reporting')window.XTrackerCampaignReporting?.show(direct?.[1]||'all');
   }
-  window.XTrackerCampaignReporting={show:()=>{render();void load();},reload:()=>load(true)};
+  window.XTrackerCampaignReporting={show:(selected='all')=>{state.tab=tabs.some(([key])=>key===selected)?selected:'all';render();void load();},reload:()=>load(true)};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
