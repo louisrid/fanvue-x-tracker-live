@@ -80,6 +80,28 @@ const state={placements:[],campaigns:[],history:[],activity:[],activityReady:fal
   hourlyEvents:[],hourlyReady:false,owner:'ALL',page:'dashboard',modalCode:'',accountCode:'',modalType:'',lastFocus:null,
   loading:false,initialLoadSettled:false,loadError:false,chartPeriod:30,lastLoadedAt:0,toastTimeout:0,adminKey:'',adminConfigured:false,
   selected:new Set(),pendingEditor:null,homePaidCodes:new Set(),homeVerified:false,homeChart:'clicks',dashboardWeek:'current',statsWeek:'current',historicalWeek:'current',fxRateGbp:null,fxRateDate:'',fxCheckedAt:0,fxLoading:false};
+// Keep deliberate week selections across reloads; default to latest active week when current week has no rows.
+const WEEK_CHOICE_KEYS={dashboardWeek:'xtracker-dashboard-week-choice-v1',historicalWeek:'xtracker-history-week-choice-v1'};
+for(const [field,key] of Object.entries(WEEK_CHOICE_KEYS)){
+  const choice=storage.get(key);
+  if(choice==='current'||choice==='other'||(/^\d{1,3}$/.test(choice||'')&&Number(choice)>0))state[field]=choice;
+}
+function selectLatestNonemptyWeek(){
+  const current=currentStatsWeekNumber();
+  const recent=state.placements.filter(p=>isLive(p)).map(p=>weeklyTabNumber(p))
+    .filter(n=>Number.isInteger(n)&&n>0&&n<=current);
+  if(!recent.length)return;
+  const last=Math.max(...recent);
+  const hasCurrent=recent.includes(current);
+  if(!hasCurrent){
+    for(const field of ['dashboardWeek','historicalWeek','statsWeek']){
+      if(field!=='statsWeek'&&storage.get(WEEK_CHOICE_KEYS[field])!==null)continue;
+      if(state[field]==='current')state[field]=String(last);
+    }
+  }else{
+    if(state.dashboardWeek==='current')state.statsWeek='current';
+  }
+}
 const dparts=d=>Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
 const day=d=>{if(!(d instanceof Date)||Number.isNaN(d.getTime()))return '';const p=dparts(d);return p.year+'-'+p.month+'-'+p.day;};
 const shift=(str,n)=>{const [y,m,d]=str.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);};
@@ -1233,6 +1255,7 @@ function applyDashboard(data){
     state.placements=data.placements.map(p=>({...p,owner:String(p.owner||'').toUpperCase(),platform:p.platform||'X',
       profileUrl:p.profileUrl||(p.platform==='Instagram'?'https://instagram.com/'+p.publisher:'https://x.com/'+p.publisher)}));
     if(!state.ofCampaign?.ready&&data.ofCampaign?.ready)state.ofCampaign=data.ofCampaign;
+    selectLatestNonemptyWeek();
     state.campaigns=Array.isArray(data.campaigns)?data.campaigns:[];
     state.history=Array.isArray(data.metricHistory)?data.metricHistory:[];
     state.trackingReady=data.trackingReady===true;
@@ -1269,6 +1292,12 @@ async function load(force=false){if(state.loading)return false;
       console.info('X Tracker frontend/backend versions differ; using compatible live data',APP_VERSION,data.uiVersion);
     }
     if(state.trackingReady&&data.trackingReady===false)throw new Error('Reporting temporarily unavailable');
+    // A transiently blank response must not erase the last verified source records.
+    const lastGood=readReportCache('xtracker-dashboard-cache-v1','placements','ok');
+    if(lastGood?.placements?.length&&data.placements.length===0&&
+       (data.homeVerified!==true||data.trackingReady!==true||data.warning||data.sourceStale)){
+      throw new Error('Source incomplete; preserving previous dashboard data');
+    }
     const merged=retainCachedStats(data,readReportCache('xtracker-dashboard-cache-v1','placements','ok'));applyDashboard(merged);saveReportCache('xtracker-dashboard-cache-v1',merged);return true;
   }catch(e){state.initialLoadSettled=true;state.loadError=true;console.error('Tracker refresh:',String(e.message||e));updateStatus(null,e);
     if(!state.placements.length&&!state.homeVerified)state.hourlyReady=false;
@@ -1594,7 +1623,7 @@ function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';clos
   if(pg==='x-rts'){renderBoosts();void loadBoosts();}
   if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
   if(pg==='reporting')window.XTrackerCampaignReporting?.show(reportCode||'all');
-  if(pg==='dashboard'){state.statsWeek='current';renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
+  if(pg==='dashboard'){renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
   if(pg==='of'){renderOfReport();if(!state.ofLoading&&Date.now()-(state.ofLastLoadedAt||0)>45000)void loadOfReport();}if(pg==='stats')renderCharts();window.scrollTo({top:0,behavior:'instant'});
 }
 function owner(next){state.owner=next;storage.set('xtracker-owner-v4',next);
@@ -1634,6 +1663,7 @@ function events(){
   el('homeArticleSort').addEventListener('change',renderWeekly);
   el('dashboardWeekSelect').addEventListener('change',e=>{
     state.dashboardWeek=e.target.value;
+    storage.set(WEEK_CHOICE_KEYS.dashboardWeek,state.dashboardWeek);
     renderWeekLabels();renderWeekly();renderKpis();
   });
   for(const id of ['trackerStatus','trackerPaid','trackerPlatform','trackerCampaign','trackerSort','trackerFrom','trackerTo','trackerMinClicks','trackerMinViews','trackerMaxCost'])
@@ -1656,6 +1686,7 @@ function events(){
   el('historicalWeekTabs').addEventListener('click',e=>{
     const tab=e.target.closest('[data-historical-week]');if(!tab)return;
     state.historicalWeek=tab.dataset.historicalWeek;
+    storage.set(WEEK_CHOICE_KEYS.historicalWeek,state.historicalWeek);
     renderHistorical();
   });
   el('historicalWeekTabs').addEventListener('keydown',e=>{
@@ -1665,6 +1696,7 @@ function events(){
     e.preventDefault();
     const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(index+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
     state.historicalWeek=tabs[next].dataset.historicalWeek;
+    storage.set(WEEK_CHOICE_KEYS.historicalWeek,state.historicalWeek);
     renderHistorical();el('historical-tab-'+state.historicalWeek)?.focus();
   });
   el('newCampaignButton').addEventListener('click',()=>openEditor('newCampaign'));
