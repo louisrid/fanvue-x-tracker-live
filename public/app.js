@@ -1213,7 +1213,7 @@ async function reloadAllData(){
     if(results[0].status!=='fulfilled'||results[0].value!==true)issues.add('Dashboard');
     if(results[1].status!=='fulfilled'||results[1].value!==true||state.ofError)issues.add('OF Terms');
     if(results[2].status!=='fulfilled'||boostsState.error)issues.add('X RTs');
-    if(results[3].status!=='fulfilled'||results[3].value!==true)issues.add('Campaign reports');
+    if(results[3].status!=='fulfilled'||results[3].value!==true)issues.add('Analytics');
     status.className='x-refresh-status '+(issues.size?'is-error':'is-success');
     status.textContent=issues.size
       ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'
@@ -1253,7 +1253,7 @@ async function loadOfReport(force=false,refreshMetrics=false){
     state.ofError='';state.ofCampaign=retainCachedStats(data,state.ofCampaign);saveReportCache('xtracker-of-cache-v1',state.ofCampaign);
     const verifiedAt=validDate(data.checkedAt||data.cachedAt);
     el('ofRefreshTime').textContent='Updated: '+(verifiedAt?new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(verifiedAt)+' UK':'not yet available');return true;
-  }catch(error){state.ofError='New readings are temporarily unavailable; showing saved figures when available.';if(!state.ofLastLoadedAt)el('ofRefreshTime').textContent='Updated: not yet available';if(!state.ofCampaign?.ready)state.ofCampaign={ready:false,error:'Campaign reporting is temporarily unavailable. Please try again shortly.'};return false;}
+  }catch(error){state.ofError='New readings are temporarily unavailable; showing saved figures when available.';if(!state.ofLastLoadedAt)el('ofRefreshTime').textContent='Updated: not yet available';if(!state.ofCampaign?.ready)state.ofCampaign={ready:false,error:'Analytics are temporarily unavailable. Please try again shortly.'};return false;}
   finally{state.ofLoading=false;state.ofSettled=true;state.ofLastLoadedAt=Date.now();preserveReadingPosition(()=>{renderOfReport();if(state.page==='campaigns')renderCampaigns();});}
 }
 async function load(force=false){if(state.loading)return false;
@@ -1284,7 +1284,7 @@ function renderOfReport(){
   el('ofLiveStatus').textContent=ready?'Campaign report':state.ofSettled?'Report unavailable':'Loading report…';
   el('ofLiveStatus').classList.toggle('is-live',ready);
   el('ofReportError').hidden=ready?!(report.warning||state.ofError):!state.ofSettled;
-  el('ofReportError').textContent=report?.warning||state.ofError||'Campaign reporting is temporarily unavailable. Please try again shortly.';
+  el('ofReportError').textContent=report?.warning||state.ofError||'Analytics are temporarily unavailable. Please try again shortly.';
   const rows=(ready?report.publishers:[]).filter(p=>p.posted===true).map(ofPublisherMetrics),activity=ready?(report.activity||[]):[];
   const daily=Array.from({length:7},(_,i)=>{const date=shift(from,i);return {date,clicks:activity.filter(e=>e.date===date).reduce((sum,e)=>sum+e.clicks,0)};});
   const paid=rows.filter(p=>p.paid),posted=rows.filter(p=>p.posted===true),weekly=daily.reduce((sum,d)=>sum+d.clicks,0);
