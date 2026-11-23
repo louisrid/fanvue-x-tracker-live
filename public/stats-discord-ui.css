@@ -551,3 +551,15 @@
   :root body .app-header .header-row .mobile-nav .mobile-nav-item {transition:none!important;}
   :root body .app-header .header-row .mobile-nav .mobile-nav-item:hover {transform:none!important;}
 }
+
+/* Keep dark text legible on the yellow and neon-green historical tiles;
+   these selectors intentionally outrank legacy all-white KPI typography. */
+:root body #mainContent #page-historical .historical-week-kpis .historical-week-kpi.historical-metric-money,
+:root body #mainContent #page-historical .historical-week-kpis .historical-week-kpi.historical-metric-likes {
+  color:#151b25!important;
+}
+:root body #mainContent #page-historical .historical-week-kpis .historical-week-kpi.historical-metric-money :is(span,strong),
+:root body #mainContent #page-historical .historical-week-kpis .historical-week-kpi.historical-metric-likes :is(span,strong) {
+  color:#151b25!important;
+  -webkit-text-fill-color:#151b25!important;
+}
