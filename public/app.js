@@ -1622,7 +1622,7 @@ function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(p
   document.querySelectorAll('[data-page]').forEach(e=>{const is=e.dataset.page===pg||(e.closest('.mobile-nav')&&e.dataset.page==='stats'&&pg==='campaigns');e.classList.toggle('is-active',is);e.setAttribute('aria-current',is?'page':'false');});
   const hash=campaignRoute?'campaign-C001':reportCode?'report-'+reportCode:pg;recordNavigation(hash,updateUrl);
   document.querySelectorAll('[data-campaign-report]').forEach(link=>link.setAttribute('aria-current',reportCode===link.dataset.campaignReport?'page':'false'));
-  const promo=document.querySelector('.of-promo-button');promo.href=pg==='of'?'#dashboard':'#campaign-C001';promo.setAttribute('aria-label',pg==='of'?'OF Terms X Promo · Return to Dashboard':'OF Terms X Promo');
+  const promo=document.querySelector('.of-promo-button');promo.href=pg==='of'?'#dashboard':'#campaign-C001';promo.setAttribute('aria-label',pg==='of'?'OF Terms X Promo · Return to Dashboard':'OF Terms X Promo');promo.setAttribute('aria-current',pg==='of'?'page':'false');
   const gtaCTA=el('gtaButton');if(gtaCTA){gtaCTA.href=pg==='gta-vi'?'#dashboard':'#gta-vi';gtaCTA.setAttribute('aria-current',pg==='gta-vi'?'page':'false');}
   if(pg==='x-rts'){renderBoosts();void loadBoosts();}
   if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
