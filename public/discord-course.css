@@ -1,0 +1,7 @@
+/* Compact Discord course metric, separate from the X campaign headline KPI grid. */
+.discord-course-summary{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;margin-top:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-weight:750}
+.discord-course-summary .discord-course-title{font-size:13px;font-weight:850;color:var(--text)}
+.discord-course-summary .discord-course-stat{font-size:13px;white-space:nowrap}
+.discord-course-summary .discord-course-stat strong{font-variant-numeric:tabular-nums;color:var(--text);font-size:17px;font-weight:850;margin-left:5px}
+.discord-course-summary .discord-course-note{font-size:11px;font-weight:700;color:var(--secondary);flex:1;min-width:190px;text-align:right}
+@media(max-width:750px){.discord-course-summary .discord-course-note{text-align:left;flex-basis:100%;min-width:0}}
