@@ -12,7 +12,7 @@ const xPost=url=>String(url||'').match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.
 const goodUrl=url=>{try{const u=new URL(String(url||''));return u.protocol==='https:'?u.href:'';}catch{return ''}};
 const sum=(rows,key)=>{const found=rows.map(key).map(num).filter(v=>v!==null);return found.length?found.reduce((a,b)=>a+b,0):null};
 const uniqueSum=(rows,key)=>{const seen=new Set();return sum(rows.filter(p=>{const id=xPost(p.postUrl);if(!id||seen.has(id))return false;seen.add(id);return true;}),key)};
-const moneyRows=rows=>{const paid=rows.filter(r=>r.paid);return {known:paid.reduce((n,p)=>n+(num(p.cost)||0),0),unknown:paid.filter(p=>num(p.cost)===null).length,paidCount:paid.length};};
+const moneyRows=rows=>{const paid=rows.filter(r=>r.paid),known=paid.map(p=>num(p.cost)).filter(v=>v!==null);return {known:known.length?known.reduce((n,v)=>n+v,0):null,unknown:paid.length-known.length,paidCount:paid.length};};
 const stamped=(o,...paths)=>paths.map(k=>o?.[k]).filter(Boolean)[0]||null;
 const diagnostic=(x)=>x instanceof Error?x.message:String(x||'Unknown source failure');
 const cellValue=c=>{let v=c?.value;if(v==null)return '';if(typeof v!=='object')return v;if(v instanceof Date)return v.toISOString();if('result' in v)return v.result??'';return v.text??v.richText?.map(x=>x.text).join('')??'';};
