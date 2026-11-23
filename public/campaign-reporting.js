@@ -147,7 +147,7 @@
       case 'gta': return articleSources()+campaignPanel('gta-qrts','Published paid QRT promotions · lifetime')+
                           campaignPanel('gta-originals','Original and V2 posts · separate from paid QRTs');
       case 'of':return campaignPanel('of-terms');
-      case 'article-rt':return campaignPanel('article-rts');
+      case 'article-rt':return campaignPanel('article-rts')+'<p class="rpt-note">Where the operations sheet supplies an original X status URL, its views are pulled from matching verified posts already tracked by this website. Each original post is counted once, even if several paid accounts reposted it. A repost by itself has no separate measurable view counter in this report.</p>';
       case 'guru':return guruContent();
       case 'articles':return renderArticleGroups()+campaignPanel('x-articles');
       case 'harness':return unconnectedContent('ai-harness',['Angles and concepts','Spend by angle','Views and clicks','Sign-ups','KYC','Earning creators','Winning creative'],'Live creative-level campaign data and verified attribution are required to compare angles fairly.');
