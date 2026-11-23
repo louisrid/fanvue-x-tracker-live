@@ -31,7 +31,7 @@ export function parseArticleRtWorkbook(workbook){
     const publisher=cellText(get('ACCOUNT'));
     if(!publisher||publisher.length>100)continue;
     const postUrl=goodUrl(cellLink(get('LINK')));
-    const profile=goodUrl(sheet.getRow(i).getCell(cols['ACCOUNT']+1)?.value);
+    const profile=goodUrl(cellLink(sheet.getRow(i).getCell(cols['ACCOUNT']+1)));
     rows.push({
       id:'ARTICLERT-'+i,sourceRow:i,publisher,profileUrl:profile,
       postUrl:xPost(postUrl)?postUrl:'',trackingUrl:goodUrl(cols['UTM LINK']?cellLink(get('UTM LINK')):''),
@@ -100,7 +100,8 @@ function ofCampaign(data){
   const rows=(data.publishers||[]).map(p=>({...p,views:num(p.xViews??p.views),likes:num(p.xLikes??p.likes),
     reposts:num(p.xShares??p.reposts),replies:num(p.xComments??p.replies),clicks:num(p.clicks)}));
   const d=normalCampaign('of-terms','OF Terms','article',rows,{source:'OF_REPORT',at:data.checkedAt},{
-    trackedClicks:sum(rows,p=>p.clicks)
+    trackedClicks:sum(rows,p=>p.clicks),
+    sourceNote:'OF Terms post clicks are recorded by the existing OF reporting feed. Do not mix them with Short.io click counts.'
   });
   return d;
 }
@@ -118,6 +119,15 @@ function dashboardCampaigns(data){
   const general=normalCampaign('x-articles','X Articles','article',rows,{source:'ARTICLE_TRACKER',at:data.sheetVerifiedAt},{
     trackedClicks:sum(rows,p=>p.clicks)
   });
+  const knownCampaigns=(data.campaigns||[]).filter(c=>c&&c.id).map(c=>{
+    const relevant=rows.filter(p=>p.campaignId===c.id),cost=moneyRows(relevant);
+    return {id:c.id,name:c.name||c.id,status:c.status||null,
+      placements:relevant.length,published:relevant.filter(p=>p.posted).length,
+      paidSpendKnown:cost.known,unknownPaidCosts:cost.unknown,
+      xViews:uniqueSum(relevant.filter(p=>p.posted),p=>p.views),
+      trackedClicks:sum(relevant,p=>p.clicks)};
+  }).filter(c=>c.placements||c.status);
+  general.sourceCampaigns=knownCampaigns;
   return [general];
 }
 export function assembleCampaignOverview(sources){
