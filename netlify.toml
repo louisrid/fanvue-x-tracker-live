@@ -5,6 +5,14 @@
 [functions]
   node_bundler = "esbuild"
 
+# Match the current Discord course button's existing beacon URL.
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/discord-course-clicks?source=discord-free-course"
+  status = 200
+  force = true
+  query = { source = "discord-free-course" }
+
 [[redirects]]
   from = "/r/:code"
   to = "/.netlify/functions/redirect?code=:code&cta=FANVUE"
