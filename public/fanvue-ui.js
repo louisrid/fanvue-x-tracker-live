@@ -103,9 +103,14 @@
   function strip(items){
     return '<section class="fv-panel fv-strip" style="--n:'+items.length+'" aria-label="Key metrics">'+items.map(it=>{
       const m=it.metric,unavailable=!m||m.value===null||!['value','partial','stale'].includes(m.state);
+      // Rounded figures (1.61M, $4,441) show the exact value on hover and to screen readers.
+      const shown=unavailable?'':formatValue(m.value,it.format||'count');
+      const exact=unavailable?'':formatValue(m.value,/^money/.test(it.format||'')?'money':'count');
+      const precise=!unavailable&&exact!==shown?' data-reason="Exact: '+esc(exact)+'"':'';
       return '<div class="fv-metric">'+
         '<div class="fv-metric-label">'+chipIcon(it.icon)+'<span>'+esc(it.label)+'</span></div>'+
-        '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'">'+value(m,it.format||'count')+'</div>'+
+        '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+value(m,it.format||'count')+
+          (precise?'<span class="fv-sr"> (exact '+esc(exact)+')</span>':'')+'</div>'+
         (it.chip!==undefined?it.chip:chipFor(m,it.note))+
       '</div>';
     }).join('')+'</section>';

@@ -3,7 +3,7 @@
 :root{
   --fv-sidebar:#000000;--fv-sidebar-text:#FFFFFF;--fv-nav-active:#212121;--fv-nav-hover:#151515;--fv-nav-group:#E3E7EC;
   --fv-outer:#DFE5EC;--fv-canvas:#DFE5EC;--fv-surface:#FFFFFF;
-  --fv-border:#E8EDF3;--fv-rule:#E8EDF3;--fv-hover:#EDF2F8;--fv-thead:#E6EEF7;--fv-tint:#F5F8FC;
+  --fv-border:#E8EDF3;--fv-rule:#E8EDF3;--fv-hover:#EDF2F8;--fv-field:#F1F4F8;--fv-thead:#E6EEF7;--fv-tint:#F5F8FC;
   --fv-ink:#000000;--fv-muted:#000000;--fv-label:#000000;
   /* Three font sizes, two weights, three radii and one faint line style, used everywhere. */
   --fv-w:720;--fv-w-strong:880;
@@ -90,13 +90,13 @@ body.fv [hidden]{display:none!important}
 .fv-metric-label .fv-chipicon{width:26px;height:26px}
 .fv-metric-value{font-size:var(--fv-fs-xl);line-height:33px;font-weight:var(--fv-w-strong);letter-spacing:-.85px;white-space:nowrap;min-height:33px}
 .fv-metric-value.is-state{font-size:var(--fv-fs-l);letter-spacing:0;font-weight:var(--fv-w-strong);white-space:normal}
-.fv-metric-value.is-state .fv-state{color:var(--fv-muted)}
 
 /* ---------- states, chips, statuses ---------- */
 .fv-num{font-variant-numeric:tabular-nums}
-.fv-state{display:inline;padding:0;border:0;background:none;color:var(--fv-muted);font:inherit;font-weight:var(--fv-w);text-align:inherit}
-button.fv-state{cursor:help;text-decoration:underline dotted rgba(83,97,116,.55);text-underline-offset:3px}
-button.fv-state:hover{color:var(--fv-ink)}
+/* Unavailable states read as quiet labels; the reason shows on hover, focus or tap. */
+.fv-state{display:inline-flex;align-items:center;padding:2px 8px;border:0;border-radius:var(--fv-r-s);background:var(--fv-neutral-bg);color:var(--fv-ink);font:inherit;font-size:var(--fv-fs-s);font-weight:var(--fv-w);line-height:18px;letter-spacing:0;white-space:nowrap;text-align:inherit;vertical-align:middle}
+button.fv-state{cursor:help;text-decoration:none}
+button.fv-state:hover{background:#DCE2E9}
 .fv-chip{display:inline-flex;align-items:center;align-self:flex-start;gap:4px;padding:2px 6px;border-radius:var(--fv-r-s);background:var(--fv-neutral-bg);color:var(--fv-neutral);font-size:var(--fv-fs-s);line-height:15px;font-weight:var(--fv-w-strong);text-decoration:none;white-space:nowrap}
 button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-chip.is-warn{background:var(--fv-warn-bg);color:var(--fv-warn)}
@@ -142,7 +142,7 @@ button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-chart-empty a{font-weight:var(--fv-w);text-decoration:none;margin-left:4px;white-space:nowrap}
 .fv-chart-table{max-height:190px;overflow:auto}
 .fv-select{position:relative;display:inline-flex;align-items:center}
-.fv-select select{appearance:none;-webkit-appearance:none;height:var(--fv-ctl);padding:0 32px 0 14px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;font-size:var(--fv-fs-s);font-weight:var(--fv-w);max-width:230px}
+.fv-select select{appearance:none;-webkit-appearance:none;height:var(--fv-ctl);padding:0 32px 0 14px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:var(--fv-field);font-size:var(--fv-fs-s);font-weight:var(--fv-w);max-width:230px}
 .fv-select .fv-icon{position:absolute;right:9px;pointer-events:none;color:var(--fv-muted)}
 .fv-switch{display:flex;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;overflow:hidden}
 .fv-switch button{display:grid;place-items:center;width:36px;height:36px;border:0;background:none;color:var(--fv-muted);transition:background-color var(--fv-fast)}
@@ -154,7 +154,7 @@ button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-segments{display:flex;gap:4px;padding:2px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;max-width:100%;overflow-x:auto}
 .fv-segments button{height:32px;padding:0 12px;border:0;border-radius:var(--fv-r-s);background:none;color:var(--fv-muted);font-size:var(--fv-fs-s);font-weight:var(--fv-w);white-space:nowrap;transition:background-color var(--fv-fast)}
 .fv-segments button[aria-pressed="true"]{background:var(--fv-chip-blue);color:#0F5596;font-weight:var(--fv-w-strong)}
-.fv-search{display:flex;align-items:center;gap:8px;height:var(--fv-ctl);padding:0 10px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;color:var(--fv-muted);width:180px}
+.fv-search{display:flex;align-items:center;gap:8px;height:var(--fv-ctl);padding:0 10px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:var(--fv-field);color:var(--fv-muted);width:200px}
 .fv-search input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-ink)}
 .fv-search:focus-within{border-color:var(--fv-line);box-shadow:0 0 0 2px rgba(22,139,243,.15)}
 .fv-filter{height:var(--fv-ctl)}
@@ -191,7 +191,7 @@ button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-detail-list{margin:12px 0 0;border-top:var(--fv-bw) solid var(--fv-rule);padding-top:10px}
 .fv-detail-list h3{margin:0 0 6px;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-label)}
 .fv-detail-list table{width:100%;border-collapse:collapse;font-size:var(--fv-fs-s)}
-.fv-detail-list th{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:var(--fv-muted);text-align:right;padding:4px 8px}
+.fv-detail-list th{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:var(--fv-muted);text-align:right;padding:4px 8px;white-space:nowrap}
 .fv-detail-list td{padding:5px 8px;text-align:right;border-top:var(--fv-bw) solid var(--fv-rule);white-space:nowrap}
 .fv-detail-list .is-left{text-align:left}
 .fv-detail-note{margin:10px 0 0;font-size:var(--fv-fs-s);color:var(--fv-muted)}
@@ -346,7 +346,7 @@ body.fv-editor-open{overflow:hidden}
 .fv-field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .fv-field label,.fv-field-label{font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-ink)}
 .fv-field small{font-size:var(--fv-fs-s);color:var(--fv-muted)}
-.fv-field input,.fv-field select,.fv-field textarea,.fv-link-row input{width:100%;min-width:0;height:var(--fv-ctl);padding:0 10px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-ink)}
+.fv-field input,.fv-field select,.fv-field textarea,.fv-link-row input{width:100%;min-width:0;height:var(--fv-ctl);padding:0 12px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:var(--fv-field);font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-ink)}
 .fv-field textarea{height:auto;padding:8px 10px;resize:vertical;line-height:1.45}
 .fv-field.has-error input,.fv-field.has-error textarea,.fv-field.has-error select{border-color:var(--fv-bad)}
 .fv-field-error{margin:0;font-size:var(--fv-fs-s);color:var(--fv-bad)}
@@ -389,9 +389,8 @@ body.fv-editor-open{overflow:hidden}
 .fv-strip{--fv-border:var(--fv-dark-rule);background:var(--fv-dark);border-color:var(--fv-dark);color:var(--fv-dark-text)}
 .fv-strip .fv-metric-label,.fv-strip .fv-metric-value{color:var(--fv-dark-text)}
 .fv-strip .fv-chipicon{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
-.fv-strip .fv-state,.fv-strip .fv-metric-value.is-state .fv-state{color:#F2F4F7}
-.fv-strip button.fv-state{text-decoration-color:rgba(255,255,255,.65)}
-.fv-strip button.fv-state:hover{color:#FFFFFF}
+.fv-strip .fv-state{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
+.fv-strip button.fv-state:hover{background:#333333}
 .fv-strip .fv-chip{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
 .fv-strip .fv-chip.is-warn{background:#FFE3A3;color:#3D2600}
 .fv-strip .fv-skel{background:linear-gradient(90deg,#1A1A1A,#2C2C2C,#1A1A1A);background-size:200% 100%}
@@ -420,3 +419,15 @@ body.fv-editor-open{overflow:hidden}
 .fv-editor-head .fv-icon-button:hover{background:var(--fv-dark-soft)}
 @media (min-width:1280px){.fv-table-panel>.fv-panel-head{padding-right:min(58%,640px)}}
 @media (max-width:767px){.fv-panel>.fv-panel-head{min-height:54px;padding:10px var(--fv-pad)}.fv-editor-head{border-radius:0}}
+
+/* ---------- polish ---------- */
+/* Small tables inside expanded rows stay compact. */
+.fv-table .fv-detail-list th,.fv-table .fv-detail-list td{height:32px;padding:0 10px;font-size:var(--fv-fs-s)}
+.fv-table .fv-detail-list th{background:var(--fv-dark);color:var(--fv-dark-text)}
+.fv-table .fv-detail-list td{border-bottom:var(--fv-bw) solid var(--fv-rule);border-top:0;background:#fff}
+.fv-table .fv-detail-list tr:last-child td{border-bottom:0}
+/* Column headings stay on one line unless the table has fixed column widths. */
+.fv-table:not(.is-aligned) th{white-space:nowrap}
+/* Fields: white on focus with a clear ring. */
+.fv-search:focus-within,.fv-field input:focus,.fv-field select:focus,.fv-field textarea:focus,.fv-link-row input:focus{background:#fff;border-color:var(--fv-line);box-shadow:0 0 0 2px rgba(22,139,243,.15);outline:none}
+.fv-select select:focus-visible{background:#fff}
