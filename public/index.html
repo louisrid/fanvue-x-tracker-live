@@ -258,7 +258,7 @@
       <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="gtaTitle">GTA VI<span class="heading-accent">.</span></h1><p id="gtaWeekLabel">All-time stats</p></div>
         <div class="x-refresh-controls"><button class="x-refresh-button" id="gtaRefreshButton" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><span class="x-refresh-status" id="gtaRefreshStatus" role="status" aria-live="polite"></span></div></div>
       <div class="gta-report-toolbar">
-        <div class="daily-overview-head"><div><div class="daily-eyebrow"><span id="gtaScopeLabel">GTA VI · QRT PROMOTIONS</span></div><h2 id="gtaBreakdownTitle">Overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="gtaLiveStatus" role="status">Checking data</span></div>
+        <div class="daily-overview-head"><div><div class="daily-eyebrow"><span id="gtaScopeLabel">GTA VI · QRT PROMOTIONS</span></div><h2 id="gtaBreakdownTitle">Overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="gtaLiveStatus" role="status">Checking data</span><details id="gtaReportError" class="source-details" hidden></details></div>
         <div class="gta-tabs" role="tablist" aria-label="GTA VI post type">
         <button id="gtaTabQrts" class="gta-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="gtaReportPanel" data-gta-tab="qrts">Paid QRTs</button>
         <button id="gtaTabOriginals" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="originals">Standalone posts</button>
@@ -266,7 +266,6 @@
       </div>
       <div id="gtaReportPanel" role="tabpanel" aria-labelledby="gtaTabQrts">
       <section class="daily-overview" aria-labelledby="gtaBreakdownTitle">
-        <details id="gtaReportError" class="source-details" hidden></details>
         <div class="daily-graph-card campaign-main-history" id="gtaTrendCard" hidden><div class="daily-graph-head"><div><span class="campaign-history-eyebrow">5-DAY HISTORY</span><h3>Combined X views<span class="heading-accent">.</span></h3><p>Verified historical X readings only.</p></div></div><div class="daily-graph campaign-history-plot" id="gtaChart"></div></div>
         <div class="daily-overview-metrics campaign-metrics"><div class="campaign-metric-values" id="gtaMetrics" aria-live="polite"><div class="loading-card">Loading campaign data</div></div><div class="engagement-control"><button class="daily-metric engagement-button" id="gtaEngagementButton" type="button" aria-expanded="false" aria-controls="gtaEngagementDetails"><span class="daily-metric-label">Engagement Rate</span><strong id="gtaEngagementRate" aria-live="polite">—</strong><small>View breakdown</small></button><p class="engagement-details" id="gtaEngagementDetails" hidden></p></div></div>
       </section>

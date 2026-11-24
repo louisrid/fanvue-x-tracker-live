@@ -862,7 +862,7 @@
   width:calc(100% - 48px)!important;
   max-width:1720px!important;
 }
-:root body #mainContent > .site-page {padding-bottom:24px!important;}
+:root body #mainContent > .site-page {padding-bottom:12px!important;}
 :root body .app-header {padding-bottom:0!important;}
 :root body:is(.is-home,:not(.is-home)) .app-header .header-row {
   padding-top:18px!important;padding-bottom:12px!important;gap:8px!important;
@@ -1064,6 +1064,7 @@
   padding:4px!important;color:#000!important;
 }
 :root body .xtracker-chart-tooltip :is(span,strong) {color:#fff!important;}
+:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-snapshot-headline p {color:#000!important;}
 :root body #mainContent #page-reporting .rpt-scroll {margin:6px 0 10px!important;}
 :root body #mainContent #page-reporting .rpt-posts-heading {padding:0!important;margin:8px 0!important;}
 :root body #mainContent #page-reporting .rpt-related {
@@ -1079,10 +1080,19 @@
 :root body #mainContent #page-gta-vi #gtaReportPanel > .daily-overview {margin-bottom:10px!important;}
 :root body #mainContent #page-gta-vi .gta-report-toolbar > .daily-overview-head:has(.daily-live:empty) {display:none!important;}
 :root body #mainContent #page-gta-vi .gta-report-toolbar {min-height:40px!important;}
+:root body #mainContent #page-gta-vi #gtaBreakdownTitle {display:none!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar > .daily-overview-head {min-height:40px!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar > .daily-overview-head:has(#gtaReportError:not([hidden])) {display:flex!important;}
 :root body #mainContent #page-gta-vi .gta-report-toolbar .gta-tabs {min-height:40px!important;}
 :root body #mainContent #page-gta-vi .gta-report-toolbar .gta-tab {min-height:32px!important;padding:6px 12px!important;}
 
 @media(min-width:1100px) {
+  :root body #mainContent #page-gta-vi #gtaPublishers .xt-table-scroll {
+    max-height:clamp(140px,calc(100dvh - 740px),340px)!important;
+  }
+  :root body #mainContent #page-reporting #reportingPanel:has(> .rpt-related) > .rpt-scroll {
+    max-height:clamp(180px,calc(100dvh - 710px),360px)!important;
+  }
   :root body #mainContent #page-reporting .rpt-data-layout {
     display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:20px;align-items:start;
   }
