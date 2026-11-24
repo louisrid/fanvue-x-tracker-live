@@ -367,8 +367,21 @@
       cell.appendChild(group);
     }
   }
+  function nativeCellSortText(cell){
+    if(!cell)return '';
+    if(cell.dataset.sortValue!==undefined)return cell.dataset.sortValue;
+    // A paid-spend value may contain a decorative 'Partial' label.
+    const label=text(cell);
+    const clean=label.replace(/\s+Partial$/i,'').trim();
+    if(numeric(clean)!==null)return clean;
+    // Link-only cells must sort by their actual distinct destinations rather
+    // than identical labels such as 'View source post' or 'Publisher profile'.
+    const href=cell.querySelector('a[href]')?.href||'';
+    if(href&&/^(?:open|view|publisher profile|x profile|tracking|profile)(?:\s+.*)?$/i.test(label))return href;
+    return label;
+  }
   function compareCell(a,b,direction) {
-    const x=text(a),y=text(b),nx=numeric(x),ny=numeric(y);
+    const x=nativeCellSortText(a),y=nativeCellSortText(b),nx=numeric(x),ny=numeric(y);
     // Missing readings are always last, in ascending and descending order.
     if(unknown.test(x)!==unknown.test(y))return unknown.test(x)?1:-1;
     if(nx!==null||ny!==null){if(nx===null)return 1;if(ny===null)return -1;return (nx-ny)*direction;}
