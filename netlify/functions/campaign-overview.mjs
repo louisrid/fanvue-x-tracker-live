@@ -122,21 +122,40 @@ export function groupArticleRtSpend(rows=[]){
     const postUrl=p.sourcePostUrl||p.postUrl||'',id=xPost(postUrl);
     if(!id){unlinked.push(p);continue;}
     const group=originals.get(id)||{postId:id,postUrl,paidCount:0,paidSpendKnown:0,
-      unknownPaidCosts:0,postedCount:0,placements:[],views:null,metricAt:null,metricSource:null};
+      unknownPaidCosts:0,postedCount:0,placements:[],views:null,likes:null,
+      reposts:null,replies:null,interactions:null,engagementRate:null,
+      metricAt:null,metricSource:null};
     group.paidCount++;if(p.posted)group.postedCount++;
     const cost=num(p.cost);if(cost===null)group.unknownPaidCosts++;else group.paidSpendKnown+=cost;
     group.placements.push({publisher:p.publisher,profileUrl:p.profileUrl,cost,paid:p.paid,
       posted:p.posted,sourceRow:p.sourceRow,postUrl});
-    if(num(p.sourceOriginalViews??p.views)!==null){
-      group.views=num(p.sourceOriginalViews??p.views);
-      group.metricAt=p.metricAt||null;
-      group.metricSource=p.metricSource||null;
+    // Every reposter referencing this same original receives the *same* source
+    // snapshot. Copy it onto the group once, never add it per reposter.
+    const sourceViews=num(p.sourceOriginalViews??p.views);
+    if(sourceViews!==null){
+      const sourceAt=Date.parse(p.metricAt||'')||0;
+      const savedAt=Date.parse(group.metricAt||'')||0;
+      if(group.views===null||sourceAt>=savedAt){
+        group.views=sourceViews;
+        group.likes=num(p.likes);
+        group.reposts=num(p.reposts);
+        group.replies=num(p.replies);
+        group.metricAt=p.metricAt||null;
+        group.metricSource=p.metricSource||null;
+        group.interactions=[group.likes,group.reposts,group.replies].every(v=>v!==null)?
+          group.likes+group.reposts+group.replies:null;
+        group.engagementRate=group.interactions!==null&&group.views>0?
+          Math.round(10000*group.interactions/group.views)/100:null;
+      }
     }
     originals.set(id,group);
   }
   const linked=[...originals.values()];
   const known=paidRows.map(p=>num(p.cost)).filter(v=>v!==null);
   const unlinkedKnown=unlinked.map(p=>num(p.cost)).filter(v=>v!==null);
+  const complete=linked.filter(p=>p.views!==null&&p.interactions!==null);
+  const completeViews=complete.reduce((total,p)=>total+p.views,0);
+  const completeInteractions=complete.reduce((total,p)=>total+p.interactions,0);
   return {originals:linked,unlinked:unlinked.map(p=>({publisher:p.publisher,profileUrl:p.profileUrl,
       cost:num(p.cost),paid:p.paid,posted:p.posted,sourceRow:p.sourceRow})),
     summary:{paidCount:paidRows.length,paidSpendKnown:known.length?known.reduce((a,b)=>a+b,0):null,
@@ -145,7 +164,14 @@ export function groupArticleRtSpend(rows=[]){
       unlinkedPaidCount:unlinked.length,unlinkedPaidSpendKnown:unlinkedKnown.reduce((a,b)=>a+b,0),
       originalPosts:linked.length,
       originalViewsKnown:sum(linked,p=>p.views),
-      originalsWithViews:linked.filter(p=>num(p.views)!==null).length}};
+      originalLikesKnown:sum(linked,p=>p.likes),
+      originalRepostsKnown:sum(linked,p=>p.reposts),
+      originalRepliesKnown:sum(linked,p=>p.replies),
+      originalInteractionsKnown:sum(linked,p=>p.interactions),
+      originalEngagementRate:complete.length===linked.length&&completeViews>0?
+        Math.round(10000*completeInteractions/completeViews)/100:null,
+      originalsWithViews:linked.filter(p=>p.views!==null).length,
+      originalsWithFullMetrics:complete.length}};
 }
 
 const converted=()=>({signups:null,kyc:null,earningCreators:null,conversionSource:'NOT_CONNECTED'});
@@ -277,6 +303,11 @@ export function assembleCampaignOverview(sources){
   const rtCampaign=normalCampaign('article-rts','X Article Boosts','rt',linkedArticleRts,
     {source:article?.source||'UNAVAILABLE',at:article?.at,warning:article?.warning,error:article?.error},{
       views:rtGroups.summary.originalViewsKnown,
+      likes:rtGroups.summary.originalLikesKnown,
+      reposts:rtGroups.summary.originalRepostsKnown,
+      replies:rtGroups.summary.originalRepliesKnown,
+      interactions:rtGroups.summary.originalInteractionsKnown,
+      engagementRate:rtGroups.summary.originalEngagementRate,
       viewScope:'ORIGINAL_X_POSTS',originalsWithViews:rtGroups.summary.originalsWithViews,
       originalPosts:rtGroups.summary.originalPosts,articleRtGroups:rtGroups.originals,
       articleRtUnlinked:rtGroups.unlinked,articleRtSummary:rtGroups.summary,
