@@ -858,6 +858,7 @@
 /* Screen-fit refinement: retain the original reports, use the available width,
    and keep long datasets readable in their own scroll area on desktop. */
 :root body {--text:#000;--secondary:#000;--muted:#000;--muted-text:#000;--xt-secondary:#000;}
+:root body:not(.modal-open) {height:auto!important;min-height:100dvh!important;overflow-y:auto!important;}
 :root body #mainContent {
   width:calc(100% - 48px)!important;
   max-width:1720px!important;
@@ -1011,8 +1012,8 @@
     font-size:clamp(24px,2vw,31px)!important;line-height:1.1!important;
   }
   :root body #mainContent .site-page :is(.xt-table-scroll,.gta-quoted-scroll) {
-    max-height:clamp(180px,calc(100dvh - 650px),420px)!important;
-    overflow:auto!important;scrollbar-gutter:stable;
+    max-height:clamp(320px,calc(100dvh - 520px),560px)!important;
+    overflow:auto!important;overscroll-behavior-y:auto!important;scrollbar-gutter:stable;
   }
   :root body #mainContent .site-page :is(.rpt-table,.xt-data-table,.gta-quoted-table) thead th {
     position:sticky!important;top:0!important;z-index:2!important;background:#f1f5fb!important;
@@ -1022,7 +1023,7 @@
     min-width:1180px!important;table-layout:fixed!important;
   }
   :root body #mainContent #page-reporting .rpt-table:has(th:nth-child(10)) td {white-space:normal!important;overflow-wrap:anywhere;}
-  :root body #mainContent #page-gta-vi .gta-quoted-collapse[open] .gta-quoted-scroll {max-height:260px!important;}
+  :root body #mainContent #page-gta-vi .gta-quoted-collapse[open] .gta-quoted-scroll {max-height:none!important;}
 }
 @media(max-width:1099px) {
   :root body #mainContent .site-page .xt-main-chart svg {max-height:170px!important;}
@@ -1092,10 +1093,10 @@
 
 @media(min-width:1100px) {
   :root body #mainContent #page-gta-vi #gtaPublishers .xt-table-scroll {
-    max-height:clamp(140px,calc(100dvh - 740px),340px)!important;
+    max-height:clamp(300px,calc(100dvh - 560px),520px)!important;
   }
   :root body #mainContent #page-reporting #reportingPanel:has(> .rpt-related) > .rpt-scroll {
-    max-height:clamp(180px,calc(100dvh - 710px),360px)!important;
+    max-height:clamp(300px,calc(100dvh - 560px),520px)!important;
   }
   :root body #mainContent #page-reporting .rpt-data-layout {
     display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:20px;align-items:start;
@@ -1159,3 +1160,12 @@
 @media(max-width:600px) {
   :root body #mainContent .site-page .xt-main-chart .xt-chart-axis {font-size:22px!important;}
 }
+
+/* Expanded sections join the document's scroll flow rather than trapping the
+   wheel in another short vertical pane. Horizontal table scrolling is kept. */
+:root body #mainContent #page-reporting details[open] .xt-table-scroll,
+:root body #mainContent #page-reporting .xt-table-scroll:has(details[open]),
+:root body #mainContent #page-gta-vi .gta-quoted-collapse[open] .gta-quoted-scroll {
+  max-height:none!important;overflow-y:visible!important;overscroll-behavior-y:auto!important;
+}
+:root body #mainContent .site-page .source-details[open] :is(p,ul) {max-height:none!important;overflow-y:visible!important;}
