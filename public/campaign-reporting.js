@@ -144,8 +144,8 @@
         metric(c.id==='x-articles'?'Spend · all-time':'Spend',usd(c.paidSpendKnown),
           c.id==='x-articles'?(c.spendPeriod||'All tracked X Article placements'):''),
         metric('Live posts',hasFeed(c)?format(c.published):'Not connected'),
-        metric('Views',num(c.views)===null?'Not tracked':format(c.views)),
-        metric('Clicks',num(clicks(c))===null?'Not tracked':format(clicks(c)))
+        metric('X views',num(c.views)===null?'No verified X reading':format(c.views)),
+        metric('Tracked clicks',num(clicks(c))===null?'No connected click source':format(clicks(c)))
       ];
     }
     return '<div class="daily-overview-metrics campaign-metrics rpt-stats">'+values.join('')+'</div>';
