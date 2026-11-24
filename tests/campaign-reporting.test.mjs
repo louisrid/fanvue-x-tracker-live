@@ -117,7 +117,7 @@ test('Reporting UI and original GTA tab exist without altering historic campaign
   assert.match(html,/id="page-reporting"/);
   assert.match(html,/campaign-reporting\.js/);
   assert.match(html,/data-gta-tab="quoted"/);
-  assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(\)/);
+  assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(reportCode\|\|'article-rt'\)/);
   assert.match(app,/Lifetime campaign performance/);
   assert.match(app,/data-page/);
   assert.match(ui,/postPublicationClicks/);
