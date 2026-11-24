@@ -24,13 +24,15 @@ function dailyContext(placements=[],activity=[],hourly=[],ready=true){
  return {ctx,elements};
 }
 test('Dashboard starts with This week and original headline KPI cards; old Performance is gone',()=>{
- const dashboard=html.split('id="page-dashboard"')[1].split('id="page-placements"')[0];
- assert(dashboard.includes('id="dashboardTitle"'));
- assert(dashboard.includes('id="dashboardKpis"'));
- assert(!dashboard.includes('id="dailyOverview"'));
- assert(!dashboard.includes('id="statsSection"'));
- assert(!dashboard.includes('id="homeChart"'));
- assert(dashboard.indexOf('id="dashboardTitle"')<dashboard.indexOf('id="dashboardKpis"'));
+ // v3.1 redesign: Home renders its title before the metric strip; the old
+ // Performance blocks stay removed.
+ const shell=fs.readFileSync(new URL('../public/fanvue-app.js',import.meta.url),'utf8');
+ assert(html.includes('id="fvTitle"'));
+ assert(html.indexOf('id="fvTitle"')<html.indexOf('id="fvPage"'));
+ assert(!html.includes('id="dailyOverview"'));
+ assert(!html.includes('id="statsSection"'));
+ assert(!html.includes('id="homeChart"'));
+ assert(shell.includes('body:overviewNotice()+strip+chart+table+discord+attn'));
  assert(js.includes("valid=['summary','articles','upcoming']"));
 });
 test('Key Stats contains the Daily Breakdown, KPI row and graph without a daily table or spacer',()=>{

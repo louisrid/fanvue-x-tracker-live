@@ -114,14 +114,17 @@ test('Reporting routes remain while GTA VI has only QRT and standalone tabs',()=
   const html=readFileSync('public/index.html','utf8');
   const app=readFileSync('public/app.js','utf8');
   const ui=readFileSync('public/campaign-reporting.js','utf8');
-  assert.match(html,/id="page-reporting"/);
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  // v3.1 redesign: report routes open the matching page or view in the new shell.
+  assert.match(shell,/'report-articles':'x-articles'/);
+  assert.match(shell,/'report-article-rt':'x-articles\/paid-reposts'/);
+  assert.match(shell,/'report-guru':'guru-promotion'/);
   assert.match(html,/campaign-reporting\.js/);
-  assert.match(html,/data-gta-tab="qrts"/);
-  assert.match(html,/data-gta-tab="originals"/);
-  assert.doesNotMatch(html,/data-gta-tab="quoted"/);
-  assert.match(html,/id="gtaQuotedSources"/);
+  // GTA VI keeps exactly the two X source groups (plus Instagram, not connected); no quoted view.
+  assert.match(shell,/\{key:'x-original-posts',label:'X original posts'\},\{key:'x-quote-posts',label:'X quote posts'\},\{key:'instagram',label:'Instagram'\}/);
+  assert.doesNotMatch(shell,/key:'quoted'/);
+  assert.match(shell,/Quoted original posts/);
   assert.match(app,/function renderGtaQuotedSources\(\)/);
-  assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(reportCode\|\|'article-rt'\)/);
   assert.match(app,/el\('gtaWeekLabel'\)\.textContent='All-time stats'/);
   assert.match(app,/data-page/);
   assert.match(app,/postPublicationClicks/);
@@ -156,12 +159,16 @@ test('Article RT views reuse only an exact verified original X post and never du
 test('dashboard has exactly one visible large Reload All control and keeps targeted refresh sources',()=>{
  const html=readFileSync('public/index.html','utf8');
  const app=readFileSync('public/app.js','utf8');
- const css=readFileSync('public/campaign-reporting.css','utf8');
+ const css=readFileSync('public/fanvue.css','utf8');
  const reporting=readFileSync('public/campaign-reporting.js','utf8');
- assert.match(html,/id="reloadAllButton"[^>]*x-reload-all/);
- assert.match(html,/id="refreshXStats"[^>]*hidden/);
- assert.match(html,/id="reloadAllStatus"/);
- assert.equal((html.match(/id="reloadAllButton"/g)||[]).length,1);
+ const shell=readFileSync('public/fanvue-app.js','utf8');
+ // v3.1 redesign: one neutral header refresh control. Home labels it "Refresh all"
+ // and runs the existing reload coordinator unchanged.
+ assert.equal((html.match(/id="fvRefresh"/g)||[]).length,1);
+ assert.match(html,/id="fvRefreshStatus"/);
+ assert.match(shell,/title:'Home',refreshLabel:'Refresh all'/);
+ assert.match(shell,/await app\?\.refresh\?\.all\?\.\(\)/);
+ assert.match(app,/refresh:Object\.freeze\(\{all:reloadAllData,/);
  const start=app.indexOf('async function reloadAllData()');
  const end=app.indexOf('function applyDashboard(data)',start);
  assert.ok(start>0&&end>start);
@@ -173,8 +180,8 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  assert.match(coordinator,/XTrackerCampaignReporting\?\.reload\?\.\(\)/);
  assert.doesNotMatch(coordinator,/refreshBoostStats\(\)|refreshOfReport\(\)/);
  assert.match(app,/el\('reloadAllButton'\)\.addEventListener\('click',reloadAllData\)/);
- assert.match(css,/#ff008c!important/);
- assert.match(css,/\.x-refresh-button,\.rpt-refresh/);
+ assert.match(css,/\.fv-control\{display:inline-flex/);
+ assert.doesNotMatch(css,/#ff008c/i);
  assert.match(reporting,/\['article-rt','X Article Boosts'\]/);
 });
 

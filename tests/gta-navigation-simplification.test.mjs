@@ -8,13 +8,14 @@ const app=readFileSync('public/app.js','utf8');
 const reporting=readFileSync('public/campaign-reporting.js','utf8');
 
 test('GTA VI has exactly two actual campaign tabs and no phantom Boosted articles tab',()=>{
-  const tabs=[...html.matchAll(/data-gta-tab="([^"]+)"/g)].map(match=>match[1]);
-  assert.deepEqual(tabs,['qrts','originals']);
-  assert.doesNotMatch(html,/id="gtaTabQuoted"|>Boosted articles<\/button>/);
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  // v3.1 redesign: GTA VI views are All formats plus the two real X source groups and
+  // Instagram (shown as not connected); there is no phantom boosted-articles view.
+  const views=[...shell.matchAll(/\{key:'(all-formats|x-original-posts|x-quote-posts|instagram|[a-z-]*boost[a-z-]*)',label:'[^']+'\}/g)].map(match=>match[1]);
+  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts','instagram']);
+  assert.doesNotMatch(shell,/Boosted articles/);
   assert.doesNotMatch(app,/renderGtaQuotedArticles|gtaTabQuoted|ARTICLES BOOSTED BY QRTS/);
-  assert.match(html,/data-gta-tab="qrts">Paid QRTs<\/button>/);
-  assert.match(html,/data-gta-tab="originals">Standalone posts<\/button>/);
-  assert.match(html,/id="gtaQuotedSources"/);
+  assert.match(shell,/IG Accounts 3\) needs a separate approved adapter/);
 });
 
 test('Quoted original X sources appear as an expandable section within paid QRTs',()=>{
@@ -25,13 +26,20 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
   assert.match(app,/Original and QRT views are separate/);
   assert.match(app,/qrt\.trackingUrl/);
   assert.match(app,/qrt\.profileUrl/);
-  assert.ok(html.indexOf('id="gtaQuotedSources"')<html.indexOf('id="gtaPublishers"'));
+  // v3.1 redesign: quoted originals are listed inside the expandable X quote posts row.
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  assert.match(shell,/const c=r\.c,isQ=r\.key==='x-quote-posts'/);
+  assert.match(shell,/Quoted original posts \('\+esc\(C\.full\(q\.rows\.length\)\)\+'\) · original and quote-post views are separate/);
 });
 
 test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
-  assert.match(html,/dashboard-campaign-pill is-boosts/);
-  assert.match(html,/dashboard-pill-copy"><strong>X Article Boosts<\/strong>/);
-  assert.match(html,/QRTs · Posts/);
+  const core=readFileSync('public/fanvue-core.js','utf8');
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  // v3.1 redesign: paid article reposts (source ID article-rts) sit under X Articles as
+  // the Paid reposts view, never under GTA VI.
+  assert.match(core,/\{key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:\['x-articles','article-rts'\]\}/);
+  assert.match(core,/\{key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:\['gta-qrts','gta-originals'\]\}/);
+  assert.match(shell,/\{key:'paid-reposts',label:'Paid reposts'\}/);
   assert.doesNotMatch(reporting,/function articleSources\(\)/);
 });
 

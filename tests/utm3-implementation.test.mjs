@@ -31,10 +31,14 @@ test('exact five sorts on each applicable page, default Most Recent',()=>{
  }
 });
 test('sort controls are leftmost for Home, Accounts, Campaigns and legacy Tracker',()=>{
- for(const [start,id] of [['home-filter-toolbar','homeArticleSort'],['accounts-tools','accountSort'],['campaign-controls','campaignSort'],['tracker-filter-strip','trackerSort']]){
+ for(const [start,id] of [['accounts-tools','accountSort'],['campaign-controls','campaignSort'],['tracker-filter-strip','trackerSort']]){
    const part=html.substring(html.indexOf(start),html.indexOf(start)+800);
    assert(part.indexOf(`id="${id}"`)!==-1,`${id} first control`);
  }
+ // v3.1 redesign: Home's article list moved to X Articles, whose tables sort from
+ // explicit header controls in the shared table component.
+ const ui=read('public/fanvue-ui.js');
+ assert.match(ui,/<button type="button" data-sort="'\+esc\(c\.key\)\+'"/);
 });
 test('unwanted home controls and legacy equivalent article/search controls removed',()=>{
  for(const id of ['homeArticleSearch','homeArticleScope','homeArticleArticle','homeArticleReset','trackerSearch','trackerArticle'])assert(!html.includes(`id="${id}"`),id);

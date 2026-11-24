@@ -10,25 +10,31 @@ const members=readFileSync('public/discord-members.js','utf8');
 const course=readFileSync('public/discord-course.js','utf8');
 
 test('Landing page is concise while keeping six genuine campaign destinations',()=>{
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  const core=readFileSync('public/fanvue-core.js','utf8');
   assert.doesNotMatch(html,/Choose a campaign to open its report|Articles this week/);
-  assert.match(html,/All-time stats/);
-  for(const route of ['gta-vi','campaign-C001','report-guru','report-article-rt','report-articles','discord']){
-    assert.match(html,new RegExp('href="#'+route+'"'));
+  // v3.1 redesign: Home is the landing page; Discord and the five paid campaigns are the
+  // six destinations, and every old destination link still opens its page.
+  assert.match(shell,/\{key:'home',title:'Home'/);
+  for(const [route,page] of [['gta-vi','gta-vi'],['campaign-C001','of-terms'],['report-guru','guru-promotion'],['report-article-rt','x-articles\\/paid-reposts'],['report-articles','x-articles'],['discord','discord']]){
+    assert.match(shell,new RegExp("'?"+route+"'?:'"+page+"'"));
   }
-  assert.equal((html.match(/class="dashboard-campaign-pill is-/g)||[]).length,6);
-  assert.ok(html.indexOf('refined-layout.css')>html.indexOf('main-charts.css'));
+  assert.equal((core.match(/\{key:'[a-z-]+',name:'[^']+',icon:/g)||[]).length,5);
+  assert.ok(html.indexOf('fanvue-records.css')>html.indexOf('fanvue.css'));
 });
 
 test('Single shared visual override tightens desktop and mobile sizing without removing metrics',()=>{
-  assert.match(styles,/Final visual pass/);
-  assert.match(styles,/min-height:78px!important/);
-  assert.match(styles,/min-height:73px!important/);
-  assert.match(styles,/color:#233249!important/);
-  assert.match(styles,/\.dashboard-campaign-pill:not\(\.is-discord\) \.dashboard-pill-meta/);
-  assert.match(styles,/#page-discord \.discord-highlight-card\{/);
-  assert.match(html,/id="dashboardKpis"/);
-  assert.match(html,/id="gtaMetrics"/);
-  assert.match(html,/id="ofMetrics"/);
+  const css=readFileSync('public/fanvue.css','utf8');
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  // v3.1 redesign: one shared token stylesheet replaces the layered overrides.
+  assert.equal((html.match(/rel="stylesheet" href="\/(?!fanvue)/g)||[]).length,0);
+  assert.match(css,/\.fv-strip\{[^}]*min-height:116px/);
+  assert.match(css,/--fv-row:39px/);
+  assert.match(css,/@media \(max-width:767px\)/);
+  assert.match(css,/@media \(max-width:359px\)/);
+  assert.match(html,/id="fvHeader"/);
+  assert.match(html,/id="fvPage"/);
+  for(const label of ['Paid spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators'])assert.ok(shell.includes("'"+label+"'"),label);
 });
 
 test('Routine status chatter is hidden but unavailable-source warnings remain',()=>{
@@ -48,23 +54,29 @@ test('Campaign views, paid QRT evidence, details and links are retained',()=>{
   assert.match(app,/qrt\.profileUrl/);
   assert.match(reports,/class="rpt-source-detail"/);
   assert.match(reports,/sourceStale:true/);
-  assert.match(html,/id="gtaTabQrts"/);
-  assert.match(html,/id="gtaTabOriginals"/);
+  // v3.1 redesign: GTA quote-post and original-post records keep the live post,
+  // tracking link and publisher profile in each row and its details.
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  assert.match(shell,/\['Tracking link',trackingText\(r\.trackingUrl\)\]/);
+  assert.match(shell,/\['Profile',U\.extLink\(r\.profileUrl,'Profile'\)/);
+  assert.match(shell,/key:'live',label:'Live post'/);
 });
 
 
 test('Campaign navigation is centred, icon-free and uses one coordinated dark palette',()=>{
-  const header=html.slice(html.indexOf('<header'),html.indexOf('</header>'));
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  const css=readFileSync('public/fanvue.css','utf8');
+  const core=readFileSync('public/fanvue-core.js','utf8');
+  // v3.1 redesign (DESIGN §2.3): one flat black sidebar with the official wordmark,
+  // white labels, campaign-coloured icons and a neutral charcoal active row.
+  // The static header markup carries no inline icons.
+  const header=html.slice(html.indexOf('id="fvHeader"'),html.indexOf('id="fvPage"'));
   assert.doesNotMatch(header,/<svg\b/);
-  assert.doesNotMatch(html,/dashboard-discord-icon/);
-  assert.match(styles,/width:min\(100%,930px\)!important/);
-  assert.match(styles,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
-  assert.match(styles,/background:#17243c!important/);
-  assert.match(styles,/background:#2451c9!important/);
-  assert.match(styles,/background:#3d2bba!important/);
-  assert.match(styles,/font-size:clamp\(36px,3\.5vw,43px\)!important/);
-  assert.match(styles,/border-radius:9px!important/);
-  for(const text of ['GTA VI','OF Terms','Guru X RTs','X Article Boosts','X Articles','Discord']){
-    assert.ok(html.includes('<strong>'+text+'</strong>'));
-  }
+  assert.doesNotMatch(html,/dashboard-discord-icon|class="brandmark"/);
+  assert.match(html,/alt="Fanvue"/);
+  assert.match(css,/--fv-sidebar:#000000/);
+  assert.match(css,/--fv-nav-active:#212121/);
+  for(const colour of ['violet','blue','teal','pink'])assert.match(core,new RegExp(colour+":\\{icon:'#"));
+  for(const text of ['X Articles','GTA VI','OF Terms','CIS','Guru Promotion'])assert.match(core,new RegExp("name:'"+text+"'"));
+  assert.match(shell,/title:'Discord'/);
 });
