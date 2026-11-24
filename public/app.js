@@ -80,13 +80,11 @@ const ICONS={articles:'<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" hei
 const state={placements:[],campaigns:[],history:[],activity:[],activityReady:false,trackingReady:false,
   hourlyEvents:[],hourlyReady:false,owner:'ALL',page:'dashboard',modalCode:'',accountCode:'',modalType:'',lastFocus:null,
   loading:false,initialLoadSettled:false,loadError:false,lastLoadedAt:0,toastTimeout:0,adminKey:'',adminConfigured:false,
-  selected:new Set(),pendingEditor:null,homePaidCodes:new Set(),homeVerified:false,dashboardWeek:'current'};
-// Keep deliberate week selections across reloads; default to latest active week when current week has no rows.
+  selected:new Set(),pendingEditor:null,homePaidCodes:new Set(),homeVerified:false,dashboardWeek:'all'};
+// Main dashboard always shows lifetime source data, regardless of a past
+// browser-stored week selection. Historical click charts remain period-specific.
 const WEEK_CHOICE_KEYS={dashboardWeek:'xtracker-dashboard-week-choice-v1'};
-for(const [field,key] of Object.entries(WEEK_CHOICE_KEYS)){
-  const choice=storage.get(key);
-  if(choice==='current'||choice==='other'||(/^\d{1,3}$/.test(choice||'')&&Number(choice)>0))state[field]=choice;
-}
+state.dashboardWeek='all';
 function selectLatestNonemptyWeek(){
   const current=currentStatsWeekNumber();
   const recent=state.placements.filter(p=>isLive(p)).map(p=>weeklyTabNumber(p))
@@ -150,7 +148,11 @@ const placementPublished=p=>{const d=postDate(p);return d?`Posted ${pubDate(p)}`
 const eligible=()=>state.placements.filter(p=>p.active&&(state.owner==='ALL'||p.owner===state.owner));
 const selected=()=>eligible().filter(p=>p.active);
 // Dashboard rows follow the selected reporting week from the Sheet.
-const selectedDashboardWeek=()=>selectedStatsWeek(state.dashboardWeek);
+const selectedDashboardWeek=()=>state.dashboardWeek==='all'?{
+  number:'all',from:'0000-01-01',to:day(new Date()),today:day(new Date()),
+  isCurrent:true,placements:state.placements.filter(p=>p.active!==false&&
+    (state.owner==='ALL'||p.owner===state.owner))
+}:selectedStatsWeek(state.dashboardWeek);
 const homePlacements=()=>{
   const scope=selectedDashboardWeek();
   if(scope.isCurrent)return scope.placements;
@@ -276,16 +278,14 @@ function weeklyCard(p){
   </${end}>`;
 }
 function renderDashboardWeekSelector(){
-  const select=el('dashboardWeekSelect'),scope=selectedDashboardWeek();
-  const current=currentStatsWeekNumber();
-  select.innerHTML=`<option value="current">This week · Week ${current}</option>`+
-    Array.from({length:current-1},(_,i)=>`<option value="${current-i-1}">Week ${current-i-1}</option>`).join('');
-  select.value=state.dashboardWeek==='current'?'current':String(scope.number);
-  const label=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
-  const range=`${label(scope.from)} – ${label(scope.to)}`;
-  el('dashboardWeekRange').textContent=range;
+  // Keep the stable selector elements for existing listeners, but no weekly
+  // restriction is applied to the visible main dashboard.
+  const select=el('dashboardWeekSelect');
+  select.innerHTML='<option value="all">Lifetime · all dates</option>';
+  select.value='all';
+  el('dashboardWeekRange').textContent='All recorded dates';
   const context=el('dashboardSnapshotContext');
-  if(context)context.textContent=`Week ${scope.number} · ${range}`;
+  if(context&&!state.homeVerified)context.textContent='All recorded X Article placements · waiting for verified source';
 }
 function renderWeekLabels(){
   renderDashboardWeekSelector();
@@ -296,7 +296,7 @@ function renderWeekly(){
   const live=sortedArticles(placements.filter(isLive),sort);
   const upcoming=sortedArticles(placements.filter(p=>!isLive(p)),sort);
   el('weeklyCount').textContent=verified?fmt(live.length):'—';
-  el('weeklyCount').title=`Published Week ${selectedDashboardWeek().number} articles`;
+  el('weeklyCount').title='All published X Articles, lifetime';
   el('weeklyGrid').innerHTML=live.length?live.map(weeklyCard).join(''):`<div class="empty-state">${verified?'No live articles yet.':'Live data unavailable.'}</div>`;
   el('upcomingCount').textContent=verified?fmt(upcoming.length):'—';
   el('upcomingGrid').innerHTML=upcoming.length?upcoming.map(weeklyCard).join(''):`<div class="empty-state">${verified?'No scheduled articles.':'Live data unavailable.'}</div>`;
@@ -312,16 +312,37 @@ function renderWeekly(){
 // Payment dates are not required: the user-defined criterion is Paid status
 // AND Posted status, with a verified publication date in the window.
 function renderKpis(){
-  const placements=homePlacements(),paid=placements.filter(p=>p.paid===true);
-  const totalPaid=paid.reduce((sum,p)=>sum+(number(p.cost)||0),0);
-  const weekClicks=homeClickTotal();
+  // X Articles only: all recorded Sheet WEEK placements. Never mix in
+  // separately paid GTA VI, OF Terms or Article RT campaigns.
+  const placements=state.placements.filter(p=>p.active!==false);
+  const paid=placements.filter(p=>p.paid===true);
+  const knownPaid=paid.filter(p=>number(p.cost)!==null);
+  const published=placements.filter(isLive);
+  const verifiedViews=published.filter(p=>number(p.xViews)!==null);
+  const verifiedClicks=placements.filter(p=>p.countVerified===true&&number(p.clicks)!==null);
+  const spend=knownPaid.reduce((sum,p)=>sum+number(p.cost),0);
+  const views=verifiedViews.reduce((sum,p)=>sum+number(p.xViews),0);
+  const clicksLifetime=verifiedClicks.reduce((sum,p)=>sum+number(p.clicks),0);
   const headline=[
-    {id:'money',label:'Spend',value:state.homeVerified?money(totalPaid):'—'},
-    {id:'clicks',label:'UTM clicks',value:weekClicks===null?'—':display(weekClicks)},
-    {id:'articles',label:'Live articles',value:state.homeVerified?fmt(placements.filter(isLive).length):'—'},
-    {id:'paid',label:'Paid placements',value:state.homeVerified?fmt(paid.length):'—'}
+    {id:'money',label:'Paid spend · all time',value:state.homeVerified?
+      (knownPaid.length?money(spend):paid.length?'—':'$0'):'—'},
+    {id:'clicks',label:'UTM clicks · all time',value:state.trackingReady?
+      (verifiedClicks.length||!placements.length?fmt(clicksLifetime):'—'):'—'},
+    {id:'views',label:'X views · all time',value:state.homeVerified?
+      (verifiedViews.length?fmt(views):published.length?'—':'0'):'—'},
+    {id:'articles',label:'Published posts · all time',value:state.homeVerified?
+      fmt(published.length):'—'}
   ];
   el('dashboardKpis').innerHTML=headline.map(kpiCard).join('');
+  const context=el('dashboardSnapshotContext');
+  if(context&&state.homeVerified){
+    const coverage=(paid.length!==knownPaid.length?' · '+fmt(knownPaid.length)+' of '+fmt(paid.length)+' paid costs verified':'')+
+      (published.length!==verifiedViews.length?' · '+fmt(verifiedViews.length)+' of '+fmt(published.length)+' X view readings verified':'')+
+      (state.trackingReady&&verifiedClicks.length!==placements.length?
+        ' · '+fmt(verifiedClicks.length)+' of '+fmt(placements.length)+' click records verified':'');
+    context.textContent=fmt(placements.length)+' tracked X Article placements · '+
+      fmt(paid.length)+' paid · lifetime to date'+coverage;
+  }
 }
 function notify(s){const t=el('toast');t.textContent=s;t.hidden=false;clearTimeout(state.toastTimeout);state.toastTimeout=setTimeout(()=>t.hidden=true,2800);}
 function optionList(records,selected='ALL',allLabel='All campaigns'){
