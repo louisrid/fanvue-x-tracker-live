@@ -526,16 +526,16 @@
   const RENDER={home:homePage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,cis:cisPage,'guru-promotion':guruPage};
 
   /* ---------- shell rendering ---------- */
-  let current=parseHash(),busy=false;
+  let current=parseHash(),recordsShown=false;
   const hooks={addedRoute:null,navExtra:null,headerExtra:null};  // extension points (campaign manager)
   function navHtml(active){
     const item=p=>{
       const color=p.color?C.PALETTE[p.color]?.icon:p.key==='discord'?'var(--fv-discord)':'#FFFFFF';
       return '<a class="fv-nav-item" href="#'+esc(p.key)+'" style="--fv-icon:'+esc(color)+'"'+(p.key===active?' aria-current="page"':'')+'>'+U.icon(p.icon==='x'?'xmark':p.icon,17)+'<span>'+esc(p.title)+'</span></a>';
     };
-    return '<div class="fv-nav" role="list" aria-label="General">'+PAGES.filter(p=>p.group==='general').map(item).join('')+'</div>'+
+    return '<div class="fv-nav" role="group" aria-label="General">'+PAGES.filter(p=>p.group==='general').map(item).join('')+'</div>'+
       '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvPaidLabel">Paid campaigns</span>'+(hooks.navAddButton?hooks.navAddButton():'')+'</div>'+
-      '<div class="fv-nav" role="list" aria-labelledby="fvPaidLabel">'+PAGES.filter(p=>p.group==='paid').map(item).join('')+(hooks.navExtra?hooks.navExtra(active):'')+'</div>';
+      '<div class="fv-nav" role="group" aria-labelledby="fvPaidLabel">'+PAGES.filter(p=>p.group==='paid').map(item).join('')+(hooks.navExtra?hooks.navExtra(active):'')+'</div>';
   }
   function setNav(active){$('fvNav').innerHTML=navHtml(active);}
   function setTitle(text){document.title=text+' · '+APP_NAME;}
@@ -562,10 +562,12 @@
       const rec=RECORDS[r.key];
       setNav(rec.parent);setTitle(rec.title);
       $('fvHeader').hidden=true;$('fvPage').hidden=true;$('fvPage').innerHTML='';$('fvRecords').hidden=false;
-      D.app()?.showRecords?.(r.key);
+      D.app()?.showRecords?.(r.key);recordsShown=true;
       return;
     }
-    $('fvRecords').hidden=true;D.app()?.showRecords?.('');
+    // Leave the record views only on navigation; re-renders must not close an open editor.
+    if(recordsShown||!$('fvRecords').hidden){D.app()?.showRecords?.('');recordsShown=false;}
+    $('fvRecords').hidden=true;
     $('fvHeader').hidden=false;$('fvPage').hidden=false;
     let page;
     if(r.kind==='added'){page=hooks.addedRoute?hooks.addedRoute(r.key):null;
