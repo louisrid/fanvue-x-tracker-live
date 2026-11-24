@@ -673,3 +673,17 @@
     font-size:clamp(27px,7.4vw,33px)!important;
   }
 }
+
+
+/* Hide low-value success metadata; retain warning/error messages and links. */
+:root body #mainContent #page-discord .discord-source-status:not(:has(span:not(:empty))){
+  display:none!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat small{
+  display:none!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat{
+  justify-content:space-between!important;
+  min-height:93px!important;
+  gap:6px!important;
+}
