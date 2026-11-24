@@ -78,21 +78,23 @@
         if(!data.latest){
           if(saved)throw Error('Latest snapshot unavailable');
           display(data);
-          return;
+          return false;
         }
         if(!validMembers(data))throw Error('Incomplete snapshot');
         if(saved?.latest?.date&&data.latest.date<saved.latest.date)throw Error('Older snapshot');
         saved=data;
         window.XTrackerLastGood?.write('discord-members',data,validMembers);
         display(data);
+        return true;
       }catch{
         if(!verified){amount.textContent='—';change.textContent='—';}
         status.textContent=verified?'Last recorded value · refresh unavailable':'Member history temporarily unavailable';
         if(!verified)note.textContent='Graph temporarily unavailable';
         syncDisplays();
+        return false;
       }
     })();
-    try{await active;}finally{active=null;}
+    try{return await active;}finally{active=null;}
   }
   document.addEventListener('click',event=>{
     if(event.target.closest('#reloadAllButton,#refreshXStats,[data-refresh],[data-reload-all]'))void refresh();
