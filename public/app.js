@@ -284,7 +284,7 @@ function renderDashboardWeekSelector(){
   select.value='all';
   el('dashboardWeekRange').textContent='All recorded dates';
   const context=el('dashboardSnapshotContext');
-  if(context&&!state.homeVerified)context.textContent='All recorded X Article placements · waiting for verified source';
+  if(context&&!state.homeVerified)context.textContent='Loading article totals';
 }
 function renderWeekLabels(){
   renderDashboardWeekSelector();
@@ -339,8 +339,7 @@ function renderKpis(){
       (published.length!==verifiedViews.length?' · '+fmt(verifiedViews.length)+' of '+fmt(published.length)+' X view readings verified':'')+
       (state.trackingReady&&verifiedClicks.length!==placements.length?
         ' · '+fmt(verifiedClicks.length)+' of '+fmt(placements.length)+' click records verified':'');
-    context.textContent=fmt(placements.length)+' tracked X Article placements · '+
-      fmt(paid.length)+' paid · lifetime to date'+coverage;
+    context.textContent=fmt(placements.length)+' placements · '+fmt(paid.length)+' paid'+coverage;
   }
 }
 function notify(s){const t=el('toast');t.textContent=s;t.hidden=false;clearTimeout(state.toastTimeout);state.toastTimeout=setTimeout(()=>t.hidden=true,2800);}
@@ -954,8 +953,8 @@ function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix
 function renderOfReport(){
   const report=state.ofCampaign,ready=report?.ready===true;
   const today=day(new Date());
-  el('ofWeekLabel').textContent='Lifetime campaign totals · tracked clicks since tracking began';
-  el('ofLiveStatus').textContent=ready?'Campaign report':state.ofSettled?'Report unavailable':'Loading report…';
+  el('ofWeekLabel').textContent='All-time stats';
+  el('ofLiveStatus').textContent=ready?'':state.ofSettled?'Data unavailable':'Loading…';
   el('ofLiveStatus').classList.toggle('is-live',ready);
   el('ofReportError').hidden=ready?!(report.warning||state.ofError):!state.ofSettled;
   el('ofReportError').textContent=report?.warning||state.ofError||'Campaign data temporarily unavailable. Please try again shortly.';
@@ -967,17 +966,17 @@ function renderOfReport(){
     (knownClicks.length?knownClicks.reduce((sum,p)=>sum+number(p.clicks),0):0):null;
   const paidTotal=paid.some(p=>p.cost===null)?null:paid.reduce((sum,p)=>sum+p.cost,0);
   const defs=[['spend','Paid spend · all time',ready?money(paidTotal):'—',ready?
-    `${paid.length} paid placements · ${paid.length-posted.filter(p=>p.paid).length} paid not yet published`:
+    `${paid.length} paid · ${paid.length-posted.filter(p=>p.paid).length} not live`:
     'Waiting for verified campaign data'],
     ['seven','X views · all time',gtaNumber(posted.some(p=>number(p.xViews)!==null)?
       posted.reduce((sum,p)=>sum+(number(p.xViews)??0),0):null),
-      `${posted.filter(p=>number(p.xViews)!==null).length} of ${posted.length} published posts verified`],
-    ['published','Published posts · all time',ready?fmt(posted.length):'—','All published campaign X posts']];
+      `${posted.filter(p=>number(p.xViews)!==null).length}/${posted.length} posts measured`],
+    ['published','Published posts · all time',ready?fmt(posted.length):'—','Published X posts']];
   const interactions=interactionSummary(posted);
   defs.push(['interactions','Total interactions',gtaNumber(interactions.total),interactions.note]);
   renderEngagement('of',ready?posted:[]);
   defs.push(['shortio','UTM clicks · all time',gtaNumber(lifetimeClicks),
-    `${knownClicks.length} of ${allPublishers.length} placement links verified · tap to view posts`]);
+    `${knownClicks.length}/${allPublishers.length} links tracked`]);
   el('ofMetrics').innerHTML=defs.map(([kind,label,value,sub])=>`<${kind==='shortio'?'button type="button" aria-controls="ofPublishers" data-of-clicks':'div'} class="daily-metric daily-metric-${kind}"><span class="daily-metric-label">${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small></${kind==='shortio'?'button':'div'}>`).join('');
   el('ofMetrics').querySelector('[data-of-clicks]')?.addEventListener('click',()=>focusPromoClicks('ofPublishers','UTM clicks'));
 
@@ -996,7 +995,7 @@ function renderOfReport(){
       metricsOverride:[['clicks','Lifetime UTM clicks',ready?p.clicks:null],
         ['views','Lifetime X views',p.views??null],
         ['spend','Paid cost',p.paid?money(p.cost):'Unpaid']]});
-    return `<article class="of-publisher-entry"><${tag}${attributes} data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${content}</${tag}><p class="of-last-click">Last click: ${p.lastClick?esc(new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(new Date(p.lastClick)))+' UK':'None recorded'}</p><div class="of-publisher-links">${link(p.profileUrl,'X profile')}${link(p.postUrl,'View post')}</div></article>`;
+    return `<article class="of-publisher-entry"><${tag}${attributes} data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${content}</${tag}><div class="of-publisher-links">${link(p.profileUrl,'X profile')}${link(p.postUrl,'View post')}</div></article>`;
   }).join('')||'<div class="empty-state">No posts in this group.</div>'}</div></section>`;
   el('ofPublishers').innerHTML=ready?section('Published X posts',posted):'';
 }
@@ -1048,7 +1047,7 @@ function gtaDate(day){return new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day
 function interactionSummary(rows){
   const measured=rows.filter(p=>['likes','reposts','replies'].every(key=>Number.isFinite(p[key])&&p[key]>=0));
   return {total:measured.length?measured.reduce((sum,p)=>sum+p.likes+p.reposts+p.replies,0):null,
-    note:`Likes + reposts + replies · ${measured.length} of ${rows.length} posts with complete data`};
+    note:measured.length===rows.length?'Likes + reposts + replies':`${measured.length}/${rows.length} posts measured`};
 }
 function ofPublisherMetrics(p){
   const measured=state.placements.find(row=>row.code===p.code || (p.postUrl && row.postUrl===p.postUrl))||{};
@@ -1066,7 +1065,7 @@ function engagementSummary(rows){
 function renderEngagement(prefix,rows){
   const summary=engagementSummary(rows);
   el(prefix+'EngagementRate').textContent=summary.rate===null?'—':summary.rate.toFixed(2)+'%';
-  el(prefix+'EngagementDetails').textContent=`(Likes + reposts + replies) ÷ views × 100. ${summary.count} of ${summary.total} published posts have complete readings and positive views. ${summary.rate===null?'The rate appears when verified engagement and view counts are available. ':''}Uses the latest available readings; updates with the campaign report. Use Refresh X Stats to request updated figures.`;
+  el(prefix+'EngagementDetails').textContent=`(Likes + reposts + replies) ÷ views × 100. ${summary.count}/${summary.total} posts have complete X readings.${summary.rate===null?' Waiting for complete figures.':''}`;
 }
 // Measure the complete sticky navigation, including wrapped mobile rows.
 function updatePromoScrollOffset(){
@@ -1163,7 +1162,7 @@ function renderGtaQuotedSources(){
   panel.innerHTML=
     '<div class="gta-quoted-header"><div>'+
     '<h2 id="gtaQuotedSourcesTitle">Quoted X posts</h2>'+
-    '<p>Original X post performance. Individual paid QRTs are linked in each row.</p>'+
+    ''+
     '</div><div class="gta-quoted-summary">'+
       '<span><strong>'+esc(gtaNumber(summary.originalPosts))+'</strong> source posts</span>'+
       '<span><strong>'+esc(gtaNumber(summary.matchedQrts))+'</strong> linked QRTs</span>'+
@@ -1175,7 +1174,7 @@ function renderGtaQuotedSources(){
       '<thead><tr><th>Original X post</th><th>Original views</th>'+
       '<th>QRT views</th><th>Paid QRT spend</th><th>QRTs</th><th data-no-sort-col="true">Details</th></tr></thead>'+
       '<tbody>'+entries+'</tbody></table></div></details>'+
-    '<p class="gta-quoted-footnote">Source X views and QRT views are separate counters, not unique reach. Paid QRT spend is already included in the campaign total above.</p>';
+    '<p class="gta-quoted-footnote">Original and QRT views are separate. Spend is included above.</p>';
 }
 
 function renderGtaReport(){
@@ -1189,23 +1188,23 @@ function renderGtaReport(){
     button.classList.toggle('is-active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
     if(active)el('gtaReportPanel').setAttribute('aria-labelledby',button.id);
   });
-  el('gtaWeekLabel').textContent='Lifetime campaign performance';
-  const status=el('gtaLiveStatus');status.textContent=ready?(report.warning?'Saved campaign data · '+gtaUKDate(report.sourceVerifiedAt):report.statsCached?'Saved stats · refreshing when available':report.source==='GOOGLE_SHEETS_LIVE'?((report.cached?'Cached sheet · ':'Sheet verified · ')+gtaUKDate(report.sourceVerifiedAt)):'Verified snapshot'):gtaState.error?'Report unavailable':'Loading report…';
+  el('gtaWeekLabel').textContent='All-time stats';
+  const status=el('gtaLiveStatus');status.textContent=ready?(report.warning?'Saved data':''):gtaState.error?'Data unavailable':'Loading…';
   status.classList.toggle('is-live',ready);
-  if(!gtaState.refreshing){const sourceStatus=gtaSourceStatus(report);if(sourceStatus){el('gtaRefreshStatus').textContent=sourceStatus.text;el('gtaRefreshStatus').className='x-refresh-status '+(sourceStatus.failed?'is-error':'is-success');el('gtaRefreshStatus').title=[report.shortIo?.lastSuccessfulAt?'Short.io last successful: '+gtaUKDate(report.shortIo.lastSuccessfulAt):'',report.metricLastSuccessfulAt?'X last verified: '+gtaUKDate(report.metricLastSuccessfulAt):''].filter(Boolean).join(' · ');}}
-  const error=el('gtaReportError');const issues=rows.flatMap(p=>[p.clickError,p.metricError].filter(Boolean).map(message=>p.publisher+': '+message));const diagnostics=[gtaState.error,report?.warning,...issues].filter(Boolean);error.hidden=!diagnostics.length;error.innerHTML='<summary>Source details</summary><p>'+esc(diagnostics.join(' · '))+'</p>';
+  if(!gtaState.refreshing){const sourceStatus=gtaSourceStatus(report);if(sourceStatus){el('gtaRefreshStatus').textContent=sourceStatus.failed?'Partial data':'';el('gtaRefreshStatus').className='x-refresh-status '+(sourceStatus.failed?'is-error':'is-success');el('gtaRefreshStatus').title=[report.shortIo?.lastSuccessfulAt?'Short.io last successful: '+gtaUKDate(report.shortIo.lastSuccessfulAt):'',report.metricLastSuccessfulAt?'X last verified: '+gtaUKDate(report.metricLastSuccessfulAt):''].filter(Boolean).join(' · ');}}
+  const error=el('gtaReportError');const issues=rows.flatMap(p=>[p.clickError,p.metricError].filter(Boolean).map(message=>p.publisher+': '+message));const diagnostics=[gtaState.error,report?.warning,...issues].filter(Boolean);error.hidden=!diagnostics.length;error.innerHTML='<summary>Data issues</summary><p>'+esc(diagnostics.join(' · '))+'</p>';
   const paid=placements.filter(p=>p.paid),posted=rows.filter(p=>p.posted===true&&safeUrl(p.postUrl));
   const gtaHistory=fiveDayViewHistory(report?.history||[]);
   renderFiveDayLine('gtaChart','gtaTrendCard',gtaHistory,{title:originals?'Original post views over time':'QRT views over time',context:originals?'GTA VI · Original posts':'GTA VI · QRTs',suffix:'views'});
   const knownPaid=paid.filter(p=>p.cost!==null&&Number.isFinite(Number(p.cost)));
   const spend=report?.summary?.paidSpend??(ready?knownPaid.reduce((n,p)=>n+Number(p.cost),0):null);
   const seen=posted.filter(p=>p.views!==null&&p.views!==undefined),views=seen.length?seen.reduce((n,p)=>n+Number(p.views),0):null;
-  const defs=[['spend',originals?'Paid standalone spend · all time':'Paid QRT spend · all time',gtaMoney(spend),`${knownPaid.length} paid ${originals?'standalone posts':'QRTs'}`],['seven','X views · all time',gtaNumber(views),`${seen.length} of ${posted.length} live posts with verified views`],['published',originals?'Published posts · all time':'Published QRTs · all time',ready?fmt(report?.summary?.publishedPosts??posted.length):'—',originals?'GTA VI · standalone posts including V2':'GTA VI · paid QRT promotions']];
+  const defs=[['spend',originals?'Paid standalone spend · all time':'Paid QRT spend · all time',gtaMoney(spend),`${knownPaid.length} paid ${originals?'standalone posts':'QRTs'}`],['seven','X views · all time',gtaNumber(views),`${seen.length}/${posted.length} posts measured`],['published',originals?'Published posts · all time':'Published QRTs · all time',ready?fmt(report?.summary?.publishedPosts??posted.length):'—',originals?'Standalone posts':'Paid QRTs']];
   const interactions=interactionSummary(posted);
   defs.push(['interactions','Total Interactions',gtaNumber(interactions.total),interactions.note]);
   renderEngagement('gta',ready?posted:[]);
   const shortIo=report?.shortIo?.metric==='humanClicks'?report.shortIo:null;
-  defs.push(['shortio','Short.io clicks · all time',gtaNumber(shortIo?.total),`${shortIo?.verified||0} of ${shortIo?.totalPublishers||0} published links verified · ${shortIo?.linkCount||0} source links · all-time, not publication-attributed${shortIo?.stale?' · saved readings':''}${shortIo&&shortIo.verified<shortIo.totalPublishers?' · partial total':''}`]);
+  defs.push(['shortio','Short.io clicks · all time',gtaNumber(shortIo?.total),`${shortIo?.verified||0}/${shortIo?.totalPublishers||0} links tracked${shortIo?.stale?' · saved data':''}${shortIo&&shortIo.verified<shortIo.totalPublishers?' · partial':''}`]);
   el('gtaMetrics').innerHTML=defs.map(([kind,label,value,sub])=>`<${kind==='shortio'?'button type="button" aria-controls="gtaPublishers" data-gta-clicks':'div'} class="daily-metric daily-metric-${kind}"><span class="daily-metric-label">${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small></${kind==='shortio'?'button':'div'}>`).join('');
   el('gtaMetrics').querySelector('[data-gta-clicks]')?.addEventListener('click',()=>focusPromoClicks('gtaPublishers','All-time clicks'));
   const section=(title,publishers)=>`<section class="of-publisher-section"><div class="result-line"><h2>${esc(title)}<span class="heading-accent">.</span></h2><span class="section-count">${publishers.length}</span></div><div class="of-publisher-grid">${publishers.map(p=>{
@@ -1216,7 +1215,7 @@ function renderGtaReport(){
     const subtitle=p.campaign==='GTAQ'?'GTA VI QRT':p.campaign==='GTA2'?'GTA VI V2':'GTA VI original';
     const clickNote=' · Post-publication clicks: '+gtaNumber(p.clicks)+' · All-time human clicks: '+gtaNumber(p.allTimeClicks);
 
-    return `<article class="of-publisher-entry"><${tag}${attributes} data-shortio-tracked="${Boolean(p.trackingUrl&&p.clickTracked!==false)}" data-shortio-clicks="${esc(p.clicks??'')}" data-shortio-cpc="${esc(p.cpc??'')}" data-shortio-note="${esc(p.clickError||clickNote)}" data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${info}</${tag}><p class="of-last-click">${esc(subtitle)}${esc(clickNote)}${p.metricAt?' · X updated '+esc(gtaUKDate(p.metricAt)):''}</p><div class="of-publisher-links">${gtaSafeLink(p.profileUrl,'X profile')}${gtaSafeLink(p.postUrl,'View post')}</div></article>`;
+    return `<article class="of-publisher-entry"><${tag}${attributes} data-shortio-tracked="${Boolean(p.trackingUrl&&p.clickTracked!==false)}" data-shortio-clicks="${esc(p.clicks??'')}" data-shortio-cpc="${esc(p.cpc??'')}" data-shortio-note="${esc(p.clickError||clickNote)}" data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${info}</${tag}><div class="of-publisher-links">${gtaSafeLink(p.profileUrl,'X profile')}${gtaSafeLink(p.postUrl,'View post')}</div></article>`;
   }).join('')||'<div class="empty-state">No posts in this group.</div>'}</div></section>`;
   el('gtaPublishers').innerHTML=ready?section(originals?'Published standalone posts':'Published QRTs',posted):'<div class="empty-state">GTA VI data is temporarily unavailable.</div>';
   renderGtaQuotedSources();
@@ -1558,7 +1557,7 @@ function renderBoosts(){
   const matched=known.filter(t=>t.views>0),eff=known.length&&matched.length===known.length?1000*matched.reduce((s,t)=>s+t.spend,0)/matched.reduce((s,t)=>s+t.views,0):null;
   const interactions=interactionSummary(rows);
   el('boostKpis').innerHTML=[['Known ad boost spend · all time',boostMoney(spend),`${known.length} of ${rows.length} with verified spend`],['Original X views · all time',boostNumber(views),`${seen.length} of ${rows.length} with views`],['Ad cost / 1K original views',eff===null?'—':boostMoney(eff),'Known spend + available views'],['Original interactions · all time',boostNumber(interactions.total),interactions.note]].map(([label,value,note],i)=>`<div class="daily-metric daily-metric-${['spend','seven','click','interactions'][i]}"><span class="daily-metric-label">${label}</span><strong>${value}</strong><small>${note}</small></div>`).join('');
-  el('boostStatus').textContent=(boostsState.error?(boostsState.loaded?'Showing saved figures. New readings are temporarily unavailable.':'X RTs is temporarily unavailable.'):null)||(boostsState.loaded?'Lifetime X views include organic traffic · Refreshes every 2h':'Loading saved tweet records…');
+  el('boostStatus').textContent=boostsState.error?(boostsState.loaded?'Saved stats · refresh unavailable':'Data unavailable'):boostsState.loaded?'':'Loading…';
   const sort=el('boostSort').value,field={spend:'spend',rtSpend:'rtSpend',views:'views',engagement:'engagement',efficiency:'efficiency'}[sort];
   rows.sort((a,b)=>{if(!field)return new Date(b.added_at)-new Date(a.added_at)||b.id.localeCompare(a.id);const x=a[field],y=b[field];return x==null?(y==null?0:1):y==null?-1:sort==='efficiency'?x-y:y-x;});
   const values=t=>[boostMoney(t.spend),boostMoney(t.rtSpend),t.rtCount==null?'—':boostNumber(t.rtCount),boostNumber(t.views),boostNumber(t.likes),boostNumber(t.reposts),boostNumber(t.replies),boostPercent(t.engagement),t.efficiency==null?'—':boostMoney(t.efficiency),t.growth24==null?'Not enough history':boostNumber(t.growth24)];
