@@ -1113,13 +1113,27 @@ function renderGtaQuotedArticles(){
       '<li><strong>'+esc(qrt.publisher)+'</strong> · '+esc(gtaNumber(qrt.views))+
       ' QRT views · '+(qrt.paid?esc(gtaMoney(qrt.cost)):'Payment unverified')+
       ' · '+safeLink(qrt.postUrl,'Live QRT')+'</li>').join('');
+    const fullOriginal=[row.likes,row.reposts,row.replies].every(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v)));
+    const originalInteractions=fullOriginal?Number(row.likes)+Number(row.reposts)+Number(row.replies):null;
+    const originalRate=originalInteractions!==null&&Number(row.views)>0?
+      (originalInteractions/Number(row.views)*100).toFixed(2)+'%':'—';
     return '<article class="rpt-quoted-card"><div class="rpt-quoted-card-head"><div><h3>'+esc('@'+row.handle)+
       '</h3><p>'+safeLink(row.originalUrl,'Open original article post')+'</p></div><span class="rpt-quoted-counter">'+
-      esc(gtaNumber(row.qrtCount))+' QRTs</span></div><dl><div><dt>Original views</dt><dd>'+
-      esc(gtaNumber(row.views))+'</dd></div><div><dt>QRT views</dt><dd>'+esc(gtaNumber(row.qrtViews))+
-      '</dd></div><div><dt>Known paid spend</dt><dd>'+esc(gtaMoney(row.paidSpendKnown))+
-      '</dd></div><div><dt>Human clicks</dt><dd>'+esc(gtaNumber(row.allTimeHumanClicks))+
-      '</dd></div></dl><details><summary>Show linked paid QRTs</summary><ul>'+children+
+      esc(gtaNumber(row.qrtCount))+' linked QRTs</span></div>'+
+      '<p class="rpt-quoted-metric-caption">Verified original X post · lifetime counters (organic exposure included)</p>'+
+      '<dl class="rpt-quoted-data">'+
+        '<div><dt>Original views</dt><dd>'+esc(gtaNumber(row.views))+'</dd></div>'+
+        '<div><dt>Original likes</dt><dd>'+esc(gtaNumber(row.likes))+'</dd></div>'+
+        '<div><dt>Original reposts</dt><dd>'+esc(gtaNumber(row.reposts))+'</dd></div>'+
+        '<div><dt>Original replies</dt><dd>'+esc(gtaNumber(row.replies))+'</dd></div>'+
+        '<div><dt>Original interactions</dt><dd>'+esc(gtaNumber(originalInteractions))+'</dd></div>'+
+        '<div><dt>Original engagement</dt><dd>'+esc(originalRate)+'</dd></div>'+
+      '</dl><p class="rpt-quoted-metric-caption">Separate paid QRT activity, not additional unique reach</p>'+
+      '<dl class="rpt-quoted-data rpt-quoted-qrt-data">'+
+        '<div><dt>QRT views</dt><dd>'+esc(gtaNumber(row.qrtViews))+'</dd></div>'+
+        '<div><dt>Known QRT spend</dt><dd>'+esc(gtaMoney(row.paidSpendKnown))+'</dd></div>'+
+        '<div><dt>Human clicks</dt><dd>'+esc(gtaNumber(row.allTimeHumanClicks))+'</dd></div>'+
+      '</dl><details><summary>Show linked paid QRTs</summary><ul>'+children+
       '</ul></details><p class="rpt-quoted-updated">X updated '+esc(gtaUKDate(row.metricAt))+
       '</p></article>';
   });
