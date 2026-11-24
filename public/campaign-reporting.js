@@ -45,12 +45,37 @@
   }
   function totals(c){
     if(!c)return '';
-    return '<div class="daily-overview-metrics campaign-metrics rpt-stats">'+[
-      metric('Spend',usd(c.paidSpendKnown)),
-      metric('Live posts',hasFeed(c)?format(c.published):'—'),
-      metric('Views',format(c.views)),
-      metric('Clicks',format(clicks(c)))
-    ].join('')+'</div>';
+    const interactions=[c.likes,c.reposts,c.replies].every(v=>num(v)!==null)
+      ?Number(c.likes)+Number(c.reposts)+Number(c.replies):null;
+    const engagement=num(c.views)!==null&&Number(c.views)>0&&interactions!==null
+      ?(interactions/Number(c.views))*100:null;
+    const avgPaid=num(c.paidSpendKnown)!==null&&num(c.paidCount)!==null&&Number(c.paidCount)>0
+      ?Number(c.paidSpendKnown)/Number(c.paidCount):null;
+
+    let values;
+    if(c.id==='guru-rts'){
+      values=[
+        metric('Live posts',format(c.published),'4 tracked boosted tweets'),
+        metric('Views',format(c.views),'Combined X views'),
+        metric('Interactions',format(interactions),'Likes + reposts + replies'),
+        metric('Engagement',engagement===null?'Not available':engagement.toFixed(2)+'%','Interactions ÷ views')
+      ];
+    }else if(c.id==='article-rts'){
+      values=[
+        metric('Spend',usd(c.paidSpendKnown),'Verified paid total'),
+        metric('Paid placements',format(c.paidCount),'Booked / paid accounts'),
+        metric('Live posts',format(c.published),'Published placements'),
+        metric('Avg. paid cost',usd(avgPaid),'Spend ÷ paid placements')
+      ];
+    }else{
+      values=[
+        metric('Spend',usd(c.paidSpendKnown)),
+        metric('Live posts',hasFeed(c)?format(c.published):'Not connected'),
+        metric('Views',num(c.views)===null?'Not tracked':format(c.views)),
+        metric('Clicks',num(clicks(c))===null?'Not tracked':format(clicks(c)))
+      ];
+    }
+    return '<div class="daily-overview-metrics campaign-metrics rpt-stats">'+values.join('')+'</div>';
   }
   function campaignRows(c){
     const rows=c?.rows||[];
@@ -63,8 +88,9 @@
       grid(['Publisher','Status','Spend','Views','Clicks','Links'],rows.map(r=>[
       '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>',
       r.posted?'Live':r.paid?'Pending':'Unconfirmed',
-      r.paid?usd(r.cost):'—',esc(format(view(r))),
-      esc(format(r.allTimeClicks??r.clicks??null)),linkCell(r)
+      r.paid?usd(r.cost):'<span class="rpt-missing">Unpaid</span>',
+      num(view(r))===null?'<span class="rpt-missing">Not linked</span>':esc(format(view(r))),
+      num(r.allTimeClicks??r.clicks??null)===null?'<span class="rpt-missing">Not tracked</span>':esc(format(r.allTimeClicks??r.clicks??null)),linkCell(r)
     ]));
   }
   function campaignPanel(id,sub){
@@ -131,17 +157,21 @@
     const c=item('guru-rts');
     if(!c)return empty('X RT boost feed is unavailable.');
     const rows=c.rows||[];
-    const percent=v=>num(v)===null?'—':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
+    const percent=v=>num(v)===null?'Not available':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
     const summary=(viewStatus(c)==='Connected'?'':badge(c))+totals(c);
     if(!rows.length)return summary+empty('No verified boosted X tweets currently recorded.');
-    return summary+'<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+format(c.published)+'</span></div>'+grid(
-      ['Original tweet','Known spend','X views','Interactions','Engagement','Cost / 1K views','Views gained 24h','Live X link'],
+    const missingSpend=rows.filter(r=>num(r.spend)===null).length;
+    const spendNote=missingSpend
+      ?'<p class="rpt-warning"><strong>Boost spend not entered for '+esc(format(missingSpend))+' of '+esc(format(rows.length))+' tweets.</strong> The dashboard keeps these costs unfilled until a verified amount is saved in X RTs.</p>'
+      :'';
+    return summary+spendNote+'<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+format(c.published)+'</span></div>'+grid(
+      ['Original tweet','Boost spend','X views','Interactions','Engagement','Cost / 1K views','Views gained 24h','Live X link'],
       rows.map(r=>[
         '<strong>'+esc(r.name||r.publisher||r.handle)+'</strong><small class="rpt-rowmeta">@'+esc(r.handle||'')+'</small>',
-        usd(r.spend),esc(format(r.views)),
+        num(r.spend)===null?'<span class="rpt-missing">Not entered</span>':esc(usd(r.spend)),esc(format(r.views)),
         esc(format([r.likes,r.reposts,r.replies].every(v=>num(v)!==null)?
           Number(r.likes)+Number(r.reposts)+Number(r.replies):null)),
-        esc(percent(r.engagement)),usd(r.efficiency),esc(format(r.growth24)),
+        esc(percent(r.engagement)),num(r.efficiency)===null?'<span class="rpt-missing">Needs spend</span>':esc(usd(r.efficiency)),esc(format(r.growth24)),
         link(r.postUrl,'Open post')
       ])
     );
