@@ -267,9 +267,23 @@
     const body=rows.map(r=>{
       const key=String(cfg.rowKey(r)),open=st.expanded?.has(key);
       const detailId='fvd-'+cfg.id+'-'+key.replace(/[^A-Za-z0-9_-]/g,'_');
-      const tr='<tr class="fv-row'+(open?' is-open':'')+'">'+cols.map(c=>{
+      // Side-by-side cells with no data in this row share one cell and one label.
+      const cells=[];
+      for(let i=0;i<cols.length;i++){
+        const c=cols[i],v=c.get?c.get(r):null;
+        if(v&&typeof v==='object'&&'state' in v&&unavailableState(v)){
+          let j=i;const run=[v];
+          while(j+1<cols.length&&cols[j+1].get){const w=cols[j+1].get(r);if(!(w&&typeof w==='object'&&'state' in w&&unavailableState(w)))break;run.push(w);j++;}
+          if(run.length>1){
+            const reasons=[...new Set(run.map(x=>x.reason).filter(Boolean))];
+            const label=run.every(x=>isOutcome(x.reason))?'Not connected yet':run.every(x=>x.state==='notConnected')?'Not connected':run.every(x=>x.state==='notTracked')?'Not tracked':'Not available';
+            cells.push('<td class="is-merged" colspan="'+run.length+'">'+reasonButton(label,reasons.join('\n'),'is-na')+'</td>');i=j;continue;
+          }
+        }
         const left=['name','text','status','link'].includes(c.type)||c.align==='left';
-        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'">'+cellValue(c,r)+'</td>';}).join('')+
+        cells.push('<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'">'+cellValue(c,r)+'</td>');
+      }
+      const tr='<tr class="fv-row'+(open?' is-open':'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
       return tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
     }).join('');

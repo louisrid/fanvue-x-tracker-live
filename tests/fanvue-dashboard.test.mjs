@@ -153,6 +153,9 @@ test('unavailable data is shown once: empty columns hide and neighbouring empty 
   assert.match(strip,/Creator signups · KYC completions · Earning creators/);
   assert.match(strip,/Not connected yet/);
   assert.equal(U.detailGrid([['KYC completions',U.value(na)],['Paid',C.money(5)]]).includes('KYC completions'),false);
+  const gap=U.tablePanel({id:'t3',title:'T',rows:[{n:'A',v:1},{n:'B',v:null}],rowKey:r=>r.n,columns:[{key:'n',label:'Name',type:'name'},
+    {key:'v',label:'V',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)},{key:'w',label:'W',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)}]},{expanded:new Set()});
+  assert.match(gap,/<td class="is-merged" colspan="2">/);
 });
 
 test('six-slot strip keeps fixed metric order on every paid campaign page',()=>{
