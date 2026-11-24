@@ -79,10 +79,10 @@ const ICONS={articles:'<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" hei
   paid:'<svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M7 10h4M16 12h1"/></svg>'};
 const state={placements:[],campaigns:[],history:[],activity:[],activityReady:false,trackingReady:false,
   hourlyEvents:[],hourlyReady:false,owner:'ALL',page:'dashboard',modalCode:'',accountCode:'',modalType:'',lastFocus:null,
-  loading:false,initialLoadSettled:false,loadError:false,chartPeriod:30,lastLoadedAt:0,toastTimeout:0,adminKey:'',adminConfigured:false,
-  selected:new Set(),pendingEditor:null,homePaidCodes:new Set(),homeVerified:false,homeChart:'clicks',dashboardWeek:'current',statsWeek:'current',historicalWeek:'current',fxRateGbp:null,fxRateDate:'',fxCheckedAt:0,fxLoading:false};
+  loading:false,initialLoadSettled:false,loadError:false,lastLoadedAt:0,toastTimeout:0,adminKey:'',adminConfigured:false,
+  selected:new Set(),pendingEditor:null,homePaidCodes:new Set(),homeVerified:false,dashboardWeek:'current'};
 // Keep deliberate week selections across reloads; default to latest active week when current week has no rows.
-const WEEK_CHOICE_KEYS={dashboardWeek:'xtracker-dashboard-week-choice-v1',historicalWeek:'xtracker-history-week-choice-v1'};
+const WEEK_CHOICE_KEYS={dashboardWeek:'xtracker-dashboard-week-choice-v1'};
 for(const [field,key] of Object.entries(WEEK_CHOICE_KEYS)){
   const choice=storage.get(key);
   if(choice==='current'||choice==='other'||(/^\d{1,3}$/.test(choice||'')&&Number(choice)>0))state[field]=choice;
@@ -94,13 +94,8 @@ function selectLatestNonemptyWeek(){
   if(!recent.length)return;
   const last=Math.max(...recent);
   const hasCurrent=recent.includes(current);
-  if(!hasCurrent){
-    for(const field of ['dashboardWeek','historicalWeek','statsWeek']){
-      if(field!=='statsWeek'&&storage.get(WEEK_CHOICE_KEYS[field])!==null)continue;
-      if(state[field]==='current')state[field]=String(last);
-    }
-  }else{
-    if(state.dashboardWeek==='current')state.statsWeek='current';
+  if(!hasCurrent&&storage.get(WEEK_CHOICE_KEYS.dashboardWeek)===null&&state.dashboardWeek==='current'){
+    state.dashboardWeek=String(last);
   }
 }
 const dparts=d=>Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
@@ -311,182 +306,11 @@ function renderWeekly(){
   if(upcomingSection)upcomingSection.hidden=!verified||upcoming.length===0;
 }
 // Daily click totals are verified event counts, never estimated from post lifetime counts.
-function dailySeries(now=new Date()){
-  const today=day(now),start=weekStart(now),home=homePlacements();
-  const codes=new Set(home.map(p=>p.code));
-  const daily=Array.from({length:7},(_,i)=>{
-    const date=shift(start,i);
-    const clicks=state.activityReady?state.activity.filter(e=>codes.has(e.code)&&e.date===date).reduce((sum,e)=>sum+(number(e.clicks)||0),0):null;
-    return {date,clicks};
-  });
-  return {daily:daily.filter(x=>x.date<=today),hasClicks:state.activityReady};
-}
 // Article cost is recorded in USD in the source Sheet. Avg. Daily Spend
 // measures the average GBP per day over the seven UK calendar days ending today:
 // sum(price in USD for paid + published articles in that window) × USD/GBP ÷ 7.
 // Payment dates are not required: the user-defined criterion is Paid status
 // AND Posted status, with a verified publication date in the window.
-function equivalisedSpendUsd(now=new Date()){
-  const today=day(now),start=weekStart(now);
-  const qualifying=homePlacements().filter(p=>{
-    if(p.paid!==true||p.posted!==true||number(p.cost)===null)return false;
-    const published=postDate(p);
-    return published&&day(published)>=start&&day(published)<=today;
-  });
-  return {totalUsd:qualifying.reduce((sum,p)=>sum+number(p.cost),0),articles:qualifying.length,start,today};
-}
-const FX_STORAGE_KEY='xtracker-usd-gbp-fx-v1';
-const FX_UPDATE_MS=24*60*60*1000;
-function restoreGbpRate(){
-  try{
-    const cached=JSON.parse(storage.get(FX_STORAGE_KEY)||'null');
-    if(cached&&Number.isFinite(cached.rate)&&cached.rate>0.4&&cached.rate<1.5&&/^\d{4}-\d{2}-\d{2}$/.test(cached.date)){
-      state.fxRateGbp=cached.rate;
-      state.fxRateDate=cached.date;
-      state.fxCheckedAt=Number(cached.checkedAt)||0;
-    }
-  }catch{}
-}
-async function refreshGbpRate(){
-  if(state.fxLoading||Date.now()-state.fxCheckedAt<FX_UPDATE_MS)return;
-  state.fxLoading=true;
-  state.fxCheckedAt=Date.now();
-  // Both public sources provide a dated, verifiable USD -> GBP rate.
-  // A backup avoids leaving the GBP KPI empty when only one FX API is down.
-  const sources=[
-    {url:'https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP',
-     rate:d=>d?.base==='USD'?Number(d.rates?.GBP):NaN,date:d=>String(d.date||'')},
-    {url:'https://open.er-api.com/v6/latest/USD',
-     rate:d=>d?.result==='success'?Number(d.rates?.GBP):NaN,
-     date:d=>{const v=String(d.time_last_update_utc||'');
-       const t=Date.parse(v);return Number.isFinite(t)?new Date(t).toISOString().slice(0,10):''}}
-  ];
-  try{
-    let quote=null;
-    for(const source of sources){
-      try{
-        const options={cache:'no-store'};
-        if(typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function')options.signal=AbortSignal.timeout(7000);
-        const res=await fetch(source.url,options);
-        if(!res.ok)continue;
-        const data=await res.json(),rate=source.rate(data),date=source.date(data);
-        if(!Number.isFinite(rate)||rate<=0.4||rate>=1.5||!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;
-        quote={rate,date};break;
-      }catch{ /* Move to the other live, dated exchange-rate source. */ }
-    }
-    if(!quote)throw new Error('No verified rate available');
-    state.fxRateGbp=quote.rate;state.fxRateDate=quote.date;
-    storage.set(FX_STORAGE_KEY,JSON.stringify({...quote,checkedAt:state.fxCheckedAt}));
-    if(state.initialLoadSettled)renderDailyOverview();
-  }catch{
-    // Never mislabel USD as GBP. Retain a previously verified cached rate.
-    state.fxCheckedAt=Date.now()-FX_UPDATE_MS+60*60*1000;
-  }finally{state.fxLoading=false;}
-}
-function niceTop(value){
-  if(value<=0)return 4;
-  const raw=value/4,p=Math.pow(10,Math.floor(Math.log10(raw))),step=[1,2,2.5,5,10].map(n=>n*p).find(n=>n>=raw)||10*p;
-  return step*4;
-}
-let lastDailyChartWidth=0;
-function hourlyWindow(now=new Date()){
-  // Use UK midnight, including summer time, and only this week’s placement IDs.
-  const end=Math.floor(now.getTime()/3600000)*3600000;
-  const start=Math.min(end,ukMidnight(weekStart(now)));
-  const codes=new Set(homePlacements().map(p=>p.code));
-  const buckets=Array.from({length:Math.floor((end-start)/3600000)+1},(_,i)=>({time:start+i*3600000,clicks:0}));
-  if(!state.hourlyReady)return {buckets,ready:false};
-  for(const ev of state.hourlyEvents){
-    if(!codes.has(ev.code))continue;
-    const t=Date.parse(ev.timestamp);
-    if(!Number.isFinite(t)||t<start||t>=end+3600000)continue;
-    const i=Math.floor((t-start)/3600000);
-    if(i>=0&&i<buckets.length)buckets[i].clicks++;
-  }
-  return {buckets,ready:true};
-}
-function hourlyCurve(pts){
-  if(pts.length<2)return '';
-  // Monotone-tangent cubic Bezier avoids artificial overshoot below zero.
-  const slopes=pts.slice(1).map((p,i)=>(p.y-pts[i].y)/(p.x-pts[i].x));
-  const tangents=pts.map((p,i)=>i===0?slopes[0]:i===pts.length-1?slopes.at(-1):slopes[i-1]*slopes[i]<=0?0:2*slopes[i-1]*slopes[i]/(slopes[i-1]+slopes[i]));
-  let path=`M${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
-  for(let i=1;i<pts.length;i++){
-    const a=pts[i-1],b=pts[i],dx=b.x-a.x;
-    path+=` C${(a.x+dx/3).toFixed(2)} ${(a.y+tangents[i-1]*dx/3).toFixed(2)} ${(b.x-dx/3).toFixed(2)} ${(b.y-tangents[i]*dx/3).toFixed(2)} ${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
-  }
-  return path;
-}
-function renderDailyOverview(){
-  const panel=el('dailyTrendChart'),metrics=el('dailyOverviewMetrics'),note=el('dailyTrendNote'),status=el('dailyLiveStatus');
-  if(!panel||!metrics||!note||!status)return;
-  const {daily,hasClicks}=dailySeries(),today=daily.at(-1);
-  const totalClicks=hasClicks?daily.reduce((s,d)=>s+d.clicks,0):null;
-  const spend=equivalisedSpendUsd(),fx=state.fxRateGbp;
-  const spendGbp=fx!==null?spend.totalUsd*fx/7:null;
-  // Use verified published articles from the current reporting week only.
-  const scope=selectedStatsWeek('current');
-  const liveArticles=scope.placements.filter(p=>weeklyLive(p,scope));
-  const views=liveArticles.map(p=>recordedMetricFor(p,'xViews',scope)).filter(v=>v!==null);
-  const hasPlacements=state.initialLoadSettled&&(!state.loadError||state.placements.length);
-  const chartHeading=el('statsChartTitle');
-  if(chartHeading)chartHeading.innerHTML='Week '+currentStatsWeekNumber()+' UTM clicks<span class="heading-accent">.</span>';
-  const connected=state.initialLoadSettled&&state.trackingReady&&hasClicks;
-  status.classList.toggle('is-live',connected);
-  el('dailyLiveLabel').textContent=connected?'LIVE DATA':'DATA UNAVAILABLE';
-  const defs=[
-    {kind:'click',label:'UTM clicks today',value:hasClicks?fmt(today.clicks):'—',sub:`Week ${currentStatsWeekNumber()} placements`},
-    {kind:'seven',label:`Week ${currentStatsWeekNumber()} clicks`,value:hasClicks?fmt(totalClicks):'—',sub:''},
-    {kind:'spend',label:'Avg. Daily Spend',value:state.initialLoadSettled&&(!state.loadError||state.placements.length)?(spend.totalUsd===0?gbp(0):spendGbp!==null?gbp(spendGbp):'£—'):'£—',sub:state.initialLoadSettled&&(!state.loadError||state.placements.length)?`${spend.articles} paid & published ${spend.articles===1?'article':'articles'} · 7-day daily average${fx!==null?' · FX '+state.fxRateDate:''}`:'Waiting for verified article data'},
-    {kind:'articles',label:'Live articles',value:hasPlacements?fmt(liveArticles.length):'—',sub:'Published in the current reporting week'},
-    {kind:'views',label:'X views',value:hasPlacements&&views.length?fmt(views.reduce((sum,n)=>sum+n,0)):'—',sub:hasPlacements?views.length+' of '+liveArticles.length+' posts with verified views':'Waiting for source data'}
-  ];
-  // Projected weekly clicks are an extrapolation, not recorded clicks.
-  // Keep it visually attached to the seven-day KPI and make it strictly
-  // contingent on verified daily click totals (never fabricate a value).
-  const projectedClicks=hasClicks?fmt(today.clicks*7):'—';
-  metrics.innerHTML=defs.map(x=>{
-    const card=`<div class="daily-metric daily-metric-${x.kind}"><span class="daily-metric-label">${esc(x.label)}</span><strong>${esc(x.value)}</strong>${x.sub?`<small>${esc(x.sub)}</small>`:''}</div>`;
-    return x.kind==='seven'?`<div class="daily-metric-middle" aria-label="Clicks and seven-day projection"><div class="daily-projection" title="Today's verified UTM clicks multiplied by seven"><span>Projected</span><strong>${esc(projectedClicks)}</strong></div>${card}</div>`:card;
-  }).join('');
-  fitDailyMetricNumbers(metrics);
-  const {buckets,ready}=hourlyWindow();
-  if(!ready){panel.innerHTML='<div class="daily-hourly-unavailable">Hourly click history unavailable.</div>';
-    note.textContent='';
-    return;
-  }
-  const actualWidth=panel.clientWidth||panel.getBoundingClientRect?.().width||780;
-  const W=Math.max(280,Math.round(actualWidth)),mobile=W<600,H=mobile?230:285,L=mobile?35:48,R=mobile?11:18,T=17,B=mobile?44:43;
-  lastDailyChartWidth=W;
-  const cw=W-L-R,ch=H-T-B;
-  const high=Math.max(4,niceTop(Math.max(...buckets.map(b=>b.clicks))));
-  const X=i=>L+i*cw/Math.max(1,buckets.length-1),Y=v=>T+ch-(v/high)*ch;
-  const pts=buckets.map((b,i)=>({x:X(i),y:Y(b.clicks)}));
-  const line=hourlyCurve(pts),fill=`${line} L${X(buckets.length-1)} ${Y(0)} L${X(0)} ${Y(0)} Z`;
-  const axes=[0,1,2,3,4].map(i=>{const y=T+ch*i/4;
-    return `<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" class="daily-grid-line"/><text x="${L-9}" y="${y+4}" text-anchor="end" class="daily-axis-label">${fmt(high*(4-i)/4)}</text>`;
-  }).join('');
-  const tzLabel=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,weekday:'short'});
-  const tzDate=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,month:'short',day:'numeric'});
-  const dayRanges=[];
-  let section=null;
-  buckets.forEach((b,i)=>{const date=day(new Date(b.time));if(!section||section.date!==date){section={date,from:i,to:i,time:b.time};dayRanges.push(section);}else section.to=i;});
-  const todayLocal=day(new Date());
-  const xlabels=dayRanges.slice(Math.max(0,dayRanges.length-7)).map(d=>{
-    const x=X((d.from+d.to)/2),label=d.date===todayLocal?'Today':tzLabel.format(new Date(d.time));
-    const sep=d.from>0?`<line x1="${X(d.from)}" y1="${T}" x2="${X(d.from)}" y2="${T+ch}" class="daily-day-divider"/>`:'';
-    return `${sep}<text x="${x}" y="${H-17}" text-anchor="middle" class="daily-axis-label daily-x-label">${esc(label)}</text>`;
-  }).join('');
-  const total=buckets.reduce((s,b)=>s+b.clicks,0),latestBucket=buckets.at(-1);
-  const latestDate=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(new Date(latestBucket.time));
-  const latestMetrics=encodeURIComponent(JSON.stringify([
-    {label:'UTM clicks',value:fmt(latestBucket.clicks)},
-    {label:'Week total',value:fmt(total)},
-    {label:'Reporting week',value:'Week '+currentStatsWeekNumber()}
-  ]));
-  panel.innerHTML=`<svg class="daily-trend-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Verified Week ${currentStatsWeekNumber()} UTM clicks each hour, with the current hour on the far right">${axes}${xlabels}<path d="${fill}" fill="#0055ff" fill-opacity=".12"/><path d="${line}" class="daily-utm-line" stroke="#0055ff"/><circle cx="${X(buckets.length-1)}" cy="${Y(latestBucket.clicks)}" r="${mobile?5:6.2}" class="daily-latest-dot" tabindex="0" role="button" data-chart-point data-chart-title="Hourly UTM clicks" data-chart-date="${esc(latestDate)}" data-chart-metrics="${latestMetrics}" aria-label="${esc(latestDate+': '+fmt(latestBucket.clicks)+' UTM clicks. Hover or focus for details.')}"/></svg>`;
-  note.textContent=`${fmt(total)} verified Week ${currentStatsWeekNumber()} clicks · UK time · updated approximately every minute`;
-}
 function fitDailyMetricNumbers(root=el('dailyOverviewMetrics')){
   if(!root)return;
   root.querySelectorAll('.daily-metric strong,.daily-projection strong').forEach(value=>{
@@ -501,13 +325,6 @@ function fitDailyMetricNumbers(root=el('dailyOverviewMetrics')){
   });
 }
 
-function renderHomeChart(){
-  if(!el('homeChart')||!el('homeChartTotal'))return;
-  const key=state.homeChart,rows=homePlacements().filter(isLive).map(p=>({p,value:key==='views'?number(p.xViews):clicks(p)})).filter(x=>x.value!==null).sort((a,b)=>b.value-a.value||compareUTMClicks(a.p,b.p)),max=Math.max(1,...rows.map(x=>x.value));
-  el('homeChart').innerHTML=rows.length?rows.map(({p,value})=>`<button type="button" class="home-chart-row" data-detail="${esc(p.code)}" title="${esc(p.metricNote||p.publisher)}"><span>${esc(p.publisher)}</span><span class="home-chart-track"><i style="width:${value/max*100}%"></i></span><strong>${fmt(value)}</strong></button>`).join(''):'<div class="home-chart-empty">Waiting for measured results</div>';
-  el('homeChartTotal').textContent=rows.length?fmt(rows.reduce((sum,x)=>sum+x.value,0))+' '+(key==='views'?'views':'clicks'):'—';
-  document.querySelectorAll('[data-home-chart]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.homeChart===key)));
-}
 function renderKpis(){
   const placements=homePlacements(),paid=placements.filter(p=>p.paid===true);
   const totalPaid=paid.reduce((sum,p)=>sum+(number(p.cost)||0),0);
@@ -571,93 +388,6 @@ function renderTracker(){const list=filteredPlacements(),chosen=state.placements
 // Historical keeps complete source-week cohorts. Clicks are scoped to the
 // recorded UK week; past-week X figures use snapshots at that week's cutoff.
 // Never substitute present-day lifetime X counts for a completed week's data.
-function historicalScope(key,entries){
-  if(key==='other')return null;
-  const number=Number(key),from=reportingWeekStart(number),to=shift(from,6);
-  const today=day(new Date());
-  return {number,from,to,today,isCurrent:number===currentStatsWeekNumber(),placements:entries};
-}
-function historicalCard(p,scope,weekClickMap){
-  const live=isLive(p);
-  const url=live?safeUrl(p.postUrl):'';
-  const value=scope?weeklyClicksFor(p,weekClickMap):clicks(p);
-  const paid=p.paid===true;
-  const start=url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"`:`<button type="button" data-detail="${esc(p.code)}"`;
-  const end=url?'a':'button';
-  return `${start} data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card historical-card ${paid?'historical-is-paid':''} ${live?'historical-is-live':''} ${live&&isAged(p)?'is-aged':''}" aria-label="${url?'Open':'View'} ${esc(p.publisher)} ${url?'live post':'article details'}">
-    ${articleCardContent(p,{live,value,scope})}
-  </${end}>`;
-}
-function renderHistorical(){
-  const root=el('historicalWeeks');if(!root)return;
-  const rows=state.placements.filter(p=>(state.owner==='ALL'||p.owner===state.owner)&&isLive(p));
-  const groups=new Map();
-  for(const p of rows){
-    const week=weeklyTabNumber(p);
-    const key=week?String(week):'other';
-    if(!groups.has(key))groups.set(key,[]);
-    groups.get(key).push(p);
-  }
-  const current=currentStatsWeekNumber();
-  const lastVisible=Math.max(1,current);
-  const selected=state.historicalWeek==='other'?'other':state.historicalWeek==='current'||!state.historicalWeek?current:Math.max(1,Math.min(lastVisible,Number(state.historicalWeek)||current));
-  const dateLabel=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
-  const fullDateLabel=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
-  const tabs=el('historicalWeekTabs');
-  if(tabs){
-    tabs.innerHTML=Array.from({length:lastVisible},(_,i)=>{
-      const n=i+1,from=reportingWeekStart(n),to=shift(from,6),active=n===selected;
-      return `<button type="button" class="historical-tab ${active?'is-active':''}" role="tab" id="historical-tab-${n}" aria-controls="historical-panel-${n}" aria-selected="${active}" tabindex="${active?'0':'-1'}" data-historical-week="${n}"><span class="historical-tab-top"><strong>Week ${n}</strong>${n===current?'<em class="historical-live">LIVE</em>':''}</span><small>${dateLabel(from)} – ${dateLabel(to)}</small></button>`;
-    }).join('')+(groups.has('other')?`<button type="button" class="historical-tab ${selected==='other'?'is-active':''}" role="tab" id="historical-tab-other" aria-controls="historical-panel-other" aria-selected="${selected==='other'}" tabindex="${selected==='other'?'0':'-1'}" data-historical-week="other"><span class="historical-tab-top"><strong>Other</strong></span><small>Unassigned placements</small></button>`:'');
-    const active=tabs.querySelector('.is-active');
-    if(active&&!el('page-historical')?.hidden&&tabs.dataset.lastSelected!==String(selected)){
-      active.scrollIntoView?.({block:'nearest',inline:'nearest'});
-      tabs.dataset.lastSelected=String(selected);
-    }
-  }
-  const ordered=Array.from({length:lastVisible},(_,i)=>String(i+1));
-  if(groups.has('other'))ordered.push('other');
-  root.innerHTML=ordered.map(key=>{
-    const entries=[...(groups.get(key)||[])];
-    const scope=historicalScope(key,entries),clickMap=scope?weeklyCodeClicks(scope):new Map();
-    const knownClicks=p=>scope?(state.activityReady?(clickMap.get(p.code)||0):null):clicks(p);
-    const sortMode=el('historicalSort')?.value||'recent';
-    entries.sort((a,b)=>sortMode==='clicks'?(function(){
-      const av=knownClicks(a),bv=knownClicks(b);
-      if(av===null)return bv===null?compareArticles(a,b,'recent'):1;
-      if(bv===null)return -1;
-      return bv-av||compareArticles(a,b,'recent');
-    })():compareArticles(a,b,sortMode));
-    const label=scope?`Week ${key}`:'Other placements';
-    const weeklyEvents=scope&&state.activityReady?(scope.number===2?scopeEvents(scope):state.activity.filter(e=>e.date>=scope.from&&e.date<=scope.to&&e.date<=scope.today)):[];
-    const allClicks=scope?(state.activityReady?weeklyEvents.reduce((sum,e)=>sum+(Number(e.clicks)||0),0):null):null;
-    const summaries=scope?statsWeekKpis(scope):[
-      {id:'articles',label:'Placements',value:fmt(entries.length)},
-      {id:'money',label:'Paid total',value:money(entries.filter(p=>p.paid).reduce((n,p)=>n+(number(p.cost)||0),0))},
-      {id:'clicks',label:'UTM clicks',value:state.trackingReady?display(entries.reduce((n,p)=>n+(clicks(p)||0),0)):'—'}
-    ];
-    if(scope)summaries.find(k=>k.id==='clicks').value=display(allClicks);
-    const weekDays=scope?Array.from({length:7},(_,i)=>{
-      const date=shift(scope.from,i);
-      return {date,clicks:weeklyEvents.reduce((sum,e)=>sum+(e.date===date?Number(e.clicks)||0:0),0)};
-    }):[];
-    const peak=Math.max(1,...weekDays.map(d=>d.clicks));
-    const chart=scope?`<div class="historical-chart" aria-label="Daily verified clicks in Week ${key}"><div class="historical-chart-heading"><div><span class="historical-control-label">WEEKLY ACTIVITY</span><h3>Clicks by day<span class="heading-accent">.</span></h3></div><span>UK time · Mon–Sun</span></div><div class="historical-chart-bars">${weekDays.map(d=>`<div class="historical-chart-day" title="${esc(dateLabel(d.date))}: ${state.activityReady?fmt(d.clicks):'—'} clicks"><strong>${state.activityReady?fmt(d.clicks):'—'}</strong><span class="historical-chart-track"><i style="height:${state.activityReady&&d.clicks?Math.max(6,d.clicks/peak*100):0}%"></i></span><small>${esc(new Intl.DateTimeFormat('en-GB',{weekday:'short',timeZone:'UTC'}).format(new Date(d.date+'T12:00:00Z')))}</small></div>`).join('')}</div><p>All recorded tracked clicks during this UK calendar week, including clicks on articles from earlier weeks.</p></div>`:'';
-    const active=key===String(selected);
-    return `<details class="historical-week" id="historical-panel-${esc(key)}" role="tabpanel" aria-labelledby="${scope?'historical-tab-'+key:'historical-other-label'}" data-week="${esc(key)}" ${active?'open':''}>
-      <summary class="historical-week-toggle"><span class="historical-week-name" id="${scope?'historical-week-'+key:'historical-other-label'}">${esc(label)}<span class="heading-accent">.</span></span><span class="historical-week-summary">${fmt(entries.length)} ${entries.length===1?'placement':'placements'}</span><svg class="historical-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg></summary>
-      <div class="historical-week-body">
-        <div class="historical-panel-heading"><div><span class="historical-control-label">${scope?'CAMPAIGN REPORT':'ARCHIVE'}</span><h2>${esc(label)}<span class="heading-accent">.</span></h2><p>${scope?`${fullDateLabel(scope.from)} – ${fullDateLabel(scope.to)} · Europe/London`:'Placements without a recorded source week'}</p></div>${scope&&scope.isCurrent?'<span class="historical-panel-live"><i></i> CURRENT WEEK</span>':''}</div>
-        <h3 class="historical-subtitle">Week summary<span class="heading-accent">.</span></h3>
-        <div class="historical-week-kpis" aria-label="${esc(label)} summary">${summaries.map(k=>`<div class="historical-week-kpi historical-metric-${esc(k.id)}"><span>${esc(/[.!?]$/.test(k.label)?k.label:k.label+'.')}</span><strong>${esc(k.value)}</strong></div>`).join('')}</div>
-        ${chart}
-        <div class="historical-placements-heading"><div><h3 class="historical-subtitle">Articles<span class="heading-accent">.</span></h3></div><span class="section-count">${fmt(entries.length)}</span></div>
-        <div class="historical-cards">${entries.length?entries.map(p=>historicalCard(p,scope,clickMap)).join(''):`<div class="historical-empty"><strong>No placements recorded for ${esc(label)} yet.</strong><span>Weekly click tracking is already active. Articles appear here when the campaign feed records them.</span></div>`}</div>
-      </div>
-    </details>`;
-  }).join('');
-}
-
 function renderBulk(){for(const code of [...state.selected])if(!state.placements.some(p=>p.code===code))state.selected.delete(code);
   const n=state.selected.size,bar=el('bulkBar');bar.hidden=n===0;el('bulkCount').textContent=n+' selected';}
 function buildAccounts(){
@@ -787,21 +517,6 @@ function newestSnapshotByDay(){
     if(x.availability!=='unavailable')perDay.set(k,{...x,date:d,engagements:[x.likes,x.comments,x.shares].every(v=>number(v)!==null)?Number(x.likes)+Number(x.comments)+Number(x.shares):null});
   }return [...perDay.values()].sort((a,b)=>a.date.localeCompare(b.date));
 }
-function metricHistorySeries(period,key){
-  const rows=newestSnapshotByDay(),today=day(new Date()),start=shift(today,-period+1),byCode=new Map();
-  for(const row of rows){if(row.date>today)continue;const arr=byCode.get(row.code)||[];arr.push(row);byCode.set(row.code,arr);}
-  const daily=[];
-  for(let n=period-1;n>=0;n--){const date=shift(today,-n);let total=0,known=0;
-    for(const arr of byCode.values()){
-      const vals=arr.filter(x=>x.date===date&&number(x[key])!==null);
-      if(!vals.length)continue;
-      const last=vals.at(-1);total+=Number(last[key]);known++;
-    }
-    daily.push({date,value:known?total:null});
-  }
-  // Values are cumulative measured post totals, not incremental daily audience numbers.
-  return daily;
-}
 function bookedHistory(period){const today=day(new Date());const vals=[];
   const undated=eligible().some(p=>p.paid&&!p.paidAt&&!p.bookedAt);
   if(undated)return Array.from({length:period},(_,i)=>({date:shift(today,i-period+1),value:null}));
@@ -814,31 +529,6 @@ function bookedHistory(period){const today=day(new Date());const vals=[];
     vals.push({date:d,value:known?total:0});
   }
   return vals;
-}
-function trendCard(target,records,label){
-  const n=records.length;const points=records.filter(x=>x.value!==null);if(points.length<2){el(target).innerHTML='<div class="no-history">History not yet available</div>';return;}
-  const max=Math.max(1,...points.map(x=>x.value)),min=Math.min(0,...points.map(x=>x.value));
-  const coords=records.map((r,i)=>r.value===null?null:[14+i*(600/(n-1)),185-(r.value-min)/Math.max(max-min,1)*153]);
-  let segments=[],last=[];for(const pt of coords){if(pt)last.push(pt);else if(last.length){segments.push(last);last=[];}}if(last.length)segments.push(last);
-  const paths=segments.map(seg=>`<path d="${seg.map(([x,y],i)=>(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)).join(' ')}" fill="none" stroke="${label==='Views'?'#2b6cff':label==='Engagement'?'#9658e7':'#2cb8b0'}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
-  const first=points[0],latest=points.at(-1);
-  el(target).innerHTML=`<div class="trend-value">${label==='$'?'$':''}${fmt(latest.value)}</div><svg class="line-svg" viewBox="0 0 630 200" preserveAspectRatio="none" role="img" aria-label="${esc(label)} history"><path d="M14 185H614M14 95H614M14 32H614" fill="none" stroke="var(--line)" stroke-width="1"/>${paths}</svg><div class="trend-dates"><span>${esc(first.date)}</span><span>${esc(latest.date)}</span></div>`;
-}
-function growthChange(key,element){
-  const now=new Date(),day7=shift(day(now),-7),list=metricHistorySeries(90,key);
-  const a=list.find(x=>x.date===day7)?.value,b=list.at(-1)?.value;
-  const node=el(element);if(!node)return;
-  node.textContent=a===null||b===null||a===undefined||b===undefined?'':(b-a>=0?'+':'')+fmt(b-a)+' / 7d';
-}
-function renderClickChart(){const chart=el('clickChart'),n=state.chartPeriod,today=day(new Date());
-  if(!state.activityReady){chart.innerHTML='<div class="no-history">Click history unavailable</div>';return;}
-  const rows=activity(),first=rows.map(x=>x.date).sort()[0]||today,arr=[];for(let i=n-1;i>=0;i--){const date=shift(today,-i);arr.push({date,value:date<first?null:rows.reduce((a,x)=>a+(x.date===date?Number(x.clicks)||0:0),0)});}
-  const max=Math.max(1,...arr.map(x=>x.value)),stride=n<=7?1:n<=30?5:15;
-  chart.style.setProperty('--bars',n);
-  chart.innerHTML=arr.map((x,i)=>{const h=x.value?Math.max(4,x.value/max*87):1;
-    const lbl=i%stride===0||i===n-1?new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(x.date+'T12:00:00Z')):'';
-    return `<div class="click-chart-column" title="${esc(x.date)}: ${x.value===null?'No recorded history':x.value}"><div class="click-bar ${x.value?'':'is-zero'}" style="--bar-height:${h}%;${x.value===null?'opacity:0':''}"></div><span class="click-bar-label">${esc(lbl)}</span></div>`;
-  }).join('');
 }
 // Preserve the original historical Week 1 and Week 2 date ranges.
 // Keep week numbering calendar-based so the selector rolls over even before
@@ -891,121 +581,6 @@ function recordedMetricFor(p,key,scope){
   return rows.length?number(rows.at(-1)[snapshotKey]):null;
 }
 const weeklyLive=(p,scope)=>isLive(p)&&Boolean(postDate(p)&&day(postDate(p))<=scope.to&&day(postDate(p))<=scope.today);
-function statsWeekKpis(scope){
-  // A failed initial request is not evidence of zero articles or zero spend.
-  if(state.loadError&&!state.placements.length)return [
-    {id:'articles',label:'Live articles',value:'—'},
-    {id:'money',label:'Paid total',value:'—'},
-    {id:'clicks',label:'UTM clicks',value:'—'},
-    {id:'views',label:'Views recorded',value:'—'},
-    {id:'likes',label:'Likes recorded',value:'—'}
-  ];
-  const rows=scope.placements,live=rows.filter(p=>weeklyLive(p,scope));
-  const paid=rows.filter(p=>p.paid&&number(p.cost)!==null),map=weeklyCodeClicks(scope);
-  const paidTotal=paid.reduce((n,p)=>n+number(p.cost),0);
-  const totalClicks=state.activityReady?rows.reduce((n,p)=>n+(map.get(p.code)||0),0):null;
-  const views=live.map(p=>recordedMetricFor(p,'xViews',scope)).filter(v=>v!==null);
-  const likes=live.map(p=>recordedMetricFor(p,'xLikes',scope)).filter(v=>v!==null);
-  return [
-    {id:'articles',label:'Live articles',value:fmt(live.length)},
-    {id:'money',label:'Paid total',value:money(paidTotal),badge:`${fmt(paid.length)} paid ${paid.length===1?'article':'articles'}`},
-    {id:'clicks',label:'UTM clicks',value:display(totalClicks)},
-    {id:'views',label:'Views recorded',value:views.length?fmt(views.reduce((n,v)=>n+v,0)):'—'},
-    {id:'likes',label:'Likes recorded',value:likes.length?fmt(likes.reduce((n,v)=>n+v,0)):'—'}
-  ];
-}
-function renderStatsWeekSelector(scope){
-  const select=el('statsWeekSelect');if(!select)return;
-  const current=currentStatsWeekNumber();
-  const options=[`<option value="current">This Week (Week ${current})</option>`];
-  for(let n=current-1;n>=1;n--)options.push(`<option value="${n}">Week ${n}</option>`);
-  const chosen=state.statsWeek==='current'?'current':String(scope.number);
-  select.innerHTML=options.join('');select.value=chosen;
-  const label=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
-  el('statsWeekRange').textContent=`${label(scope.from)} to ${label(scope.to)}`;
-  el('statsChartRange').textContent=`Week ${scope.number} · ${label(scope.from)} to ${label(scope.to)}`;
-}
-function renderWeeklyBreakdown(scope){
-  const list=el('statsWeeklyBreakdown');if(!list)return;
-  if(!state.initialLoadSettled){list.innerHTML='<div class="stats-week-empty stats-loading-row" role="status"><span class="metric-spinner" aria-label="Loading article ranking"></span></div>';return;}
-  if(state.loadError&&!state.placements.length){list.innerHTML='<div class="stats-week-empty">Statistics unavailable</div>';return;}
-  const map=weeklyCodeClicks(scope);
-  // Key Stats is a ranking, not a second copy of the complete placements page.
-  // Complete released and paid Scheduled placement records live in Historical; unpaid drafts do not.
-  const live=scope.placements.filter(p=>weeklyLive(p,scope));
-  const sortMode=el('statsArticleSort').value;
-  const rows=[...live].sort((a,b)=>sortMode==='clicks'?(function(){
-    const av=weeklyClicksFor(a,map),bv=weeklyClicksFor(b,map);
-    if(av===null)return bv===null?compareArticles(a,b,'recent'):1;
-    if(bv===null)return -1;
-    return bv-av||compareArticles(a,b,'recent');
-  })():sortMode==='views'?(function(){
-    const av=recordedMetricFor(a,'xViews',scope),bv=recordedMetricFor(b,'xViews',scope);
-    if(av===null)return bv===null?compareArticles(a,b,'recent'):1;
-    if(bv===null)return -1;
-    return bv-av||compareArticles(a,b,'recent');
-  })():compareArticles(a,b,sortMode)).slice(0,5);
-  el('statsArticleCount').textContent=rows.length?`${rows.length} shown`:'';
-  el('statsBreakdownHeading').innerHTML='Top articles<span class="heading-accent">.</span>'; 
-  const history=el('statsViewHistory');
-  history.hidden=scope.placements.length===0;
-  history.textContent=`View Week ${scope.number} in Historical →`;
-  list.innerHTML=rows.length?rows.map((p,i)=>{
-    const clickValue=weeklyClicksFor(p,map),views=recordedMetricFor(p,'xViews',scope);
-    return `<button type="button" class="stats-breakdown-row ${isLive(p)?'is-posted':''}" data-detail="${esc(p.code)}" aria-label="${esc(p.publisher)} performance for Week ${scope.number}">
-      <span class="stats-breakdown-account"><strong><span class="stats-rank">${i+1}.</span> ${esc(p.publisher)}</strong><small>${campaignTag(p)} ${metricBadge(p)} <span>${esc(p.articleLabel||p.code)}</span></small><span class="state-pill is-live">POSTED</span></span>
-      <span class="stats-breakdown-metric"><strong>${display(clickValue)}</strong><small>UTM clicks</small></span>
-      <span class="stats-breakdown-metric"><strong>${display(views)}</strong><small>Views</small></span>
-    </button>`;
-  }).join(''):`<div class="stats-week-empty">${scope.placements.length?`No live articles for Week ${scope.number}.`:`No placements recorded for Week ${scope.number} yet.`}</div>`;
-}
-function viewStatsWeekHistory(){
-  const scope=selectedStatsWeek();
-  state.historicalWeek=String(scope.number);
-  route('historical');
-  renderHistorical();
-  el('historical-panel-'+scope.number)?.scrollIntoView({block:'start',behavior:'instant'});
-}
-function weeklySnapshotSeries(scope,key){
-  const codes=new Set(scope.placements.map(p=>p.code));
-  return Array.from({length:7},(_,i)=>{
-    const d=shift(scope.from,i),dayRows=state.history.filter(x=>d<=scope.today&&codes.has(x.code)&&x.availability!=='unavailable'&&validDate(x.at)&&day(validDate(x.at))===d);
-    const byCode=new Map();
-    const getValue=r=>key==='engagements'?[r.likes,r.comments,r.shares].every(x=>number(x)!==null)?Number(r.likes)+Number(r.comments)+Number(r.shares):null:number(r[key]);
-    for(const r of dayRows){if(getValue(r)===null)continue;const prev=byCode.get(r.code);if(!prev||String(prev.at)<String(r.at))byCode.set(r.code,r);}
-    return {date:d,value:byCode.size?[...byCode.values()].reduce((sum,r)=>sum+getValue(r),0):null};
-  });
-}
-function weeklyPaidSeries(scope){
-  // Undated paid placements appear in the paid-total KPI, but must not be
-  // assigned arbitrarily to a particular day in the spend chart.
-  const dated=scope.placements.filter(p=>p.paid&&number(p.cost)!==null&&validDate(p.paidAt));
-  return Array.from({length:7},(_,i)=>{const d=shift(scope.from,i);
-    return {date:d,value:dated.length&&d<=scope.today?dated.reduce((sum,p)=>sum+(day(validDate(p.paidAt))===d?number(p.cost):0),0):null};
-  });
-}
-function weeklyGrowthLabel(series,id){
-  const a=series.filter(x=>x.value!==null),node=el(id);
-  node.textContent=a.length<2?'':`${a.at(-1).value-a[0].value>=0?'+':''}${fmt(a.at(-1).value-a[0].value)} / week`;
-}
-function renderClickChart(scope){
-  const chart=el('clickChart');
-  if(!state.initialLoadSettled){chart.innerHTML='<div class="no-history chart-loading" role="status"><span class="metric-spinner" aria-label="Loading click history"></span></div>';return;}
-  if(state.loadError&&!state.placements.length){chart.innerHTML='<div class="no-history">Click data unavailable</div>';return;}
-  if(!scope.placements.length){chart.innerHTML=`<div class="no-history">No Week ${scope.number} articles yet</div>`;return;}
-  if(!state.activityReady){chart.innerHTML='<div class="no-history">Click history unavailable</div>';return;}
-  const rows=scopeEvents(scope),first=state.activity.map(x=>x.date).sort()[0]||scope.today;
-  const arr=Array.from({length:7},(_,i)=>{const date=shift(scope.from,i);
-    return {date,value:date>scope.today||date<first?null:rows.reduce((sum,x)=>sum+(x.date===date?Number(x.clicks)||0:0),0)};
-  });
-  const max=Math.max(1,...arr.filter(x=>x.value!==null).map(x=>x.value));chart.style.setProperty('--bars',7);
-  chart.innerHTML=arr.map(x=>{const h=x.value?Math.max(4,x.value/max*87):1;
-    const label=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(x.date+'T12:00:00Z'));
-    return `<div class="click-chart-column" title="${esc(x.date)}: ${x.value===null?'No recorded history':x.value}"><div class="click-bar ${x.value?'':'is-zero'}" style="--bar-height:${h}%;${x.value===null?'opacity:0':''}"></div><span class="click-bar-label">${esc(label)}</span></div>`;
-  }).join('');
-}
-function renderCharts(){renderDailyOverview();}
-
 const ageStates=new Map();
 function tickAges(){
   document.querySelectorAll('[data-post-age]').forEach(t=>{const n=Number(t.dataset.postAge);if(Number.isFinite(n))t.textContent=liveAge(new Date(n));});
@@ -1298,7 +873,6 @@ async function loadOfReport(force=false,refreshMetrics=false){
   finally{state.ofLoading=false;state.ofSettled=true;state.ofLastLoadedAt=Date.now();preserveReadingPosition(()=>{renderOfReport();if(state.page==='campaigns')renderCampaigns();});}
 }
 async function load(force=false){if(state.loading)return false;
-  refreshGbpRate();
   state.loading=true;state.lastRefreshAttemptAt=Date.now();
   try{
     const response=await fetch('/.netlify/functions/dashboard'+(force?'?refresh='+Date.now():''),{cache:'no-store',signal:AbortSignal.timeout(30000)});
@@ -2003,8 +1577,6 @@ function initBoosts(){
   setInterval(()=>{if(!document.hidden&&(state.page==='x-rts'||boostsState.loaded))void loadBoosts();},60000);
   renderBoosts();
 }
-
-restoreGbpRate();
 initReorder();events();initBoosts();initGtaUi();
 renderWeekLabels();scheduleWeekRollover();renderKpis();
 try{const cached=readReportCache('xtracker-dashboard-cache-v1','placements','ok');if(cached?.ok&&Array.isArray(cached.placements))applyDashboard({...cached,cached:true});}catch{}
