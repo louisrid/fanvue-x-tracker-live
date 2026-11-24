@@ -236,9 +236,8 @@ function kpiCard(k){
   // Only the first pending request gets a spinner. Missing/unavailable metrics
   // return to an honest dash after the request settles; never spin forever.
   const value=state.initialLoadSettled?esc(k.value):'<span class="metric-spinner" role="status" aria-label="Loading statistic"></span>';
-  const title=String(k.label||'').trim();
-  const punctuatedTitle=/[.!?]$/.test(title)?title:title+'.';
-  return `<div class="kpi-card metric-${k.id}"><div class="kpi-top"><span class="kpi-label">${esc(punctuatedTitle)}</span><span class="kpi-icon" aria-hidden="true">${ICONS[k.id]}</span></div><div class="kpi-value">${value}</div><div class="kpi-bottom">${state.initialLoadSettled&&k.badge?`<span class="kpi-support-badge">${esc(k.badge)}</span>`:''}${k.support?`<span class="kpi-support-note">${esc(k.support)}</span>${state.initialLoadSettled&&k.suppValue?`<strong>${esc(k.suppValue)}</strong>`:''}`:''}</div></div>`;
+  const title=String(k.label||'').trim().replace(/[.!?]+\s*$/,'');
+  return `<div class="kpi-card metric-${k.id}"><div class="kpi-top"><span class="kpi-label">${esc(title)}</span><span class="kpi-icon" aria-hidden="true">${ICONS[k.id]}</span></div><div class="kpi-value">${value}</div><div class="kpi-bottom">${state.initialLoadSettled&&k.badge?`<span class="kpi-support-badge">${esc(k.badge)}</span>`:''}${k.support?`<span class="kpi-support-note">${esc(k.support)}</span>${state.initialLoadSettled&&k.suppValue?`<strong>${esc(k.suppValue)}</strong>`:''}`:''}</div></div>`;
 }
 // Correct the known Fanvue Partners publisher assignment without changing
 // unrelated explicit campaign IDs or future campaign mappings.
@@ -295,11 +294,7 @@ function renderDashboardWeekSelector(){
 }
 function renderWeekLabels(){
   renderDashboardWeekSelector();
-  const n=selectedDashboardWeek().number;
   el('dashboardTitle').innerHTML='Dashboard<span class="heading-accent">.</span>';
-  // This legacy daily heading was removed; never require absent elements.
-  // Key Stats' hourly chart always refers to the actual current week.
-  el('dailyTrendChart')?.setAttribute('aria-label',`Week ${currentStatsWeekNumber()} placement clicks by hour`);
 }
 function renderWeekly(){
   const verified=state.homeVerified,placements=homePlacements(),sort=el('homeArticleSort').value;
@@ -1018,7 +1013,7 @@ function tickAges(){
     if(!ageStates.has(code)){ageStates.set(code,fresh);continue;}
     if(ageStates.get(code)!==fresh){ageStates.set(code,fresh);changed=true;}
   }
-  if(changed){renderWeekly();renderTracker();renderHistorical();renderCampaigns();const scope=selectedStatsWeek();renderWeeklyBreakdown(scope);}
+  if(changed){renderWeekly();renderTracker();renderCampaigns();}
 }
 // Background updates can replace tables before their observer rebuilds them.
 // Restore after that frame, provided the reader has not navigated or interacted.
@@ -1042,7 +1037,7 @@ function preserveReadingPosition(update){
     window.scrollTo({left:x,top:y,behavior:'instant'});
   }));
 }
-function render(){renderOfReport();renderWeekLabels();renderCampaignSelectors();renderWeekly();renderKpis();renderTracker();renderAccounts();renderCampaigns();renderHistorical();renderCharts();tickAges();if(state.modalCode)refreshDetails();}
+function render(){renderOfReport();renderWeekLabels();renderCampaignSelectors();renderWeekly();renderKpis();renderTracker();renderAccounts();renderCampaigns();tickAges();if(state.modalCode)refreshDetails();}
 function closeDetails(){if(el('articleModal').hidden)return;el('articleModal').hidden=true;document.body.classList.remove('modal-open');state.modalCode='';state.modalType='';if(state.lastFocus?.isConnected)state.lastFocus.focus();}
 function detailsAction(url,label,copy=false){const link=safeUrl(url);if(!link)return '';
   return copy?`<button type="button" class="modal-link" data-copy="${esc(link)}">${esc(label)}</button>`:
@@ -1324,7 +1319,7 @@ async function load(force=false){if(state.loading)return false;
   }catch(e){state.initialLoadSettled=true;state.loadError=true;console.error('Tracker refresh:',String(e.message||e));updateStatus(null,e);
     if(!state.placements.length&&!state.homeVerified)state.hourlyReady=false;
     render();
-    if(!state.placements.length&&!state.homeVerified){for(const id of ['weeklyGrid','upcomingGrid','trackerList','accountMobileList','campaignGrid','historicalWeeks'])el(id).innerHTML='<div class="empty-state">Reporting is temporarily unavailable. Please try again shortly.</div>';}return false;}
+    if(!state.placements.length&&!state.homeVerified){for(const id of ['weeklyGrid','upcomingGrid','trackerList','accountMobileList','campaignGrid']){const node=el(id);if(node)node.innerHTML='<div class="empty-state">Reporting is temporarily unavailable. Please try again shortly.</div>';}}return false;}
   finally{state.loading=false;}
 }
 function fiveDayViewHistory(history=[]){
@@ -1717,7 +1712,7 @@ function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(p
   if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
   if(pg==='reporting')window.XTrackerCampaignReporting?.show(reportCode||'article-rt');
   if(pg==='dashboard'){renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
-  if(pg==='of'){renderOfReport();if(!state.ofLoading&&Date.now()-(state.ofLastLoadedAt||0)>45000)void loadOfReport();}if(pg==='stats')renderCharts();window.scrollTo({top:0,behavior:'instant'});
+  if(pg==='of'){renderOfReport();if(!state.ofLoading&&Date.now()-(state.ofLastLoadedAt||0)>45000)void loadOfReport();}window.scrollTo({top:0,behavior:'instant'});
 }
 function owner(next){state.owner=next;storage.set('xtracker-owner-v4',next);
   document.querySelectorAll('[data-owner]').forEach(b=>{const yes=b.dataset.owner===next;b.classList.toggle('is-selected',yes);b.setAttribute('aria-pressed',String(yes));});render();}
@@ -1822,26 +1817,7 @@ function events(){
 }
 // The live graph redraws when its available width changes (phone rotation,
 // split-screen resizing, returning to the Dashboard), without scaling labels.
-{
-  const dailyGraph=el('dailyTrendChart');
-  if(dailyGraph&&typeof ResizeObserver!=='undefined'){
-    let pendingDailyResize=false;
-    new ResizeObserver(()=>{
-      if(pendingDailyResize)return;
-      pendingDailyResize=true;
-      requestAnimationFrame(()=>{
-        pendingDailyResize=false;
-        const graph=el('dailyTrendChart');
-        if(graph&&graph.clientWidth&&Math.abs(graph.clientWidth-lastDailyChartWidth)>2)renderDailyOverview();
-      });
-    }).observe(dailyGraph);
-  }else if(dailyGraph){
-    window.addEventListener('resize',()=>{
-      const graph=el('dailyTrendChart');
-      if(graph&&graph.clientWidth&&Math.abs(graph.clientWidth-lastDailyChartWidth)>2)renderDailyOverview();
-    },{passive:true});
-  }
-}
+
 // Fit presentation text after rendering, route changes, fonts loading and resizing.
 // Values remain complete and retain their original formatting and precision.
 const fittedTextSelector=[
