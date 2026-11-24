@@ -19,10 +19,10 @@
   <script src="/last-good-cache.js?v=20261123-1" defer></script>
   <script src="/chart-tooltip.js?v=20261124-simple-points-2" defer></script>
   <script src="/main-charts.js?v=20261124-all-lines-2" defer></script>
-  <script src="/app.js?v=20261124-reload-all-rt-data-2" defer></script>
+  <script src="/app.js?v=20261124-two-real-gta-tabs-1" defer></script>
   <script src="/discord-course.js?v=20261124-verified-reload-3" defer></script>
   <script src="/discord-members.js?v=20261124-verified-reload-5" defer></script>
-<link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
+<link rel="stylesheet" href="/gta-vi.css?v=20261124-two-real-gta-tabs-1">
     <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/campaign-reporting.css?v=20261124-rt-links-sort-fix-1">
     <link rel="stylesheet" href="/campaign-pills.css?v=20261123-final-tabs-1">
@@ -74,7 +74,7 @@
       </div>
       <nav class="dashboard-campaign-grid" aria-label="Open campaign reports">
         <a class="dashboard-campaign-pill is-gta" href="#gta-vi">
-          <span class="dashboard-pill-copy"><strong>GTA VI</strong><span class="dashboard-pill-meta">QRTs, originals &amp; boosts</span></span>
+          <span class="dashboard-pill-copy"><strong>GTA VI</strong><span class="dashboard-pill-meta">Paid QRTs &amp; standalone posts</span></span>
         </a>
         <a class="dashboard-campaign-pill is-of" href="#campaign-C001">
           <span class="dashboard-pill-copy"><strong>OF Terms</strong><span class="dashboard-pill-meta">X promotion results</span></span>
@@ -260,9 +260,8 @@
       <div class="gta-report-toolbar">
         <div class="daily-overview-head"><div><div class="daily-eyebrow"><span id="gtaScopeLabel">GTA VI · QRT PROMOTIONS</span></div><h2 id="gtaBreakdownTitle">Campaign overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="gtaLiveStatus" role="status">Checking data</span></div>
         <div class="gta-tabs" role="tablist" aria-label="GTA VI post type">
-        <button id="gtaTabQrts" class="gta-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="gtaReportPanel" data-gta-tab="qrts">QRTs</button>
-        <button id="gtaTabOriginals" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="originals">Original posts</button>
-        <button id="gtaTabQuoted" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="quoted">Boosted articles</button>
+        <button id="gtaTabQrts" class="gta-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="gtaReportPanel" data-gta-tab="qrts">Paid QRTs</button>
+        <button id="gtaTabOriginals" class="gta-tab" type="button" role="tab" aria-selected="false" aria-controls="gtaReportPanel" tabindex="-1" data-gta-tab="originals">Standalone posts</button>
       </div>
       </div>
       <div id="gtaReportPanel" role="tabpanel" aria-labelledby="gtaTabQrts">
@@ -273,6 +272,7 @@
       </section>
       
       <div id="gtaPublishers" tabindex="-1" aria-label="GTA VI publisher performance and click breakdown" aria-live="polite"></div>
+      <section id="gtaQuotedSources" class="gta-quoted-sources" aria-labelledby="gtaQuotedSourcesTitle" hidden></section>
       </div>
     </section>
 
