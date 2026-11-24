@@ -46,18 +46,22 @@
     .format(new Date(value+'T12:00:00Z'));
   function fiveDayViewSeries(campaign){
     const cutoff=londonDay(new Date(Date.now()-4*24*60*60*1000)),samples=[];
+    const addSample=(series,h)=>{
+      if(num(h.views)===null||!h.at)return;
+      const date=londonDay(h.at);if(date<cutoff)return;
+      samples.push({
+        series,date,at:Date.parse(h.at),views:Number(h.views),
+        likes:num(h.likes),
+        reposts:num(h.reposts??h.shares),
+        replies:num(h.replies??h.comments)
+      });
+    };
     if(campaign?.id==='guru-rts'){
-      for(const row of campaign.rows||[])for(const h of row.history||[]){
-        if(num(h.views)===null||!h.at)continue;
-        const date=londonDay(h.at);if(date<cutoff)continue;
-        samples.push({series:String(row.id||row.handle||row.publisher),date,at:Date.parse(h.at),views:Number(h.views)});
-      }
+      for(const row of campaign.rows||[])for(const h of row.history||[])
+        addSample(String(row.id||row.handle||row.publisher),h);
     }else{
-      for(const h of campaign?.history||[]){
-        if(num(h.views)===null||!h.at)continue;
-        const date=londonDay(h.at);if(date<cutoff)continue;
-        samples.push({series:String(h.code||h.postId||h.id||''),date,at:Date.parse(h.at),views:Number(h.views)});
-      }
+      for(const h of campaign?.history||[])
+        addSample(String(h.code||h.postId||h.id||''),h);
     }
     const grouped=new Map();
     for(const s of samples){
@@ -65,9 +69,26 @@
       if(!prior||s.at>prior.at)grouped.set(key,s);
     }
     const days=new Map();
+    const add=(row,key,value)=>{
+      if(value===null||value===undefined)return;
+      row[key]=(row[key]??0)+Number(value);
+    };
     for(const s of grouped.values()){
-      const row=days.get(s.date)||{date:s.date,views:0,series:0};
-      row.views+=s.views;row.series++;days.set(s.date,row);
+      const row=days.get(s.date)||{date:s.date,views:0,likes:null,reposts:null,replies:null,series:0};
+      row.views+=s.views;row.series++;
+      add(row,'likes',s.likes);add(row,'reposts',s.reposts);add(row,'replies',s.replies);
+      days.set(s.date,row);
+    }
+    const clickDays=new Map();
+    for(const h of campaign?.clickHistory||[]){
+      const date=String(h.date||'');if(date<cutoff||num(h.clicks)===null)continue;
+      clickDays.set(date,(clickDays.get(date)||0)+Number(h.clicks));
+    }
+    for(const row of days.values()){
+      if(clickDays.has(row.date))row.clicks=clickDays.get(row.date);
+      const parts=[row.likes,row.reposts,row.replies].filter(v=>v!==null);
+      row.interactions=parts.length?parts.reduce((a,b)=>a+b,0):null;
+      row.engagement=row.views>0&&row.interactions!==null?row.interactions/row.views*100:null;
     }
     return [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
   }
@@ -86,9 +107,22 @@
     const deltaText=(delta>0?'+':'')+format(delta)+' over shown history';
     const grid=[0,.5,1].map(r=>{const yy=T+plotH*r;return '<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" class="rpt-trend-grid"/>';}).join('');
     const labels=data.map((d,i)=>'<text x="'+x(i)+'" y="'+(H-14)+'" text-anchor="middle" class="rpt-trend-label">'+esc(shortDay(d.date))+'</text>').join('');
-    const dots=data.map((d,i)=>'<circle cx="'+x(i)+'" cy="'+y(d.views)+'" r="4.5" class="rpt-trend-dot"><title>'+esc(shortDay(d.date)+': '+format(d.views)+' views')+'</title></circle>').join('');
+    const dots=data.map((d,i)=>{
+      const metrics=[
+        {label:'Views',value:format(d.views)},
+        ...(d.likes!==null?[{label:'Likes',value:format(d.likes)}]:[]),
+        ...(d.reposts!==null?[{label:'Reposts',value:format(d.reposts)}]:[]),
+        ...(d.replies!==null?[{label:'Replies',value:format(d.replies)}]:[]),
+        ...(d.interactions!==null?[{label:'Interactions',value:format(d.interactions)}]:[]),
+        ...(d.engagement!==null?[{label:'Engagement',value:d.engagement.toFixed(2)+'%'}]:[]),
+        ...(d.clicks!==undefined?[{label:'Tracked clicks',value:format(d.clicks)}]:[]),
+        {label:'Tracked posts',value:format(d.series)},
+        ...(i>0?[{label:'View change',value:(d.views-data[i-1].views>0?'+':'')+format(d.views-data[i-1].views)}]:[])
+      ];
+      return '<circle cx="'+x(i)+'" cy="'+y(d.views)+'" r="5" class="rpt-trend-dot" tabindex="0" role="button" data-chart-point data-chart-title="'+esc(campaign.name||'Campaign history')+'" data-chart-date="'+esc(shortDay(d.date))+'" data-chart-metrics="'+encodeURIComponent(JSON.stringify(metrics))+'" aria-label="'+esc(shortDay(d.date)+': '+format(d.views)+' views. Hover or focus for details.')+'"><title>'+esc(shortDay(d.date)+': '+format(d.views)+' views')+'</title></circle>';
+    }).join('');
     return '<section class="rpt-main-trend rpt-main-trend-'+esc(campaign.id)+'">'+
-      '<div class="rpt-trend-head"><div><span class="rpt-trend-eyebrow">5-DAY HISTORY</span><h2>Combined X views<span class="heading-accent">.</span></h2><p>Only verified historical readings are plotted.</p></div>'+
+      '<div class="rpt-trend-head"><div><span class="rpt-trend-eyebrow">5-DAY HISTORY</span><h2>Combined X views<span class="heading-accent">.</span></h2><p>Hover or tap a point for the full verified reading.</p></div>'+
       '<div class="rpt-trend-latest"><span>Latest</span><strong>'+esc(format(latest.views))+'</strong><small>'+esc(deltaText)+'</small></div></div>'+
       '<div class="rpt-trend-plot"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Combined X views over the last five days with verified history">'+grid+
       '<path d="'+area+'" class="rpt-trend-area"/><path d="'+line+'" class="rpt-trend-line"/>'+dots+labels+'</svg></div></section>';
