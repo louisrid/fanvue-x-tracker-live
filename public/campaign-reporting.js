@@ -35,6 +35,64 @@
       (sub?'<small>'+esc(sub)+'</small>':'')+'</div>';
   };
   const clicks=c=>c?.allTimeHumanClicks??c?.trackedClicks??null;
+  const londonDay=value=>{
+    const d=value instanceof Date?value:new Date(value);
+    if(Number.isNaN(d.getTime()))return '';
+    const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'})
+      .formatToParts(d).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+    return p.year+'-'+p.month+'-'+p.day;
+  };
+  const shortDay=value=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'numeric',month:'short'})
+    .format(new Date(value+'T12:00:00Z'));
+  function fiveDayViewSeries(campaign){
+    const cutoff=londonDay(new Date(Date.now()-4*24*60*60*1000)),samples=[];
+    if(campaign?.id==='guru-rts'){
+      for(const row of campaign.rows||[])for(const h of row.history||[]){
+        if(num(h.views)===null||!h.at)continue;
+        const date=londonDay(h.at);if(date<cutoff)continue;
+        samples.push({series:String(row.id||row.handle||row.publisher),date,at:Date.parse(h.at),views:Number(h.views)});
+      }
+    }else{
+      for(const h of campaign?.history||[]){
+        if(num(h.views)===null||!h.at)continue;
+        const date=londonDay(h.at);if(date<cutoff)continue;
+        samples.push({series:String(h.code||h.postId||h.id||''),date,at:Date.parse(h.at),views:Number(h.views)});
+      }
+    }
+    const grouped=new Map();
+    for(const s of samples){
+      const key=s.date+'|'+s.series,prior=grouped.get(key);
+      if(!prior||s.at>prior.at)grouped.set(key,s);
+    }
+    const days=new Map();
+    for(const s of grouped.values()){
+      const row=days.get(s.date)||{date:s.date,views:0,series:0};
+      row.views+=s.views;row.series++;days.set(s.date,row);
+    }
+    return [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
+  }
+  function trendChart(campaign){
+    const data=fiveDayViewSeries(campaign);
+    if(data.length<2)return '';
+    const W=820,H=238,L=58,R=20,T=28,B=42,plotW=W-L-R,plotH=H-T-B;
+    const min=Math.min(...data.map(x=>x.views)),max=Math.max(...data.map(x=>x.views));
+    const span=Math.max(1,max-min),floor=Math.max(0,min-span*.12),ceil=max+span*.12;
+    const x=i=>L+(data.length===1?plotW/2:i*plotW/(data.length-1));
+    const y=v=>T+plotH-(v-floor)/(ceil-floor||1)*plotH;
+    const points=data.map((d,i)=>[x(i),y(d.views)]);
+    const line=points.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    const area=line+' L'+points.at(-1)[0].toFixed(1)+' '+(T+plotH)+' L'+points[0][0].toFixed(1)+' '+(T+plotH)+' Z';
+    const latest=data.at(-1),first=data[0],delta=latest.views-first.views;
+    const deltaText=(delta>0?'+':'')+format(delta)+' over shown history';
+    const grid=[0,.5,1].map(r=>{const yy=T+plotH*r;return '<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" class="rpt-trend-grid"/>';}).join('');
+    const labels=data.map((d,i)=>'<text x="'+x(i)+'" y="'+(H-14)+'" text-anchor="middle" class="rpt-trend-label">'+esc(shortDay(d.date))+'</text>').join('');
+    const dots=data.map((d,i)=>'<circle cx="'+x(i)+'" cy="'+y(d.views)+'" r="4.5" class="rpt-trend-dot"><title>'+esc(shortDay(d.date)+': '+format(d.views)+' views')+'</title></circle>').join('');
+    return '<section class="rpt-main-trend rpt-main-trend-'+esc(campaign.id)+'">'+
+      '<div class="rpt-trend-head"><div><span class="rpt-trend-eyebrow">5-DAY HISTORY</span><h2>Combined X views<span class="heading-accent">.</span></h2><p>Only verified historical readings are plotted.</p></div>'+
+      '<div class="rpt-trend-latest"><span>Latest</span><strong>'+esc(format(latest.views))+'</strong><small>'+esc(deltaText)+'</small></div></div>'+
+      '<div class="rpt-trend-plot"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Combined X views over the last five days with verified history">'+grid+
+      '<path d="'+area+'" class="rpt-trend-area"/><path d="'+line+'" class="rpt-trend-line"/>'+dots+labels+'</svg></div></section>';
+  }
   const note='<p class="rpt-note">All-time X counters, not unique reach. Clicks come from their named tracking source and are not interchangeable. Missing sign-ups, KYC and earning-creator metrics are shown as unavailable, never zero.</p>';
   function grid(columns,rows,classname='rpt-table'){
     return '<div class="rpt-scroll xt-table-scroll"><table class="'+classname+'"><thead><tr>'+columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
@@ -69,7 +127,8 @@
       ];
     }else{
       values=[
-        metric('Spend',usd(c.paidSpendKnown)),
+        metric(c.id==='x-articles'?'Spend · all-time':'Spend',usd(c.paidSpendKnown),
+          c.id==='x-articles'?(c.spendPeriod||'All tracked X Article placements'):''),
         metric('Live posts',hasFeed(c)?format(c.published):'Not connected'),
         metric('Views',num(c.views)===null?'Not tracked':format(c.views)),
         metric('Clicks',num(clicks(c))===null?'Not tracked':format(clicks(c)))
@@ -98,7 +157,7 @@
     if(!c)return empty('Campaign feed unavailable.');
     return '<section class="rpt-campaign-panel">'+
       (viewStatus(c)==='Connected'?'':badge(c))+
-      totals(c)+(c.unavailable?empty('Source unavailable'):campaignRows(c))+
+      trendChart(c)+totals(c)+(c.unavailable?empty('Source unavailable'):campaignRows(c))+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
   }
   function articleSources(){
@@ -158,7 +217,7 @@
     if(!c)return empty('X RT boost feed is unavailable.');
     const rows=c.rows||[];
     const percent=v=>num(v)===null?'Not available':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
-    const summary=(viewStatus(c)==='Connected'?'':badge(c))+totals(c);
+    const summary=(viewStatus(c)==='Connected'?'':badge(c))+trendChart(c)+totals(c);
     if(!rows.length)return summary+empty('No verified boosted X tweets currently recorded.');
     const missingSpend=rows.filter(r=>num(r.spend)===null).length;
     const spendNote=missingSpend
