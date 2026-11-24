@@ -206,14 +206,13 @@
           '<li><strong>@'+esc(p.publisher)+'</strong><span>'+esc(usd(p.cost))+'</span>'+
           '<span>'+(p.posted?'Marked published':'Not marked published')+'</span>'+
           '<span>'+link(p.profileUrl,'Profile')+'</span></li>').join('');
-        const detail='<details class="rpt-source-detail"><summary>Details</summary>'+
+        const detail='<details class="rpt-source-detail" title="Original X updated '+esc(date(g.metricAt))+'"><summary>Details</summary>'+
           '<div class="rpt-source-detail-body">'+
           '<dl><div><dt>Likes</dt><dd>'+esc(format(g.likes))+'</dd></div>'+
           '<div><dt>Reposts</dt><dd>'+esc(format(g.reposts))+'</dd></div>'+
           '<div><dt>Replies</dt><dd>'+esc(format(g.replies))+'</dd></div>'+
           '<div><dt>Engagement</dt><dd>'+esc(pct(g.engagementRate))+'</dd></div></dl>'+
-          '<p>Source X updated '+esc(date(g.metricAt))+
-          ' · '+esc(g.metricSource||'Saved X reading')+'</p>'+
+          
           '<h4>Paid RT publishers</h4><ul>'+placements+'</ul></div></details>';
         return [
           '<strong>'+esc('@'+(g.postUrl?.split('/')[3]||'X post'))+'</strong>'+
