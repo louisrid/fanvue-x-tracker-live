@@ -403,7 +403,7 @@
     if(ths.length<2)return;
     const state={key:null,direction:1};nativeTables.set(table,state);
     ths.forEach((th,i)=>{
-      const name=text(th);if(!name)return;
+      const name=text(th);if(!name||th.hasAttribute('data-no-sort-col'))return;
       th.classList.add('xt-sort-th');th.setAttribute('aria-sort','none');
       const btn=elem('button','xt-sort-button',name);btn.type='button';th.replaceChildren(btn);
       btn.addEventListener('click',()=>{
