@@ -825,13 +825,7 @@
   background:#f8faff!important;
 }
 :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-week-toolbar #dashboardWeekRange {
-  display:block!important;
-  color:#627089!important;
-  font-size:11px!important;
-  line-height:1.25!important;
-  font-weight:750!important;
-  text-align:right!important;
-  padding:0 4px!important;
+  display:none!important;
 }
 :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.home-top-kpis {
   display:grid!important;
@@ -864,9 +858,6 @@
   border-radius:0!important;
   background:transparent!important;
   box-shadow:none!important;
-}
-:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.home-top-kpis > .kpi-card:first-child {
-  padding-left:1px!important;
 }
 :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.home-top-kpis > .kpi-card:last-child {
   border-right:0!important;
@@ -1329,7 +1320,7 @@
   :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary.dashboard-snapshot-card{padding:16px!important;}
   :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-week-toolbar{
     display:grid!important;
-    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-columns:minmax(0,1fr)!important;
   }
   :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-week-select{
     min-width:0!important;
