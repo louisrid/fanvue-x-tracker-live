@@ -307,7 +307,8 @@ function renderWeekly(){
   el('upcomingGrid').innerHTML=upcoming.length?upcoming.map(weeklyCard).join(''):`<div class="empty-state">${verified?'No scheduled articles.':'Live data unavailable.'}</div>`;
   const meta=el('dashboardArticleMeta');
   if(meta)meta.textContent=verified?`${fmt(live.length)} live · ${fmt(upcoming.length)} scheduled`:'Article status unavailable';
-  el('upcomingSection').hidden=true;
+  const upcomingSection=el('upcomingSection');
+  if(upcomingSection)upcomingSection.hidden=!verified||upcoming.length===0;
 }
 // Daily click totals are verified event counts, never estimated from post lifetime counts.
 function dailySeries(now=new Date()){
