@@ -74,6 +74,7 @@
   const unavailableState=m=>Boolean(m)&&m.state!=='loading'&&(m.value===null||!['value','partial','stale'].includes(m.state));
   function reasonButton(label,reason,cls=''){
     if(isOutcome(reason))cls+=' is-outcome';
+    if(/^Not (available|recorded|tracked|connected)/.test(label))cls+=' is-na';
     if(!reason)return '<span class="fv-state '+cls+'">'+esc(label)+'</span>';
     const id='fvr'+(++reasonSeq);
     return '<button type="button" class="fv-state fv-reason '+cls+'" data-reason="'+esc(reason)+'" aria-describedby="'+id+'">'+esc(label)+
@@ -117,24 +118,11 @@
       (it.chip!==undefined?it.chip:chipFor(m,it.note))+
     '</div>';
   }
-  /* Neighbouring slots with no data share one cell, so the label appears once. */
-  function mergedCell(run){
-    const reasons=[...new Set(run.map(it=>it.metric.reason).filter(Boolean))];
-    const label=run.every(it=>isOutcome(it.metric.reason))?'Not connected yet':run.every(it=>it.metric.state==='notConnected')?'Not connected':
-      run.every(it=>it.metric.state==='notTracked')?'Not tracked':'Not available';
-    return '<div class="fv-metric is-merged'+(run.length>=3?' is-wide':'')+'" style="--span:'+run.length+'">'+
-      '<div class="fv-metric-label">'+chipIcon(run[0].icon)+'<span>'+run.map(it=>esc(it.label)).join(' · ')+'</span></div>'+
-      '<div class="fv-metric-value is-state">'+reasonButton(label,reasons.join('\n'),'is-na')+'</div></div>';
-  }
+  /* Only figures that exist are shown; slots without data are left out. */
   function strip(items){
-    const cells=[];
-    for(let i=0;i<items.length;i++){
-      let j=i;
-      while(unavailableState(items[i].metric)&&j+1<items.length&&unavailableState(items[j+1].metric))j++;
-      if(j>i){cells.push(mergedCell(items.slice(i,j+1)));i=j;}
-      else cells.push(stripCell(items[i]));
-    }
-    return '<section class="fv-panel fv-strip" style="--n:'+items.length+'" aria-label="Key metrics">'+cells.join('')+'</section>';
+    const shown=items.filter(it=>!unavailableState(it.metric));
+    if(!shown.length)return '';
+    return '<section class="fv-panel fv-strip" style="--n:'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
   }
 
   /* ---------- panel heads ---------- */
@@ -148,11 +136,7 @@
   function chartPanel(opts,state){
     const measures=(opts.measures||[]).filter(m=>(m.series&&m.series.length)||(m.categories&&m.categories.length));
     for(const m of measures)measureRegistry.set(opts.id+'|'+m.key,m);
-    if(!measures.length){
-      const e=opts.empty||{};
-      return '<section class="fv-panel fv-chart-panel is-empty" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(e.title||'History unavailable','trend','',opts.id+'-t')+
-        '<div class="fv-chart-empty">'+icon('clock',16)+'<p>'+esc(e.reason||'No genuine dated history is available yet.')+(e.links||'')+'</p></div></section>';
-    }
+    if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];
     const kinds=sel.kinds||(sel.categories?['bar','table']:['line','bar','table']);
     const type=kinds.includes(state.type)?state.type:(sel.defaultType||kinds[0]);
@@ -161,7 +145,7 @@
     const sw='<div class="fv-switch" role="group" aria-label="Chart display">'+kinds.map(k=>'<button type="button" data-chart-type="'+k+'" data-chart="'+esc(opts.id)+'" aria-pressed="'+(k===type)+'" aria-label="'+(k==='line'?'Line chart':k==='bar'?'Bar chart':'Table')+'">'+icon(k==='line'?'line':k==='bar'?'bars':'table',15)+'</button>').join('')+'</div>';
     return '<section class="fv-panel fv-chart-panel" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(sel.title,'trend',select+sw,opts.id+'-t')+
       '<div class="fv-chart" id="'+esc(opts.id)+'" data-type="'+type+'" data-measure="'+esc(sel.key)+'">'+chartBody(sel,type)+'</div>'+
-      (sel.note?'<p class="fv-chart-note">'+sel.note+'</p>':'')+'</section>';
+      '</section>';
   }
   function chartBody(m,type){
     if(type==='table'){
@@ -222,9 +206,11 @@
      rows,rowKey,expand(row)->html,empty,countLabel,aligned} ; st: {sort:{key,dir},q,expanded:Set} */
   function cellValue(col,row){
     const v=col.get?col.get(row):row[col.key];
+    // Missing data leaves the cell blank (never zero), even for custom cells.
+    if(v&&typeof v==='object'&&'state' in v&&unavailableState(v))return '<span class="fv-blank" aria-label="No data"></span>';
     if(col.html)return col.html(row,v);
-    if(v&&typeof v==='object'&&'state' in v)return value(v,col.format||'count');
-    if(v===null||v===undefined||v==='')return reasonButton('Not available',col.missing?col.missing(row):'');
+    if(v&&typeof v==='object'&&'state' in v)return unavailableState(v)?'<span class="fv-blank" aria-label="No data"></span>':value(v,col.format||'count');
+    if(v===null||v===undefined||v==='')return '<span class="fv-blank" aria-label="No data"></span>';
     if(col.type==='money')return esc(C.money(v));
     if(col.type==='count')return esc(C.full(v));
     return esc(v);
@@ -254,10 +240,9 @@
       if(!vals.every(v=>v&&typeof v==='object'&&'state' in v&&unavailableState(v)))return true;
       hidden.push({label:c.label,reason:vals[0]?.reason||''});return false;
     }):cfg.columns;
-    const groups=new Map();for(const h of hidden){const k=isOutcome(h.reason)?'Creator outcomes (signups, KYC, earning creators) are not connected yet.':h.reason.replace(/^Not (?:connected|tracked): /,'');(groups.get(k)||groups.set(k,[]).get(k)).push(h.label);}
-    // One short line; the reasons show on hover, focus and tap.
-    const hiddenNote=hidden.length?'<p class="fv-hidden-note" tabindex="0" data-reason="'+esc([...groups].map(([reason,labels])=>labels.join(', ')+': '+reason).join('\n'))+'">'+
-      '<b>Not shown, no data yet:</b> '+esc(hidden.map(h=>h.label).join(', '))+'.<span class="fv-sr"> '+esc([...groups].map(([reason])=>reason).join(' '))+'</span></p>':'';
+    // Summary tables can drop rows that have no data at all (e.g. a source not connected yet).
+    if(cfg.dropEmptyRows)rows=rows.filter(r=>cols.filter(c=>c.get).some(c=>{const v=c.get(r);return !(v&&typeof v==='object'&&'state' in v&&unavailableState(v));}));
+    if(!rows.length&&!q)return '';
     const head='<tr>'+cols.map(c=>{
       const sorted=st.sort?.key===c.key,dir=sorted?(st.sort.dir>0?'ascending':'descending'):'none';
       const left=['name','text','status','link'].includes(c.type)||c.align==='left';
@@ -267,22 +252,10 @@
     const body=rows.map(r=>{
       const key=String(cfg.rowKey(r)),open=st.expanded?.has(key);
       const detailId='fvd-'+cfg.id+'-'+key.replace(/[^A-Za-z0-9_-]/g,'_');
-      // Side-by-side cells with no data in this row share one cell and one label.
-      const cells=[];
-      for(let i=0;i<cols.length;i++){
-        const c=cols[i],v=c.get?c.get(r):null;
-        if(v&&typeof v==='object'&&'state' in v&&unavailableState(v)){
-          let j=i;const run=[v];
-          while(j+1<cols.length&&cols[j+1].get){const w=cols[j+1].get(r);if(!(w&&typeof w==='object'&&'state' in w&&unavailableState(w)))break;run.push(w);j++;}
-          if(run.length>1){
-            const reasons=[...new Set(run.map(x=>x.reason).filter(Boolean))];
-            const label=run.every(x=>isOutcome(x.reason))?'Not connected yet':run.every(x=>x.state==='notConnected')?'Not connected':run.every(x=>x.state==='notTracked')?'Not tracked':'Not available';
-            cells.push('<td class="is-merged" colspan="'+run.length+'">'+reasonButton(label,reasons.join('\n'),'is-na')+'</td>');i=j;continue;
-          }
-        }
+      const cells=cols.map(c=>{
         const left=['name','text','status','link'].includes(c.type)||c.align==='left';
-        cells.push('<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'">'+cellValue(c,r)+'</td>');
-      }
+        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'">'+cellValue(c,r)+'</td>';
+      });
       const tr='<tr class="fv-row'+(open?' is-open':'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
       return tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
@@ -291,13 +264,14 @@
       '<div class="fv-empty"><p>No matching records.</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset search</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
     const colgroup=cfg.widths&&!hidden.length?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
-    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(cfg.widths&&!hidden.length?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':'')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
+    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(cfg.widths&&!hidden.length?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
     const count=rows.length?'<div class="fv-count">'+C.full(rows.length)+' '+(cfg.countLabel?cfg.countLabel(rows.length):rows.length===1?'record':'records')+(cfg.footnote?' · '+cfg.footnote:'')+'</div>':'';
-    return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+(cfg.notice||'')+hiddenNote+table+count+'</section>';
+    return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+table+count+'</section>';
   }
 
   /* Detail grid used inside expanded rows. items: [[label, html]] */
-  const detailGrid=items=>'<dl class="fv-detail-grid">'+items.filter(Boolean).filter(([,v])=>!String(v).includes('is-outcome')).map(([k,v])=>'<div><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>').join('')+'</dl>';
+  const hasData=([,v])=>v!==''&&v!==undefined&&v!==null&&!/\bis-(na|outcome|notTracked|notConnected)\b/.test(String(v));
+  const detailGrid=items=>'<dl class="fv-detail-grid">'+items.filter(Boolean).filter(hasData).map(([k,v])=>'<div><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>').join('')+'</dl>';
   const status=(text,tone='')=>'<span class="fv-status'+(tone?' is-'+tone:'')+'">'+esc(text)+'</span>';
   function extLink(url,label,{iconOnly=false}={}){
     const href=C.safeUrl(url);
@@ -309,7 +283,7 @@
     return plain?'<span class="fv-marker is-plain">'+icon(iconName,15)+'</span>':'<span class="fv-marker" style="background:'+pal.fill+'">'+icon(iconName,15)+'</span>';
   };
   /* Supporting blocks */
-  const inlineMetrics=items=>'<div class="fv-inline-metrics">'+items.filter(([,v])=>!String(v).includes('is-outcome')).map(([label,html])=>'<div><span>'+esc(label)+'</span><b>'+html+'</b></div>').join('')+'</div>';
+  const inlineMetrics=items=>'<div class="fv-inline-metrics">'+items.filter(hasData).map(([label,html])=>'<div><span>'+esc(label)+'</span><b>'+html+'</b></div>').join('')+'</div>';
   const supportLine=(left,right='')=>'<div class="fv-support-line"><span>'+left+'</span>'+(right?'<span class="fv-support-right">'+right+'</span>':'')+'</div>';
   const supportPanel=(title,iconName,body,tools='')=>'<section class="fv-panel fv-support">'+panelHead(title,iconName,tools)+body+'</section>';
 

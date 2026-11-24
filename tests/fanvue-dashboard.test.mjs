@@ -140,26 +140,29 @@ test('components escape every value and give unavailable states a reason on dema
 });
 
 test('unavailable data is shown once: empty columns hide and neighbouring empty slots merge',()=>{
+  // Owner direction: slots, columns, rows and cells without data are left out, never padded with labels.
   const na=C.M.na(C.OUTCOME_REASON);
-  const rows=[{n:'A',v:1},{n:'B',v:2}];
+  const rows=[{n:'A',v:1},{n:'B',v:null}];
   const html=U.tablePanel({id:'t2',title:'T',rows,rowKey:r=>r.n,columns:[
-    {key:'n',label:'Name',type:'name'},{key:'v',label:'Value',get:r=>C.M.value(r.v)},{key:'s',label:'Creator signups',get:()=>na}]},{expanded:new Set()});
-  assert.doesNotMatch(html,/<th[^>]*>.*Creator signups/);
-  assert.match(html,/Not shown, no data yet:<\/b> Creator signups/);
-  assert.match(html,/>Value</);
-  const strip=U.strip([{label:'Paid spend',icon:'wallet',metric:C.M.value(5)},{label:'Creator signups',icon:'user',metric:na},
-    {label:'KYC completions',icon:'shield',metric:na},{label:'Earning creators',icon:'check',metric:na}]);
-  assert.equal((strip.match(/class="fv-metric(?: |")/g)||[]).length,2);
-  assert.match(strip,/Creator signups · KYC completions · Earning creators/);
-  assert.match(strip,/Not connected yet/);
-  assert.equal(U.detailGrid([['KYC completions',U.value(na)],['Paid',C.money(5)]]).includes('KYC completions'),false);
-  const gap=U.tablePanel({id:'t3',title:'T',rows:[{n:'A',v:1},{n:'B',v:null}],rowKey:r=>r.n,columns:[{key:'n',label:'Name',type:'name'},
-    {key:'v',label:'V',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)},{key:'w',label:'W',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)}]},{expanded:new Set()});
-  assert.match(gap,/<td class="is-merged" colspan="2">/);
+    {key:'n',label:'Name',type:'name'},{key:'v',label:'Value',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)},{key:'s',label:'Creator signups',get:()=>na}]},{expanded:new Set()});
+  assert.doesNotMatch(html,/Creator signups/);
+  assert.doesNotMatch(html,/Not available|Not shown/);
+  assert.match(html,/class="fv-blank"/);
+  assert.match(html,/>1</);
+  const dropped=U.tablePanel({id:'t3',title:'T',rows,rowKey:r=>r.n,dropEmptyRows:true,columns:[{key:'n',label:'Name',type:'name'},{key:'v',label:'Value',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)}]},{expanded:new Set()});
+  assert.equal((dropped.match(/class="fv-row/g)||[]).length,1);
+  assert.equal(U.tablePanel({id:'t4',title:'T',rows:[],rowKey:r=>r,columns:[]},{expanded:new Set()}),'');
+  const strip=U.strip([{label:'Paid spend',icon:'wallet',metric:C.M.value(5)},{label:'Creator signups',icon:'user',metric:na},{label:'KYC completions',icon:'shield',metric:na}]);
+  assert.equal((strip.match(/class="fv-metric"/g)||[]).length,1);
+  assert.doesNotMatch(strip,/Creator signups|Not available|Not connected/);
+  assert.equal(U.strip([{label:'X',icon:'wallet',metric:na}]),'');
+  assert.equal(U.chartPanel({id:'c1',measures:[]},{}),'');
+  assert.equal(U.detailGrid([['KYC completions',U.value(na)],['Owner',U.reasonButton('Not recorded','x')],['Paid',C.money(5)]]).includes('KYC completions'),false);
+  assert.ok(U.detailGrid([['Paid',C.money(5)]]).includes('$5.00'));
 });
 
 test('six-slot strip keeps fixed metric order on every paid campaign page',()=>{
-  for(const label of ['Paid spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators','Approved budget','Remaining budget','CIS registrations','Original-post views','Members','Net growth','Course clicks','Joins','Departures'])
+  for(const label of ['Paid spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators','Approved budget','Remaining budget','Original-post views','Members','Net growth','Course clicks','Joins','Departures'])
     assert.ok(appJs.includes("'"+label+"'"),label);
   assert.match(css,/\.fv-strip\{display:grid;grid-template-columns:repeat\(var\(--n,6\)/);
 });
@@ -199,10 +202,13 @@ test('both shared stylesheets are present and use the same small scale',()=>{
   assert.ok(records.length>10000,'fanvue-records.css has content');
   for(const rule of ['.fv-records .xt-data-table','.modal-shade{','.article-modal .form-grid','.fv-records .account-table'])assert.ok(records.includes(rule),rule);
   for(const sheet of [css,records]){
-    assert.deepEqual([...new Set([...sheet.matchAll(/font-size:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-fs-(s|l|xl)\)$/.test(v)),[]);
+    assert.deepEqual([...new Set([...sheet.matchAll(/font-size:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-fs-(s|l|xl|hero)\)$/.test(v)),[]);
     assert.deepEqual([...new Set([...sheet.matchAll(/font-weight:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-w(-strong)?\)$/.test(v)),[]);
   }
   assert.match(css,/--fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;/);
+  // The big key-number size is used only by the key-numbers strip.
+  assert.equal([...css.matchAll(/font-size:var\(--fv-fs-hero\)/g)].length,1);
+  assert.match(css,/\.fv-strip \.fv-metric-value\{font-size:var\(--fv-fs-hero\)/);
   assert.match(css,/--fv-bw:1px;/);
 });
 
