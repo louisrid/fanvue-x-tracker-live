@@ -801,22 +801,26 @@ async function reloadAllData(){
     progress('2/3 · Reloading GTA VI, QRTs and boosted article views…');
     await refreshGtaReport();
     if(gtaState.error||el('gtaRefreshStatus').classList.contains('is-error'))issues.add('GTA VI metrics');
-    progress('3/3 · Reloading all campaign pages and saved totals…');
+    progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…');
     // These are GETs only. The X data providers were already refreshed above.
     const results=await Promise.allSettled([
       load(true),
       loadOfReport(true,false),
       loadBoosts(true),
-      window.XTrackerCampaignReporting?.reload?.()
+      window.XTrackerCampaignReporting?.reload?.(),
+      window.XTrackerDiscordMembers?.refresh?.(),
+      window.XTrackerDiscordCourse?.refresh?.()
     ]);
     if(results[0].status!=='fulfilled'||results[0].value!==true)issues.add('Dashboard');
     if(results[1].status!=='fulfilled'||results[1].value!==true||state.ofError)issues.add('OF Terms');
     if(results[2].status!=='fulfilled'||boostsState.error)issues.add('X RTs');
     if(results[3].status!=='fulfilled'||results[3].value!==true)issues.add('Campaigns');
+    if(results[4].status!=='fulfilled'||results[4].value!==true)issues.add('Discord members');
+    if(results[5].status!=='fulfilled'||results[5].value!==true)issues.add('Discord course clicks');
     status.className='x-refresh-status '+(issues.size?'is-error':'is-success');
     status.textContent=issues.size
       ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'
-      : 'All connected sources reloaded. Latest available X views, clicks and campaign data are shown.';
+      : 'All connected sources checked and refreshed. Verified X views, clicks, Discord and campaign data are shown.';
   }catch(error){
     status.className='x-refresh-status is-error';
     status.textContent='Reload could not finish: '+String(error?.message||error)+'. Previously verified figures are preserved.';
