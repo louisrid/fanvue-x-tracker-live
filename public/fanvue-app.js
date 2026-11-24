@@ -78,6 +78,7 @@
   ];
   const feedDown=()=>Boolean(D.overviewStatus().error)&&!D.overview();
   const FEED_DOWN='The reporting feed is unavailable and this browser has no saved copy yet. Retry shortly.';
+  // Loading placeholders list only the figures each page can show, so the strip does not jump.
   const loadingStrip=labels=>U.strip(labels.map(([l,i])=>metric(l,i,feedDown()?M.na(FEED_DOWN):M.loading())));
   const waiting=text=>feedDown()?'Data is temporarily unavailable. Last verified figures will show once the feed responds.':text;
   const money=v=>C.num(v)===null?'':esc(C.money(v));
@@ -134,7 +135,7 @@
   function homePage(st){
     ensure('overview');ensure('discord');ensure('gta');
     const ov=D.overview(),S=summaries();
-    const strip=!S?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['Creator signups','user'],['KYC completions','shield'],['Earning creators','check']]):(()=>{
+    const strip=!S?loadingStrip([['Spend','wallet'],['Post views','eye']]):(()=>{
       const T=C.homeTotals(ov,S);
       return U.strip([metric('Spend','wallet',T.spend,'moneyShort'),metric('Post views','eye',T.views,'compact'),metric('Tracked clicks','cursor',T.clicks),...outcomeItems(null)]);
     })();
@@ -251,7 +252,7 @@
     ensure('overview');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'x-articles'):null,xa=D.campaign('x-articles'),rt=D.campaign('article-rts'),dash=D.dashboard();
     const parts=s?.spend?.parts;
-    const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['Creator signups','user'],['KYC completions','shield'],['Earning creators','check']]):U.strip([
+    const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['CPC','cursor'],['CPM','eye']]):U.strip([
       metric('Spend','wallet',s.spend,'moneyShort',parts?'Incl. paid reposts':undefined),
       metric('Post views','eye',s.views,'compact'),
       metric('Tracked clicks','cursor',s.clicks,'count','Site redirects'),
@@ -353,7 +354,7 @@
     ensure('overview');ensure('gta');
     const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),ig=D.campaign('gta-instagram');
     const clicksChip=s?.clicks&&C.hasValue(s.clicks)&&s.clicks.state!=='stale'&&s.clicks.allTime!==undefined?U.reasonButton(C.full(s.clicks.allTime)+' all-time',s.clicks.reason,'fv-chip'):undefined;
-    const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['CPC','cursor'],['CPM','eye'],['Creator signups','user']]):U.strip([
+    const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['CPC','cursor'],['CPM','eye']]):U.strip([
       metric('Spend','wallet',s.spend,'moneyShort'),metric('Post views','eye',s.views,'compact'),
       {...metric('Tracked clicks','cursor',s.clicks),chip:clicksChip!==undefined?clicksChip:undefined},
       metric('CPC','cursor',s.cpc,'money'),metric('CPM','eye',s.cpm,'money'),
@@ -461,7 +462,7 @@
   function ofPage(st){
     ensure('overview');ensure('of');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'of-terms'):null,c=D.campaign('of-terms'),rep=D.of().report;
-    const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['Creator signups','user'],['KYC completions','shield'],['Earning creators','check']]):U.strip([
+    const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['CPC','cursor'],['CPM','eye']]):U.strip([
       metric('Spend','wallet',s.spend,'moneyShort'),metric('Post views','eye',s.views,'compact'),metric('Tracked clicks','cursor',s.clicks,'count','OF link events'),
       metric('CPC','cursor',s.cpc,'money'),metric('CPM','eye',s.cpm,'money'),...outcomeItems(s)]);
     const codes=new Set((c?.rows||[]).map(r=>String(r.code)));
@@ -496,7 +497,7 @@
   function guruPage(st){
     ensure('overview');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'guru-promotion'):null,g=D.campaign('guru-rts'),rt=D.campaign('article-rts');
-    const strip=!s?loadingStrip([['Spend','wallet'],['Original-post views','eye'],['Tracked clicks','cursor'],['Creator signups','user'],['KYC completions','shield'],['Earning creators','check']]):U.strip([
+    const strip=!s?loadingStrip([['Original-post views','eye']]):U.strip([
       metric('Spend','wallet',s.spend,'moneyShort'),metric('Original-post views','eye',s.views,'compact'),metric('Tracked clicks','cursor',s.clicks),...outcomeItems(s)]);
     const series=g?C.snapshotSeries((g.rows||[]).flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id})))).map(p=>({...p,extra:p.count+' original posts with a reading'})):[];
     const chart=U.chartPanel({id:'guru-chart',measures:series.length?[{key:'views',label:'Original-post views (cumulative)',title:'Original-post views by week',series,format:'compact',tipFormat:'count',unit:'Cumulative original-post views at week end',
