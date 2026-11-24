@@ -481,8 +481,14 @@ function renderDailyOverview(){
     const sep=d.from>0?`<line x1="${X(d.from)}" y1="${T}" x2="${X(d.from)}" y2="${T+ch}" class="daily-day-divider"/>`:'';
     return `${sep}<text x="${x}" y="${H-17}" text-anchor="middle" class="daily-axis-label daily-x-label">${esc(label)}</text>`;
   }).join('');
-  panel.innerHTML=`<svg class="daily-trend-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Verified Week ${currentStatsWeekNumber()} UTM clicks each hour, with the current hour on the far right">${axes}${xlabels}<path d="${fill}" fill="#0055ff" fill-opacity=".12"/><path d="${line}" class="daily-utm-line" stroke="#0055ff"/><circle cx="${X(buckets.length-1)}" cy="${Y(buckets.at(-1).clicks)}" r="${mobile?4.5:5.8}" class="daily-latest-dot"/></svg>`;
-  const total=buckets.reduce((s,b)=>s+b.clicks,0);
+  const total=buckets.reduce((s,b)=>s+b.clicks,0),latestBucket=buckets.at(-1);
+  const latestDate=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(new Date(latestBucket.time));
+  const latestMetrics=encodeURIComponent(JSON.stringify([
+    {label:'UTM clicks',value:fmt(latestBucket.clicks)},
+    {label:'Week total',value:fmt(total)},
+    {label:'Reporting week',value:'Week '+currentStatsWeekNumber()}
+  ]));
+  panel.innerHTML=`<svg class="daily-trend-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Verified Week ${currentStatsWeekNumber()} UTM clicks each hour, with the current hour on the far right">${axes}${xlabels}<path d="${fill}" fill="#0055ff" fill-opacity=".12"/><path d="${line}" class="daily-utm-line" stroke="#0055ff"/><circle cx="${X(buckets.length-1)}" cy="${Y(latestBucket.clicks)}" r="${mobile?5:6.2}" class="daily-latest-dot" tabindex="0" role="button" data-chart-point data-chart-title="Hourly UTM clicks" data-chart-date="${esc(latestDate)}" data-chart-metrics="${latestMetrics}" aria-label="${esc(latestDate+': '+fmt(latestBucket.clicks)+' UTM clicks. Hover or focus for details.')}"/></svg>`;
   note.textContent=`${fmt(total)} verified Week ${currentStatsWeekNumber()} clicks · UK time · updated approximately every minute`;
 }
 function fitDailyMetricNumbers(root=el('dailyOverviewMetrics')){
@@ -1328,12 +1334,28 @@ function fiveDayViewHistory(history=[]){
     if(!at||views===null||!id)continue;
     const date=day(at);if(date<cutoff)continue;
     const key=date+'|'+id,prior=latestBySeriesDay.get(key);
-    if(!prior||at.getTime()>prior.at)latestBySeriesDay.set(key,{date,id,views,at:at.getTime()});
+    if(!prior||at.getTime()>prior.at)latestBySeriesDay.set(key,{
+      date,id,views,at:at.getTime(),
+      likes:number(h?.likes),
+      reposts:number(h?.reposts??h?.shares),
+      replies:number(h?.replies??h?.comments)
+    });
   }
   const days=new Map();
+  const add=(row,key,value)=>{
+    if(value===null||value===undefined)return;
+    row[key]=(row[key]??0)+Number(value);
+  };
   for(const h of latestBySeriesDay.values()){
-    const row=days.get(h.date)||{date:h.date,value:0};
-    row.value+=h.views;days.set(h.date,row);
+    const row=days.get(h.date)||{date:h.date,value:0,likes:null,reposts:null,replies:null,series:0};
+    row.value+=h.views;row.series++;
+    add(row,'likes',h.likes);add(row,'reposts',h.reposts);add(row,'replies',h.replies);
+    days.set(h.date,row);
+  }
+  for(const row of days.values()){
+    const parts=[row.likes,row.reposts,row.replies].filter(v=>v!==null);
+    row.interactions=parts.length?parts.reduce((a,b)=>a+b,0):null;
+    row.engagement=row.value>0&&row.interactions!==null?row.interactions/row.value*100:null;
   }
   return [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
 }
@@ -1351,8 +1373,23 @@ function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix
   const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
   const area=line+' L'+pts.at(-1)[0].toFixed(1)+' '+(T+ph)+' L'+pts[0][0].toFixed(1)+' '+(T+ph)+' Z';
   const grid=[0,.5,1].map(r=>{const y=T+ph*r;return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" class="campaign-history-grid"/>';}).join('');
-  const labels=data.map((r,i)=>'<text x="'+X(i)+'" y="'+(H-13)+'" text-anchor="middle" class="campaign-history-label">'+esc(new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(r.date+'T12:00:00Z')))+'</text>').join('');
-  const dots=data.map((r,i)=>'<circle cx="'+X(i)+'" cy="'+Y(Number(r.value))+'" r="4.5" class="campaign-history-dot"><title>'+esc(r.date+': '+fmt(Number(r.value))+(suffix?' '+suffix:''))+'</title></circle>').join('');
+  const dateLabel=date=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
+  const labels=data.map((r,i)=>'<text x="'+X(i)+'" y="'+(H-13)+'" text-anchor="middle" class="campaign-history-label">'+esc(dateLabel(r.date))+'</text>').join('');
+  const dots=data.map((r,i)=>{
+    const primary=suffix==='clicks'?'UTM clicks':suffix==='views'?'Views':'Value';
+    const delta=Number(r.value)-Number(data[Math.max(0,i-1)].value);
+    const metrics=[
+      {label:primary,value:fmt(Number(r.value))},
+      ...(r.likes!==null&&r.likes!==undefined?[{label:'Likes',value:fmt(r.likes)}]:[]),
+      ...(r.reposts!==null&&r.reposts!==undefined?[{label:'Reposts',value:fmt(r.reposts)}]:[]),
+      ...(r.replies!==null&&r.replies!==undefined?[{label:'Replies',value:fmt(r.replies)}]:[]),
+      ...(r.interactions!==null&&r.interactions!==undefined?[{label:'Interactions',value:fmt(r.interactions)}]:[]),
+      ...(r.engagement!==null&&r.engagement!==undefined?[{label:'Engagement',value:Number(r.engagement).toFixed(2)+'%'}]:[]),
+      ...(r.series?[{label:'Tracked posts',value:fmt(r.series)}]:[]),
+      ...(i>0?[{label:primary+' change',value:(delta>0?'+':'')+fmt(delta)}]:[])
+    ];
+    return '<circle cx="'+X(i)+'" cy="'+Y(Number(r.value))+'" r="5" class="campaign-history-dot" tabindex="0" role="button" data-chart-point data-chart-title="'+esc(label)+'" data-chart-date="'+esc(dateLabel(r.date))+'" data-chart-metrics="'+encodeURIComponent(JSON.stringify(metrics))+'" aria-label="'+esc(dateLabel(r.date)+': '+fmt(Number(r.value))+' '+suffix+'. Hover or focus for details.')+'"><title>'+esc(r.date+': '+fmt(Number(r.value))+(suffix?' '+suffix:''))+'</title></circle>';
+  }).join('');
   target.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">'+grid+'<path d="'+area+'" class="campaign-history-area"/><path d="'+line+'" class="campaign-history-line"/>'+dots+labels+'</svg>';
   return true;
 }
@@ -1942,7 +1979,21 @@ function boostChart(t){
   const samples=(t.history||[]).filter(s=>s.views!=null);if(samples.length<2)return '<p class="empty-state">Not enough history</p>';
   const times=samples.map(s=>new Date(s.at).getTime()),vals=samples.map(s=>s.views),min=Math.min(...vals),range=Math.max(...vals)-min||1,span=times.at(-1)-times[0]||1;
   const points=samples.map((s,i)=>`${30+640*(times[i]-times[0])/span},${180-150*(s.views-min)/range}`).join(' ');
-  return `<svg class="boost-chart" viewBox="0 0 700 210" role="img" aria-label="Public X views over time"><polyline points="${points}" fill="none" stroke="var(--blue)" stroke-width="3"/>${samples.map((s,i)=>`<circle cx="${30+640*(times[i]-times[0])/span}" cy="${180-150*(s.views-min)/range}" r="3" fill="var(--blue)"><title>${esc(boostDate(s.at))}: ${fmt(s.views)} views</title></circle>`).join('')}</svg><p>${esc(boostDate(samples[0].at))} — ${esc(boostDate(samples.at(-1).at))}</p>`;
+  const dots=samples.map((s,i)=>{
+    const interactions=[number(s.likes),number(s.reposts),number(s.replies)].filter(v=>v!==null);
+    const totalInteractions=interactions.length?interactions.reduce((a,b)=>a+b,0):null;
+    const engagement=Number(s.views)>0&&totalInteractions!==null?totalInteractions/Number(s.views)*100:null;
+    const metrics=[
+      {label:'Views',value:fmt(s.views)},
+      ...(number(s.likes)!==null?[{label:'Likes',value:fmt(s.likes)}]:[]),
+      ...(number(s.reposts)!==null?[{label:'Reposts',value:fmt(s.reposts)}]:[]),
+      ...(number(s.replies)!==null?[{label:'Replies',value:fmt(s.replies)}]:[]),
+      ...(totalInteractions!==null?[{label:'Interactions',value:fmt(totalInteractions)}]:[]),
+      ...(engagement!==null?[{label:'Engagement',value:engagement.toFixed(2)+'%'}]:[])
+    ];
+    return `<circle cx="${30+640*(times[i]-times[0])/span}" cy="${180-150*(s.views-min)/range}" r="4.5" fill="var(--blue)" tabindex="0" role="button" data-chart-point data-chart-title="${esc(t.name||'X RT history')}" data-chart-date="${esc(boostDate(s.at))}" data-chart-metrics="${encodeURIComponent(JSON.stringify(metrics))}" aria-label="${esc(boostDate(s.at)+': '+fmt(s.views)+' views. Hover or focus for details.')}"><title>${esc(boostDate(s.at))}: ${fmt(s.views)} views</title></circle>`;
+  }).join('');
+  return `<svg class="boost-chart" viewBox="0 0 700 210" role="img" aria-label="Public X views over time"><polyline points="${points}" fill="none" stroke="var(--blue)" stroke-width="3"/>${dots}</svg><p>${esc(boostDate(samples[0].at))} — ${esc(boostDate(samples.at(-1).at))}</p>`;
 }
 function showBoostDetails(id,focus=true){
   const t=boostsState.tweets.find(t=>t.id===id);if(!t)return;
