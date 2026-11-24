@@ -5,6 +5,8 @@ import ExcelJS from 'exceljs';
 import {getStore} from '@netlify/blobs';
 const SHEET='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
 const ARTICLE_RTS='X Accounts 11 (Article RTs)';
+const OVERVIEW_CACHE_TTL=60_000;
+const overviewStore=()=>getStore({name:'fanvue-campaign-overview-v1',consistency:'strong'});
 const blank=v=>v===null||v===undefined||v==='';
 const num=v=>blank(v)?null:Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
 const yes=v=>v===true||String(v).trim().toUpperCase()==='TRUE';
@@ -200,9 +202,27 @@ export async function readReportParts(origin,{fetcher=fetch,readRts=readArticleR
 }
 export default async function handler(request){
   if(!['GET','HEAD'].includes(request.method))return Response.json({ok:false,error:'METHOD_NOT_ALLOWED'},{status:405});
+  const force=new URL(request.url).searchParams.has('refresh');
+  const store=overviewStore();
+  let saved=null;
+  try{saved=await store.get('latest',{type:'json'});}catch{}
+  if(!force&&saved?.data?.ok&&Date.now()-Date.parse(saved.at)<OVERVIEW_CACHE_TTL){
+    return Response.json({...saved.data,cached:true,cacheAgeMs:Math.max(0,Date.now()-Date.parse(saved.at))},{
+      headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}
+    });
+  }
   try{
-    const parts=await readReportParts(request.url,{force:new URL(request.url).searchParams.has('refresh')});
+    const parts=await readReportParts(request.url,{force});
     const result=assembleCampaignOverview(parts);
-    return Response.json(result,{headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
-  }catch{return Response.json({ok:false,error:'Reporting feed unavailable; existing campaigns remain accessible.'},{status:503});}
+    try{await store.setJSON('latest',{at:new Date().toISOString(),data:result});}catch{}
+    return Response.json({...result,cached:false},{headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
+  }catch{
+    if(saved?.data?.ok){
+      const warning='Overview refresh failed; showing the last verified campaign snapshot.';
+      return Response.json({...saved.data,cached:true,stale:true,errors:[...(saved.data.errors||[]),warning]},{
+        headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}
+      });
+    }
+    return Response.json({ok:false,error:'Reporting feed unavailable; existing campaigns remain accessible.'},{status:503});
+  }
 }
