@@ -1151,10 +1151,10 @@ function renderGtaQuotedSources(){
       '<td>'+esc(gtaMoney(row.paidSpendKnown))+
         (row.unknownPaidCosts?' <small>Partial</small>':'')+'</td>'+
       '<td>'+esc(gtaNumber(row.qrtCount))+'</td>'+
-      '<td><details class="gta-source-details"><summary>Details</summary>'+
+      '<td><details class="gta-source-details" title="Original X updated '+esc(dateLabel(row.metricAt))+'"><summary>Details</summary>'+
       '<div class="gta-source-detail-body">'+
       '<dl class="gta-source-extra-metrics">'+secondary+'</dl>'+
-      '<p>Original X updated '+esc(dateLabel(row.metricAt))+'</p>'+
+      
       '<h4>Linked paid QRTs</h4>'+
       '<ul>'+linkedQrts+'</ul></div></details></td></tr>';
   }).join('');
