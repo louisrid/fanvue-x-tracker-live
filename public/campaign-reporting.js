@@ -318,8 +318,9 @@
         state[field]=data;
         window.XTrackerLastGood?.write(key,data,valid);
       }));
-      state.discordLastLoadAt=Date.now();
+      state.discordLastLoadAt=Date.now();state.discordError=results.every(x=>x.status!=='fulfilled');
       if(state.tab==='discord')render();
+      window.dispatchEvent(new Event('xtracker:discord'));
       return results.some(x=>x.status==='fulfilled');
     })();
     try{return await state.discordLoading;}finally{state.discordLoading=null;}
@@ -443,7 +444,12 @@
     },
     reload:()=>load(true),
     ensure:()=>load(),
-    getCampaign:id=>item(id)
+    getCampaign:id=>item(id),
+    // Read-only accessors for the redesigned shell (fanvue-app.js).
+    getData:()=>state.data,
+    status:()=>({loading:Boolean(state.loading),error:state.error,lastLoadAt:state.lastLoadAt}),
+    discord:()=>({members:state.discordMembers,clicks:state.discordClicks,loading:Boolean(state.discordLoading),error:Boolean(state.discordError)}),
+    refreshDiscord:(force=false)=>refreshDiscordMetrics(force)
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();

@@ -1,6 +1,13 @@
 (() => {
 'use strict';
-const TZ='Europe/London',el=id=>document.getElementById(id);
+const TZ='Europe/London',el=id=>document.getElementById(id)||detachedNode(id);
+// The redesigned shell (fanvue-app.js) renders Home, Discord and the campaign pages.
+// Their superseded legacy containers resolve to detached nodes, so the retained data,
+// refresh and record-editing logic below keeps working without touching the page.
+const detachedNodes=new Map();
+function detachedNode(id){let node=detachedNodes.get(id);if(!node){node=document.createElement(/Select$/.test(id)?'select':'div');detachedNodes.set(id,node);}return node;}
+const legacyView=id=>Boolean(document.getElementById(id));
+const announce=source=>window.dispatchEvent(new CustomEvent('xtracker:data',{detail:{source}}));
 const APP_VERSION='5.0.40';
 const fmt=n=>new Intl.NumberFormat('en-GB',{maximumFractionDigits:0}).format(Number(n));
 const money=n=>n===null||n===undefined?'—':'$'+fmt(n);
@@ -290,7 +297,7 @@ function renderWeekLabels(){
   renderDashboardWeekSelector();
   el('dashboardTitle').innerHTML='Dashboard<span class="heading-accent">.</span>';
 }
-function renderWeekly(){
+function renderWeekly(){if(!legacyView('weeklyGrid'))return;
   const verified=state.homeVerified,placements=homePlacements(),sort=el('homeArticleSort').value;
   const live=sortedArticles(placements.filter(isLive),sort);
   const upcoming=sortedArticles(placements.filter(p=>!isLive(p)),sort);
@@ -310,7 +317,7 @@ function renderWeekly(){
 // sum(price in USD for paid + published articles in that window) × USD/GBP ÷ 7.
 // Payment dates are not required: the user-defined criterion is Paid status
 // AND Posted status, with a verified publication date in the window.
-function renderKpis(){
+function renderKpis(){if(!legacyView('dashboardKpis'))return;
   // X Articles only: all recorded Sheet WEEK placements. Never mix in
   // separately paid GTA VI, OF Terms or Article RT campaigns.
   const placements=state.placements;
@@ -598,7 +605,7 @@ function tickAges(){
 }
 // Background updates can replace tables before their observer rebuilds them.
 // Restore after that frame, provided the reader has not navigated or interacted.
-function preserveReadingPosition(update){
+function preserveReadingPosition(update){queueMicrotask(()=>announce('reports'));
   const x=window.scrollX,y=window.scrollY,page=state.page;
   const active=document.activeElement;
   const tableKey=active?.closest('.xt-table-wrap')?.dataset.viewKey;
@@ -752,7 +759,7 @@ function normaliseActivity(rows){if(!Array.isArray(rows))return [];
   return rows.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&/^A\d{2}-P\d{2,3}$/.test(x.code)&&number(x.clicks)!==null&&number(x.clicks)>=0)
     .map(x=>({date:x.date,code:x.code,clicks:Number(x.clicks)}));
 }
-function updateStatus(data=null,error=null){
+function updateStatus(data=null,error=null){announce('dashboard');
   const bar=el('feedWarning');
   const unavailable=Boolean(error)||data?.trackingReady===false;
   bar.hidden=!unavailable;
@@ -772,7 +779,7 @@ function syncXRefreshControls(){
   document.querySelectorAll('[data-x-refresh-status]').forEach(node=>{node.className=status.className;node.textContent=status.textContent;});
 }
 async function refreshOfReport(){
-  const button=document.querySelector('[data-refresh="of"]'),status=el('ofRefreshStatus');
+  const button=document.querySelector('[data-refresh="of"]')||el('ofRefreshButton'),status=el('ofRefreshStatus');
   if(button.disabled)return;
   button.disabled=true;button.classList.add('is-refreshing');button.setAttribute('aria-busy','true');
   status.className='x-refresh-status';status.textContent='Refreshing X and Short.io stats…';
@@ -866,7 +873,7 @@ function applyDashboard(data){
     // Reuse the verified timestamps already loaded by the dashboard API.
     if(Array.isArray(data.hourlyEvents)){state.hourlyEvents=data.hourlyEvents;state.hourlyReady=state.trackingReady;}
 
-    state.lastLoadedAt=Date.now();state.initialLoadSettled=true;state.loadError=false;updateStatus(data);showXRefreshTime(data.metricAutomation?.lastSuccessfulAt);if(changed)preserveReadingPosition(render);else tickAges();
+    state.lastLoadedAt=Date.now();state.initialLoadSettled=true;state.loadError=false;state.dashboardMeta={clickCountStartAt:data.clickCountStartAt||null,sheetVerifiedAt:data.sheetVerifiedAt||null,checkedAt:data.checkedAt||null,sourceStatus:data.sourceStatus||'',warning:data.warning||''};updateStatus(data);showXRefreshTime(data.metricAutomation?.lastSuccessfulAt);if(changed)preserveReadingPosition(render);else tickAges();
 }
 async function loadOfReport(force=false,refreshMetrics=false){
   if(state.ofLoading)return;state.ofLoading=true;
@@ -950,7 +957,7 @@ function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix
   for(const child of [...card.children])if(child!==target)child.remove();
   return !!html;
 }
-function renderOfReport(){
+function renderOfReport(){if(!legacyView('ofMetrics'))return;
   const report=state.ofCampaign,ready=report?.ready===true;
   const today=day(new Date());
   el('ofWeekLabel').textContent='All-time stats';
@@ -1178,7 +1185,7 @@ function renderGtaQuotedSources(){
     '<p class="gta-quoted-footnote">Original and QRT views are separate. Spend is included above.</p>';
 }
 
-function renderGtaReport(){
+function renderGtaReport(){if(!legacyView('gtaMetrics'))return;
   const originals=gtaState.tab==='originals';
   const report=originals?gtaState.report?.originals:gtaState.report,ready=report?.ready===true;
   const placements=ready?(report.publishers||[]).filter(p=>originals?['GTA1','GTA2'].includes(p.campaign):p.campaign==='GTAQ'):[];
@@ -1284,19 +1291,18 @@ function initGtaUi(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(state.page==='gta-vi'||gtaState.report?.ready))void loadGtaReport();});
 }
 
-function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(page==='report-gta'){page='gta-vi';updateUrl=true;}if(page==='report-of'){page='campaign-C001';updateUrl=true;}if(['stats','historical','report-all','report-harness','report-other','report-discord','reporting'].includes(page)){page='dashboard';updateUrl=true;}closeDetails();closeEditor();const campaignRoute=page==='campaign-C001';const reportCode=String(page||'').match(/^report-(article-rt|guru|articles)$/)?.[1]||null;state.campaignFocus=campaignRoute?'C001':null;if(campaignRoute)el('campaignSearch').value='';const pg=reportCode?'reporting':campaignRoute?'of':['dashboard','campaigns','discord','accounts','placements','of','x-rts','gta-vi','reporting'].includes(page)?page:'dashboard';state.page=pg;const reportNames={'article-rt':'X Article Boosts',guru:'Guru X RTs',articles:'X Articles'};document.title=pg==='discord'?'Discord · '+defaultPageTitle:pg==='gta-vi'?'GTA VI · '+defaultPageTitle:pg==='reporting'?(reportNames[reportCode]||'X Article Boosts')+' · '+defaultPageTitle:pg==='x-rts'?'X RTs · '+defaultPageTitle:defaultPageTitle;
-  document.body.classList.toggle('is-home',pg==='dashboard');
+// Record views (Article tracker, Accounts, Campaigns and promoted-post management) keep
+// their existing markup, filters and editors inside the new shell. fanvue-app.js owns
+// every other route, the legacy hash mapping and document titles.
+const RECORD_PAGES=['placements','accounts','campaigns','x-rts'];
+function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';closeDetails();closeEditor();
+  const pg=RECORD_PAGES.includes(page)?page:'';state.page=pg||'shell';state.campaignFocus=null;
   document.querySelectorAll('.site-page').forEach(e=>e.hidden=e.id!=='page-'+pg);
-  document.querySelectorAll('[data-page]').forEach(e=>{const is=e.dataset.page===pg||(e.closest('.mobile-nav')&&e.dataset.page==='stats'&&pg==='campaigns');e.classList.toggle('is-active',is);e.setAttribute('aria-current',is?'page':'false');});
-  const hash=campaignRoute?'campaign-C001':reportCode?'report-'+reportCode:pg;recordNavigation(hash,updateUrl);
-  document.querySelectorAll('[data-campaign-report]').forEach(link=>link.setAttribute('aria-current',reportCode===link.dataset.campaignReport?'page':'false'));
-  const promo=document.querySelector('.of-promo-button');promo.href=pg==='of'?'#dashboard':'#campaign-C001';promo.setAttribute('aria-label',pg==='of'?'OF Terms X Promo · Return to Dashboard':'OF Terms X Promo');promo.setAttribute('aria-current',pg==='of'?'page':'false');
-  const gtaCTA=el('gtaButton');if(gtaCTA){gtaCTA.href=pg==='gta-vi'?'#dashboard':'#gta-vi';gtaCTA.setAttribute('aria-current',pg==='gta-vi'?'page':'false');}
+  if(!pg){if(updateUrl&&page&&location.hash!=='#'+page)location.hash=page;return;}
+  recordNavigation(pg,updateUrl);
   if(pg==='x-rts'){renderBoosts();void loadBoosts();void window.XTrackerCampaignReporting?.ensure?.();}
-  if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
-  if(pg==='reporting')window.XTrackerCampaignReporting?.show(reportCode||'article-rt');
-  if(pg==='dashboard'){renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
-  if(pg==='of'){renderOfReport();if(!state.ofLoading&&Date.now()-(state.ofLastLoadedAt||0)>45000)void loadOfReport();}window.scrollTo({top:0,behavior:'instant'});
+  if(pg==='campaigns')renderCampaigns();
+  window.scrollTo({top:0,behavior:'instant'});
 }
 function owner(next){state.owner=next;storage.set('xtracker-owner-v4',next);
   document.querySelectorAll('[data-owner]').forEach(b=>{const yes=b.dataset.owner===next;b.classList.toggle('is-selected',yes);b.setAttribute('aria-pressed',String(yes));});render();}
@@ -1326,7 +1332,7 @@ function initReorder(){
   }
 }
 function events(){
-  document.querySelector('.of-promo-button').addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();route(state.page==='of'?'dashboard':'campaign-C001');});
+  document.querySelector('.of-promo-button')?.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();route(state.page==='of'?'dashboard':'campaign-C001');});
   el('refreshXStats').addEventListener('click',refreshXStats);
   el('reloadAllButton').addEventListener('click',reloadAllData);
   el('discordRefreshButton').addEventListener('click',async()=>{
@@ -1631,5 +1637,20 @@ renderWeekLabels();scheduleWeekRollover();renderKpis();
 try{const cached=readReportCache('xtracker-dashboard-cache-v1','placements','ok');if(cached?.ok&&Array.isArray(cached.placements))applyDashboard({...cached,cached:true});}catch{}
 try{const cached=readReportCache('xtracker-of-cache-v1','publishers','ready');if(cached?.ready)state.ofCampaign={...cached,cached:true};}catch{}
 route(location.hash.slice(1),false);load();if(!state.ofLoading)loadOfReport();
+// Read-only bridge for the redesigned shell: the existing adapters' verified state and
+// the existing refresh and editor actions. It adds no new requests or data writes.
+window.XTrackerApp=Object.freeze({
+  dashboard:()=>({placements:state.placements,campaigns:state.campaigns,history:state.history,activity:state.activity,
+    activityReady:state.activityReady,trackingReady:state.trackingReady,adminConfigured:state.adminConfigured,
+    loading:state.loading,loadError:state.loadError,settled:state.initialLoadSettled,raw:state.dashboardMeta||null}),
+  of:()=>({report:state.ofCampaign||null,error:state.ofError||'',loading:Boolean(state.ofLoading)}),
+  gta:()=>({report:gtaState.report,error:gtaState.error,loading:Boolean(gtaState.loading),refreshing:gtaState.refreshing}),
+  boosts:()=>({tweets:boostsState.tweets,loaded:boostsState.loaded,error:boostsState.error}),
+  load:force=>load(force),loadOf:force=>loadOfReport(force),loadGta:force=>loadGtaReport(force),loadBoosts:force=>loadBoosts(force),
+  refresh:Object.freeze({all:reloadAllData,x:refreshXStats,of:refreshOfReport,gta:refreshGtaReport,boosts:refreshBoostStats}),
+  status:id=>{const node=el(id);return {text:node.textContent||'',error:node.classList.contains('is-error')};},
+  showRecords:page=>route(page||'',false),
+  openEditor:(kind,id)=>openEditor(kind,id)
+});
 })();
 
