@@ -1390,3 +1390,31 @@
 :root body #mainContent #page-dashboard #xRefreshStatus:empty {
   display:none!important;
 }
+
+/* Lifetime metrics, not a weekly snapshot: retain legacy week selector DOM
+   for listeners, but never show an irrelevant date filter on main dashboard. */
+:root body #mainContent #page-dashboard #dashboardLiveSummary .dashboard-week-toolbar[hidden]{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-snapshot-head{
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-snapshot-headline{
+  max-width:100%!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.dashboard-snapshot-kpis .kpi-value{
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  text-overflow:clip!important;
+}
+@media(max-width:560px){
+  :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.dashboard-snapshot-kpis .kpi-value{
+    font-size:clamp(19px,5.9vw,29px)!important;
+    letter-spacing:-.05em!important;
+  }
+}
