@@ -56,7 +56,7 @@
   background:#7446ec!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
 }
 :root body .app-header .header-row .mobile-nav .mobile-nav-item[data-page="discord"] {
-  background:#39ff14!important;color:#102b00!important;-webkit-text-fill-color:#102b00!important;
+  background:#5865F2!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
 }
 :root body .app-header .header-row .mobile-nav .mobile-nav-item.is-active,
 :root body .app-header .header-row .mobile-nav .mobile-nav-item[aria-current="page"] {
@@ -88,7 +88,7 @@
   min-height:204px!important;height:204px!important;
 }
 :root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill.is-discord {
-  background:#161e2f!important;
+  background:#5865F2!important;
   color:#fff!important;-webkit-text-fill-color:#fff!important;
 }
 :root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong {
@@ -990,4 +990,23 @@
 :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
 :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
   border-radius:12px!important;
+}
+
+
+/* Discord brand treatment */
+:root body .app-header .header-row .mobile-nav .discord-nav-button .discord-brand-logo{
+  width:23px!important;height:23px!important;display:block!important;fill:currentColor!important;stroke:none!important;flex:0 0 23px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill.is-discord{
+  position:relative!important;background:#5865F2!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill.is-discord .dashboard-discord-icon{
+  width:44px!important;height:44px!important;display:grid!important;place-items:center!important;flex:0 0 44px!important;
+  border-radius:12px!important;background:rgba(255,255,255,.14)!important;color:#fff!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill.is-discord .dashboard-discord-icon .discord-brand-logo{
+  width:27px!important;height:27px!important;display:block!important;fill:currentColor!important;stroke:none!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill.is-discord .dashboard-pill-copy{
+  max-width:calc(100% - 112px)!important;
 }
