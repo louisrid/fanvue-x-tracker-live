@@ -37,8 +37,8 @@ test('OF Terms lifetime spend includes paid pending placements and all recorded 
 
 test('Other campaign sources remain lifetime; history graphs are separate',()=>{
  assert.match(reporting,/lifetime campaign reporting/);
- assert.match(reporting,/all-time across every tracked X Article placement/i);
- assert.match(app,/Lifetime campaign performance/);
+ assert.match(reporting,/All-time totals · 5-day chart/);
+ assert.match(app,/el\('gtaWeekLabel'\)\.textContent='All-time stats'/);
  assert.match(html,/id="gtaTabQrts"/);
  assert.match(html,/id="gtaTabOriginals"/);
  assert.doesNotMatch(html,/id="gtaTabQuoted"/);
