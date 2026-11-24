@@ -1173,7 +1173,7 @@ function renderGtaQuotedSources(){
     '<details class="gta-quoted-collapse"><summary>View quoted X post results</summary>'+
     '<div class="gta-quoted-scroll"><table class="gta-quoted-table account-table">'+
       '<thead><tr><th>Original X post</th><th>Original views</th>'+
-      '<th>QRT views</th><th>Paid QRT spend</th><th>QRTs</th><th>Details</th></tr></thead>'+
+      '<th>QRT views</th><th>Paid QRT spend</th><th>QRTs</th><th data-no-sort-col="true">Details</th></tr></thead>'+
       '<tbody>'+entries+'</tbody></table></div></details>'+
     '<p class="gta-quoted-footnote">Source X views and QRT views are separate counters, not unique reach. Paid QRT spend is already included in the campaign total above.</p>';
 }
