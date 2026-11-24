@@ -508,7 +508,9 @@
       render();
       void load();
     },
-    reload:()=>load(true)
+    reload:()=>load(true),
+    ensure:()=>load(),
+    getCampaign:id=>item(id)
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
