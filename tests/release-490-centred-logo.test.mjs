@@ -8,7 +8,7 @@ test('all-caps centred enlarged logo with soft blur and webfont fallback',()=>{
  // supplied image, Inter is the only web font and no font files are bundled.
  assert.doesNotMatch(html,/brand-name|Unbounded/);
  assert.match(html,/alt="Fanvue"/);
- assert.match(html,/family=Inter:wght@400\.\.800/);
+ assert.match(html,/family=Inter:wght@400\.\.900/);
  assert(!readdirSync(new URL('../public/',import.meta.url)).some(f=>/\.(woff2?|otf|ttf)$/i.test(f)),'No font files are bundled');
 });
 test('all page and interface versions match, and no font assets bundled',()=>{
