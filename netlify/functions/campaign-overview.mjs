@@ -143,8 +143,15 @@ function dashboardCampaigns(data){
   if(!data?.ok||!Array.isArray(data.placements))return [{...normalCampaign('x-articles','X Articles','article',[],{source:'UNAVAILABLE',error:'Article tracker unavailable'}),unavailable:true}];
   const rows=data.placements.map(p=>({...p,views:num(p.xViews),likes:num(p.xLikes),
     reposts:num(p.xShares),replies:num(p.xComments),clicks:num(p.clicks)}));
+  const codes=new Set(rows.map(p=>String(p.code||'')).filter(Boolean));
+  const cutoff=Date.now()-6*24*60*60*1000;
+  const history=(Array.isArray(data.metricHistory)?data.metricHistory:[])
+    .filter(h=>codes.has(String(h.code||''))&&Date.parse(h.at||'')>=cutoff&&num(h.views)!==null);
+  const clickHistory=(Array.isArray(data.clickActivity)?data.clickActivity:[])
+    .filter(h=>codes.has(String(h.code||''))&&Date.parse(String(h.date||'')+'T12:00:00Z')>=cutoff&&num(h.clicks)!==null);
   const general=normalCampaign('x-articles','X Articles','article',rows,{source:'ARTICLE_TRACKER',at:data.sheetVerifiedAt},{
-    trackedClicks:sum(rows,p=>p.clicks)
+    trackedClicks:sum(rows,p=>p.clicks),history,clickHistory,
+    spendPeriod:'All-time across all tracked X Article placements'
   });
   const knownCampaigns=(data.campaigns||[]).filter(c=>c&&c.id).map(c=>{
     const relevant=rows.filter(p=>p.campaignId===c.id),cost=moneyRows(relevant);
