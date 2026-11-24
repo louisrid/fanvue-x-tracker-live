@@ -10,7 +10,7 @@
   const nativeTables = new WeakMap();
   const integer = new Intl.NumberFormat('en-GB', {maximumFractionDigits: 0});
   const usdNumber = new Intl.NumberFormat('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 2});
-  const unknown = /^(?:n\/?a|unknown|not recorded|pending|unavailable|—|-|)$/i;
+  const unknown = /^(?:n\/?a|unknown|not recorded|not tracked|not entered|not supplied|not linked|not available|no tracking link|click feed unavailable|x reading unavailable|original url missing|original x post not supplied|no matched paid rts|needs ad spend|needs spend|pending|unavailable|—|-|)$/i;
   const text = el => (el && el.textContent || '').replace(/\s+/g, ' ').trim();
   const safe = url => {
     if (typeof url !== 'string' || !url.trim()) return '';
@@ -369,6 +369,8 @@
   }
   function compareCell(a,b,direction) {
     const x=text(a),y=text(b),nx=numeric(x),ny=numeric(y);
+    // Missing readings are always last, in ascending and descending order.
+    if(unknown.test(x)!==unknown.test(y))return unknown.test(x)?1:-1;
     if(nx!==null||ny!==null){if(nx===null)return 1;if(ny===null)return -1;return (nx-ny)*direction;}
     const dx=Date.parse(x),dy=Date.parse(y);
     if(Number.isFinite(dx)&&Number.isFinite(dy))return(dx-dy)*direction;
@@ -400,7 +402,10 @@
     });
   }
   function enhanceNativeTables() {
-    for(const el of document.querySelectorAll('#page-accounts .account-table, #page-x-rts .account-table, #page-of .of-daily-table .account-table, #page-gta-vi .of-daily-table .account-table, #page-stats .daily-totals-table')){
+    // All native report tables, including dynamically rendered paid RT details,
+    // historical breakdowns, X RTs and campaign summaries, share one click-sort
+    // engine. The custom .xt-data-table has its own dedicated sortable headers.
+    for(const el of document.querySelectorAll('#mainContent table:not(.xt-data-table):not([data-no-sort])')){
       nativeTable(el);applyNativeSort(el);
     }
     addSourceLinks();
