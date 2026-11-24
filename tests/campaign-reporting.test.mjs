@@ -122,7 +122,7 @@ test('Reporting routes remain while GTA VI has only QRT and standalone tabs',()=
   assert.match(html,/id="gtaQuotedSources"/);
   assert.match(app,/function renderGtaQuotedSources\(\)/);
   assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(reportCode\|\|'article-rt'\)/);
-  assert.match(app,/Lifetime campaign performance/);
+  assert.match(app,/el\('gtaWeekLabel'\)\.textContent='All-time stats'/);
   assert.match(app,/data-page/);
   assert.match(app,/postPublicationClicks/);
   assert.match(ui,/X Article Boosts/);
