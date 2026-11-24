@@ -150,8 +150,7 @@ const selected=()=>eligible().filter(p=>p.active);
 // Dashboard rows follow the selected reporting week from the Sheet.
 const selectedDashboardWeek=()=>state.dashboardWeek==='all'?{
   number:'all',from:'0000-01-01',to:day(new Date()),today:day(new Date()),
-  isCurrent:true,placements:state.placements.filter(p=>p.active!==false&&
-    (state.owner==='ALL'||p.owner===state.owner))
+  isCurrent:true,placements:state.placements.filter(p=>state.owner==='ALL'||p.owner===state.owner)
 }:selectedStatsWeek(state.dashboardWeek);
 const homePlacements=()=>{
   const scope=selectedDashboardWeek();
@@ -314,7 +313,7 @@ function renderWeekly(){
 function renderKpis(){
   // X Articles only: all recorded Sheet WEEK placements. Never mix in
   // separately paid GTA VI, OF Terms or Article RT campaigns.
-  const placements=state.placements.filter(p=>p.active!==false);
+  const placements=state.placements;
   const paid=placements.filter(p=>p.paid===true);
   const knownPaid=paid.filter(p=>number(p.cost)!==null);
   const published=placements.filter(isLive);
