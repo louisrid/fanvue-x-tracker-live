@@ -919,7 +919,7 @@ function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix
   const card=el(cardId),target=el(targetId);if(!card||!target)return false;
   const clicks=suffix==='clicks';
   const html=window.XTrackerMainChart.markup({rows,title:title||label,context,
-    metric:clicks?'Daily clicks':'Total X views',unit:clicks?'clicks':'views',kind:clicks?'bars':'line',
+    metric:clicks?'Daily clicks':'Total X views',unit:clicks?'clicks':'views',
     note:clicks?'Verified UTM clicks each day. Today is still in progress.':'Total views on posts with saved readings. Includes organic views.'});
   card.hidden=!html;card.classList.add('xt-main-chart');
   // Keep the existing plot ID for refreshes and navigation.
@@ -951,7 +951,7 @@ function renderOfReport(){
   if(ready){
     const start5=shift(today,-4),historyDates=new Set(activity.filter(e=>e.date>=start5&&e.date<=today).map(e=>e.date));
     const history5=Array.from({length:5},(_,i)=>{const date=shift(start5,i);return {date,value:activity.filter(e=>e.date===date).reduce((sum,e)=>sum+(number(e.clicks)||0),0)};});
-    if(historyDates.size>=2)renderFiveDayLine('ofChart','ofTrendCard',history5,{title:'Daily UTM clicks',context:'OF Terms',suffix:'clicks'});
+    if(historyDates.size>=2)renderFiveDayLine('ofChart','ofTrendCard',history5,{title:'UTM clicks over time',context:'OF Terms',suffix:'clicks'});
     else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
   }else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
   const link=(url,label)=>safeUrl(url)?`<a class="button" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${label}</a>`:'';

@@ -25,7 +25,6 @@
 :root body #mainContent .xt-main-chart .xt-chart-axis{font:700 14px Inter,system-ui,sans-serif;fill:#445168}
 :root body #mainContent .xt-main-chart .xt-chart-line{fill:none!important;stroke:var(--chart-accent)!important;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 :root body #mainContent .xt-main-chart .xt-chart-dot{fill:#fff;stroke:var(--chart-accent);stroke-width:3;vector-effect:non-scaling-stroke}
-:root body #mainContent .xt-main-chart .xt-chart-bar{fill:var(--chart-accent);stroke:none}
 :root body #mainContent .xt-main-chart [data-chart-point]:focus-visible{outline:2px solid #101827;outline-offset:4px}
 :root body #mainContent .xt-main-chart .xt-chart-note{margin:6px 0 0!important;font-size:13px!important;font-weight:650!important;line-height:1.45!important;color:#445168!important}
 @media(max-width:640px){
