@@ -43,6 +43,7 @@
         display(data);
         info.textContent='Clicks recorded since dashboard tracking was connected';
         syncDisplays();
+        return true;
       }catch(error){
         // Never replace an unavailable measurement with a made-up zero.
         if(output.dataset.source!=='ready'){
@@ -50,9 +51,10 @@
         }
         info.textContent=output.dataset.source==='ready'?'Last verified count · refresh unavailable':'Click data temporarily unavailable';
         syncDisplays();
+        return false;
       }
     })();
-    try{await pending;}finally{pending=null;}
+    try{return await pending;}finally{pending=null;}
   }
   document.addEventListener('click',event=>{
     if(event.target.closest('#reloadAllButton,#refreshXStats,[data-refresh],[data-reload-all]'))void refresh();
