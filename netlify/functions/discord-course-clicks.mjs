@@ -6,6 +6,7 @@ const SOURCE='discord-free-course';
 const NAME='fanvue-discord-course-beacons-v1';
 const TRUSTED_AGENT=/^Fanvue-Academy-Course-Tracker\/\d+(?:\.\d+)*$/i;
 const WEEK=7*24*60*60*1000;
+const BOT_HEALTH='https://fanvue-academy-invite-bot.onrender.com/healthz';
 const responseHeaders={'cache-control':'no-store, max-age=0'};
 
 export const isCourseBeacon=req=>new URL(req.url).searchParams.get('source')===SOURCE;
@@ -32,10 +33,11 @@ export function makeCourseClicksHandler({
 }={}){
   return async req=>{
     if(isCourseBeacon(req)){
-      if(req.method==='GET')return new Response(null,{status:200,headers:responseHeaders});
-      if(req.method!=='HEAD')return new Response(null,{status:405,headers:responseHeaders});
-      // Do not treat a browser visit, crawler, or API stats request as a click.
-      if(!isTrustedCourseBeacon(req))return Response.redirect(new URL('/',req.url),302);
+      if(req.method!=='GET'&&req.method!=='HEAD')return new Response(null,{status:405,headers:responseHeaders});
+      // Netlify may surface the bot's rewritten HEAD beacon as GET, so trust the
+      // bot user-agent rather than the rewritten method. Normal browser/API GETs
+      // never increment the counter.
+      if(!isTrustedCourseBeacon(req))return new Response(null,{status:200,headers:responseHeaders});
       try{
         await storage().set('click-'+clock()+'-'+randomId(),'1');
         return new Response(null,{status:200,headers:responseHeaders});
@@ -51,9 +53,38 @@ export function makeCourseClicksHandler({
       for await(const page of storage().list({paginate:true})){
         for(const blob of page.blobs||[])keys.push(blob.key);
       }
-      return Response.json({ok:true,source:'DISCORD_COURSE_HEAD_BEACON',period:'since-counter-enabled',
-        ...summariseCourseBeaconKeys(keys,clock()),checkedAt:new Date(clock()).toISOString()},
-        {headers:responseHeaders});
+      const stored=summariseCourseBeaconKeys(keys,clock());
+
+      let live=null;
+      try{
+        const response=await fetch(BOT_HEALTH,{headers:{accept:'application/json'},cache:'no-store',signal:AbortSignal.timeout(7000)});
+        const data=await response.json();
+        if(response.ok&&data?.ok===true&&Number.isSafeInteger(data.courseClicks)&&data.courseClicks>=0){
+          live={
+            total:data.courseClicks,
+            last7Days:Number.isSafeInteger(data.courseClicksLast7Days)&&data.courseClicksLast7Days>=0
+              ?data.courseClicksLast7Days:null,
+            lastCourseClickAt:data.lastCourseClickAt||null
+          };
+        }
+      }catch(error){
+        console.warn('Live Discord course counter unavailable; using Netlify fallback:',error?.message||error);
+      }
+
+      const total=live?Math.max(live.total,stored.total):stored.total;
+      const last7Days=live?.last7Days!==null&&live?.last7Days!==undefined
+        ?Math.min(total,live.last7Days)
+        :Math.min(total,stored.last7Days);
+
+      return Response.json({
+        ok:true,
+        source:live?'DISCORD_BOT_LIVE':'DISCORD_COURSE_BEACON_FALLBACK',
+        period:'since-counter-enabled',
+        total,
+        last7Days,
+        lastCourseClickAt:live?.lastCourseClickAt||null,
+        checkedAt:new Date(clock()).toISOString()
+      },{headers:responseHeaders});
     }catch(error){
       console.error('Discord course clicks could not be loaded:',error);
       return Response.json({ok:false,error:'Discord course click data is temporarily unavailable.'},
