@@ -103,7 +103,9 @@
   function parsePromo(wrapper, kind, idx, gtaByCode) {
     const card = wrapper.querySelector('.article-card');
     if (!card) return null;
-    const code = fromCode(card), measured = lookups.get(code) || {}, source = gtaByCode?.get(code) || {...measured, views:measured.xViews, likes:measured.xLikes, reposts:measured.xShares, replies:measured.xComments};
+    let promoMetrics={};
+    if(kind==='of')try {promoMetrics=JSON.parse(card.dataset.promoMetrics||'{}');}catch { /* Retain the source-card fallback. */ }
+    const code = fromCode(card), measured = lookups.get(code) || {}, source = gtaByCode?.get(code) || {...measured, views:measured.xViews, likes:measured.xLikes, reposts:measured.xShares, replies:measured.xComments,...promoMetrics};
     const account = source.publisher || text(card.querySelector('.article-publisher')) || 'Unknown account';
     const price = numeric(source.cost) ?? findPrice(card);
     const posted = source.posted === true || (!Object.prototype.hasOwnProperty.call(source, 'posted') && /posted/i.test(postStatus(card)));
@@ -112,14 +114,14 @@
     const base = {key: code || String(idx), account, price, posted, status: posted ? 'Posted' : '—', accountUrl,
        postUrl, source: card, campaign:source.campaign || (code.startsWith('GTA2') ? 'V2' : 'Original'), code};
     if (kind === 'gta' || kind === 'of') {
-      const views = numeric(source.views) ?? getMetric(card, ['X views', 'Views']);
+      const views = numeric(source.views) ?? getMetric(card, ['Lifetime X views', 'X views', 'Views']);
       const likes = numeric(source.likes) ?? getMetric(card, ['Likes']);
       const rts = numeric(source.reposts); // No guessed RTs. Source must supply them.
       const replies = numeric(source.replies);
       const complete = [likes,rts,replies].every(Number.isFinite);
       const total = complete ? likes + rts + replies : null;
       return {...base, kind, views, likes, rts, replies, interactions:total,
-         ...(kind==='gta'?{tracked:source.clickTracked!==false&&(!!source.trackingUrl||card.dataset.shortioTracked==='true'),clicks:posted?(numeric(source.allTimeClicks)):null,cpc:posted?(numeric(source.cpc)??numeric(card.dataset.shortioCpc)):null,clickNote:source.clickError||card.dataset.shortioNote||(source.clickAt?'All-time human clicks · verified '+source.clickAt:'No verified Short.io reading')} : {clicks:getMetric(card, ['Week UTM clicks', 'Weekly clicks'])}),
+         ...(kind==='gta'?{tracked:source.clickTracked!==false&&(!!source.trackingUrl||card.dataset.shortioTracked==='true'),clicks:posted?(numeric(source.allTimeClicks)):null,cpc:posted?(numeric(source.cpc)??numeric(card.dataset.shortioCpc)):null,clickNote:source.clickError||card.dataset.shortioNote||(source.clickAt?'All-time human clicks · verified '+source.clickAt:'No verified Short.io reading')} : {clicks:numeric(source.clicks)??getMetric(card, ['Lifetime UTM clicks', 'Week UTM clicks', 'Weekly clicks'])}),
          cpi:total != null && total > 0 && price != null ? price / total : null,
          subtitle:kind==='of'?'OF Terms':source.campaign==='GTAQ'||code.startsWith('GTAQ')?'QRT':source.campaign === 'GTA2' || code.startsWith('GTA2') ? 'V2' : 'Original'};
     }

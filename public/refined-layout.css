@@ -887,6 +887,7 @@
 :root body #mainContent .site-page:not(#page-dashboard) .page-intro h1 {
   font-size:clamp(28px,2.6vw,36px)!important;
 }
+:root body #mainContent :is(#ofWeekLabel,#gtaWeekLabel) {display:none!important;}
 :root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh),
 :root body #mainContent #page-dashboard #reloadAllButton {
   height:42px!important;min-height:42px!important;min-width:140px!important;
@@ -949,7 +950,7 @@
 :root body #mainContent .site-page .xt-main-chart .xt-chart-summary strong {font-size:26px!important;}
 :root body #mainContent .site-page .xt-main-chart .xt-chart-summary :is(span,small) {font-size:11px!important;}
 :root body #mainContent .site-page .xt-main-chart .xt-chart-note {font-size:11px!important;margin-top:4px!important;}
-:root body #mainContent .site-page .xt-main-chart svg {max-height:180px!important;min-height:0!important;}
+:root body #mainContent .site-page .xt-main-chart svg {max-height:140px!important;min-height:0!important;}
 :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview {margin:0 0 10px!important;}
 :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-head {margin-bottom:8px!important;}
 :root body #mainContent #page-of .daily-overview-head:has(.daily-live:empty) {display:none!important;}
@@ -970,6 +971,7 @@
 :root body #mainContent #page-reporting .rpt-table th {white-space:normal!important;}
 :root body #mainContent .site-page .xt-search {margin-bottom:6px!important;}
 :root body #mainContent .site-page .xt-search input {height:36px!important;min-height:36px!important;}
+:root body #mainContent .site-page .of-publisher-section {margin-bottom:10px!important;}
 :root body #mainContent #page-gta-vi .gta-quoted-sources {margin:10px 0!important;padding-top:10px!important;}
 :root body #mainContent #page-reporting .rpt-source-compact {margin-top:10px!important;padding-top:10px!important;}
 :root body #mainContent #page-reporting .rpt-source-compact .rpt-note {margin:6px 0!important;}
@@ -1009,7 +1011,7 @@
     font-size:clamp(24px,2vw,31px)!important;line-height:1.1!important;
   }
   :root body #mainContent .site-page :is(.xt-table-scroll,.gta-quoted-scroll) {
-    max-height:clamp(220px,calc(100dvh - 570px),480px)!important;
+    max-height:clamp(180px,calc(100dvh - 650px),420px)!important;
     overflow:auto!important;scrollbar-gutter:stable;
   }
   :root body #mainContent .site-page :is(.rpt-table,.xt-data-table,.gta-quoted-table) thead th {

@@ -995,7 +995,8 @@ function renderOfReport(){
       metricsOverride:[['clicks','Lifetime UTM clicks',ready?p.clicks:null],
         ['views','Lifetime X views',p.views??null],
         ['spend','Paid cost',p.paid?money(p.cost):'Unpaid']]});
-    return `<article class="of-publisher-entry"><${tag}${attributes} data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${content}</${tag}><div class="of-publisher-links">${link(p.profileUrl,'X profile')}${link(p.postUrl,'View post')}</div></article>`;
+    const promoMetrics=JSON.stringify({views:p.views??null,likes:p.likes??null,reposts:p.reposts??null,replies:p.replies??null,clicks:p.clicks??null});
+    return `<article class="of-publisher-entry"><${tag}${attributes} data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" data-promo-metrics="${esc(promoMetrics)}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${content}</${tag}><div class="of-publisher-links">${link(p.profileUrl,'X profile')}${link(p.postUrl,'View post')}</div></article>`;
   }).join('')||'<div class="empty-state">No posts in this group.</div>'}</div></section>`;
   el('ofPublishers').innerHTML=ready?section('Published X posts',posted):'';
 }
