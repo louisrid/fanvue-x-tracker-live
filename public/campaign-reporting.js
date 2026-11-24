@@ -103,7 +103,11 @@
   }
   const note='<p class="rpt-note">All-time X counters, not unique reach. Clicks come from their named tracking source and are not interchangeable. Missing sign-ups, KYC and earning-creator metrics are shown as unavailable, never zero.</p>';
   function grid(columns,rows,classname='rpt-table'){
-    return '<div class="rpt-scroll xt-table-scroll"><table class="'+classname+'"><thead><tr>'+columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    // The table enhancer adds accessible sortable column controls after every
+    // render. Keep cell values as DOM text so it can sort numerically.
+    return '<div class="rpt-scroll xt-table-scroll"><table class="'+classname+'"><thead><tr>'+
+      columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+
+      rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }
   function empty(message){return '<div class="rpt-empty">'+esc(message)+'</div>';}
   function header(title){
@@ -128,10 +132,12 @@
       ];
     }else if(c.id==='article-rts'){
       values=[
-        metric('Spend',usd(c.paidSpendKnown),'Verified paid total'),
-        metric('Paid placements',format(c.paidCount),'Booked / paid accounts'),
-        metric('Live posts',format(c.published),'Published placements'),
-        metric('Avg. paid cost',usd(avgPaid),'Spend ÷ paid placements')
+        metric('Paid RT spend',usd(c.paidSpendKnown),'Verified from Article RTs Sheet'),
+        metric('Paid RT placements',format(c.paidCount),'Paid accounts, independent of posting status'),
+        metric('Marked published',format(c.published),'Source sheet POSTED? checkbox only'),
+        metric('Original X views',format(c.views),
+          format(c.originalsWithViews)+' of '+format(c.originalPosts)+' original posts verified'),
+        metric('Avg. paid RT cost',usd(avgPaid),'Spend ÷ paid placements')
       ];
     }else{
       values=[
@@ -147,18 +153,30 @@
   function campaignRows(c){
     const rows=c?.rows||[];
     if(!rows.length)return empty(c?.unavailable?'This campaign has no connected, verified placement feed yet.':'No placements found in the connected source.');
-    const view=r=>r.views??r.xViews;
-    const sourceLink=r=>r.postUrl?link(r.postUrl,'X post'):r.profileUrl?link(r.profileUrl,'X profile'):link('', 'X');
-    const linkCell=r=>'<span class="rpt-links">'+sourceLink(r)+(r.trackingUrl?' · '+link(r.trackingUrl,'Tracking'): '')+'</span>';
-    return '<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+
-      format(rows.filter(r=>r.posted).length)+'</span></div>'+
-      grid(['Publisher','Status','Spend','Views','Clicks','Links'],rows.map(r=>[
-      '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>',
-      r.posted?'Live':r.paid?'Pending':'Unconfirmed',
+    const isArticleRt=c.id==='article-rts';
+    const view=r=>r.sourceOriginalViews??r.views??r.xViews;
+    const sourceLink=r=>r.sourcePostUrl||r.postUrl?link(r.sourcePostUrl||r.postUrl,isArticleRt?'Original X post':'X post'):
+      r.profileUrl?link(r.profileUrl,'Publisher profile'):'<span class="rpt-missing">Original X post not supplied</span>';
+    const linkCell=r=>'<span class="rpt-links">'+sourceLink(r)+
+      (r.profileUrl&&(r.sourcePostUrl||r.postUrl)?' · '+link(r.profileUrl,'Publisher'):'')+
+      (r.trackingUrl?' · '+link(r.trackingUrl,'Tracking'):'')+'</span>';
+    const cols=isArticleRt?
+      ['Publisher','RT status','Paid RT spend','Original X views','Tracked clicks','Original X post / publisher']:
+      ['Publisher','Status','Spend','X views','Clicks','Links'];
+    const rendered=rows.map(r=>[
+      '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>'+
+        (isArticleRt&&Number.isSafeInteger(r.sourceRow)?'<small class="rpt-rowmeta">Sheet row '+esc(r.sourceRow)+'</small>':''),
+      isArticleRt?(r.posted?'Marked posted':r.paid?'Paid · not marked posted':'Unconfirmed'):
+        (r.posted?'Live':r.paid?'Pending':'Unconfirmed'),
       r.paid?usd(r.cost):'<span class="rpt-missing">Unpaid</span>',
-      num(view(r))===null?'<span class="rpt-missing">Not linked</span>':esc(format(view(r))),
-      num(r.allTimeClicks??r.clicks??null)===null?'<span class="rpt-missing">Not tracked</span>':esc(format(r.allTimeClicks??r.clicks??null)),linkCell(r)
-    ]));
+      num(view(r))===null?'<span class="rpt-missing">'+(r.sourcePostUrl||r.postUrl?'X reading unavailable':'Original URL missing')+'</span>':esc(format(view(r))),
+      num(r.allTimeClicks??r.clicks??null)===null?'<span class="rpt-missing">'+(r.trackingUrl?'Click feed unavailable':'No tracking link')+'</span>':
+        esc(format(r.allTimeClicks??r.clicks??null)),linkCell(r)
+    ]);
+    return (isArticleRt?'<p class="rpt-note"><strong>Original X views:</strong> unique source-post counters, not impressions attributable to paid RTs. Paid and posted statuses come directly from separate Sheet columns. Click tracking requires a per-placement UTM link.</p>':'')+
+      '<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+
+      format(isArticleRt?rows.length:rows.filter(r=>r.posted).length)+'</span></div>'+
+      grid(cols,rendered);
   }
   function campaignPanel(id,sub){
     const c=item(id);
@@ -225,28 +243,68 @@
         usd(c.paidSpendKnown),format(c.xViews),format(c.trackedClicks)
       ]));
   }
+  function paidArticleRtGroups(c){
+    const groups=c?.articleRtGroups||[],unlinked=c?.articleRtUnlinked||[],summary=c?.articleRtSummary;
+    if(!summary||num(summary.paidSpendKnown)===null)return '';
+    const used=groups.filter(g=>num(g.paidCount)!==null&&g.paidCount>0);
+    const top='<section class="rpt-rt-source-summary">'+
+      header('Paid article retweets')+
+      '<div class="daily-overview-metrics campaign-metrics rpt-stats">'+[
+        metric('Paid RT spend',usd(summary.paidSpendKnown),'Verified Sheet total'),
+        metric('Paid RT accounts',format(summary.paidCount),'Paid source rows'),
+        metric('Linked original posts',format(summary.originalPosts),'Grouped by original X status'),
+        metric('Original X views',format(summary.originalViewsKnown),
+          format(summary.originalsWithViews)+' originals have verified X readings')
+      ].join('')+'</div>'+
+      '<p class="rpt-note">Sheet RT payments are separate from X boost-ad spend. Original-post views include organic reach and are never multiplied by the number of RT accounts.</p>';
+    const grouped=used.length?
+      grid(['Original X post','Paid RTs','Paid RT spend','Original X views','Verified reading'],used.map(g=>[
+        link(g.postUrl,'Open original post'),
+        esc(format(g.paidCount)),
+        esc(usd(g.paidSpendKnown))+(g.unknownPaidCosts?' <small class="rpt-rowmeta">Partial</small>':''),
+        num(g.views)===null?'<span class="rpt-missing">X reading unavailable</span>':esc(format(g.views)),
+        esc(date(g.metricAt))
+      ])):'';
+    const details=used.map(g=>'<details class="rpt-expander"><summary><strong>'+esc(g.postUrl?.split('/')[3]||'Original post')+'</strong>'+
+      '<span>'+esc(format(g.paidCount))+' paid RTs · '+esc(usd(g.paidSpendKnown))+'</span></summary>'+
+      grid(['Paid RT account','Cost','Sheet status','Publisher profile'],
+        (g.placements||[]).map(p=>['<strong>'+esc(p.publisher)+'</strong>',esc(usd(p.cost)),
+          p.posted?'Marked posted':'Paid · not marked posted',link(p.profileUrl,'Profile')]))+'</details>').join('');
+    const unlinkedNote=unlinked.length?
+      '<p class="rpt-warning"><strong>'+esc(format(unlinked.length))+' paid RT rows ('+esc(usd(summary.unlinkedPaidSpendKnown))+') have no original X post link.</strong> Payments are included in the total above; their cost cannot yet be attributed to an original post.</p>'+
+      grid(['Paid RT account','Spend','Source row','Publisher'],unlinked.map(p=>[
+        '<strong>'+esc(p.publisher)+'</strong>',esc(usd(p.cost)),esc(format(p.sourceRow)),
+        link(p.profileUrl,'Profile')])):'';
+    return top+grouped+(details?'<div class="rpt-expanders">'+details+'</div>':'')+unlinkedNote+'</section>';
+  }
   function guruContent(){
     const c=item('guru-rts');
     if(!c)return empty('X RT boost feed is unavailable.');
     const rows=c.rows||[];
     const percent=v=>num(v)===null?'Not available':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
     const summary=(viewStatus(c)==='Connected'?'':badge(c))+trendChart(c)+totals(c);
-    if(!rows.length)return summary+empty('No verified boosted X tweets currently recorded.');
+    const related=paidArticleRtGroups(c);
+    if(!rows.length)return summary+related+empty('No verified boosted original X tweets currently recorded.');
     const missingSpend=rows.filter(r=>num(r.spend)===null).length;
     const spendNote=missingSpend
-      ?'<p class="rpt-warning"><strong>Boost spend not entered for '+esc(format(missingSpend))+' of '+esc(format(rows.length))+' tweets.</strong> The dashboard keeps these costs unfilled until a verified amount is saved in X RTs.</p>'
+      ?'<p class="rpt-note"><strong>Separate ad boost spend is not recorded for '+esc(format(missingSpend))+' of '+esc(format(rows.length))+' originals.</strong> Paid RT costs from Google Sheets are reported below, without confusing them with ad boost spend.</p>'
       :'';
-    return summary+spendNote+'<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+format(c.published)+'</span></div>'+grid(
-      ['Original tweet','Boost spend','X views','Interactions','Engagement','Cost / 1K views','Views gained 24h','Live X link'],
-      rows.map(r=>[
-        '<strong>'+esc(r.name||r.publisher||r.handle)+'</strong><small class="rpt-rowmeta">@'+esc(r.handle||'')+'</small>',
-        num(r.spend)===null?'<span class="rpt-missing">Not entered</span>':esc(usd(r.spend)),esc(format(r.views)),
-        esc(format([r.likes,r.reposts,r.replies].every(v=>num(v)!==null)?
-          Number(r.likes)+Number(r.reposts)+Number(r.replies):null)),
-        esc(percent(r.engagement)),num(r.efficiency)===null?'<span class="rpt-missing">Needs spend</span>':esc(usd(r.efficiency)),esc(format(r.growth24)),
-        link(r.postUrl,'Open post')
-      ])
-    );
+    return summary+spendNote+
+      '<div class="result-line rpt-posts-heading"><h2>Original X posts<span class="heading-accent">.</span></h2><span class="section-count">'+format(c.published)+'</span></div>'+
+      grid(['Original tweet','Ad boost spend','Paid RT spend','Paid RT accounts','Original X views','Interactions','Engagement','Ad cost / 1K views','Views gained 24h','Live X link'],
+        rows.map(r=>[
+          '<strong>'+esc(r.name||r.publisher||r.handle)+'</strong><small class="rpt-rowmeta">@'+esc(r.handle||'')+'</small>',
+          num(r.spend)===null?'<span class="rpt-missing">Not entered</span>':esc(usd(r.spend)),
+          num(r.linkedRtPaidSpend)===null?'<span class="rpt-missing">No matched paid RTs</span>':esc(usd(r.linkedRtPaidSpend)),
+          esc(format(r.linkedRtPaidCount)),
+          esc(format(r.views)),
+          esc(format([r.likes,r.reposts,r.replies].every(v=>num(v)!==null)?
+            Number(r.likes)+Number(r.reposts)+Number(r.replies):null)),
+          esc(percent(r.engagement)),
+          num(r.efficiency)===null?'<span class="rpt-missing">Needs ad spend</span>':esc(usd(r.efficiency)),
+          esc(format(r.growth24)),
+          link(r.postUrl,'Open post')
+        ]))+related;
   }
   function discordContent(){
     const course=state.discordClicks,members=state.discordMembers;
