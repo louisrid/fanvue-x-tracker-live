@@ -1261,7 +1261,7 @@ function route(page,updateUrl=true){if(page==='boosted-tweets')page='x-rts';if(p
   document.querySelectorAll('[data-campaign-report]').forEach(link=>link.setAttribute('aria-current',reportCode===link.dataset.campaignReport?'page':'false'));
   const promo=document.querySelector('.of-promo-button');promo.href=pg==='of'?'#dashboard':'#campaign-C001';promo.setAttribute('aria-label',pg==='of'?'OF Terms X Promo · Return to Dashboard':'OF Terms X Promo');promo.setAttribute('aria-current',pg==='of'?'page':'false');
   const gtaCTA=el('gtaButton');if(gtaCTA){gtaCTA.href=pg==='gta-vi'?'#dashboard':'#gta-vi';gtaCTA.setAttribute('aria-current',pg==='gta-vi'?'page':'false');}
-  if(pg==='x-rts'){renderBoosts();void loadBoosts();}
+  if(pg==='x-rts'){renderBoosts();void loadBoosts();void window.XTrackerCampaignReporting?.ensure?.();}
   if(pg==='gta-vi'){renderGtaReport();void loadGtaReport();}
   if(pg==='reporting')window.XTrackerCampaignReporting?.show(reportCode||'article-rt');
   if(pg==='dashboard'){renderWeekLabels();renderWeekly();renderKpis();}if(pg==='campaigns')renderCampaigns();
@@ -1490,17 +1490,48 @@ async function loadBoosts(force=false){
   return boostsState.loading;
 }
 function renderBoosts(){
-  const rows=[...boostsState.tweets],known=rows.filter(t=>Number.isFinite(t.spend)),seen=rows.filter(t=>t.views!==null&&t.views!==undefined),spend=known.length?known.reduce((s,t)=>s+t.spend,0):null;
+  const campaigns=window.XTrackerCampaignReporting;
+  const guru=campaigns?.getCampaign?.('guru-rts');
+  const article=campaigns?.getCampaign?.('article-rts');
+  const groups=guru?.articleRtGroups||article?.articleRtGroups||[];
+  const byOriginal=new Map(groups.map(g=>[String(g.postId),g]));
+  const rtSummary=guru?.articleRtSummary||article?.articleRtSummary;
+  // Each boosted X original can be linked to paid RT placements; boost spend
+  // itself is a *different* source and remains missing unless explicitly paid.
+  const rows=boostsState.tweets.map(t=>{
+    const group=byOriginal.get(String(t.id));
+    return {...t,rtSpend:group?.paidSpendKnown??null,rtCount:group?.paidCount??null};
+  });
+  const rtStrip=el('boostPaidRtSummary');
+  if(rtStrip){
+    if(rtSummary){
+      const waiting=Number(rtSummary.unlinkedPaidCount)||0;
+      rtStrip.textContent='Paid article RTs (Google Sheets): '+
+        boostMoney(rtSummary.paidSpendKnown)+' across '+fmt(rtSummary.paidCount)+' paid accounts · '+
+        boostMoney(rtSummary.linkedPaidSpendKnown)+' linked to '+
+        fmt(rtSummary.originalPosts)+' originals'+
+        (waiting?' · '+boostMoney(rtSummary.unlinkedPaidSpendKnown)+' from '+
+          fmt(waiting)+' accounts still missing original-post links':'')+
+        '. Separate from ad boost spend; X views are original-post totals including organic exposure.';
+      rtStrip.classList.remove('is-pending');
+    }else{
+      rtStrip.textContent='Paid RT sheet data '+(campaigns?.getCampaign?
+        'is temporarily unavailable; existing verified X stats remain visible.':
+        'loading from the connected reporting source…');
+      rtStrip.classList.add('is-pending');
+    }
+  }
+  const known=rows.filter(t=>Number.isFinite(t.spend)),seen=rows.filter(t=>t.views!==null&&t.views!==undefined),spend=known.length?known.reduce((s,t)=>s+t.spend,0):null;
   const views=seen.length?seen.reduce((s,t)=>s+t.views,0):null;
   const matched=known.filter(t=>t.views>0),eff=known.length&&matched.length===known.length?1000*matched.reduce((s,t)=>s+t.spend,0)/matched.reduce((s,t)=>s+t.views,0):null;
   const interactions=interactionSummary(rows);
   el('boostKpis').innerHTML=[['Known Boost Spend ($)',boostMoney(spend),`${known.length} of ${rows.length} with verified spend`],['Combined X Views',boostNumber(views),`${seen.length} of ${rows.length} with views`],['Effective Cost / 1K Views',eff===null?'—':boostMoney(eff),'Known spend + available views'],['Total interactions',boostNumber(interactions.total),interactions.note]].map(([label,value,note],i)=>`<div class="daily-metric daily-metric-${['spend','seven','click','interactions'][i]}"><span class="daily-metric-label">${label}</span><strong>${value}</strong><small>${note}</small></div>`).join('');
   el('boostStatus').textContent=(boostsState.error?(boostsState.loaded?'Showing saved figures. New readings are temporarily unavailable.':'X RTs is temporarily unavailable.'):null)||(boostsState.loaded?'Views include organic traffic · Refreshes every 2h':'Loading saved tweet records…');
-  const sort=el('boostSort').value,field={spend:'spend',views:'views',engagement:'engagement',efficiency:'efficiency'}[sort];
+  const sort=el('boostSort').value,field={spend:'spend',rtSpend:'rtSpend',views:'views',engagement:'engagement',efficiency:'efficiency'}[sort];
   rows.sort((a,b)=>{if(!field)return new Date(b.added_at)-new Date(a.added_at)||b.id.localeCompare(a.id);const x=a[field],y=b[field];return x==null?(y==null?0:1):y==null?-1:sort==='efficiency'?x-y:y-x;});
-  const values=t=>[boostMoney(t.spend),boostNumber(t.views),boostNumber(t.likes),boostNumber(t.reposts),boostNumber(t.replies),boostPercent(t.engagement),t.efficiency==null?'—':boostMoney(t.efficiency),t.growth24==null?'Not enough history':boostNumber(t.growth24)];
-  el('boostRows').innerHTML=rows.map(t=>`<tr class="account-row" data-boost="${esc(t.id)}" tabindex="0" role="button" aria-label="View ${esc(t.name)} tweet"><td><strong>${esc(t.name)}</strong><br><small>@${esc(t.handle)}</small></td>${values(t).map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="9">${boostsState.loaded?'No boosted tweets.':boostsState.error?'Saved records could not be loaded.':'Loading saved tweets…'}</td></tr>`;
-  const labels=['Actual boost spend','X views','Likes','Reposts','Replies','Engagement rate','Cost / 1K views','Views gained · 24h'];
+  const values=t=>[boostMoney(t.spend),boostMoney(t.rtSpend),t.rtCount==null?'—':boostNumber(t.rtCount),boostNumber(t.views),boostNumber(t.likes),boostNumber(t.reposts),boostNumber(t.replies),boostPercent(t.engagement),t.efficiency==null?'—':boostMoney(t.efficiency),t.growth24==null?'Not enough history':boostNumber(t.growth24)];
+  el('boostRows').innerHTML=rows.map(t=>`<tr class="account-row" data-boost="${esc(t.id)}" tabindex="0" role="button" aria-label="View ${esc(t.name)} tweet"><td><strong>${esc(t.name)}</strong><br><small>@${esc(t.handle)}</small></td>${values(t).map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="11">${boostsState.loaded?'No boosted tweets.':boostsState.error?'Saved records could not be loaded.':'Loading saved tweets…'}</td></tr>`;
+  const labels=['Actual ad boost spend','Paid RT spend','Paid RT accounts','Original X views','Original likes','Original reposts','Original replies','Original engagement rate','Ad cost / 1K views','Original views gained · 24h'];
   el('boostMobile').innerHTML=rows.map(t=>`<button class="account-mobile-card" data-boost="${esc(t.id)}"><span class="account-mobile-top"><strong>${esc(t.name)}</strong><small>@${esc(t.handle)}</small></span><span class="boost-card-metrics">${values(t).map((v,i)=>`<span><strong>${esc(v)}</strong><small>${labels[i]}</small></span>`).join('')}</span></button>`).join('');
 }
 function boostChart(t){
@@ -1531,7 +1562,16 @@ function showBoostDetails(id,focus=true){
   if(focus)state.lastFocus=document.activeElement;
   state.modalType='boost';state.modalCode=id;
   el('modalOwner').textContent='Original X tweet';el('articleModal').classList.remove('modal-is-posted','modal-is-unposted');
-  const metrics=[['Actual boost spend',boostMoney(t.spend)],['X views',boostNumber(t.views)],['Likes',boostNumber(t.likes)],['Reposts',boostNumber(t.reposts)],['Replies',boostNumber(t.replies)],['Engagement rate',boostPercent(t.engagement)],['Effective cost / 1K total views',t.efficiency==null?'—':boostMoney(t.efficiency)],['24-hour view growth',t.growth24==null?'Not enough history':boostNumber(t.growth24)],['7-day view growth',t.growth7==null?'Not enough history':boostNumber(t.growth7)]];
+  const group=window.XTrackerCampaignReporting?.getCampaign?.('guru-rts')?.articleRtGroups?.find(g=>String(g.postId)===String(t.id));
+  const metrics=[['Actual ad boost spend',boostMoney(t.spend)],
+    ['Paid RT spend (Google Sheets)',boostMoney(group?.paidSpendKnown)],
+    ['Paid RT accounts',group?.paidCount==null?'—':boostNumber(group.paidCount)],
+    ['Original X views',boostNumber(t.views)],['Original likes',boostNumber(t.likes)],
+    ['Original reposts',boostNumber(t.reposts)],['Original replies',boostNumber(t.replies)],
+    ['Original engagement rate',boostPercent(t.engagement)],
+    ['Ad cost / 1K original views',t.efficiency==null?'—':boostMoney(t.efficiency)],
+    ['24-hour view growth',t.growth24==null?'Not enough history':boostNumber(t.growth24)],
+    ['7-day view growth',t.growth7==null?'Not enough history':boostNumber(t.growth7)]];
   el('modalBody').innerHTML=`<h2 class="modal-title" id="modalTitle">${esc(t.name)}<span class="heading-accent">.</span></h2><p>@${esc(t.handle)}</p><div class="modal-links"><a class="button" href="${esc(boostURL(t))}" target="_blank" rel="noopener noreferrer">Original X post</a><button class="button" data-boost-edit="${esc(id)}">Edit tweet / spend</button></div><p class="boost-text">${esc(t.tweet_text||'Tweet text is currently unavailable.')}</p><div class="modal-metrics">${metrics.map(([label,val])=>`<div class="modal-metric"><span>${label}</span><strong>${esc(val)}</strong></div>`).join('')}</div><p>X metrics updated: ${t.at?esc(boostDate(t.at)):'—'}</p>${t.error?`<p role="status">${esc(t.error)}</p>`:''}<h3>Views over time</h3>${boostChart(t)}<p>Public views include organic traffic. Unknown costs are excluded from spending totals.</p>`;
   el('articleModal').hidden=false;document.body.classList.add('modal-open');if(focus)el('modalClose').focus();
 }
@@ -1546,6 +1586,9 @@ async function saveBoostForm(form,remove=false){
 }
 function initBoosts(){
   el('boostSort').addEventListener('change',renderBoosts);
+  window.addEventListener('xtracker:campaign-overview',()=>{
+    if(state.page==='x-rts')renderBoosts();
+  });
   el('boostAdd').addEventListener('click',()=>openEditor('boost',''));
   document.addEventListener('click',e=>{const row=e.target.closest('[data-boost]');if(row)showBoostDetails(row.dataset.boost);const edit=e.target.closest('[data-boost-edit]');if(edit)openEditor('boost',edit.dataset.boostEdit);if(e.target.id==='boostRemove'){const label=el('boostRemoveConfirm');label.hidden=false;if(label.querySelector('input').checked)void saveBoostForm(el('boostForm'),true);else el('boostFormStatus').textContent='Confirm removal, then press Remove tweet again.';}});
   document.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.matches('tr[data-boost]')){e.preventDefault();showBoostDetails(e.target.dataset.boost);}});
