@@ -94,7 +94,7 @@
   }
   function trendChart(campaign){
     const rows=fiveDayViewSeries(campaign).map(d=>({...d,value:d.views}));
-    const titles={'guru-rts':'Boosted post views over time','x-articles':'Article views over time','article-rts':'Article boost views over time'};
+    const titles={'guru-rts':'Boosted post views over time','x-articles':'Article views over time','article-rts':'Original X post views over time'};
     const count=rows.at(-1)?.series||0;
     const html=window.XTrackerMainChart.markup({rows,title:titles[campaign.id]||'Post views over time',
       context:campaign.id==='guru-rts'?'Guru X RTs':campaign.name,metric:'Total X views',unit:'views',
@@ -125,29 +125,29 @@
     let values;
     if(c.id==='guru-rts'){
       values=[
-        metric('Live posts',format(c.published),'4 tracked boosted tweets'),
-        metric('Views',format(c.views),'Combined X views'),
-        metric('Interactions',format(interactions),'Likes + reposts + replies'),
+        metric('Boosted posts · all time',format(c.published),'Published boosted X originals'),
+        metric('X views · all time',format(c.views),'Cumulative original-post X views'),
+        metric('Interactions · all time',format(interactions),'Likes + reposts + replies on original posts'),
         metric('Engagement',engagement===null?'Not available':engagement.toFixed(2)+'%','Interactions ÷ views')
       ];
     }else if(c.id==='article-rts'){
       values=[
-        metric('Paid RT spend',usd(c.paidSpendKnown),'Verified from Article RTs Sheet'),
-        metric('Paid RT placements',format(c.paidCount),'Paid accounts, independent of posting status'),
+        metric('Paid RT spend · all time',usd(c.paidSpendKnown),'Verified from Article RTs Sheet'),
+        metric('Paid RT placements · all time',format(c.paidCount),'Paid accounts, including unpublished'),
         metric('Marked published',format(c.published),'Source sheet POSTED? checkbox only'),
-        metric('Original X views',format(c.views),
+        metric('Original X views · all time',format(c.views),
           format(c.originalsWithViews)+' of '+format(c.originalPosts)+' source posts measured'),
-        metric('Original interactions',format(c.interactions),
+        metric('Original interactions · all time',format(c.interactions),
           'Likes + reposts + replies on unique originals'),
         metric('Avg. paid RT cost',usd(avgPaid),'Spend ÷ paid placements')
       ];
     }else{
       values=[
-        metric(c.id==='x-articles'?'Spend · all-time':'Spend',usd(c.paidSpendKnown),
+        metric('Paid spend · all time',usd(c.paidSpendKnown),
           c.id==='x-articles'?(c.spendPeriod||'All tracked X Article placements'):''),
-        metric('Live posts',hasFeed(c)?format(c.published):'Not connected'),
-        metric('X views',num(c.views)===null?'No verified X reading':format(c.views)),
-        metric('Tracked clicks',num(clicks(c))===null?'No connected click source':format(clicks(c)))
+        metric('Published posts · all time',hasFeed(c)?format(c.published):'Not connected'),
+        metric('X views · all time',num(c.views)===null?'No verified X reading':format(c.views)),
+        metric('Tracked clicks · all time',num(clicks(c))===null?'No connected click source':format(clicks(c)))
       ];
     }
     return '<div class="daily-overview-metrics campaign-metrics rpt-stats">'+values.join('')+'</div>';
