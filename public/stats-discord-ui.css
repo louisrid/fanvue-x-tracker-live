@@ -1378,3 +1378,15 @@
   min-height:44px!important;
   cursor:pointer!important;
 }
+
+
+/* One actual dashboard reload control: legacy internal X refresh remains
+   callable from Reload All but must not become a second visible button. */
+:root body #mainContent #page-dashboard #refreshXStats,
+:root body #mainContent #page-dashboard #refreshXStats[hidden] {
+  display:none!important;
+  visibility:hidden!important;
+}
+:root body #mainContent #page-dashboard #xRefreshStatus:empty {
+  display:none!important;
+}
