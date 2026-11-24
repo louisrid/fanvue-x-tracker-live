@@ -16,7 +16,8 @@
     const data=[...unique.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-days);
     if(data.length<2)return '';
     const first=data[0],last=data.at(-1);
-    const W=window.innerWidth<=640?520:900,H=238,L=86,R=30,T=18,B=40,pw=W-L-R,ph=H-T-B;
+    const compact=window.innerWidth<=640;
+    const W=compact?520:900,H=238,L=compact?104:86,R=30,T=18,B=40,pw=W-L-R,ph=H-T-B;
     const lo=Math.min(...data.map(d=>d.value)),hi=Math.max(...data.map(d=>d.value));
     const span=Math.max(1,hi-lo),rawStep=span*1.3/3;
     const power=10**Math.floor(Math.log10(rawStep)),fraction=rawStep/power;
@@ -39,7 +40,8 @@
       const delta=previous&&(!d.series||d.series===previous.series)?d.value-previous.value:null;
       const metrics=[{label:metric,value:format(d.value)},...(delta===null?[]:[{label:'Since previous reading',value:signed(delta)}])];
       const attrs=' tabindex="0" role="button" data-chart-point data-chart-title="'+esc(context||title)+'" data-chart-date="'+esc(day(d.date))+'" data-chart-metrics="'+encodeURIComponent(JSON.stringify(metrics))+'" aria-label="'+esc(day(d.date)+': '+format(d.value)+' '+unit)+'"';
-      return '<circle class="xt-chart-dot" cx="'+x(d)+'" cy="'+y(d.value)+'" r="4.5"'+attrs+'/>';
+      return '<g'+attrs+'><circle class="xt-chart-hit" cx="'+x(d)+'" cy="'+y(d.value)+'" r="'+(compact?42:16)+'"/>'+
+        '<circle class="xt-chart-dot" cx="'+x(d)+'" cy="'+y(d.value)+'" r="4.5"/></g>';
     }).join('');
     const stable=!first.series||data.every(d=>d.series===first.series);
     const change=stable?signed(last.value-first.value)+' '+unit+(/daily/i.test(metric)?' vs ':' since ')+day(first.date):'Post coverage varies by date';

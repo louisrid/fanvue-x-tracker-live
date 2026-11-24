@@ -1064,6 +1064,8 @@
   padding:4px!important;color:#000!important;
 }
 :root body .xtracker-chart-tooltip :is(span,strong) {color:#fff!important;}
+:root body #mainContent .xt-main-chart .xt-chart-hit {fill:transparent!important;stroke:none!important;pointer-events:all;}
+:root body #mainContent .xt-main-chart .xt-chart-dot {pointer-events:none;}
 :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-snapshot-headline p {color:#000!important;}
 :root body #mainContent #page-reporting .rpt-scroll {margin:6px 0 10px!important;}
 :root body #mainContent #page-reporting .rpt-posts-heading {padding:0!important;margin:8px 0!important;}
@@ -1120,4 +1122,38 @@
   :root body #mainContent #page-gta-vi .gta-quoted-collapse > summary {min-height:36px!important;padding:8px 11px!important;}
   :root body #mainContent #page-gta-vi .gta-quoted-footnote,
   :root body #mainContent #page-gta-vi .gta-quoted-warning {grid-column:1 / -1;margin:2px 0!important;}
+}
+
+/* Phone controls stay easy to tap without breaking the compact desktop scale. */
+@media(max-width:760px) {
+  :root body #mainContent .site-page .subpage-back-row .page-back-button {
+    width:44px!important;height:44px!important;min-height:44px!important;
+  }
+  :root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh),
+  :root body #mainContent #page-dashboard #reloadAllButton {
+    min-height:44px!important;height:44px!important;
+  }
+  :root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav,
+  :root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item {
+    min-height:44px!important;height:44px!important;max-height:44px!important;
+  }
+  :root body #mainContent #page-reporting .rpt-stats.daily-overview-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;
+  }
+  :root body #mainContent #page-reporting .rpt-stats > .rpt-stat.daily-metric {
+    grid-column:auto!important;min-height:94px!important;padding:12px!important;
+  }
+  :root body #mainContent #page-reporting .rpt-stats .rpt-stat strong {
+    font-size:clamp(22px,6.2vw,27px)!important;white-space:nowrap!important;overflow-wrap:normal!important;
+  }
+  :root body #mainContent #page-gta-vi .gta-report-toolbar .gta-tab {
+    min-height:44px!important;padding:8px 12px!important;
+  }
+  :root body #mainContent .site-page .xt-search input {min-height:44px!important;height:44px!important;}
+  :root body #mainContent :is(#page-gta-vi,#page-reporting) :is(.gta-source-details,.rpt-source-detail) > summary {
+    min-height:44px!important;min-width:60px!important;padding:10px 12px!important;box-sizing:border-box;
+  }
+}
+@media(max-width:600px) {
+  :root body #mainContent .site-page .xt-main-chart .xt-chart-axis {font-size:22px!important;}
 }
