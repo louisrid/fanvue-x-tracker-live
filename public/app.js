@@ -1710,23 +1710,6 @@ function events(){
     el('accountSearch').value='';el('accountSort').value='recent';
     renderAccounts();
   });
-  el('historicalSort').addEventListener('change',renderHistorical);
-  el('historicalWeekTabs').addEventListener('click',e=>{
-    const tab=e.target.closest('[data-historical-week]');if(!tab)return;
-    state.historicalWeek=tab.dataset.historicalWeek;
-    storage.set(WEEK_CHOICE_KEYS.historicalWeek,state.historicalWeek);
-    renderHistorical();
-  });
-  el('historicalWeekTabs').addEventListener('keydown',e=>{
-    if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
-    const tabs=[...el('historicalWeekTabs').querySelectorAll('[data-historical-week]')];
-    const index=tabs.indexOf(document.activeElement);if(index<0)return;
-    e.preventDefault();
-    const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(index+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
-    state.historicalWeek=tabs[next].dataset.historicalWeek;
-    storage.set(WEEK_CHOICE_KEYS.historicalWeek,state.historicalWeek);
-    renderHistorical();el('historical-tab-'+state.historicalWeek)?.focus();
-  });
   el('newCampaignButton').addEventListener('click',()=>openEditor('newCampaign'));
   el('newPlacementButton').addEventListener('click',()=>openEditor('newPlacement'));
   el('bulkSave').addEventListener('click',saveBulk);
@@ -1764,22 +1747,25 @@ function events(){
 }
 // The live graph redraws when its available width changes (phone rotation,
 // split-screen resizing, returning to the Dashboard), without scaling labels.
-if(typeof ResizeObserver!=='undefined'){
-  let pendingDailyResize=false;
-  new ResizeObserver(()=>{
-    if(pendingDailyResize)return;
-    pendingDailyResize=true;
-    requestAnimationFrame(()=>{
-      pendingDailyResize=false;
+{
+  const dailyGraph=el('dailyTrendChart');
+  if(dailyGraph&&typeof ResizeObserver!=='undefined'){
+    let pendingDailyResize=false;
+    new ResizeObserver(()=>{
+      if(pendingDailyResize)return;
+      pendingDailyResize=true;
+      requestAnimationFrame(()=>{
+        pendingDailyResize=false;
+        const graph=el('dailyTrendChart');
+        if(graph&&graph.clientWidth&&Math.abs(graph.clientWidth-lastDailyChartWidth)>2)renderDailyOverview();
+      });
+    }).observe(dailyGraph);
+  }else if(dailyGraph){
+    window.addEventListener('resize',()=>{
       const graph=el('dailyTrendChart');
       if(graph&&graph.clientWidth&&Math.abs(graph.clientWidth-lastDailyChartWidth)>2)renderDailyOverview();
-    });
-  }).observe(el('dailyTrendChart'));
-}else{
-  window.addEventListener('resize',()=>{
-    const graph=el('dailyTrendChart');
-    if(graph&&graph.clientWidth&&Math.abs(graph.clientWidth-lastDailyChartWidth)>2)renderDailyOverview();
-  },{passive:true});
+    },{passive:true});
+  }
 }
 // Fit presentation text after rendering, route changes, fonts loading and resizing.
 // Values remain complete and retain their original formatting and precision.
