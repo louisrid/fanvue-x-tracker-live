@@ -33,13 +33,13 @@ body.fv [hidden]{display:none!important}
 
 /* Toolbars and filters. */
 .fv-records .page-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
-.fv-records .toolbar-summary{font-size:var(--fv-fs-s);color:var(--fv-label)}
+.fv-records .toolbar-summary{display:flex;flex-wrap:wrap;gap:16px;font-size:var(--fv-fs-s);color:var(--fv-label)}
 .fv-records .toolbar-summary strong,.fv-records .toolbar-summary b{color:var(--fv-ink)}
 .fv-records .tracker-controls,.fv-records .accounts-tools{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin:0 0 var(--fv-gap);background:#fff;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-radius)}
 .fv-records .tracker-filter-strip,.fv-records .tracker-filter-extras{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
 .fv-records .select-control,.fv-records .filter-grid label,.fv-records .tracker-advanced-fields label,.article-modal .form-field{display:flex;flex-direction:column;gap:4px;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-muted)}
 .fv-records select,.fv-records input[type="search"],.fv-records input[type="number"],.fv-records input[type="date"],.fv-records .search-control input,
-.article-modal input:not([type="checkbox"]),.article-modal select,.article-modal textarea{height:var(--fv-ctl);min-width:0;padding:0 10px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;color:var(--fv-ink);font-size:var(--fv-fs-s);font-weight:var(--fv-w)}
+.article-modal input:not([type="checkbox"]),.article-modal select,.article-modal textarea{height:var(--fv-ctl);min-width:0;padding:0 12px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:var(--fv-field);color:var(--fv-ink);font-size:var(--fv-fs-s);font-weight:var(--fv-w)}
 .article-modal textarea{height:auto;padding:8px 10px;resize:vertical}
 .fv-records .search-control{display:flex;align-items:flex-end}
 .fv-records .search-control input{width:220px}
@@ -79,7 +79,7 @@ body.fv [hidden]{display:none!important}
 .fv-records .xt-cell-link{color:var(--fv-blue);font-weight:var(--fv-w);text-decoration:none}
 .fv-records .xt-original-links{display:flex;gap:12px;flex-wrap:wrap}
 .fv-records .xt-missing{color:var(--fv-muted)}
-.fv-records .xt-state{display:inline-flex;padding:3px 7px;border-radius:var(--fv-r-s);font-size:var(--fv-fs-s);font-weight:var(--fv-w);background:var(--fv-warn-bg);color:var(--fv-warn)}
+.fv-records .xt-state{display:inline-block;text-transform:lowercase;padding:3px 7px;border-radius:var(--fv-r-s);font-size:var(--fv-fs-s);font-weight:var(--fv-w);background:var(--fv-warn-bg);color:var(--fv-warn)}
 .fv-records .xt-state-posted{background:var(--fv-pos-bg);color:var(--fv-pos)}
 .fv-records .xt-select-cell,.fv-records .xt-select-col{width:34px;text-align:center}
 .fv-records .xt-detail-row td{background:var(--fv-tint);white-space:normal}
@@ -161,3 +161,15 @@ body.modal-open{overflow:hidden}
 .fv-records .button-primary,.article-modal .button-primary,.article-modal .modal-link.main-link{background:var(--fv-dark);border-color:var(--fv-dark);color:var(--fv-dark-text)}
 .fv-records .section-count{background:var(--fv-dark);color:var(--fv-dark-text)}
 .fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#1C1C1C;border-color:#1C1C1C}
+
+/* ---------- polish: match the main pages ---------- */
+/* Section headings become black title bars joined to the table card below. */
+.fv-records .result-line{margin:0;padding:12px var(--fv-pad);min-height:62px;background:var(--fv-dark);color:var(--fv-dark-text);border-radius:var(--fv-radius) var(--fv-radius) 0 0}
+.fv-records .result-line h2{color:var(--fv-dark-text)}
+.fv-records .result-line .section-count{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
+.fv-records .result-line~.account-table-wrap,.fv-records .result-line~.tracker-list .xt-table-wrap{border-top:0;border-top-left-radius:0;border-top-right-radius:0}
+.fv-records .result-line~.tracker-filter-caption,.fv-records .result-line~.bulk-bar{margin:0;border-radius:0}
+.fv-records .xt-state::first-letter{text-transform:uppercase}
+/* One search per table: the table's own search box replaces the duplicate above it. */
+.fv-records #page-campaigns .campaign-controls .search-control{display:none}
+.fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#fff;border-color:var(--fv-line);outline:none;box-shadow:0 0 0 2px rgba(22,139,243,.15)}
