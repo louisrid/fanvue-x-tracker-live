@@ -10,7 +10,7 @@ const between=(source,a,b)=>source.slice(source.indexOf(a),source.indexOf(b,sour
 
 test('Main dashboard headline is lifetime, not a hidden saved-week selection',()=>{
  assert.match(html,/LIFETIME · X ARTICLES/);
- assert.match(html,/id="dashboardLiveSummaryTitle">Lifetime overview/);
+ assert.match(html,/id="dashboardLiveSummaryTitle">All-time stats/);
  assert.match(html,/class="dashboard-week-toolbar" hidden aria-hidden="true"/);
  assert.match(css,/\.dashboard-week-toolbar\[hidden\]\s*\{[\s\S]*?display:none!important/);
  assert.match(app,/const placements=state\.placements;/);
@@ -32,7 +32,7 @@ test('OF Terms lifetime spend includes paid pending placements and all recorded 
  assert.match(of,/UTM clicks · all time/);
  assert.match(of,/Published posts · all time/);
  assert.doesNotMatch(of,/This week's UTM clicks|Week UTM clicks|Week [0-9]/);
- assert.match(html,/id="ofWeekLabel">Lifetime campaign totals/);
+ assert.match(html,/id="ofWeekLabel">All-time stats/);
 });
 
 test('Other campaign sources remain lifetime; history graphs are separate',()=>{
