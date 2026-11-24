@@ -281,7 +281,7 @@ export function assembleCampaignOverview(sources){
       originalPosts:rtGroups.summary.originalPosts,articleRtGroups:rtGroups.originals,
       articleRtUnlinked:rtGroups.unlinked,articleRtSummary:rtGroups.summary,
       trackingWarning:rtGroups.summary.unlinkedPaidCount?
-        rtGroups.summary.unlinkedPaidCount+' paid RT entries have no original X status URL; their costs are retained but cannot be assigned to an original post.':null,
+        rtGroups.summary.unlinkedPaidCount+' paid RT entries have no original X post URL; their costs are retained but cannot be assigned to an original post.':null,
       sourceNote:'Original X post views are measured automatically; these are NOT individual paid retweet impressions. Individual RTs need their own X post URL to measure impressions separately.'
     });
   const campaigns=[
