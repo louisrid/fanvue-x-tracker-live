@@ -1064,6 +1064,8 @@
   padding:4px!important;color:#000!important;
 }
 :root body .xtracker-chart-tooltip :is(span,strong) {color:#fff!important;}
+:root body > #nl-badge-frame {display:none!important;}
+:root body #mainContent #page-reporting .rpt-stats > .rpt-stat.daily-metric {grid-column:auto!important;}
 :root body #mainContent .xt-main-chart .xt-chart-hit {fill:transparent!important;stroke:none!important;pointer-events:all;}
 :root body #mainContent .xt-main-chart .xt-chart-dot {pointer-events:none;}
 :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary .dashboard-snapshot-headline p {color:#000!important;}
