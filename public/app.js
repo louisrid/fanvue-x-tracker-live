@@ -1109,61 +1109,73 @@ function gtaSourceStatus(report){
 function renderGtaQuotedSources(){
   const panel=el('gtaQuotedSources');
   if(!panel)return;
-  const report=gtaState.report,linked=report?.quotedOriginals;
+  const linked=gtaState.report?.quotedOriginals;
   const rows=Array.isArray(linked?.rows)?linked.rows:[];
-  const show=gtaState.tab==='qrts'&&report?.ready===true&&rows.length>0;
+  const show=gtaState.tab==='qrts'&&gtaState.report?.ready===true&&rows.length>0;
   panel.hidden=!show;
   if(!show){panel.replaceChildren();return;}
   const summary=linked.summary||{};
   const sourceLink=(url,label)=>{
     const safe=safeUrl(url);
-    return safe?'<a href="'+esc(safe)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':'—';
+    return safe?'<a href="'+esc(safe)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':'';
+  };
+  const dateLabel=value=>{
+    if(!value||!Number.isFinite(Date.parse(value)))return 'Not yet verified';
+    return new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'short',
+      year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value))+' UK';
   };
   const entries=rows.map(row=>{
     const complete=[row.likes,row.reposts,row.replies].every(v=>Number.isFinite(v));
     const interactions=complete?row.likes+row.reposts+row.replies:null;
-    const qrts=(row.qrts||[]).map(qrt=>
-      '<li><strong>'+esc(qrt.publisher||'Publisher')+'</strong>'+
-      '<span>'+esc(gtaNumber(qrt.views))+' QRT views</span>'+
-      '<span>'+esc(qrt.paid?gtaMoney(qrt.cost):'Payment unverified')+'</span>'+
-      '<span>'+esc(gtaNumber(qrt.postPublicationClicks))+' post-publication clicks</span>'+
-      '<span class="gta-quoted-qrt-links">'+sourceLink(qrt.postUrl,'View QRT')+
-      (safeUrl(qrt.profileUrl)?' · '+sourceLink(qrt.profileUrl,'Publisher'):'')+
+    const engagement=complete&&Number(row.views)>0?
+      (interactions/Number(row.views)*100).toFixed(2)+'%':'—';
+    const secondary=[
+      ['Likes',row.likes],['Reposts',row.reposts],['Replies',row.replies],
+      ['Interactions',interactions],['Engagement',engagement],
+      ['Post-publication clicks',row.postPublicationClicks]
+    ].map(([title,val])=>'<div><dt>'+esc(title)+'</dt><dd>'+
+      esc(typeof val==='string'?val:gtaNumber(val))+'</dd></div>').join('');
+    const linkedQrts=(row.qrts||[]).map(qrt=>
+      '<li class="gta-source-qrt"><strong>@'+esc(qrt.publisher||'Publisher')+'</strong>'+
+      '<span>'+esc(gtaNumber(qrt.views))+' views</span>'+
+      '<span>'+(qrt.paid?esc(gtaMoney(qrt.cost)):'Payment unverified')+'</span>'+
+      '<span>'+esc(gtaNumber(qrt.postPublicationClicks))+' clicks</span>'+
+      '<span class="gta-source-qrt-links">'+sourceLink(qrt.postUrl,'Open QRT')+
+      (safeUrl(qrt.profileUrl)?' · '+sourceLink(qrt.profileUrl,'Profile'):'')+
       (safeUrl(qrt.trackingUrl)?' · '+sourceLink(qrt.trackingUrl,'Tracking'):'')+
       '</span></li>').join('');
-    return '<tr><td><strong>'+esc('@'+(row.handle||'X post'))+'</strong>'+
-      '<small>'+sourceLink(row.originalUrl,'Open source X post')+'</small></td>'+
-      '<td>'+esc(gtaNumber(row.qrtCount))+'</td>'+
-      '<td>'+esc(gtaMoney(row.paidSpendKnown))+
-        (row.unknownPaidCosts?' <small class="gta-quoted-partial">Partial</small>':'')+'</td>'+
+    return '<tr>'+
+      '<td><span class="gta-source-handle">@'+esc(row.handle||'X post')+'</span>'+
+      sourceLink(row.originalUrl,'View on X')+'</td>'+
       '<td>'+esc(gtaNumber(row.views))+'</td>'+
-      '<td>'+esc(gtaNumber(row.likes))+'</td>'+
-      '<td>'+esc(gtaNumber(row.reposts))+'</td>'+
-      '<td>'+esc(gtaNumber(row.replies))+'</td>'+
-      '<td>'+esc(gtaNumber(interactions))+'</td>'+
       '<td>'+esc(gtaNumber(row.qrtViews))+'</td>'+
-      '<td>'+esc(gtaNumber(row.postPublicationClicks))+'</td>'+
-      '<td><details class="gta-quoted-qrt-details"><summary>View QRTs</summary>'+
-      '<ul>'+qrts+'</ul></details></td></tr>';
+      '<td>'+esc(gtaMoney(row.paidSpendKnown))+
+        (row.unknownPaidCosts?' <small>Partial</small>':'')+'</td>'+
+      '<td>'+esc(gtaNumber(row.qrtCount))+'</td>'+
+      '<td><details class="gta-source-details"><summary>Details</summary>'+
+      '<div class="gta-source-detail-body">'+
+      '<dl class="gta-source-extra-metrics">'+secondary+'</dl>'+
+      '<p>Original X updated '+esc(dateLabel(row.metricAt))+'</p>'+
+      '<h4>Linked paid QRTs</h4>'+
+      '<ul>'+linkedQrts+'</ul></div></details></td></tr>';
   }).join('');
   const missing=Number(summary.unmatchedQrts)||0;
   panel.innerHTML=
-    '<div class="gta-quoted-header"><div><h2 id="gtaQuotedSourcesTitle">X posts quoted by QRTs</h2>'+
-    '<p>These are the original X posts your paid QRTs quote, not a separate article campaign. Original-post views include organic exposure.</p></div>'+
-    '<div class="gta-quoted-summary">'+
+    '<div class="gta-quoted-header"><div>'+
+    '<h2 id="gtaQuotedSourcesTitle">Quoted X posts</h2>'+
+    '<p>Original X post performance. Individual paid QRTs are linked in each row.</p>'+
+    '</div><div class="gta-quoted-summary">'+
       '<span><strong>'+esc(gtaNumber(summary.originalPosts))+'</strong> source posts</span>'+
       '<span><strong>'+esc(gtaNumber(summary.matchedQrts))+'</strong> linked QRTs</span>'+
-      '<span><strong>'+esc(gtaNumber(summary.quotedPostViews))+'</strong> original X views</span>'+
-    '</div></div>'+
+      '</div></div>'+
     (missing?'<p class="gta-quoted-warning">'+esc(gtaNumber(missing))+
-      ' published QRTs have no verified quoted-post relationship. Their own X metrics remain recorded above.</p>':'')+
-    '<details class="gta-quoted-collapse"><summary>View source post stats and linked QRTs</summary>'+
+      ' published QRTs have no verified original X post link. Their own performance remains tracked below.</p>':'')+
+    '<details class="gta-quoted-collapse"><summary>View quoted X post results</summary>'+
     '<div class="gta-quoted-scroll"><table class="gta-quoted-table account-table">'+
-      '<thead><tr><th>Quoted source X post</th><th>QRTs</th><th>Paid QRT spend</th>'+
-      '<th>Source X views</th><th>Source likes</th><th>Source reposts</th><th>Source replies</th>'+
-      '<th>Source interactions</th><th>QRT views</th><th>Post-publication clicks</th><th>QRT links</th></tr></thead>'+
+      '<thead><tr><th>Original X post</th><th>Original views</th>'+
+      '<th>QRT views</th><th>Paid QRT spend</th><th>QRTs</th><th>Details</th></tr></thead>'+
       '<tbody>'+entries+'</tbody></table></div></details>'+
-    '<p class="gta-quoted-footnote">Source X views and QRT views are separate counters and must not be added as unique reach. QRT spend is already included in the paid QRT total above.</p>';
+    '<p class="gta-quoted-footnote">Source X views and QRT views are separate counters, not unique reach. Paid QRT spend is already included in the campaign total above.</p>';
 }
 
 function renderGtaReport(){
