@@ -161,7 +161,7 @@ test('shell: official wordmark, Inter only, flat seven-page navigation and noind
   assert.match(html,/brand\/fanvue-wordmark-white-240w\.png/);
   assert.match(html,/fanvue-wordmark-white-360w\.png 3x/);
   assert.doesNotMatch(html,/Unbounded/);
-  assert.match(html,/family=Inter:wght@400\.\.800/);
+  assert.match(html,/family=Inter:wght@400\.\.900/);
   const order=C.CAMPAIGNS.map(c=>c.name);
   assert.deepEqual(order,['X Articles','GTA VI','OF Terms','CIS','Guru Promotion']);
   assert.match(appJs,/\{key:'home',title:'Home',icon:'home',group:'general'\}/);
