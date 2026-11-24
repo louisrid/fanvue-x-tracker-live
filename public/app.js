@@ -75,7 +75,8 @@ const ICONS={articles:'<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" hei
   money:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.75" y="5" width="18.5" height="15" rx="2.5"/><path d="M2.75 9h18.5M15.5 13h5.75v4H15.5a2 2 0 0 1 0-4Z"/></svg>', 
   clicks:'<svg viewBox="0 0 24 24"><path d="m10 14 4-4M8 17H7a5 5 0 0 1 0-10h4m5 0h1a5 5 0 0 1 0 10h-4"/></svg>',
   views:'<svg viewBox="0 0 24 24"><path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></svg>',
-  likes:'<svg viewBox="0 0 24 24"><path d="M20 8c0 5-8 11-8 11S4 13 4 8a4.5 4.5 0 0 1 8-2 4.5 4.5 0 0 1 8 2Z"/></svg>'};
+  likes:'<svg viewBox="0 0 24 24"><path d="M20 8c0 5-8 11-8 11S4 13 4 8a4.5 4.5 0 0 1 8-2 4.5 4.5 0 0 1 8 2Z"/></svg>',
+  paid:'<svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M7 10h4M16 12h1"/></svg>'};
 const state={placements:[],campaigns:[],history:[],activity:[],activityReady:false,trackingReady:false,
   hourlyEvents:[],hourlyReady:false,owner:'ALL',page:'dashboard',modalCode:'',accountCode:'',modalType:'',lastFocus:null,
   loading:false,initialLoadSettled:false,loadError:false,chartPeriod:30,lastLoadedAt:0,toastTimeout:0,adminKey:'',adminConfigured:false,
@@ -283,11 +284,14 @@ function weeklyCard(p){
 function renderDashboardWeekSelector(){
   const select=el('dashboardWeekSelect'),scope=selectedDashboardWeek();
   const current=currentStatsWeekNumber();
-  select.innerHTML=`<option value="current">This week (Week ${current})</option>`+
+  select.innerHTML=`<option value="current">This week · Week ${current}</option>`+
     Array.from({length:current-1},(_,i)=>`<option value="${current-i-1}">Week ${current-i-1}</option>`).join('');
   select.value=state.dashboardWeek==='current'?'current':String(scope.number);
   const label=d=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
-  el('dashboardWeekRange').textContent=`${label(scope.from)} – ${label(scope.to)}`;
+  const range=`${label(scope.from)} – ${label(scope.to)}`;
+  el('dashboardWeekRange').textContent=range;
+  const context=el('dashboardSnapshotContext');
+  if(context)context.textContent=`Week ${scope.number} · ${range}`;
 }
 function renderWeekLabels(){
   renderDashboardWeekSelector();
@@ -306,6 +310,8 @@ function renderWeekly(){
   el('weeklyGrid').innerHTML=live.length?live.map(weeklyCard).join(''):`<div class="empty-state">${verified?'No live articles yet.':'Live data unavailable.'}</div>`;
   el('upcomingCount').textContent=verified?fmt(upcoming.length):'—';
   el('upcomingGrid').innerHTML=upcoming.length?upcoming.map(weeklyCard).join(''):`<div class="empty-state">${verified?'No scheduled articles.':'Live data unavailable.'}</div>`;
+  const meta=el('dashboardArticleMeta');
+  if(meta)meta.textContent=verified?`${fmt(live.length)} live · ${fmt(upcoming.length)} scheduled`:'Article status unavailable';
   el('upcomingSection').hidden=true;
 }
 // Daily click totals are verified event counts, never estimated from post lifetime counts.
@@ -505,12 +511,12 @@ function renderKpis(){
   const totalPaid=paid.reduce((sum,p)=>sum+(number(p.cost)||0),0);
   const weekClicks=homeClickTotal();
   const headline=[
-    {id:'money',label:'Paid total',value:state.homeVerified?money(totalPaid):'—'},
+    {id:'money',label:'Spend',value:state.homeVerified?money(totalPaid):'—'},
     {id:'clicks',label:'UTM clicks',value:weekClicks===null?'—':display(weekClicks)},
-    {id:'articles',label:'Live articles',value:state.homeVerified?fmt(placements.filter(isLive).length):'—'}
+    {id:'articles',label:'Live articles',value:state.homeVerified?fmt(placements.filter(isLive).length):'—'},
+    {id:'paid',label:'Paid placements',value:state.homeVerified?fmt(paid.length):'—'}
   ];
   el('dashboardKpis').innerHTML=headline.map(kpiCard).join('');
-  // Dashboard deliberately no longer hosts the Performance comparison or Daily Breakdown.
 }
 function notify(s){const t=el('toast');t.textContent=s;t.hidden=false;clearTimeout(state.toastTimeout);state.toastTimeout=setTimeout(()=>t.hidden=true,2800);}
 function optionList(records,selected='ALL',allLabel='All campaigns'){
