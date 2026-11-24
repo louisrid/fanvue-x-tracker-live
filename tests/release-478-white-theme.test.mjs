@@ -9,7 +9,7 @@ test('the page and click-exclusion background is solid white, including iPhone c
  // v3.1 redesign: the dashboard fills the screen with a pale blue-white workspace, white panels and a
  // black mobile top bar; the click-exclusion page keeps its solid white background.
  const fv=src('../public/fanvue.css');
- assert(fv.includes('--fv-outer:#F1F5FA;--fv-canvas:#F1F5FA;--fv-surface:#FFFFFF;'));
+ assert(fv.includes('--fv-outer:#DFE5EC;--fv-canvas:#DFE5EC;--fv-surface:#FFFFFF;'));
  assert(html.includes('name="theme-color" content="#000000"'));
  assert(prefs.includes('name="theme-color" content="#ffffff"'));
  assert(prefs.includes('background:#ffffff'));
