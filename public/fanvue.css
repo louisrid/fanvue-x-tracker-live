@@ -120,7 +120,7 @@ button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-grid.is-zero{stroke:#C9D6E4;stroke-dasharray:none}
 .fv-axis{fill:#59687B;font-size:11px;font-family:var(--fv-font);font-variant-numeric:tabular-nums}
 .fv-axis.is-incomplete{font-style:italic}
-.fv-axis.is-muted{fill:#6B7A8C;font-style:italic}
+.fv-axis.is-muted{fill:#59687B;font-style:italic}
 .fv-area{fill:var(--fv-area)}
 .fv-line{fill:none;stroke:var(--fv-line);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .fv-line.is-dashed{stroke-dasharray:4 4}
