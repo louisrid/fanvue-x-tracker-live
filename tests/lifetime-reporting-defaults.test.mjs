@@ -13,7 +13,8 @@ test('Main dashboard headline is lifetime, not a hidden saved-week selection',()
  assert.match(html,/id="dashboardLiveSummaryTitle">Lifetime overview/);
  assert.match(html,/class="dashboard-week-toolbar" hidden aria-hidden="true"/);
  assert.match(css,/\.dashboard-week-toolbar\[hidden\]\s*\{[\s\S]*?display:none!important/);
- assert.match(app,/const placements=state\.placements\.filter\(p=>p\.active!==false\)/);
+ assert.match(app,/const placements=state\.placements;/);
+ assert.doesNotMatch(between(app,'function renderKpis(){','function notify('),/\.filter\(p=>p\.active!==false\)/);
  assert.match(app,/label:'Paid spend · all time'/);
  assert.match(app,/label:'UTM clicks · all time'/);
  assert.match(app,/label:'X views · all time'/);
