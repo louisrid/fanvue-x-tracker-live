@@ -27,7 +27,8 @@ export function summariseQuotedOriginals(publishers=[],metrics={}){
     const group=byOriginal.get(id);
     if(Date.parse(quoted.at||'')>(Date.parse(group.firstQuotedSnapshot.at||'')||0))group.firstQuotedSnapshot=quoted;
     const qrt={
-      publisher:p.publisher,postUrl:p.postUrl,views:amount(p.views),
+      publisher:p.publisher,profileUrl:p.profileUrl||'',trackingUrl:p.trackingUrl||'',
+      postUrl:p.postUrl,views:amount(p.views),
       likes:amount(p.likes),reposts:amount(p.reposts),replies:amount(p.replies),
       paid:!!p.paid,cost:p.paid?amount(p.cost):null,
       allTimeHumanClicks:amount(p.allTimeClicks),postPublicationClicks:amount(p.clicks),
