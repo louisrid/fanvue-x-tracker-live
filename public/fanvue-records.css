@@ -130,3 +130,26 @@ body.modal-open{overflow:hidden}
   .article-modal{width:100%;max-height:92vh;border-radius:14px 14px 0 0}
   .article-modal .form-grid{grid-template-columns:1fr}
 }
+
+/* Detail modal content (placements, accounts, campaigns, promoted posts). */
+.article-modal .heading-accent{display:none}
+.article-modal .modal-summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 12px;font-size:12px;color:var(--fv-label)}
+.article-modal .modal-summary>span:not([class]){color:var(--fv-muted)}
+.article-modal .article-campaign-chip,.article-modal .state-pill{display:inline-flex;align-items:center;padding:3px 7px;border-radius:5px;font-size:11px;font-weight:600;background:var(--fv-neutral-bg);color:var(--fv-neutral)}
+.article-modal .state-pill.is-live{background:var(--fv-pos-bg);color:var(--fv-pos)}
+.article-modal .modal-primary{margin:0 0 10px}
+.article-modal .modal-primary-label{font-size:12px;color:var(--fv-muted);font-weight:550}
+.article-modal .modal-primary-number{font-size:26px;line-height:32px;font-weight:740;letter-spacing:-.6px}
+.article-modal .modal-metrics{margin:0 0 12px}
+.article-modal .modal-metric span{display:block;font-size:11px;color:var(--fv-muted);font-weight:550}
+.article-modal .modal-list-heading{margin:14px 0 6px;font-size:13px;font-weight:650}
+.article-modal .mini-history{display:flex;flex-direction:column;border:1px solid var(--fv-rule);border-radius:8px;overflow:hidden}
+.article-modal .history-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:0;border-bottom:1px solid var(--fv-rule);background:#fff;text-align:left;font-size:12px}
+.article-modal .history-row:last-child{border-bottom:0}
+.article-modal .history-row:hover{background:#F7FBFF}
+.article-modal .modal-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.article-modal .modal-link{display:inline-flex;align-items:center;gap:6px;height:var(--fv-ctl);padding:0 11px;border:1px solid var(--fv-border);border-radius:var(--fv-ctl-radius);background:#fff;color:var(--fv-ink);font-size:12px;font-weight:550;text-decoration:none}
+.article-modal a.modal-link{color:var(--fv-blue)}
+.article-modal .modal-link:hover{background:#F5F9FE}
+.article-modal .modal-link.main-link{background:var(--fv-blue);border-color:var(--fv-blue);color:#fff}
+.article-modal .boost-text{font-size:12.5px;color:var(--fv-label)}
