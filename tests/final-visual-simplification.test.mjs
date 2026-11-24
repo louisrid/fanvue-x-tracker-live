@@ -28,8 +28,8 @@ test('Single shared visual override tightens desktop and mobile sizing without r
   const shell=readFileSync('public/fanvue-app.js','utf8');
   // v3.1 redesign: one shared token stylesheet replaces the layered overrides.
   assert.equal((html.match(/rel="stylesheet" href="\/(?!fanvue)/g)||[]).length,0);
-  assert.match(css,/\.fv-strip\{[^}]*min-height:116px/);
-  assert.match(css,/--fv-row:39px/);
+  assert.match(css,/\.fv-strip\{[^}]*min-height:140px/);
+  assert.match(css,/--fv-row:44px/);
   assert.match(css,/@media \(max-width:767px\)/);
   assert.match(css,/@media \(max-width:359px\)/);
   assert.match(html,/id="fvHeader"/);
