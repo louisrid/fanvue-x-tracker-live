@@ -798,7 +798,7 @@ async function reloadAllData(){
     if(!x?.ok)issues.add('X article metrics');
     if(!x||x.of?.error)issues.add('OF Terms X metrics');
     if(!x||x.boosts?.error)issues.add('X RT metrics');
-    progress('2/3 · Reloading GTA VI, QRTs and boosted article views…');
+    progress('2/3 · Reloading GTA VI QRTs, standalone posts and quoted X sources…');
     await refreshGtaReport();
     if(gtaState.error||el('gtaRefreshStatus').classList.contains('is-error'))issues.add('GTA VI metrics');
     progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…');
@@ -1075,88 +1075,72 @@ function gtaSourceStatus(report){
   const text=`X: ${x.updated} of ${x.total} posts · Short.io: ${short?.refreshed||0} of ${short?.linkCount||0} links`+(failed?' · '+issues.join(' · '):' · Latest available readings verified');
   return {failed,text};
 }
-function renderGtaQuotedArticles(){
-  const report=gtaState.report;
-  const linked=report?.quotedOriginals;
-  const summaries=linked?.summary||{};
+function renderGtaQuotedSources(){
+  const panel=el('gtaQuotedSources');
+  if(!panel)return;
+  const report=gtaState.report,linked=report?.quotedOriginals;
   const rows=Array.isArray(linked?.rows)?linked.rows:[];
-  document.querySelectorAll('[data-gta-tab]').forEach(button=>{
-    const active=button.dataset.gtaTab==='quoted';
-    button.classList.toggle('is-active',active);
-    button.setAttribute('aria-selected',String(active));
-    button.tabIndex=active?0:-1;
-  });
-  el('gtaReportPanel').setAttribute('aria-labelledby','gtaTabQuoted');
-  el('gtaScopeLabel').textContent='GTA VI · ARTICLES BOOSTED BY QRTS';
-  el('gtaWeekLabel').textContent='Lifetime campaign performance';
-  const status=el('gtaLiveStatus');
-  status.textContent=report?.ready?(report.warning?'Saved campaign data · '+gtaUKDate(report.sourceVerifiedAt):
-    'Quote-linked articles · X metrics updated '+gtaUKDate(report.metricLastSuccessfulAt)):'Loading verified X data';
-  status.classList.toggle('is-live',!!report?.ready);
-  const diag=el('gtaReportError'),problems=report?.warning?[report.warning]:[];
-  diag.hidden=!problems.length;diag.innerHTML=problems.length?'<summary>Source details</summary><p>'+esc(problems.join(' · '))+'</p>':'';
-  const defs=[
-    ['spend','Known Paid QRT Spend',gtaMoney(summaries.allocatedPaidSpend),summaries.unknownPaidCosts?'Some payment amounts unknown':'Allocated to verified original posts'],
-    ['seven','Original Post Views',gtaNumber(summaries.quotedPostViews),'Views on quoted source X posts'],
-    ['published','Linked Source Posts',gtaNumber(summaries.originalPosts),'One count per original X post'],
-    ['interactions','Paid QRT Views',gtaNumber(summaries.qrtViews),'Separate from original X views']
-  ];
-  el('gtaMetrics').innerHTML=defs.map(([kind,title,value,sub])=>
-    '<div class="daily-metric daily-metric-'+kind+'"><span class="daily-metric-label">'+esc(title)+
-    '</span><strong>'+esc(value)+'</strong><small>'+esc(sub)+'</small></div>').join('');
-  el('gtaEngagementRate').textContent='—';
-  el('gtaEngagementDetails').textContent='Original posts and QRTs have different X engagement measures; they cannot be combined as unique reach.';
-  el('gtaEngagementButton').setAttribute('aria-expanded','false');
-  el('gtaEngagementDetails').hidden=true;
-  const safeLink=(value,label)=>{
-    const u=safeUrl(value);
-    return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':'<span>Link missing</span>';
+  const show=gtaState.tab==='qrts'&&report?.ready===true&&rows.length>0;
+  panel.hidden=!show;
+  if(!show){panel.replaceChildren();return;}
+  const summary=linked.summary||{};
+  const sourceLink=(url,label)=>{
+    const safe=safeUrl(url);
+    return safe?'<a href="'+esc(safe)+'" target="_blank" rel="noopener noreferrer">'+esc(label)+'</a>':'—';
   };
-  const articles=rows.map(row=>{
-    const children=(row.qrts||[]).map(qrt=>
-      '<li><strong>'+esc(qrt.publisher)+'</strong> · '+esc(gtaNumber(qrt.views))+
-      ' QRT views · '+(qrt.paid?esc(gtaMoney(qrt.cost)):'Payment unverified')+
-      ' · '+safeLink(qrt.postUrl,'Live QRT')+'</li>').join('');
-    const fullOriginal=[row.likes,row.reposts,row.replies].every(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v)));
-    const originalInteractions=fullOriginal?Number(row.likes)+Number(row.reposts)+Number(row.replies):null;
-    const originalRate=originalInteractions!==null&&Number(row.views)>0?
-      (originalInteractions/Number(row.views)*100).toFixed(2)+'%':'—';
-    return '<article class="rpt-quoted-card"><div class="rpt-quoted-card-head"><div><h3>'+esc('@'+row.handle)+
-      '</h3><p>'+safeLink(row.originalUrl,'Open original article post')+'</p></div><span class="rpt-quoted-counter">'+
-      esc(gtaNumber(row.qrtCount))+' linked QRTs</span></div>'+
-      '<p class="rpt-quoted-metric-caption">Verified original X post · lifetime counters (organic exposure included)</p>'+
-      '<dl class="rpt-quoted-data">'+
-        '<div><dt>Original views</dt><dd>'+esc(gtaNumber(row.views))+'</dd></div>'+
-        '<div><dt>Original likes</dt><dd>'+esc(gtaNumber(row.likes))+'</dd></div>'+
-        '<div><dt>Original reposts</dt><dd>'+esc(gtaNumber(row.reposts))+'</dd></div>'+
-        '<div><dt>Original replies</dt><dd>'+esc(gtaNumber(row.replies))+'</dd></div>'+
-        '<div><dt>Original interactions</dt><dd>'+esc(gtaNumber(originalInteractions))+'</dd></div>'+
-        '<div><dt>Original engagement</dt><dd>'+esc(originalRate)+'</dd></div>'+
-      '</dl><p class="rpt-quoted-metric-caption">Separate paid QRT activity, not additional unique reach</p>'+
-      '<dl class="rpt-quoted-data rpt-quoted-qrt-data">'+
-        '<div><dt>QRT views</dt><dd>'+esc(gtaNumber(row.qrtViews))+'</dd></div>'+
-        '<div><dt>Known QRT spend</dt><dd>'+esc(gtaMoney(row.paidSpendKnown))+'</dd></div>'+
-        '<div><dt>Human clicks</dt><dd>'+esc(gtaNumber(row.allTimeHumanClicks))+'</dd></div>'+
-      '</dl><details><summary>Show linked paid QRTs</summary><ul>'+children+
-      '</ul></details><p class="rpt-quoted-updated">X updated '+esc(gtaUKDate(row.metricAt))+
-      '</p></article>';
-  });
-  const missing=summaries.unmatchedQrts||0;
-  el('gtaPublishers').innerHTML=
-    '<p class="rpt-quoted-note">Lifetime views on the original X articles quoted by paid promotions. Source views include organic exposure and must not be added to QRT views as unique reach.</p>'+
-    (missing?'<p class="rpt-quoted-warning">'+esc(gtaNumber(missing))+
-      ' published QRTs are not yet matched to their original X posts. Their views remain in the QRT tab.</p>':'')+
-    (articles.length?'<div class="rpt-quoted-list">'+articles.join('')+'</div>':
-      '<div class="empty-state">No original article links verified yet. Refresh X Stats to retrieve the quoted-post relationships. Existing QRT metrics remain available.</div>');
+  const entries=rows.map(row=>{
+    const complete=[row.likes,row.reposts,row.replies].every(v=>Number.isFinite(v));
+    const interactions=complete?row.likes+row.reposts+row.replies:null;
+    const qrts=(row.qrts||[]).map(qrt=>
+      '<li><strong>'+esc(qrt.publisher||'Publisher')+'</strong>'+
+      '<span>'+esc(gtaNumber(qrt.views))+' QRT views</span>'+
+      '<span>'+esc(qrt.paid?gtaMoney(qrt.cost):'Payment unverified')+'</span>'+
+      '<span>'+esc(gtaNumber(qrt.postPublicationClicks))+' post-publication clicks</span>'+
+      '<span class="gta-quoted-qrt-links">'+sourceLink(qrt.postUrl,'View QRT')+
+      (safeUrl(qrt.profileUrl)?' · '+sourceLink(qrt.profileUrl,'Publisher'):'')+
+      (safeUrl(qrt.trackingUrl)?' · '+sourceLink(qrt.trackingUrl,'Tracking'):'')+
+      '</span></li>').join('');
+    return '<tr><td><strong>'+esc('@'+(row.handle||'X post'))+'</strong>'+
+      '<small>'+sourceLink(row.originalUrl,'Open source X post')+'</small></td>'+
+      '<td>'+esc(gtaNumber(row.qrtCount))+'</td>'+
+      '<td>'+esc(gtaMoney(row.paidSpendKnown))+
+        (row.unknownPaidCosts?' <small class="gta-quoted-partial">Partial</small>':'')+'</td>'+
+      '<td>'+esc(gtaNumber(row.views))+'</td>'+
+      '<td>'+esc(gtaNumber(row.likes))+'</td>'+
+      '<td>'+esc(gtaNumber(row.reposts))+'</td>'+
+      '<td>'+esc(gtaNumber(row.replies))+'</td>'+
+      '<td>'+esc(gtaNumber(interactions))+'</td>'+
+      '<td>'+esc(gtaNumber(row.qrtViews))+'</td>'+
+      '<td>'+esc(gtaNumber(row.postPublicationClicks))+'</td>'+
+      '<td><details class="gta-quoted-qrt-details"><summary>View QRTs</summary>'+
+      '<ul>'+qrts+'</ul></details></td></tr>';
+  }).join('');
+  const missing=Number(summary.unmatchedQrts)||0;
+  panel.innerHTML=
+    '<div class="gta-quoted-header"><div><h2 id="gtaQuotedSourcesTitle">X posts quoted by QRTs</h2>'+
+    '<p>These are the original X posts your paid QRTs quote, not a separate article campaign. Original-post views include organic exposure.</p></div>'+
+    '<div class="gta-quoted-summary">'+
+      '<span><strong>'+esc(gtaNumber(summary.originalPosts))+'</strong> source posts</span>'+
+      '<span><strong>'+esc(gtaNumber(summary.matchedQrts))+'</strong> linked QRTs</span>'+
+      '<span><strong>'+esc(gtaNumber(summary.quotedPostViews))+'</strong> original X views</span>'+
+    '</div></div>'+
+    (missing?'<p class="gta-quoted-warning">'+esc(gtaNumber(missing))+
+      ' published QRTs have no verified quoted-post relationship. Their own X metrics remain recorded above.</p>':'')+
+    '<details class="gta-quoted-collapse"><summary>View source post stats and linked QRTs</summary>'+
+    '<div class="gta-quoted-scroll"><table class="gta-quoted-table account-table">'+
+      '<thead><tr><th>Quoted source X post</th><th>QRTs</th><th>Paid QRT spend</th>'+
+      '<th>Source X views</th><th>Source likes</th><th>Source reposts</th><th>Source replies</th>'+
+      '<th>Source interactions</th><th>QRT views</th><th>Post-publication clicks</th><th>QRT links</th></tr></thead>'+
+      '<tbody>'+entries+'</tbody></table></div></details>'+
+    '<p class="gta-quoted-footnote">Source X views and QRT views are separate counters and must not be added as unique reach. QRT spend is already included in the paid QRT total above.</p>';
 }
 
 function renderGtaReport(){
-  if(gtaState.tab==='quoted'){if(el('gtaTrendCard'))el('gtaTrendCard').hidden=true;renderGtaQuotedArticles();return;}
   const originals=gtaState.tab==='originals';
   const report=originals?gtaState.report?.originals:gtaState.report,ready=report?.ready===true;
   const placements=ready?(report.publishers||[]).filter(p=>originals?['GTA1','GTA2'].includes(p.campaign):p.campaign==='GTAQ'):[];
   const rows=placements.filter(p=>p.posted===true);
-  el('gtaScopeLabel').textContent=originals?'GTA VI · ORIGINAL POSTS & V2':'GTA VI · QRT PROMOTIONS';
+  el('gtaScopeLabel').textContent=originals?'GTA VI · STANDALONE CAMPAIGN POSTS':'GTA VI · PAID QRT PROMOTIONS';
   document.querySelectorAll('[data-gta-tab]').forEach(button=>{
     const active=button.dataset.gtaTab===gtaState.tab;
     button.classList.toggle('is-active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
@@ -1173,7 +1157,7 @@ function renderGtaReport(){
   const knownPaid=paid.filter(p=>p.cost!==null&&Number.isFinite(Number(p.cost)));
   const spend=report?.summary?.paidSpend??(ready?knownPaid.reduce((n,p)=>n+Number(p.cost),0):null);
   const seen=posted.filter(p=>p.views!==null&&p.views!==undefined),views=seen.length?seen.reduce((n,p)=>n+Number(p.views),0):null;
-  const defs=[['spend',originals?'Paid Post Spend':'Paid QRT Spend',gtaMoney(spend),`${knownPaid.length} paid ${originals?'posts':'QRTs'}`],['seven','X Views',gtaNumber(views),`${seen.length} of ${posted.length} live posts with verified views`],['published','Published Posts',ready?fmt(report?.summary?.publishedPosts??posted.length):'—',originals?'GTA VI · original posts & V2':'GTA VI · published QRT promotions']];
+  const defs=[['spend',originals?'Paid Standalone Spend':'Paid QRT Spend',gtaMoney(spend),`${knownPaid.length} paid ${originals?'standalone posts':'QRTs'}`],['seven','X Views',gtaNumber(views),`${seen.length} of ${posted.length} live posts with verified views`],['published',originals?'Published Posts':'Published QRTs',ready?fmt(report?.summary?.publishedPosts??posted.length):'—',originals?'GTA VI · standalone posts including V2':'GTA VI · paid QRT promotions']];
   const interactions=interactionSummary(posted);
   defs.push(['interactions','Total Interactions',gtaNumber(interactions.total),interactions.note]);
   renderEngagement('gta',ready?posted:[]);
@@ -1191,7 +1175,8 @@ function renderGtaReport(){
 
     return `<article class="of-publisher-entry"><${tag}${attributes} data-shortio-tracked="${Boolean(p.trackingUrl&&p.clickTracked!==false)}" data-shortio-clicks="${esc(p.clicks??'')}" data-shortio-cpc="${esc(p.cpc??'')}" data-shortio-note="${esc(p.clickError||clickNote)}" data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${info}</${tag}><p class="of-last-click">${esc(subtitle)}${esc(clickNote)}${p.metricAt?' · X updated '+esc(gtaUKDate(p.metricAt)):''}</p><div class="of-publisher-links">${gtaSafeLink(p.profileUrl,'X profile')}${gtaSafeLink(p.postUrl,'View post')}</div></article>`;
   }).join('')||'<div class="empty-state">No posts in this group.</div>'}</div></section>`;
-  el('gtaPublishers').innerHTML=ready?section('Published X posts',posted):'<div class="empty-state">GTA VI data is temporarily unavailable.</div>';
+  el('gtaPublishers').innerHTML=ready?section(originals?'Published standalone posts':'Published QRTs',posted):'<div class="empty-state">GTA VI data is temporarily unavailable.</div>';
+  renderGtaQuotedSources();
 }
 async function loadGtaReport(force=false){
   if(gtaState.loading)return gtaState.loading;
