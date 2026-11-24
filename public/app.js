@@ -7,7 +7,6 @@ const TZ='Europe/London',el=id=>document.getElementById(id)||detachedNode(id);
 const detachedNodes=new Map();
 function detachedNode(id){let node=detachedNodes.get(id);if(!node){node=document.createElement(/Select$/.test(id)?'select':'div');detachedNodes.set(id,node);}return node;}
 const legacyView=id=>Boolean(document.getElementById(id));
-const announce=source=>window.dispatchEvent(new CustomEvent('xtracker:data',{detail:{source}}));
 const APP_VERSION='5.0.40';
 const fmt=n=>new Intl.NumberFormat('en-GB',{maximumFractionDigits:0}).format(Number(n));
 const money=n=>n===null||n===undefined?'—':'$'+fmt(n);
@@ -605,7 +604,7 @@ function tickAges(){
 }
 // Background updates can replace tables before their observer rebuilds them.
 // Restore after that frame, provided the reader has not navigated or interacted.
-function preserveReadingPosition(update){queueMicrotask(()=>announce('reports'));
+function preserveReadingPosition(update){
   const x=window.scrollX,y=window.scrollY,page=state.page;
   const active=document.activeElement;
   const tableKey=active?.closest('.xt-table-wrap')?.dataset.viewKey;
@@ -759,7 +758,7 @@ function normaliseActivity(rows){if(!Array.isArray(rows))return [];
   return rows.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&/^A\d{2}-P\d{2,3}$/.test(x.code)&&number(x.clicks)!==null&&number(x.clicks)>=0)
     .map(x=>({date:x.date,code:x.code,clicks:Number(x.clicks)}));
 }
-function updateStatus(data=null,error=null){announce('dashboard');
+function updateStatus(data=null,error=null){globalThis.dispatchEvent?.(new CustomEvent('xtracker:data'));
   const bar=el('feedWarning');
   const unavailable=Boolean(error)||data?.trackingReady===false;
   bar.hidden=!unavailable;
@@ -957,7 +956,7 @@ function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix
   for(const child of [...card.children])if(child!==target)child.remove();
   return !!html;
 }
-function renderOfReport(){if(!legacyView('ofMetrics'))return;
+function renderOfReport(){globalThis.dispatchEvent?.(new CustomEvent('xtracker:data'));if(!legacyView('ofMetrics'))return;
   const report=state.ofCampaign,ready=report?.ready===true;
   const today=day(new Date());
   el('ofWeekLabel').textContent='All-time stats';
@@ -1185,7 +1184,7 @@ function renderGtaQuotedSources(){
     '<p class="gta-quoted-footnote">Original and QRT views are separate. Spend is included above.</p>';
 }
 
-function renderGtaReport(){if(!legacyView('gtaMetrics'))return;
+function renderGtaReport(){globalThis.dispatchEvent?.(new CustomEvent('xtracker:data'));if(!legacyView('gtaMetrics'))return;
   const originals=gtaState.tab==='originals';
   const report=originals?gtaState.report?.originals:gtaState.report,ready=report?.ready===true;
   const placements=ready?(report.publishers||[]).filter(p=>originals?['GTA1','GTA2'].includes(p.campaign):p.campaign==='GTAQ'):[];

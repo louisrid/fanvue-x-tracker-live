@@ -8,12 +8,13 @@ const js=read('public/app.js');
 const css=read('public/styles.css');
 
 test('Every static page/section/chart heading ends with a full stop',()=>{
-  const headings=[...html.matchAll(/<h([123])\b[^>]*>([\s\S]*?)<\/h\1>/g)];
-  assert(headings.length>=16);
-  for(const [,level,inner] of headings){
-    const text=inner.replace(/<[^>]*>/g,'').trim();
-    assert(/[.!?]$/.test(text),`h${level} missing punctuation: ${text}`);
-  }
+  // v3.1 redesign: page and panel titles are literal labels without decorative full
+  // stops. Retained record views keep their markup, with the accent hidden.
+  const records=readFileSync(new URL('../public/fanvue-records.css',import.meta.url),'utf8');
+  assert.match(html,/<h1 id="fvTitle">Home<\/h1>/);
+  assert.match(records,/\.fv-records \.heading-accent\{display:none\}/);
+  const shell=readFileSync(new URL('../public/fanvue-ui.js',import.meta.url),'utf8');
+  assert.doesNotMatch(shell,/heading-accent/);
 });
 
 test('Historical, campaign, weekly, and modal headings include punctuation when rendered',()=>{

@@ -21,12 +21,13 @@ test('homepage headline cards use vivid pink and blue gradients, white figures a
 });
 
 test('wordmark has larger top than bottom padding and navigation is centred',()=>{
-  const s=css.slice(css.indexOf('/* X Tracker v4.7.4: smaller, brighter campaign KPI bar'));
-  assert(s.includes('padding-top:27px'));
-  assert(s.includes('padding-bottom:16px'));
-  assert(s.includes('gap:17px'));
-  assert(s.includes('.mobile-nav-item'));
-  assert(html.includes('<span class="brand-name">X TRACKER</span>'));
+  // v3.1 redesign: the sidebar wordmark sits at the navigation inset with more space
+  // above than below, and the mobile layout keeps navigation in a drawer.
+  const fv=read('../public/fanvue.css');
+  assert(fv.includes('.fv-sidebar{width:var(--fv-side-w);flex-shrink:0;background:var(--fv-sidebar);color:var(--fv-sidebar-text);padding:26px 13px 22px}'));
+  assert(fv.includes('.fv-wordmark{display:block;margin:2px 11px 31px;line-height:0}'));
+  assert(html.includes('id="fvMenu"'));
+  assert(html.includes('alt="Fanvue"'));
 });
 
 test('mobile home filters are compact scrollable and the placement advanced filters are accessible',()=>{

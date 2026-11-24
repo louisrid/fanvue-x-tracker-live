@@ -95,9 +95,14 @@ test('Every native report table can be sorted; stale weekly article drawer is re
   const tableJs=readFileSync('public/xtracker-tables.js','utf8');
   const html=readFileSync('public/index.html','utf8');
   const reporting=readFileSync('public/campaign-reporting.js','utf8');
+  const ui=readFileSync('public/fanvue-ui.js','utf8');
   assert.match(tableJs,/#mainContent table:not\(\.xt-data-table\)/);
   assert.match(tableJs,/setAttribute\('aria-sort'/);
   assert.match(reporting,/Paid RT spend/);
   assert.match(reporting,/Original X views/);
-  assert.match(html,/dashboard-article-drawer" hidden inert aria-hidden="true"/);
+  // v3.1 redesign: the stale weekly article drawer is removed entirely, and the new
+  // results tables sort from explicit, accessible header controls.
+  assert.doesNotMatch(html,/dashboard-article-drawer/);
+  assert.match(ui,/aria-sort="'\+dir\+'"/);
+  assert.match(ui,/data-sort="'\+esc\(c\.key\)\+'"/);
 });

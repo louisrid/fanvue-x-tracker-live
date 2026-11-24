@@ -6,10 +6,11 @@ const css=src('../public/styles.css'), app=src('../public/app.js'),html=src('../
 const prefs=src('../public/click-preferences.html'),api=src('../netlify/functions/dashboard.mjs');
 const next=css.slice(css.indexOf('/* X Tracker v4.7.8'));
 test('the page and click-exclusion background is solid white, including iPhone chrome',()=>{
- assert(next.includes('--page:#ffffff;'));
- assert(next.includes('html {background:var(--page);}'));
- assert(next.includes('body {background:var(--page);}'));
- assert(html.includes('name="theme-color" content="#ffffff"'));
+ // v3.1 redesign: the dashboard uses the pale blue-white workspace with white panels and a
+ // black mobile top bar; the click-exclusion page keeps its solid white background.
+ const fv=src('../public/fanvue.css');
+ assert(fv.includes('--fv-outer:#EBF3FC;--fv-canvas:#F5F8FC;--fv-surface:#FFFFFF;'));
+ assert(html.includes('name="theme-color" content="#000000"'));
  assert(prefs.includes('name="theme-color" content="#ffffff"'));
  assert(prefs.includes('background:#ffffff'));
 });

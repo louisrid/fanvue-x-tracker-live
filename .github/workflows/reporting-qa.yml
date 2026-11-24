@@ -33,12 +33,15 @@ jobs:
           node --check public/app.js
           node --check public/campaign-reporting.js
           node --check public/xtracker-tables.js
+          node --check public/fanvue-core.js
+          node --check public/fanvue-ui.js
+          node --check public/fanvue-app.js
           node --check netlify/functions/gta-report.mjs
           node --check netlify/functions/campaign-overview.mjs
           node --check netlify/lib/quoted-originals.mjs
           node --check netlify/lib/gta-x-metrics.mjs
       - name: Run new reporting, GTA, X and integrity tests
-        run: node --test tests/campaign-reporting.test.mjs tests/article-rt-source-reconciliation.test.mjs tests/native-table-sort-behaviour.test.mjs tests/final-visual-simplification.test.mjs tests/lifetime-reporting-defaults.test.mjs tests/gta-navigation-simplification.test.mjs tests/gta-x-metrics.test.mjs tests/gta-qrts.test.mjs tests/reporting-integrity.test.mjs tests/boosts.test.mjs
+        run: node --test tests/campaign-reporting.test.mjs tests/article-rt-source-reconciliation.test.mjs tests/native-table-sort-behaviour.test.mjs tests/final-visual-simplification.test.mjs tests/lifetime-reporting-defaults.test.mjs tests/gta-navigation-simplification.test.mjs tests/gta-x-metrics.test.mjs tests/gta-qrts.test.mjs tests/reporting-integrity.test.mjs tests/boosts.test.mjs tests/fanvue-dashboard.test.mjs
       - name: Compare full regression suite against untouched production main
         if: github.ref != 'refs/heads/main'
         shell: bash

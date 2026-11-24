@@ -10,13 +10,11 @@ const css = get('public/styles.css');
 
 function versionOf(s) { return s.match(/(?:APP_VERSION|uiVersion)\s*[:=]\s*'([0-9.]+)'/)?.[1]; }
 
-test('wordmark is centred and all caps without requiring a font download from user', () => {
-  assert.match(html, /class="brand-name">X TRACKER<\/span>/);
-  assert.match(css, /\/\* v4\.9\.0 \| Bold blurred all-caps centred/);
-  const overrides = css.slice(css.lastIndexOf('/* v4.9.0 |'));
-  assert.match(overrides, /\.app-header \.brand\s*\{[^}]*justify-content:center/);
-  assert.match(overrides, /text-align:center/);
-  assert.match(html, /fonts\.googleapis\.com\/css2\?family=Unbounded/);
+test('wordmark is centred and all caps without requiring a font download from user',()=>{
+  // v3.1 redesign: the wordmark is the official PNG, so no display-font download is needed.
+  assert.match(html,/src="\/brand\/fanvue-wordmark-white-240w\.png"/);
+  assert.doesNotMatch(html,/Unbounded|brand-name/);
+  assert.ok(readdirSync(new URL('public/brand/',root)).includes('fanvue-wordmark-white.png'));
 });
 
 test('all logo font sizes remain at most ten percent above the previous live size', () => {

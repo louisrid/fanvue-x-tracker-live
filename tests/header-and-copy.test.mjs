@@ -7,15 +7,13 @@ const js=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
 const backend=readFileSync(new URL('../netlify/functions/dashboard.mjs',import.meta.url),'utf8');
 
 test('X Tracker wordmark remains on all pages, bigger, bold and visually centred',()=>{
-  assert(html.includes('<a class="brand" href="#dashboard"'));
-  assert(html.includes('<span class="brand-name">X TRACKER</span>'));
-  assert(css.includes('/* X Tracker v4.7.3 - centred wordmark and full-height segmented navigation. */'));
-  const tail=css.slice(css.indexOf('/* X Tracker v4.7.3'));
-  assert(tail.includes('font-size:32px'));
-  assert(tail.includes('font-weight:900'));
-  assert(tail.includes('align-self:center'));
-  assert(css.includes('padding-top:27px'));
-  assert(tail.includes('text-align:center'));
+  // v3.1 redesign: the official white Fanvue wordmark replaces the X Tracker text logo
+  // in the sidebar and the mobile top bar, served at 2x/3x from public/brand.
+  assert.equal((html.match(/<img src="\/brand\/fanvue-wordmark-white-240w\.png" srcset="\/brand\/fanvue-wordmark-white-240w\.png 2x, \/brand\/fanvue-wordmark-white-360w\.png 3x"/g)||[]).length,2);
+  assert.match(html,/width="120" height="28" alt="Fanvue"/);
+  assert.doesNotMatch(html,/X TRACKER/);
+  const fv=readFileSync(new URL('../public/fanvue.css',import.meta.url),'utf8');
+  assert.match(fv,/\.fv-wordmark img\{width:120px;height:auto;display:block\}/);
 });
 test('header navigation has three equally sized tabs with full-height dividers',()=>{
   const nav=html.match(/<nav class="mobile-nav".*?<\/nav>/s)?.[0]||'';
