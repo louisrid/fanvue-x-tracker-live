@@ -195,58 +195,6 @@
       (c.trackingWarning?'<p class="rpt-warning">'+esc(c.trackingWarning)+'</p>':'')+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
   }
-  function articleSources(){
-    const quoted=item('gta-qrts')?.quotedOriginals;
-    if(!quoted)return header('Quoted originals','Awaiting verified X quote relationships')+empty('No linked original-post report has been returned yet. Refreshing the existing X metrics may populate it.');
-    const records=quoted.rows||[];
-    const summary=quoted.summary||{};
-    const intro=header('Original posts boosted by QRTs','Each source article is listed once, with its linked paid promotions.');
-    const stats='<dl class="rpt-stats">'+[
-      metric('Original posts',format(summary.originalPosts),'Provider-verified links'),
-      metric('Original views',format(summary.quotedPostViews),'Separate from QRT views'),
-      metric('QRT views',format(summary.qrtViews),'On matched QRTs only'),
-      metric('Matched QRTs',format(summary.matchedQrts),'Of '+format(summary.publishedQrts)+' published')
-    ].join('')+'</dl>';
-    const warning=summary.unmatchedQrts?'<p class="rpt-warning">'+esc(format(summary.unmatchedQrts)+' QRTs are not yet linked to a verified original post. Their views are not assigned to an article.')+'</p>':'';
-    if(!records.length)return intro+stats+warning+empty('No source-post relationships are verified yet. QRT metrics will remain available separately.');
-    const rows=records.map(r=>[
-      '<strong>'+esc('@'+r.handle)+'</strong><small class="rpt-rowmeta">'+link(r.originalUrl,'Original X post')+'</small>',
-      esc(format(r.views)),esc(format(r.qrtCount)),esc(format(r.qrtViews)),
-      esc(usd(r.paidSpendKnown))+(r.unknownPaidCosts?' <small>Partial</small>':''),
-      esc(format(r.allTimeHumanClicks)),esc(date(r.metricAt))
-    ]);
-    const details=records.map(r=>
-      '<details class="rpt-expander"><summary><strong>'+esc('@'+r.handle)+'</strong><span>'+esc(format(r.qrtCount))+' linked QRTs · '+esc(format(r.qrtViews))+' QRT views</span></summary>'+
-      grid(['Paid QRT publisher','X views','Paid cost','Human clicks','Post-publication clicks','Live QRT'],
-      (r.qrts||[]).map(q=>[
-        '<strong>'+esc(q.publisher)+'</strong>',esc(format(q.views)),q.paid?esc(usd(q.cost)):'—',
-        esc(format(q.allTimeHumanClicks)),esc(format(q.postPublicationClicks)),link(q.postUrl,'View QRT')
-      ]))+'</details>').join('');
-    return intro+stats+warning+grid(['Original post','Original views','QRTs','QRT views','Known paid spend','Human clicks','Last X reading'],rows)+
-      '<div class="rpt-expanders">'+details+'</div>'+
-      '<p class="rpt-note">Original-post views include organic exposure. QRT views reflect only the separate posts quoted by each publisher. They must not be added together as unique reach.</p>';
-  }
-  function renderOverview(){
-    const unlinked=list().filter(c=>!hasFeed(c));
-    const sourceNote=unlinked.length?'<p class="rpt-note"><strong>No verified campaign posts linked:</strong> '+
-      esc(unlinked.map(c=>c.name).join(', '))+'. Their feeds are not connected; this does not prove that no posts exist. Other Campaigns is a grouping, not a separate post feed.</p>':'';
-    return header('Campaign overview','All available campaigns · lifetime totals without date filters')+
-      sourceNote+'<p class="rpt-note">Each source is shown separately to avoid double-counting shared campaigns and article views.</p>'+
-      grid(['Campaign','Data source','Paid spend','Published','X views','Tracked clicks','Conversions'],list().map(c=>[
-        '<button class="rpt-rowbutton" data-report-jump="'+esc(c.id.startsWith('gta-')?'gta':c.id==='of-terms'?'of':c.id==='article-rts'?'article-rt':c.id==='guru-rts'?'guru':c.id==='ai-harness'?'harness':c.id==='discord'?'discord':'articles')+'">'+esc(c.name)+'</button>',
-        badge(c),usd(c.paidSpendKnown),published(c),hasFeed(c)?format(c.views):'—',hasFeed(c)?format(clicks(c)):'—','<span class="rpt-missing">Not connected</span>'
-      ]))+note;
-  }
-  function renderArticleGroups(){
-    const campaign=item('x-articles'),groups=campaign?.sourceCampaigns||[];
-    if(!groups.length)return empty('No historical article campaign groups returned.');
-    return header('Campaigns')+
-      grid(['Campaign','Status','Placements','Published','Paid spend · all-time','X views','Tracked clicks'],groups.map(c=>[
-        '<strong>'+esc(c.name)+'</strong><small class="rpt-rowmeta">'+esc(c.id)+'</small>',
-        esc(c.status||'Recorded'),format(c.placements),format(c.published),
-        usd(c.paidSpendKnown),format(c.xViews),format(c.trackedClicks)
-      ]));
-  }
   function paidArticleRtGroups(c,compact=false){
     const groups=c?.articleRtGroups||[],unlinked=c?.articleRtUnlinked||[],
       summary=c?.articleRtSummary;
