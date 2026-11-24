@@ -9,10 +9,10 @@ const reporting=readFileSync('public/campaign-reporting.js','utf8');
 
 test('GTA VI has exactly two actual campaign tabs and no phantom Boosted articles tab',()=>{
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  // v3.1 redesign: GTA VI views are All formats plus the two real X source groups and
-  // Instagram (shown as not connected); there is no phantom boosted-articles view.
+  // v3.1 redesign: GTA VI views are All formats plus the two real X source groups; views
+  // without data (Instagram, not connected) are left out, and there is no boosted-articles view.
   const views=[...shell.matchAll(/\{key:'(all-formats|x-original-posts|x-quote-posts|instagram|[a-z-]*boost[a-z-]*)',label:'[^']+'\}/g)].map(match=>match[1]);
-  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts','instagram']);
+  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts']);
   assert.doesNotMatch(shell,/Boosted articles/);
   assert.doesNotMatch(app,/renderGtaQuotedArticles|gtaTabQuoted|ARTICLES BOOSTED BY QRTS/);
   assert.match(shell,/IG Accounts 3\) needs a separate approved adapter/);

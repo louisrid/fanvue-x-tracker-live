@@ -7,7 +7,7 @@
   --fv-ink:#000000;--fv-muted:#000000;--fv-label:#000000;
   /* Three font sizes, two weights, three radii and one faint line style, used everywhere. */
   --fv-w:720;--fv-w-strong:880;
-  --fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;
+  --fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;--fv-fs-hero:46px;
   --fv-r-s:6px;--fv-r-m:8px;--fv-r-l:10px;
   --fv-dark:#000000;--fv-dark-text:#FFFFFF;--fv-dark-rule:#262626;--fv-dark-soft:#202020;
   --fv-blue:#0A58B8;--fv-line:#0B6FD6;--fv-area:#B7D8FA;--fv-chip-blue:#D6E8FD;
@@ -252,8 +252,9 @@ body.fv .toast{position:fixed;right:20px;bottom:20px;z-index:90;max-width:360px;
   .fv-strip .fv-metric:nth-child(3n){border-right:0}
   .fv-metric-value{font-size:var(--fv-fs-xl)}
   .fv-detail-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .fv-table{min-width:760px}
-  .fv-table.is-aligned{min-width:860px}
+  /* Narrow screens scroll wide tables sideways; tables with few columns fit the card. */
+  .fv-table{min-width:min(760px,calc(var(--cols,6)*150px))}
+  .fv-table.is-aligned{min-width:min(860px,calc(var(--cols,6)*150px))}
 }
 @media (max-width:1023px){
   :root{--fv-side-w:168px}
@@ -263,7 +264,7 @@ body.fv .toast{position:fixed;right:20px;bottom:20px;z-index:90;max-width:360px;
   .fv-inline-metrics>div:nth-child(2n){border-right:0}
 }
 @media (max-width:767px){
-  :root{--fv-fs-xl:24px;--fv-pad:14px;--fv-gap:14px}
+  :root{--fv-fs-xl:24px;--fv-fs-hero:34px;--fv-pad:14px;--fv-gap:14px}
   .fv-shell{display:block;margin:0;border-radius:0;min-height:100vh}
   .fv-mobile-top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 10px 0 16px;background:#000;color:#fff}
   .fv-mobile-top .fv-wordmark{margin:0}
@@ -451,3 +452,22 @@ body.fv-editor-open{overflow:hidden}
 .fv-hidden-note{cursor:help}
 @media (max-width:767px){.fv-metric.is-merged{grid-column:1/-1;border-right:0!important}}
 .fv-table td.is-merged{text-align:center}
+
+/* ---------- big key numbers ---------- */
+/* Only figures with data appear, so each slot is wide enough for large numbers. */
+.fv-strip{min-height:180px;padding:30px 0}
+.fv-strip .fv-metric{gap:12px;padding:0 28px;justify-content:flex-start}
+.fv-strip .fv-metric-label{font-size:var(--fv-fs-l);line-height:24px;min-height:34px;gap:12px}
+.fv-strip .fv-metric-label .fv-chipicon{width:34px;height:34px}
+.fv-strip .fv-metric-value{font-size:var(--fv-fs-hero);line-height:1.05;letter-spacing:-1.4px;min-height:0}
+.fv-strip .fv-chip{font-size:var(--fv-fs-s);padding:3px 8px}
+.fv-blank{display:inline-block;min-width:1px}
+.fv-plain{margin:0;font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong)}
+@media (min-width:1600px){.fv-strip{min-height:190px}}
+@media (max-width:1279px){.fv-strip .fv-metric{padding:0 20px}}
+@media (max-width:767px){
+  .fv-strip{padding:0;min-height:0}
+  .fv-strip .fv-metric,.fv-strip .fv-metric:nth-child(3n){padding:18px 16px;min-height:130px}
+  .fv-strip .fv-metric-label{font-size:var(--fv-fs-s);line-height:16px;min-height:28px}
+  .fv-strip .fv-metric-label .fv-chipicon{width:28px;height:28px}
+}

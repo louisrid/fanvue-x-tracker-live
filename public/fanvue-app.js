@@ -80,9 +80,9 @@
   const FEED_DOWN='The reporting feed is unavailable and this browser has no saved copy yet. Retry shortly.';
   const loadingStrip=labels=>U.strip(labels.map(([l,i])=>metric(l,i,feedDown()?M.na(FEED_DOWN):M.loading())));
   const waiting=text=>feedDown()?'Data is temporarily unavailable. Last verified figures will show once the feed responds.':text;
-  const money=v=>C.num(v)===null?U.reasonButton('Not available','No cost recorded in the source.'):esc(C.money(v));
-  const count=v=>C.num(v)===null?U.reasonButton('Not available',''):esc(C.full(v));
-  const when=v=>v?esc(C.stamp(v)):U.reasonButton('Not available','No timestamp recorded.');
+  const money=v=>C.num(v)===null?'':esc(C.money(v));
+  const count=v=>C.num(v)===null?'':esc(C.full(v));
+  const when=v=>v?esc(C.stamp(v)):'';
   const pubStatus=r=>r.posted===true?U.status('Published','good'):r.stage==='booked'?U.status('Booked'):r.stage==='planned'?U.status('Planned'):r.paid?U.status('Awaiting publication','warn'):U.status('Not published');
   const payStatus=r=>r.paid===true?U.status('Paid','good'):C.num(r.cost)!==null?U.status('Unpaid'):U.status('No cost recorded');
   const placementSpend=r=>r.paid===true?(C.num(r.cost)===null?M.na('Paid, but no cost is recorded.'):M.value(r.cost)):
@@ -92,9 +92,8 @@
     if(!C.postId(r.postUrl))return M.na('No X post link recorded.');
     return M.na(r.metricError||'No verified X reading yet.');};
   const accountName=(r,iconName='user')=>'<span class="fv-name">'+U.marker(iconName,'',{plain:true})+'<span>'+esc(r.publisher||r.name||r.handle||'Unnamed account')+'</span></span>';
-  const liveLink=r=>r.posted===true&&C.safeUrl(r.postUrl)?U.extLink(r.postUrl,'Open live post by '+(r.publisher||'publisher'),{iconOnly:true}):
-    U.reasonButton('Not available',r.posted===true?'No live post link recorded.':'Not published yet.');
-  const trackingText=url=>url?'<span class="fv-mono">'+esc(url)+'</span>':U.reasonButton('Not available','No tracking link recorded.');
+  const liveLink=r=>r.posted===true&&C.safeUrl(r.postUrl)?U.extLink(r.postUrl,'Open live post by '+(r.publisher||'publisher'),{iconOnly:true}):'';
+  const trackingText=url=>url?'<span class="fv-mono">'+esc(url)+'</span>':'';
   const engagement=r=>{const l=C.num(r.likes??r.xLikes),rp=C.num(r.reposts??r.xShares),re=C.num(r.replies??r.xComments),v=C.num(r.views??r.xViews);
     if([l,rp,re].some(x=>x===null))return U.reasonButton('Not available','Some engagement counters are missing.');
     return esc(C.full(l)+' likes · '+C.full(rp)+' reposts · '+C.full(re)+' replies'+(v>0?' · '+((l+rp+re)/v*100).toFixed(2)+'%':''));};
@@ -142,7 +141,7 @@
       reason:'No combined weekly series is shown: campaign feeds start on different dates and partly overlap, so adding them would create false jumps. Weekly charts are on',
       links:' <a href="#x-articles">X Articles</a>, <a href="#of-terms">OF Terms</a> and <a href="#guru-promotion">Guru Promotion</a>.'}},{});
     const rows=S?S.map(s=>({...s,def:C.CAMPAIGNS.find(c=>c.key===s.key)})):[];
-    const table=U.tablePanel({id:'home-results',title:'Campaign results',icon:'layers',rows,rowKey:r=>r.key,rowLabel:r=>r.def.name,widths:ALIGNED,
+    const table=U.tablePanel({id:'home-results',title:'Campaign results',icon:'layers',rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.def.name,widths:ALIGNED,
       empty:S?'No campaigns.':waiting('Loading campaign results…'),countLabel:n=>n===1?'campaign':'campaigns',
       columns:[
         {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>';},sort:r=>r.def.name},
@@ -230,20 +229,16 @@
       netSeries.length>=1?{key:'net',label:'Net membership growth',title:'Net membership growth by week',series:netSeries,format:'signed',unit:'Net growth',kinds:['bar','line','table']}:null,
       endSeries.length>=2?{key:'members',label:'Total members',title:'Members at week end',series:endSeries,unit:'Members',kinds:['line','bar','table']}:null
     ].filter(Boolean),empty:{title:'Net membership growth by week',reason:first?'Weekly growth needs daily snapshots across two weeks. Snapshots began '+C.dayLong(first)+'.':'No dated membership snapshots are available yet.'}},pageState('discord').chart);
-    const view=st.view==='growth-sources'?'growth-sources':'weekly-history';
-    const table=view==='weekly-history'?U.tablePanel({id:'discord-table',title:'Weekly history',icon:'users',view,views:[{key:'growth-sources',label:'Growth sources'},{key:'weekly-history',label:'Weekly history'}],
+    const table=U.tablePanel({id:'discord-table',title:'Weekly history',icon:'users',dropEmptyRows:true,
       rows:weeks.filter(w=>w.snapshots).slice().reverse(),rowKey:r=>r.week,
-      empty:members?'No dated snapshots yet.':waiting('Loading membership history…'),
       columns:[
         {key:'week',label:'Week',type:'name',html:r=>esc(r.range)+(r.incomplete?' '+U.status('In progress'):''),sort:r=>r.week},
         {key:'start',label:'Start members',get:r=>r.start===null?M.na('No snapshot from the previous week.'):M.value(r.start)},
         {key:'joins',label:'Joins',get:()=>M.notTracked('Not tracked by the member endpoint.')},
         {key:'departures',label:'Departures',get:()=>M.notTracked('Not tracked by the member endpoint.')},
-        {key:'net',label:'Net growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week’s snapshot.'):M.value(r.value)},
+        {key:'net',label:'Net growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week\u2019s snapshot.'):M.value(r.value)},
         {key:'end',label:'End members',get:r=>M.value(r.end)}
-      ]},tableState('discord','discord-table')):
-      U.tablePanel({id:'discord-table',title:'Growth sources',icon:'users',view,views:[{key:'growth-sources',label:'Growth sources'},{key:'weekly-history',label:'Weekly history'}],rows:[],rowKey:r=>r.key,
-        empty:'No growth-source data is connected. Joins, valid referrals and attribution need a source; no sources are shown until one exists.',columns:[]},tableState('discord','discord-table'));
+      ]},tableState('discord','discord-table'));
     return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:strip+chart+table};
   }
 
@@ -307,7 +302,6 @@
       table=U.tablePanel({id:'xa-rt',title:'Paid reposts',icon:'refresh',view,views,search:true,filters:placementFilter('x-articles','xa-rt'),filter:applyFilter(ts.filter),
         rows:rt?.rows||[],rowKey:r=>r.id||r.sourceRow,rowLabel:r=>r.publisher,minWidth:900,searchText:r=>r.publisher,
         empty:rt?(rt.unavailable?'Paid repost source unavailable.':'No paid reposts recorded.'):waiting('Loading paid reposts…'),
-        notice:rt?.trackingWarning?'<div class="fv-notice" role="note">'+U.icon('alert',15)+'<span>'+esc(rt.trackingWarning)+'</span></div>':'',
         columns:repostColumns(),expand:r=>repostDetail(r)},ts);
     }
     const pending=(xa?.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length,rtPending=(rt?.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length,unl=rt?.articleRtSummary;
@@ -316,7 +310,7 @@
       rtPending?U.supportLine(U.status('Pending','warn')+' '+esc(rtPending+' paid reposts not marked published in the sheet'),'<a href="#x-articles/paid-reposts">Review</a>'):'',
       unl?.unlinkedPaidCount?U.supportLine(U.status('Missing link','warn')+' '+esc(unl.unlinkedPaidCount+' paid reposts ('+C.money(unl.unlinkedPaidSpendKnown)+') have no original post link; costs are kept'),'<a href="#x-articles/paid-reposts">Review</a>'):''
     ].join('');
-    const support=(delivery?U.supportPanel('Delivery','check',delivery+U.supportLine('','Original-post and paid repost metrics are kept separate')):'')+
+    const support=(delivery?U.supportPanel('Delivery','check',delivery):'')+
       U.supportPanel('Records and editing','edit','<div class="fv-records-links"><a class="fv-control" href="#placements">'+U.icon('doc',15)+'Article tracker</a><a class="fv-control" href="#accounts">'+U.icon('users',15)+'Accounts</a><a class="fv-control" href="#campaigns">'+U.icon('layers',15)+'Campaigns</a></div>');
     return {title:'X Articles',chip:'x-articles',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||xa?.sourceStale||xa?.dataWarning),body:overviewNotice()+strip+chart+table+support};
   }
@@ -358,8 +352,8 @@
     ]);
     const IG='Not connected: the GTA report reads the X tabs only. Instagram (IG Accounts 3) needs a separate approved adapter.';
     const fmt=[{label:'X original posts',c:og},{label:'X quote posts',c:qr}];
-    const spendCats=s?[...fmt.map(f=>{const m=C.spendOf(f.c);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};}),{label:'Instagram',value:null,state:'Not connected',reason:IG}]:[];
-    const viewCats=s?[...fmt.map(f=>{const m=C.viewsOf([f.c]);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};}),{label:'Instagram',value:null,state:'Not connected',reason:IG}]:[];
+    const spendCats=s?[...fmt.map(f=>{const m=C.spendOf(f.c);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};})]:[];
+    const viewCats=s?[...fmt.map(f=>{const m=C.viewsOf([f.c]);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};})]:[];
     const weekly=gr?C.snapshotSeries([...(gr.history||[]),...(gr.originals?.history||[])]).map(p=>({...p,extra:p.count+' posts with a reading'})):[];
     const ms=[
       spendCats.length?{key:'spend-format',label:'Paid spend by format',title:'Paid spend by format',categories:spendCats,format:'moneyShort',tipFormat:'money',unit:'Paid spend'}:null,
@@ -368,11 +362,11 @@
     ].filter(Boolean);
     if(weekly.length>=3)ms.unshift(ms.pop());
     const chart=U.chartPanel({id:'gta-chart',measures:ms,empty:{title:'Paid spend by format',reason:waiting('Loading GTA VI results…')}},pageState('gta-vi').chart);
-    const view=['x-original-posts','x-quote-posts','instagram'].includes(st.view)?st.view:'all-formats';
-    const views=[{key:'all-formats',label:'All formats'},{key:'x-original-posts',label:'X original posts'},{key:'x-quote-posts',label:'X quote posts'},{key:'instagram',label:'Instagram'}];
+    const view=['x-original-posts','x-quote-posts'].includes(st.view)?st.view:'all-formats';
+    const views=[{key:'all-formats',label:'All formats'},{key:'x-original-posts',label:'X original posts'},{key:'x-quote-posts',label:'X quote posts'}];
     let table;
     if(view==='all-formats'){
-      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og},{key:'x-quote-posts',name:'X quote posts',c:qr},{key:'instagram',name:'Instagram',c:null}]:[];
+      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og},{key:'x-quote-posts',name:'X quote posts',c:qr}]:[];
       table=U.tablePanel({id:'gta-table',title:'Promotion results',icon:'layers',view,views,rows,rowKey:r=>r.key,rowLabel:r=>r.name,widths:ALIGNED,empty:waiting('Loading promotion results…'),
         columns:[
           {key:'name',label:'Promotion type',type:'name',html:r=>'<a class="fv-name" href="#gta-vi/'+esc(r.key)+'">'+U.marker('gamepad','',{plain:true})+'<span>'+esc(r.name)+'</span></a>',sort:r=>r.name},
@@ -383,8 +377,6 @@
           {key:'published',label:'Published posts',get:r=>r.c&&!r.c.unavailable?M.value(r.c.published):M.na(r.c?'Source unavailable.':IG)},
           {key:'paid',label:'Paid placements',get:r=>r.c&&!r.c.unavailable?M.value(r.c.paidCount):M.na(r.c?'Source unavailable.':IG)}
         ],expand:r=>gtaFormatDetail(r,gr)},tableState('gta-vi','gta-table'));
-    }else if(view==='instagram'){
-      table=U.tablePanel({id:'gta-ig',title:'Instagram',icon:'image',view,views,rows:[],rowKey:r=>r,empty:esc(IG),columns:[]},tableState('gta-vi','gta-ig'));
     }else{
       const c=view==='x-quote-posts'?qr:og,id='gta-'+view,ts=tableState('gta-vi',id);
       table=U.tablePanel({id,title:view==='x-quote-posts'?'X quote posts':'X original posts',icon:'gamepad',view,views,search:true,filters:placementFilter('gta-vi',id),filter:applyFilter(ts.filter),
@@ -400,12 +392,7 @@
         ])},ts);
     }
     const pend=[qr,og].reduce((n,c)=>n+(c?.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length,0);
-    const budget=s?U.supportPanel('Budget and delivery','wallet',U.inlineMetrics([
-      ['Approved budget',U.reasonButton('Not available','No approved programme budget is recorded in a connected source.')],
-      ['Paid spend',U.value(s.spend,'money')],
-      ['Unpaid commitments',U.reasonButton('Not available','Not reconciled: the source records payment per row, not committed amounts.')],
-      ['Remaining budget',U.reasonButton('Not available','Needs an approved budget and reconciled commitments.')]
-    ])+(pend?U.supportLine(U.status('Pending','warn')+' '+esc(pend+' paid '+(pend===1?'placement':'placements')+' awaiting publication'),'Programme lifetime · review before further allocation'):U.supportLine('','Programme lifetime'))):'';
+    const budget=pend?U.supportPanel('Delivery','check',U.supportLine(U.status('Pending','warn')+' '+esc(pend+' paid '+(pend===1?'placement':'placements')+' awaiting publication'),'<a href="#gta-vi/x-original-posts">Review</a>')):'';
     return {title:'GTA VI',chip:'gta-vi',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||qr?.sourceStale||og?.sourceStale),body:overviewNotice()+strip+chart+table+budget};
   }
   function gtaFormatDetail(r,gr){
@@ -454,17 +441,8 @@
 
   function cisPage(st){
     ensure('overview');
-    const reason='Not connected: no dedicated CIS spend or placement source is linked yet.';
-    const strip=U.strip([
-      metric('Paid spend','wallet',M.na(reason),'money0','Dedicated CIS'),metric('Post views','eye',M.na(reason)),
-      metric('Tracked clicks','cursor',M.na('Not connected: no CIS click definition is connected. Amplitude sessions would be labelled separately.')),
-      metric('Creator signups','user',M.na(C.OUTCOME_REASON)),metric('CIS registrations','doc',M.na('Not connected: the Amplitude CIS project is not connected yet.')),
-      metric('Earning creators','check',M.na(C.OUTCOME_REASON))]);
-    const chart=U.chartPanel({id:'cis-chart',empty:{title:'Tracked clicks by week',reason:'No CIS source is connected yet, so there is no measured history. Planned tests are not shown as activity.'}},{});
-    const view=st.view==='publishers'?'publishers':'angles';
-    const table=U.tablePanel({id:'cis-table',title:view==='angles'?'Promotional angle results':'Publisher results',icon:'target',view,views:[{key:'angles',label:'Angles'},{key:'publishers',label:'Publishers'}],rows:[],rowKey:r=>r,
-      empty:'No connected source yet. Promotional angles and publisher placements appear here once a dedicated CIS placement register is connected; no sample angles or amounts are shown.',columns:[]},tableState('cis','cis-table'));
-    return {title:'CIS',chip:'cis',refreshLabel:'Refresh',updated:D.overview()?.checkedAt,body:strip+chart+table};
+    return {title:'CIS',chip:'cis',refreshLabel:'Refresh',updated:D.overview()?.checkedAt,
+      body:U.supportPanel('CIS','sparkles','<p class="fv-plain">No CIS data is connected yet.</p>')};
   }
 
   function guruPage(st){
@@ -500,13 +478,10 @@
       table=U.tablePanel({id:'guru-rt',title:'Paid reposts',icon:'refresh',view,views,search:true,filters:placementFilter('guru-promotion','guru-rt'),filter:applyFilter(ts.filter),
         rows,rowKey:r=>r.id||r.sourceRow,rowLabel:r=>r.publisher,minWidth:900,searchText:r=>r.publisher,
         empty:rt?'No paid reposts are linked to these original posts.':waiting('Loading paid reposts…'),
-        notice:'<p class="fv-chart-note">Paid repost costs are counted once, under X Articles. Listed here for their original-post relationship.</p>',
         columns:repostColumns().map(c=>c.key==='original'?{...c,html:r=>{const o=byId.get(String(C.postId(r.sourcePostUrl||r.postUrl)));return U.extLink(r.sourcePostUrl||r.postUrl,o?.publisher||'Original');}}:c),
         expand:r=>repostDetail(r)},ts);
     }
-    const missing=(g?.rows||[]).filter(r=>C.num(r.cost)===null).length;
-    const support=U.supportPanel('Records and editing','edit',(missing?U.supportLine(U.status('Missing cost','warn')+' '+esc('Platform boost spend is not recorded for '+missing+' of '+(g?.rows||[]).length+' promoted posts'),''):'')+
-      '<div class="fv-records-links"><a class="fv-control" href="#x-rts">'+U.icon('megaphone',15)+'Manage promoted posts</a></div>');
+    const support=U.supportPanel('Records and editing','edit','<div class="fv-records-links"><a class="fv-control" href="#x-rts">'+U.icon('megaphone',15)+'Manage promoted posts</a></div>');
     return {title:'Guru Promotion',chip:'guru-promotion',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||g?.sourceStale),body:overviewNotice()+strip+chart+table+support};
   }
   function guruDetail(r,group){
