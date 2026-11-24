@@ -19,7 +19,7 @@
   <script src="/last-good-cache.js?v=20261123-1" defer></script>
   <script src="/chart-tooltip.js?v=20261124-simple-points-2" defer></script>
   <script src="/main-charts.js?v=20261124-all-lines-2" defer></script>
-  <script src="/app.js?v=20261124-all-lines-14" defer></script>
+  <script src="/app.js?v=20261124-boost-rt-data-1" defer></script>
   <script src="/discord-course.js?v=20261124-live-source-2" defer></script>
   <script src="/discord-members.js?v=20261124-consistent-charts-4" defer></script>
 <link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="/final-ui.css?v=20261123-gta-position-2">
     <link rel="stylesheet" href="/dashboard-hub.css?v=20261123-oversized-pills-1">
     <link rel="stylesheet" href="/stats-discord-ui.css?v=20261124-hide-article-drawer-1">
-    <script src="/campaign-reporting.js?v=20261124-rt-links-sort-fix-1" defer></script>
+    <script src="/campaign-reporting.js?v=20261124-shared-rt-data-3" defer></script>
   <link rel="stylesheet" href="/main-charts.css?v=20261124-all-lines-2">
 </head>
 <body class="is-home">
@@ -246,10 +246,11 @@
       <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
       <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="boostTitle">X RTs<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="boosts" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><span class="x-refresh-status" id="boostRefreshStatus" role="status" aria-live="polite"></span><span class="x-refresh-status" id="boostRefreshCooldown"></span></div></div>
       <div class="daily-overview-metrics" id="boostKpis" aria-live="polite"></div>
+       <div class="boost-paid-rt-strip" id="boostPaidRtSummary" role="status" aria-live="polite">Checking paid-retweet data from Google Sheets…</div>
       <p id="boostStatus" role="status"></p>
-      <div class="accounts-tools"><label class="select-control sort-by-control"><span>Sort By</span><select id="boostSort"><option value="recent">Most recently added</option><option value="spend">Spend</option><option value="views">Views</option><option value="engagement">Engagement</option><option value="efficiency">Efficiency · lowest cost first</option></select></label><button class="button" id="boostAdd" type="button">+ Add Tweet</button></div>
+      <div class="accounts-tools"><label class="select-control sort-by-control"><span>Sort By</span><select id="boostSort"><option value="recent">Most recently added</option><option value="spend">Boost spend</option><option value="rtSpend">Paid RT spend</option><option value="views">Views</option><option value="engagement">Engagement</option><option value="efficiency">Efficiency · lowest cost first</option></select></label><button class="button" id="boostAdd" type="button">+ Add Tweet</button></div>
       <div class="result-line"><h2>Tweet performance<span class="heading-accent">.</span></h2></div>
-      <div class="account-table-wrap"><table class="account-table"><thead><tr><th>Original tweet / @handle</th><th>Actual boost spend ($)</th><th>X views</th><th>Likes</th><th>Reposts</th><th>Replies</th><th>Engagement rate</th><th>Effective cost / 1K views</th><th>Views gained · 24h</th></tr></thead><tbody id="boostRows"></tbody></table></div>
+      <div class="account-table-wrap"><table class="account-table"><thead><tr><th>Original tweet / @handle</th><th>Actual boost spend ($)</th><th>Paid RT spend ($)</th><th>Paid RT accounts</th><th>X views</th><th>Likes</th><th>Reposts</th><th>Replies</th><th>Engagement rate</th><th>Effective cost / 1K views</th><th>Views gained · 24h</th></tr></thead><tbody id="boostRows"></tbody></table></div>
       <div class="account-mobile-list" id="boostMobile"></div>
     </section>
       <section class="site-page key-stats-page of-report-page" id="page-gta-vi" aria-labelledby="gtaTitle" hidden>
