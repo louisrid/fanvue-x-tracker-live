@@ -51,3 +51,20 @@ test('Campaign views, paid QRT evidence, details and links are retained',()=>{
   assert.match(html,/id="gtaTabQrts"/);
   assert.match(html,/id="gtaTabOriginals"/);
 });
+
+
+test('Campaign navigation is centred, icon-free and uses one coordinated dark palette',()=>{
+  const header=html.slice(html.indexOf('<header'),html.indexOf('</header>'));
+  assert.doesNotMatch(header,/<svg\b/);
+  assert.doesNotMatch(html,/dashboard-discord-icon/);
+  assert.match(styles,/width:min\(100%,930px\)!important/);
+  assert.match(styles,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
+  assert.match(styles,/background:#17243c!important/);
+  assert.match(styles,/background:#2451c9!important/);
+  assert.match(styles,/background:#3d2bba!important/);
+  assert.match(styles,/font-size:clamp\(36px,3\.5vw,43px\)!important/);
+  assert.match(styles,/border-radius:9px!important/);
+  for(const text of ['GTA VI','OF Terms','Guru X RTs','X Article Boosts','X Articles','Discord']){
+    assert.ok(html.includes('<strong>'+text+'</strong>'));
+  }
+});
