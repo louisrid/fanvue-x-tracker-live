@@ -734,7 +734,7 @@
   min-height:122px!important;
   height:122px!important;
   padding:16px 20px!important;
-  border-radius:70px!important;
+  border-radius:12px!important;
 }
 :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy {
   gap:5px!important;
@@ -919,7 +919,7 @@
     min-height:99px!important;
     height:99px!important;
     padding:12px 21px!important;
-    border-radius:55px!important;
+    border-radius:12px!important;
   }
   :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
   :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
@@ -981,4 +981,13 @@
   :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.home-top-kpis .kpi-value {
     font-size:clamp(25px,6.6vw,33px)!important;
   }
+}
+
+
+/* Lock every dashboard campaign pill to the same radius as the fixed menu.
+   This declaration is last, so no breakpoint can restore capsule corners. */
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
+  border-radius:12px!important;
 }
