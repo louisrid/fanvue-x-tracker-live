@@ -17,18 +17,18 @@
   <link rel="stylesheet" href="/discord-course.css?v=20261123-1">
   <link rel="stylesheet" href="/last-good.css?v=20261123-1">
   <script src="/last-good-cache.js?v=20261123-1" defer></script>
-  <script src="/app.js?v=20261124-remove-legacy-pages-5" defer></script>
+  <script src="/app.js?v=20261124-campaign-history-6" defer></script>
   <script src="/discord-course.js?v=20261124-live-source-2" defer></script>
   <script src="/discord-members.js?v=20261124-live-source-2" defer></script>
 <link rel="stylesheet" href="/gta-vi.css?v=20261117-layout-fix">
     <link rel="stylesheet" href="/xtracker-polish.css?v=20261117-layout-fix">
-    <link rel="stylesheet" href="/campaign-reporting.css?v=20261124-report-kpis-4">
+    <link rel="stylesheet" href="/campaign-reporting.css?v=20261124-five-day-trends-5">
     <link rel="stylesheet" href="/campaign-pills.css?v=20261123-final-tabs-1">
     <link rel="stylesheet" href="/report-match.css?v=20261123-1">
     <link rel="stylesheet" href="/final-ui.css?v=20261123-gta-position-2">
     <link rel="stylesheet" href="/dashboard-hub.css?v=20261123-oversized-pills-1">
-    <link rel="stylesheet" href="/stats-discord-ui.css?v=20261124-weekly-snapshot-4">
-    <script src="/campaign-reporting.js?v=20261124-meaningful-kpis-3" defer></script>
+    <link rel="stylesheet" href="/stats-discord-ui.css?v=20261124-campaign-history-6">
+    <script src="/campaign-reporting.js?v=20261124-five-day-trends-5" defer></script>
 </head>
 <body class="is-home">
   <header class="app-header">
@@ -240,8 +240,8 @@
       <section class="daily-overview" aria-labelledby="ofBreakdownTitle">
         <div class="daily-overview-head"><div><div class="daily-eyebrow">C001 · X ACCOUNTS 13 (OF TERMS)</div><h2 id="ofBreakdownTitle">Campaign overview<span class="heading-accent">.</span></h2></div><span class="daily-live" id="ofLiveStatus" role="status">Checking data</span></div>
         <details class="source-details"><summary>Source details</summary><p id="ofReportError" role="status" hidden></p></details>
+        <div class="daily-graph-card campaign-main-history" id="ofTrendCard" hidden><div class="daily-graph-head"><div><span class="campaign-history-eyebrow">5-DAY HISTORY</span><h3>UTM clicks<span class="heading-accent">.</span></h3><p>Verified daily click events only.</p></div></div><div class="daily-graph campaign-history-plot" id="ofChart"></div></div>
         <div class="daily-overview-metrics campaign-metrics"><div class="campaign-metric-values" id="ofMetrics" aria-live="polite"><div class="loading-card">Loading campaign data</div></div><div class="engagement-control"><button class="daily-metric engagement-button" id="ofEngagementButton" type="button" aria-expanded="false" aria-controls="ofEngagementDetails"><span class="daily-metric-label">Engagement rate</span><strong id="ofEngagementRate" aria-live="polite">—</strong><small>Latest verified readings · tap for details</small></button><p class="engagement-details" id="ofEngagementDetails" hidden></p></div></div>
-        <div class="daily-graph-card"><div class="daily-graph-head"><div><h3>This week's UTM clicks<span class="heading-accent">.</span></h3></div></div><div class="daily-graph" id="ofChart"></div></div>
       </section>
       <div id="ofPublishers" tabindex="-1" aria-label="OF Terms publisher performance and click breakdown" aria-live="polite"></div>
     </section>
@@ -270,6 +270,7 @@
       <div id="gtaReportPanel" role="tabpanel" aria-labelledby="gtaTabQrts">
       <section class="daily-overview" aria-labelledby="gtaBreakdownTitle">
         <details id="gtaReportError" class="source-details" hidden></details>
+        <div class="daily-graph-card campaign-main-history" id="gtaTrendCard" hidden><div class="daily-graph-head"><div><span class="campaign-history-eyebrow">5-DAY HISTORY</span><h3>Combined X views<span class="heading-accent">.</span></h3><p>Verified historical X readings only.</p></div></div><div class="daily-graph campaign-history-plot" id="gtaChart"></div></div>
         <div class="daily-overview-metrics campaign-metrics"><div class="campaign-metric-values" id="gtaMetrics" aria-live="polite"><div class="loading-card">Loading campaign data</div></div><div class="engagement-control"><button class="daily-metric engagement-button" id="gtaEngagementButton" type="button" aria-expanded="false" aria-controls="gtaEngagementDetails"><span class="daily-metric-label">Engagement Rate</span><strong id="gtaEngagementRate" aria-live="polite">—</strong><small>Latest verified readings · tap for details</small></button><p class="engagement-details" id="gtaEngagementDetails" hidden></p></div></div>
       </section>
       
