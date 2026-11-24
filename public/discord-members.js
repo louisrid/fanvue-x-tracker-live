@@ -31,67 +31,22 @@
   function renderGrowth(history){
     const values=(Array.isArray(history)?history:[])
       .filter(p=>p&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)&&Number.isSafeInteger(p.memberCount)&&p.memberCount>=0)
-      .sort((a,b)=>a.date.localeCompare(b.date)).slice(-60);
-    chart.classList.toggle('is-pending',values.length<2);
-    if(values.length<2){
-      canvas.replaceChildren();
-      canvas.setAttribute('aria-label','Waiting for two daily member count snapshots to draw the growth graph');
-      note.textContent=values.length?'First snapshot recorded. Graph starts after tomorrow’s reading.':'Graph starts after two midday snapshots';
-      tip.textContent='Daily snapshots at 12:00 UK';
-      return;
-    }
-    const NS='http://www.w3.org/2000/svg',W=960,H=265,L=69,R=24,T=20,B=48;
-    const lo=Math.min(...values.map(v=>v.memberCount)),hi=Math.max(...values.map(v=>v.memberCount));
-    const range=Math.max(20,hi-lo),min=Math.max(0,lo-range*.22),max=hi+range*.22;
-    const x=i=>L+(W-L-R)*i/(values.length-1);
-    const y=n=>T+(H-T-B)*(max-n)/(max-min);
-    const create=(tag,attrs={},textValue=null)=>{
-      const el=document.createElementNS(NS,tag);
-      for(const [name,value] of Object.entries(attrs))el.setAttribute(name,String(value));
-      if(textValue!==null)el.textContent=String(textValue);
-      return el;
-    };
-    const graph=create('svg',{viewBox:`0 0 ${W} ${H}`,role:'img',
-      'aria-label':`Discord members, approximate counts, ${label(values[0].date)} to ${label(values.at(-1).date)}`});
-    for(let i=0;i<4;i++){
-      const val=min+(max-min)*i/3,yy=y(val);
-      graph.append(create('line',{x1:L,x2:W-R,y1:yy,y2:yy,class:'discord-growth-grid'}));
-      graph.append(create('text',{x:L-13,y:yy+4,'text-anchor':'end',class:'discord-growth-axis'},format(Math.round(val))));
-    }
-    const count=Math.min(values.length,5);
-    const used=new Set();
-    for(let k=0;k<count;k++){
-      const i=Math.round(k*(values.length-1)/Math.max(1,count-1));
-      if(used.has(i))continue;used.add(i);
-      graph.append(create('text',{x:x(i),y:H-13,'text-anchor':i===0?'start':i===values.length-1?'end':'middle',class:'discord-growth-axis'},label(values[i].date)));
-    }
-    graph.append(create('polyline',{points:values.map((p,i)=>`${x(i)},${y(p.memberCount)}`).join(' '),
-      class:'discord-growth-line',fill:'none'}));
-    values.forEach((p,i)=>{
-      const previous=i>0?values[i-1]:null;
-      const first=values[0];
-      const metrics=[
-        {label:'Members',value:format(p.memberCount)},
-        ...(previous?[{label:'Daily change',value:(p.memberCount-previous.memberCount>0?'+':'')+format(p.memberCount-previous.memberCount)}]:[]),
-        ...(i>0?[{label:'Change shown',value:(p.memberCount-first.memberCount>0?'+':'')+format(p.memberCount-first.memberCount)}]:[])
-      ];
-      const dot=create('circle',{cx:x(i),cy:y(p.memberCount),r:5,
-        class:'discord-growth-dot',tabindex:'0',role:'button',
-        'data-chart-point':'',
-        'data-chart-title':'Discord members',
-        'data-chart-date':label(p.date),
-        'data-chart-metrics':encodeURIComponent(JSON.stringify(metrics)),
-        'aria-label':`${label(p.date)}: ${format(p.memberCount)} approximate members. Hover or focus for details.`});
-      dot.append(create('title',{},`${label(p.date)}: ${format(p.memberCount)} members`));
-      const describe=()=>{tip.textContent=`${label(p.date)} · ${format(p.memberCount)} members`};
-      dot.addEventListener('mouseenter',describe);
-      dot.addEventListener('focus',describe);
-      graph.append(dot);
-    });
-    canvas.replaceChildren(graph);
-    tip.textContent=`${label(values.at(-1).date)} · ${format(values.at(-1).memberCount)} members`;
-    note.textContent=`${values.length} daily snapshots · 12:00 UK · approximate Discord member counts`;
+      .sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
+    const html=window.XTrackerMainChart.markup({rows:values.map(p=>({date:p.date,value:p.memberCount})),
+      title:'Discord members over time',context:'Fanvue AI Creator Academy',metric:'Total members',unit:'members',
+      headingId:'discordGrowthTitle',note:'Approximate member totals. Daily snapshots at 12:00 UK.'});
+    chart.classList.add('xt-main-chart');chart.classList.toggle('is-pending',!html);
+    // Keep source hooks stable while giving the graph the same card as campaigns.
+    for(const child of [...chart.children])if(child!==canvas)child.hidden=true;
+    chart.querySelector('.discord-growth-heading h2')?.removeAttribute('id');
+    canvas.className='';canvas.innerHTML=html;
+    if(!html){
+      chart.hidden=true;
+      note.textContent=values.length?'First snapshot recorded. Waiting for a second daily reading.':'Waiting for two daily member snapshots';
+    }else chart.hidden=false;
+    tip.textContent='Daily snapshots at 12:00 UK';
   }
+
   function display(data,fromCache=false){
     renderGrowth(data.history);
     const latest=data.latest;

@@ -1,0 +1,39 @@
+/* One readable chart card across campaign pages. */
+:root body #mainContent .xt-main-chart{
+  --chart-accent:#175af3;
+  margin:4px 0 18px!important;padding:20px 22px 14px!important;
+  border:1px solid #dce2eb!important;border-radius:16px!important;
+  background:#fff!important;box-shadow:0 4px 14px #10182706!important;overflow:hidden!important;
+}
+:root body #mainContent .xt-main-chart[hidden]{display:none!important}
+:root body #mainContent #page-gta-vi .xt-main-chart{--chart-accent:#ed0085}
+:root body #mainContent #page-of .xt-main-chart{--chart-accent:#198a24}
+:root body #mainContent .rpt-main-trend-guru-rts{--chart-accent:#7134df}
+:root body #mainContent #page-discord .xt-main-chart{--chart-accent:#5635dd}
+:root body #mainContent .xt-main-chart .xt-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:18px}
+:root body #mainContent .xt-main-chart .xt-chart-copy{min-width:0}
+:root body #mainContent .xt-main-chart .xt-chart-context{display:block;font-size:12px;font-weight:850;color:var(--chart-accent);letter-spacing:.05em;text-transform:uppercase}
+:root body #mainContent .xt-main-chart h2{margin:5px 0 7px!important;font-size:clamp(21px,2.1vw,29px)!important;font-weight:900!important;line-height:1.15!important;letter-spacing:-.04em!important;color:#101827!important;overflow-wrap:anywhere}
+:root body #mainContent .xt-main-chart .xt-chart-copy p{margin:0!important;color:#445168!important;font-size:14px!important;font-weight:700!important;line-height:1.4!important}
+:root body #mainContent .xt-main-chart .xt-chart-summary{flex-shrink:0;text-align:right;max-width:42%}
+:root body #mainContent .xt-main-chart .xt-chart-summary>span{display:block;color:#445168;font-size:12px;font-weight:800}
+:root body #mainContent .xt-main-chart .xt-chart-summary strong{display:block;margin:3px 0;color:#101827;font-size:30px;line-height:1.1;letter-spacing:-.04em;font-weight:900;font-variant-numeric:tabular-nums}
+:root body #mainContent .xt-main-chart .xt-chart-summary small{display:block;color:var(--chart-accent);font-size:13px;font-weight:750;line-height:1.4}
+:root body #mainContent .xt-main-chart .xt-chart-plot{width:100%;min-width:0}
+:root body #mainContent .xt-main-chart svg{display:block!important;width:100%!important;height:auto!important;max-height:290px;overflow:visible!important}
+:root body #mainContent .xt-main-chart .xt-chart-grid{stroke:#e5e9ef;stroke-width:1;vector-effect:non-scaling-stroke}
+:root body #mainContent .xt-main-chart .xt-chart-axis{font:700 14px Inter,system-ui,sans-serif;fill:#445168}
+:root body #mainContent .xt-main-chart .xt-chart-line{fill:none!important;stroke:var(--chart-accent)!important;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+:root body #mainContent .xt-main-chart .xt-chart-dot{fill:#fff;stroke:var(--chart-accent);stroke-width:3;vector-effect:non-scaling-stroke}
+:root body #mainContent .xt-main-chart .xt-chart-bar{fill:var(--chart-accent);stroke:none}
+:root body #mainContent .xt-main-chart [data-chart-point]:focus-visible{outline:2px solid #101827;outline-offset:4px}
+:root body #mainContent .xt-main-chart .xt-chart-note{margin:6px 0 0!important;font-size:13px!important;font-weight:650!important;line-height:1.45!important;color:#445168!important}
+@media(max-width:640px){
+  :root body #mainContent .xt-main-chart{padding:16px 14px 12px!important;border-radius:14px!important}
+  :root body #mainContent .xt-main-chart .xt-chart-head{display:block;margin-bottom:14px}
+  :root body #mainContent .xt-main-chart .xt-chart-summary{max-width:none;margin-top:14px;display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 9px;text-align:left}
+  :root body #mainContent .xt-main-chart .xt-chart-summary strong{font-size:25px;order:-1}
+  :root body #mainContent .xt-main-chart .xt-chart-summary small{flex-basis:100%}
+  :root body #mainContent .xt-main-chart svg{min-height:155px}
+  :root body #mainContent .xt-main-chart .xt-chart-axis{font-size:18px}
+}

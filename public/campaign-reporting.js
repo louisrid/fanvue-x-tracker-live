@@ -93,39 +93,13 @@
     return [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
   }
   function trendChart(campaign){
-    const data=fiveDayViewSeries(campaign);
-    if(data.length<2)return '';
-    const W=820,H=238,L=58,R=20,T=28,B=42,plotW=W-L-R,plotH=H-T-B;
-    const min=Math.min(...data.map(x=>x.views)),max=Math.max(...data.map(x=>x.views));
-    const span=Math.max(1,max-min),floor=Math.max(0,min-span*.12),ceil=max+span*.12;
-    const x=i=>L+(data.length===1?plotW/2:i*plotW/(data.length-1));
-    const y=v=>T+plotH-(v-floor)/(ceil-floor||1)*plotH;
-    const points=data.map((d,i)=>[x(i),y(d.views)]);
-    const line=points.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-    const area=line+' L'+points.at(-1)[0].toFixed(1)+' '+(T+plotH)+' L'+points[0][0].toFixed(1)+' '+(T+plotH)+' Z';
-    const latest=data.at(-1),first=data[0],delta=latest.views-first.views;
-    const deltaText=(delta>0?'+':'')+format(delta)+' over shown history';
-    const grid=[0,.5,1].map(r=>{const yy=T+plotH*r;return '<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" class="rpt-trend-grid"/>';}).join('');
-    const labels=data.map((d,i)=>'<text x="'+x(i)+'" y="'+(H-14)+'" text-anchor="middle" class="rpt-trend-label">'+esc(shortDay(d.date))+'</text>').join('');
-    const dots=data.map((d,i)=>{
-      const metrics=[
-        {label:'Views',value:format(d.views)},
-        ...(d.likes!==null?[{label:'Likes',value:format(d.likes)}]:[]),
-        ...(d.reposts!==null?[{label:'Reposts',value:format(d.reposts)}]:[]),
-        ...(d.replies!==null?[{label:'Replies',value:format(d.replies)}]:[]),
-        ...(d.interactions!==null?[{label:'Interactions',value:format(d.interactions)}]:[]),
-        ...(d.engagement!==null?[{label:'Engagement',value:d.engagement.toFixed(2)+'%'}]:[]),
-        ...(d.clicks!==undefined?[{label:'Tracked clicks',value:format(d.clicks)}]:[]),
-        {label:'Tracked posts',value:format(d.series)},
-        ...(i>0?[{label:'View change',value:(d.views-data[i-1].views>0?'+':'')+format(d.views-data[i-1].views)}]:[])
-      ];
-      return '<circle cx="'+x(i)+'" cy="'+y(d.views)+'" r="5" class="rpt-trend-dot" tabindex="0" role="button" data-chart-point data-chart-title="'+esc(campaign.name||'Campaign history')+'" data-chart-date="'+esc(shortDay(d.date))+'" data-chart-metrics="'+encodeURIComponent(JSON.stringify(metrics))+'" aria-label="'+esc(shortDay(d.date)+': '+format(d.views)+' views. Hover or focus for details.')+'"><title>'+esc(shortDay(d.date)+': '+format(d.views)+' views')+'</title></circle>';
-    }).join('');
-    return '<section class="rpt-main-trend rpt-main-trend-'+esc(campaign.id)+'">'+
-      '<div class="rpt-trend-head"><div><span class="rpt-trend-eyebrow">5-DAY HISTORY</span><h2>Combined X views<span class="heading-accent">.</span></h2><p>Hover or tap a point for its date and key figures.</p></div>'+
-      '<div class="rpt-trend-latest"><span>Latest</span><strong>'+esc(format(latest.views))+'</strong><small>'+esc(deltaText)+'</small></div></div>'+
-      '<div class="rpt-trend-plot"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Combined X views over the last five days with verified history">'+grid+
-      '<path d="'+area+'" class="rpt-trend-area"/><path d="'+line+'" class="rpt-trend-line"/>'+dots+labels+'</svg></div></section>';
+    const rows=fiveDayViewSeries(campaign).map(d=>({...d,value:d.views}));
+    const titles={'guru-rts':'Boosted post views over time','x-articles':'Article views over time','article-rts':'Article boost views over time'};
+    const count=rows.at(-1)?.series||0;
+    const html=window.XTrackerMainChart.markup({rows,title:titles[campaign.id]||'Post views over time',
+      context:campaign.id==='guru-rts'?'Guru X RTs':campaign.name,metric:'Total X views',unit:'views',
+      note:count+' posts with saved readings. Total views include organic exposure.'});
+    return html?'<section class="rpt-main-trend rpt-main-trend-'+esc(campaign.id)+' xt-main-chart">'+html+'</section>':'';
   }
   const note='<p class="rpt-note">All-time X counters, not unique reach. Clicks come from their named tracking source and are not interchangeable. Missing sign-ups, KYC and earning-creator metrics are shown as unavailable, never zero.</p>';
   function grid(columns,rows,classname='rpt-table'){

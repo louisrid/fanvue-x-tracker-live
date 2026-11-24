@@ -915,39 +915,17 @@ function fiveDayViewHistory(history=[]){
   }
   return [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
 }
-function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix=''}={}){
-  const target=el(targetId),card=el(cardId);if(!target||!card)return false;
-  const data=(rows||[]).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(String(r.date||''))&&number(r.value)!==null)
-    .sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-5);
-  if(data.length<2){card.hidden=true;target.innerHTML='';return false;}
-  card.hidden=false;
-  const W=Math.max(520,target.clientWidth||820),H=230,L=58,R=20,T=24,B=42,pw=W-L-R,ph=H-T-B;
-  const vals=data.map(r=>Number(r.value)),min=Math.min(...vals),max=Math.max(...vals),span=Math.max(1,max-min);
-  const floor=Math.max(0,min-span*.12),ceil=max+span*.12;
-  const X=i=>L+i*pw/Math.max(1,data.length-1),Y=v=>T+ph-(v-floor)/(ceil-floor||1)*ph;
-  const pts=data.map((r,i)=>[X(i),Y(Number(r.value))]);
-  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-  const area=line+' L'+pts.at(-1)[0].toFixed(1)+' '+(T+ph)+' L'+pts[0][0].toFixed(1)+' '+(T+ph)+' Z';
-  const grid=[0,.5,1].map(r=>{const y=T+ph*r;return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" class="campaign-history-grid"/>';}).join('');
-  const dateLabel=date=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
-  const labels=data.map((r,i)=>'<text x="'+X(i)+'" y="'+(H-13)+'" text-anchor="middle" class="campaign-history-label">'+esc(dateLabel(r.date))+'</text>').join('');
-  const dots=data.map((r,i)=>{
-    const primary=suffix==='clicks'?'UTM clicks':suffix==='views'?'Views':'Value';
-    const delta=Number(r.value)-Number(data[Math.max(0,i-1)].value);
-    const metrics=[
-      {label:primary,value:fmt(Number(r.value))},
-      ...(r.likes!==null&&r.likes!==undefined?[{label:'Likes',value:fmt(r.likes)}]:[]),
-      ...(r.reposts!==null&&r.reposts!==undefined?[{label:'Reposts',value:fmt(r.reposts)}]:[]),
-      ...(r.replies!==null&&r.replies!==undefined?[{label:'Replies',value:fmt(r.replies)}]:[]),
-      ...(r.interactions!==null&&r.interactions!==undefined?[{label:'Interactions',value:fmt(r.interactions)}]:[]),
-      ...(r.engagement!==null&&r.engagement!==undefined?[{label:'Engagement',value:Number(r.engagement).toFixed(2)+'%'}]:[]),
-      ...(r.series?[{label:'Tracked posts',value:fmt(r.series)}]:[]),
-      ...(i>0?[{label:primary+' change',value:(delta>0?'+':'')+fmt(delta)}]:[])
-    ];
-    return '<circle cx="'+X(i)+'" cy="'+Y(Number(r.value))+'" r="5" class="campaign-history-dot" tabindex="0" role="button" data-chart-point data-chart-title="'+esc(label)+'" data-chart-date="'+esc(dateLabel(r.date))+'" data-chart-metrics="'+encodeURIComponent(JSON.stringify(metrics))+'" aria-label="'+esc(dateLabel(r.date)+': '+fmt(Number(r.value))+' '+suffix+'. Hover or focus for details.')+'"><title>'+esc(r.date+': '+fmt(Number(r.value))+(suffix?' '+suffix:''))+'</title></circle>';
-  }).join('');
-  target.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">'+grid+'<path d="'+area+'" class="campaign-history-area"/><path d="'+line+'" class="campaign-history-line"/>'+dots+labels+'</svg>';
-  return true;
+function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix='',title='',context=''}={}){
+  const card=el(cardId),target=el(targetId);if(!card||!target)return false;
+  const clicks=suffix==='clicks';
+  const html=window.XTrackerMainChart.markup({rows,title:title||label,context,
+    metric:clicks?'Daily clicks':'Total X views',unit:clicks?'clicks':'views',kind:clicks?'bars':'line',
+    note:clicks?'Verified UTM clicks each day. Today is still in progress.':'Total views on posts with saved readings. Includes organic views.'});
+  card.hidden=!html;card.classList.add('xt-main-chart');
+  // Keep the existing plot ID for refreshes and navigation.
+  target.className='';target.innerHTML=html;
+  for(const child of [...card.children])if(child!==target)child.remove();
+  return !!html;
 }
 function renderOfReport(){
   const report=state.ofCampaign,ready=report?.ready===true;
@@ -973,7 +951,7 @@ function renderOfReport(){
   if(ready){
     const start5=shift(today,-4),historyDates=new Set(activity.filter(e=>e.date>=start5&&e.date<=today).map(e=>e.date));
     const history5=Array.from({length:5},(_,i)=>{const date=shift(start5,i);return {date,value:activity.filter(e=>e.date===date).reduce((sum,e)=>sum+(number(e.clicks)||0),0)};});
-    if(historyDates.size>=2)renderFiveDayLine('ofChart','ofTrendCard',history5,{label:'OF Terms verified UTM clicks over the last five days',suffix:'clicks'});
+    if(historyDates.size>=2)renderFiveDayLine('ofChart','ofTrendCard',history5,{title:'Daily UTM clicks',context:'OF Terms',suffix:'clicks'});
     else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
   }else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
   const link=(url,label)=>safeUrl(url)?`<a class="button" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${label}</a>`:'';
@@ -1173,7 +1151,7 @@ function renderGtaReport(){
   const error=el('gtaReportError');const issues=rows.flatMap(p=>[p.clickError,p.metricError].filter(Boolean).map(message=>p.publisher+': '+message));const diagnostics=[gtaState.error,report?.warning,...issues].filter(Boolean);error.hidden=!diagnostics.length;error.innerHTML='<summary>Source details</summary><p>'+esc(diagnostics.join(' · '))+'</p>';
   const paid=placements.filter(p=>p.paid),posted=rows.filter(p=>p.posted===true&&safeUrl(p.postUrl));
   const gtaHistory=fiveDayViewHistory(report?.history||[]);
-  renderFiveDayLine('gtaChart','gtaTrendCard',gtaHistory,{label:(originals?'GTA VI originals':'GTA VI QRTs')+' combined X views over the last five days',suffix:'views'});
+  renderFiveDayLine('gtaChart','gtaTrendCard',gtaHistory,{title:originals?'Original post views over time':'QRT views over time',context:originals?'GTA VI · Original posts':'GTA VI · QRTs',suffix:'views'});
   const knownPaid=paid.filter(p=>p.cost!==null&&Number.isFinite(Number(p.cost)));
   const spend=report?.summary?.paidSpend??(ready?knownPaid.reduce((n,p)=>n+Number(p.cost),0):null);
   const seen=posted.filter(p=>p.views!==null&&p.views!==undefined),views=seen.length?seen.reduce((n,p)=>n+Number(p.views),0):null;
