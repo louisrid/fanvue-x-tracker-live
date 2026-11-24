@@ -174,6 +174,19 @@ test('shell: official wordmark, Inter only, flat seven-page navigation and noind
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
+test('both shared stylesheets are present and use the same small scale',()=>{
+  const records=readFileSync('public/fanvue-records.css','utf8');
+  // Guards against a stylesheet being emptied: the record views, modals and editor depend on it.
+  assert.ok(records.length>10000,'fanvue-records.css has content');
+  for(const rule of ['.fv-records .xt-data-table','.modal-shade{','.article-modal .form-grid','.fv-records .account-table'])assert.ok(records.includes(rule),rule);
+  for(const sheet of [css,records]){
+    assert.deepEqual([...new Set([...sheet.matchAll(/font-size:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-fs-(s|l|xl)\)$/.test(v)),[]);
+    assert.deepEqual([...new Set([...sheet.matchAll(/font-weight:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-w(-strong)?\)$/.test(v)),[]);
+  }
+  assert.match(css,/--fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;/);
+  assert.match(css,/--fv-bw:1px;/);
+});
+
 test('presentation layer only: the shell reads existing adapters and never posts data',()=>{
   for(const src of [appJs,uiJs,readFileSync('public/fanvue-core.js','utf8')]){
     assert.doesNotMatch(src,/method:\s*['"]POST['"]/);
