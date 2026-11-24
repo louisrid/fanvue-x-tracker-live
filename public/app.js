@@ -293,10 +293,9 @@ function renderWeekLabels(){
   renderDashboardWeekSelector();
   const n=selectedDashboardWeek().number;
   el('dashboardTitle').innerHTML='Dashboard<span class="heading-accent">.</span>';
-  document.querySelector('.daily-eyebrow').textContent=`CAMPAIGN REPORT · WEEK ${n}`;
-  document.querySelector('.daily-graph-head h3').innerHTML=`Week ${n} UTM clicks<span class="heading-accent">.</span>`;
-  document.querySelector('.daily-graph-head p').textContent=`Verified hourly clicks · UK time · since ${weekStart(new Date())}`;
-  el('dailyTrendChart').setAttribute('aria-label',`Week ${n} placement clicks by hour`);
+  // This legacy daily heading was removed; never require absent elements.
+  // Key Stats' hourly chart always refers to the actual current week.
+  el('dailyTrendChart')?.setAttribute('aria-label',`Week ${currentStatsWeekNumber()} placement clicks by hour`);
 }
 function renderWeekly(){
   const verified=state.homeVerified,placements=homePlacements(),sort=el('homeArticleSort').value;
