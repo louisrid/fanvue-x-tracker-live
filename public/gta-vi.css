@@ -102,3 +102,177 @@
 .gta-tab.is-active{background:#fff;color:#172554;border-color:#cbd5e1;box-shadow:0 2px 5px rgb(15 23 42 / 6%);}
 .gta-tab:focus-visible{outline:3px solid #2563eb;outline-offset:3px;}
 @media(max-width:480px){.gta-tabs{width:100%;}.gta-tab{flex:1;padding:12px 14px;}}
+
+
+/* Real GTA VI campaign types only: paid QRTs and standalone paid posts.
+   Quote-linked source X posts are evidence within QRTs, never a third page. */
+#page-gta-vi #gtaQuotedSources[hidden]{display:none!important}
+#page-gta-vi .gta-quoted-sources{
+  display:block;
+  margin:24px 0 26px;
+  padding:23px 0 0;
+  border-top:2px solid #dfe7f1;
+  min-width:0;
+}
+#page-gta-vi .gta-quoted-header{
+  display:flex;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  gap:13px 24px;
+  margin:0 0 15px;
+}
+#page-gta-vi .gta-quoted-header h2{
+  margin:0 0 6px;
+  font-size:clamp(21px,2.2vw,28px);
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:-.045em;
+  color:#152135;
+}
+#page-gta-vi .gta-quoted-header p{
+  max-width:660px;
+  margin:0;
+  color:#475671;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.5;
+}
+#page-gta-vi .gta-quoted-summary{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 15px;
+  font:800 12px/1.4 Inter,system-ui,sans-serif;
+  color:#30435e;
+}
+#page-gta-vi .gta-quoted-summary span{
+  display:inline-flex;
+  align-items:baseline;
+  gap:5px;
+}
+#page-gta-vi .gta-quoted-summary strong{
+  font-size:17px;
+  line-height:1;
+  color:#101b2e;
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+}
+#page-gta-vi .gta-quoted-collapse{
+  display:block;
+  width:100%;
+  min-width:0;
+  border:1px solid #d5dfec;
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+}
+#page-gta-vi .gta-quoted-collapse>summary{
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  cursor:pointer;
+  padding:13px 17px;
+  background:#f7f9fc;
+  color:#152b48;
+  font-size:13px;
+  font-weight:900;
+}
+#page-gta-vi .gta-quoted-collapse>summary:hover{
+  background:#edf3fb;
+}
+#page-gta-vi .gta-quoted-collapse>summary:focus-visible{
+  outline:3px solid #175af3;
+  outline-offset:-3px;
+}
+#page-gta-vi .gta-quoted-scroll{
+  display:block;
+  max-width:100%;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  padding:0;
+}
+#page-gta-vi .gta-quoted-table{
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:1120px;
+  width:100%;
+  font-size:12px;
+  line-height:1.45;
+  font-variant-numeric:tabular-nums;
+}
+#page-gta-vi .gta-quoted-table :is(th,td){
+  padding:11px 12px;
+  vertical-align:top;
+  text-align:left;
+  white-space:normal;
+  border-bottom:1px solid #e9eef6;
+}
+#page-gta-vi .gta-quoted-table thead th{
+  background:#eef3fa;
+  white-space:nowrap;
+  color:#17243b;
+  font-size:11px;
+  font-weight:900;
+}
+#page-gta-vi .gta-quoted-table thead th .xt-sort-button{
+  cursor:pointer;
+  color:inherit;
+  font-weight:900;
+}
+#page-gta-vi .gta-quoted-table tbody tr:hover{
+  background:#f8faff;
+}
+#page-gta-vi .gta-quoted-table td strong{
+  display:block;
+  color:#15253c;
+  font-weight:850;
+}
+#page-gta-vi .gta-quoted-table td small{
+  display:block;
+  font-size:10.5px;
+  line-height:1.4;
+  margin-top:3px;
+}
+#page-gta-vi .gta-quoted-table td a{
+  color:#0052cd;
+  font-weight:800;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+#page-gta-vi .gta-quoted-qrt-details>summary{
+  cursor:pointer;
+  font-size:11px;
+  font-weight:900;
+  color:#0052cd;
+  white-space:nowrap;
+}
+#page-gta-vi .gta-quoted-qrt-details ul{
+  list-style:none;
+  margin:9px 0 0;
+  padding:0;
+  min-width:260px;
+}
+#page-gta-vi .gta-quoted-qrt-details li{
+  padding:7px 0;
+  border-top:1px solid #e7edf6;
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:4px 9px;
+  font-size:11px;
+}
+#page-gta-vi .gta-quoted-footnote,
+#page-gta-vi .gta-quoted-warning{
+  margin:10px 0 0;
+  color:#52627a;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.5;
+}
+#page-gta-vi .gta-quoted-warning{color:#ad540e}
+@media(max-width:650px){
+  #page-gta-vi .gta-quoted-sources{margin-top:19px;padding-top:18px}
+  #page-gta-vi .gta-quoted-collapse>summary{font-size:12px;padding:13px}
+  #page-gta-vi .gta-quoted-table{min-width:1060px}
+}
