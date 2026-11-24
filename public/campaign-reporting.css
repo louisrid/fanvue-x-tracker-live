@@ -228,3 +228,87 @@
     transform:none!important;
   }
 }
+
+
+/* Final campaign report KPI treatment: same compact four-card language as Dashboard. */
+#page-reporting .rpt-campaign-panel{
+  border-top:0!important;
+  padding-top:0!important;
+}
+#page-reporting .rpt-stats{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+  border:0!important;
+  background:transparent!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  margin:8px 0 18px!important;
+}
+#page-reporting .rpt-stats .rpt-stat{
+  min-height:112px!important;
+  padding:15px!important;
+  border:0!important;
+  border-radius:15px!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  overflow:hidden!important;
+}
+#page-reporting .rpt-stats .rpt-stat:nth-child(1){background:#111a2b!important;}
+#page-reporting .rpt-stats .rpt-stat:nth-child(2){background:#1155ff!important;}
+#page-reporting .rpt-stats .rpt-stat:nth-child(3){background:#ff008c!important;}
+#page-reporting .rpt-stats .rpt-stat:nth-child(4){background:#4424d6!important;}
+#page-reporting .rpt-stats .rpt-stat .daily-metric-label,
+#page-reporting .rpt-stats .rpt-stat dt{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  opacity:.86!important;
+  font-size:10.5px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+#page-reporting .rpt-stats .rpt-stat strong,
+#page-reporting .rpt-stats .rpt-stat dd{
+  display:block!important;
+  margin-top:15px!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-size:clamp(27px,2.7vw,39px)!important;
+  line-height:.96!important;
+  letter-spacing:-.06em!important;
+  font-weight:950!important;
+  font-variant-numeric:tabular-nums!important;
+}
+#page-reporting .rpt-stats .rpt-stat small{
+  margin-top:9px!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  opacity:.75!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+#page-reporting .rpt-warning{
+  border:1px solid #f0d096!important;
+  border-left:4px solid #d98512!important;
+  border-radius:12px!important;
+  padding:12px 14px!important;
+  background:#fff8e8!important;
+}
+#page-reporting .rpt-missing{
+  color:#56647b!important;
+  font-weight:850!important;
+}
+@media(max-width:760px){
+  #page-reporting .rpt-stats{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  #page-reporting .rpt-stats .rpt-stat{
+    min-height:106px!important;
+    padding:13px!important;
+  }
+  #page-reporting .rpt-stats .rpt-stat strong,
+  #page-reporting .rpt-stats .rpt-stat dd{
+    font-size:clamp(24px,8vw,34px)!important;
+  }
+}
