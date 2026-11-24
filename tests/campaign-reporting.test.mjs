@@ -120,8 +120,8 @@ test('Reporting routes remain while GTA VI has only QRT and standalone tabs',()=
   assert.match(shell,/'report-article-rt':'x-articles\/paid-reposts'/);
   assert.match(shell,/'report-guru':'guru-promotion'/);
   assert.match(html,/campaign-reporting\.js/);
-  // GTA VI keeps exactly the two X source groups; no quoted view and no empty Instagram view.
-  assert.match(shell,/\{key:'all-formats',label:'All formats'\},\{key:'x-original-posts',label:'X original posts'\},\{key:'x-quote-posts',label:'X quote posts'\}\]/);
+  // GTA VI views: the two X source groups and Instagram (IG Accounts 3); no quoted view.
+  assert.match(shell,/\{key:'all-formats',label:'All formats'\},\{key:'x-original-posts',label:'X original posts'\},\{key:'x-quote-posts',label:'X quote posts'\},\{key:'instagram',label:'Instagram'\}\]/);
   assert.doesNotMatch(shell,/key:'quoted'/);
   assert.match(shell,/Quoted original posts/);
   assert.match(app,/function renderGtaQuotedSources\(\)/);

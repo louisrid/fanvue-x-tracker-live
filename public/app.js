@@ -329,7 +329,7 @@ function renderKpis(){if(!legacyView('dashboardKpis'))return;
   const views=verifiedViews.reduce((sum,p)=>sum+number(p.xViews),0);
   const clicksLifetime=verifiedClicks.reduce((sum,p)=>sum+number(p.clicks),0);
   const headline=[
-    {id:'money',label:'Paid spend · all time',value:state.homeVerified?
+    {id:'money',label:'Spend · all time',value:state.homeVerified?
       (knownPaid.length?money(spend):paid.length?'—':'$0'):'—'},
     {id:'clicks',label:'UTM clicks · all time',value:state.trackingReady?
       (verifiedClicks.length||!placements.length?fmt(clicksLifetime):'—'):'—'},
@@ -981,7 +981,7 @@ function renderOfReport(){globalThis.dispatchEvent?.(new CustomEvent('xtracker:d
   const lifetimeClicks=ready?
     (knownClicks.length?knownClicks.reduce((sum,p)=>sum+number(p.clicks),0):0):null;
   const paidTotal=paid.some(p=>p.cost===null)?null:paid.reduce((sum,p)=>sum+p.cost,0);
-  const defs=[['spend','Paid spend · all time',ready?money(paidTotal):'—',ready?
+  const defs=[['spend','Spend · all time',ready?money(paidTotal):'—',ready?
     `${paid.length} paid · ${paid.length-posted.filter(p=>p.paid).length} not live`:
     'Waiting for verified campaign data'],
     ['seven','X views · all time',gtaNumber(posted.some(p=>number(p.xViews)!==null)?

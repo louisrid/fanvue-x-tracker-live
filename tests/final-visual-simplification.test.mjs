@@ -34,7 +34,7 @@ test('Single shared visual override tightens desktop and mobile sizing without r
   assert.match(css,/@media \(max-width:359px\)/);
   assert.match(html,/id="fvHeader"/);
   assert.match(html,/id="fvPage"/);
-  for(const label of ['Paid spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators'])assert.ok(shell.includes("'"+label+"'"),label);
+  for(const label of ['Spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators'])assert.ok(shell.includes("'"+label+"'"),label);
 });
 
 test('Routine status chatter is hidden but unavailable-source warnings remain',()=>{

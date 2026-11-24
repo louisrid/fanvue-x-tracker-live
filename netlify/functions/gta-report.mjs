@@ -14,10 +14,18 @@ import {seed,seedVerifiedAt} from '../lib/gta-seed.mjs';
 import {summariseQuotedOriginals} from '../lib/quoted-originals.mjs';
 
 const SHEET_ID='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
-const SOURCE_TABS=[['X Accounts 15 (GTA VI QRTs)','GTAQ'],['X Accounts 12 (GTA)','GTA1'],['X Accounts 14 (GTA VI V2)','GTA2']];
-export const publishedOriginals=rows=>(rows||[]).filter(p=>SOURCE_TABS.slice(1).some(([tab,campaign])=>p.sourceTab===tab&&p.campaign===campaign)&&p.posted===true);
+// Every GTA VI source tab. The first three are required; tab 16 and Instagram are read when present.
+const SOURCE_TABS=[['X Accounts 15 (GTA VI QRTs)','GTAQ'],['X Accounts 12 (GTA)','GTA1'],['X Accounts 14 (GTA VI V2)','GTA2'],
+  ['X Accounts 16 (GTA VI QRTs)','GTAQ2'],['IG Accounts 3 (GTA VI)','GTAIG']];
+const OPTIONAL_TABS=new Set(['GTAQ2','GTAIG']);
+export const GROUPS={qrts:['GTAQ','GTAQ2'],originals:['GTA1','GTA2'],instagram:['GTAIG']};
+// Approved programme budget for GTA VI (owner-confirmed, USD).
+export const GTA_BUDGET=Object.freeze({amount:10000,currency:'USD'});
+const tabOf=campaign=>SOURCE_TABS.find(([,id])=>id===campaign)?.[0];
+export const inGroup=(p,group)=>GROUPS[group].includes(p.campaign)&&p.sourceTab===tabOf(p.campaign)&&!p.duplicateOf;
+export const publishedOriginals=rows=>(rows||[]).filter(p=>inGroup(p,'originals')&&p.posted===true);
 // Apply the same boundary to live sheets, legacy caches and the verified snapshot.
-export const publishedQrts=rows=>(rows||[]).filter(p=>p.campaign==='GTAQ'&&p.sourceTab===SOURCE_TABS[0][0]&&p.posted===true);
+export const publishedQrts=rows=>(rows||[]).filter(p=>inGroup(p,'qrts')&&p.posted===true);
 const SHEET_TTL=90_000;
 
 const sheetStore=()=>getStore({name:'fanvue-gta-report-v1',consistency:'strong'});
@@ -29,6 +37,7 @@ const link=c=>String(c?.hyperlink||c?.value?.hyperlink||c?.value?.formula?.match
 const yes=c=>val(c)===true||txt(c).toUpperCase()==='TRUE';
 const usd=c=>{let v=String(val(c)).replace(/[$,\s]/g,'');return v!==''&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;};
 const safeUrl=(value,host)=>{try{const u=new URL(String(value));return u.protocol==='https:'&&(!host||host.some(x=>u.hostname===x))?u.href:'';}catch{return '';}};
+const X_HOSTS=['x.com','twitter.com'],IG_HOSTS=['www.instagram.com','instagram.com'];
 const xPost=(url)=>{const m=String(url).match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]+)\/status\/(\d+)(?:[/?#]|$)/i);return m?{handle:m[1],id:m[2]}:null;};
 
 export function parseRows(workbook){
@@ -36,24 +45,37 @@ export function parseRows(workbook){
   for(const [tab,campaign] of SOURCE_TABS){
     const sheet=workbook.getWorksheet(tab);
     if(!sheet){if(campaign==='GTAQ')throw new Error('GTA source tab missing: '+tab);continue;}
+    const instagram=campaign==='GTAIG',hosts=instagram?IG_HOSTS:X_HOSTS;
     const col={};sheet.getRow(7).eachCell((c,i)=>{const name=txt(c).toUpperCase();if(name&&(!col[name]||name==='LINK'))col[name]=i;});
-    for(const key of ['ACCOUNT','ACCOUNT SUM','PAID?','POSTED?','LINK','UTM LINK'])if(!col[key])throw new Error('GTA column missing '+key+' in '+tab);
+    // Instagram tabs mark publication as "UP?" and have no separate post-link column.
+    const postedKey=col['POSTED?']?'POSTED?':'UP?';
+    for(const key of ['ACCOUNT','ACCOUNT SUM','PAID?',postedKey,'LINK','UTM LINK'])if(!col[key])throw new Error('GTA column missing '+key+' in '+tab);
+    const formats=instagram?['POST','STORY','BOTH'].filter(k=>col[k]):[];
     for(let i=8;i<=sheet.rowCount;i++){
       const r=sheet.getRow(i),cell=key=>r.getCell(col[key]),publisher=txt(cell('ACCOUNT'));
       if(!publisher||publisher.length>100)continue;
-      const cost=usd(cell('ACCOUNT SUM')),paid=yes(cell('PAID?')),posted=yes(cell('POSTED?'));
+      const formatKey=formats.find(k=>txt(cell(k))!=='');
+      // Instagram: a blank total with a single priced format (e.g. a $0 post) uses that price.
+      const cost=usd(cell('ACCOUNT SUM'))??(instagram&&formatKey&&formats.filter(k=>txt(cell(k))!=='').length===1?usd(cell(formatKey)):null),paid=yes(cell('PAID?')),posted=yes(cell(postedKey));
       // Retain every account row; finance, publication and click eligibility are separate.
-      const candidate=link(cell('LINK'));
-      const postUrl=safeUrl(candidate,['x.com','twitter.com']);
-      const profileUrl=safeUrl(txt(cell('LINK')),['x.com','twitter.com']);
-      const accountUrl=safeUrl(link(r.getCell(col['ACCOUNT']+1)),['x.com','twitter.com']);
+      const candidate=instagram?'':link(cell('LINK'));
+      const postUrl=safeUrl(candidate,X_HOSTS);
+      const accountUrl=safeUrl(link(r.getCell(col['ACCOUNT']+1)),hosts);
       const trackingUrl=trackingLink(link(r.getCell(col['UTM LINK'])))?.url||'';
       const identity=trackingUrl||accountUrl||publisher.toLowerCase();
       const code=campaign+'-'+createHash('sha256').update(identity+'|'+publisher.toLowerCase()).digest('hex').slice(0,20);
-      result.push({code,campaign,sourceRow:i,sourceTab:tab,
-        publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
+      const format=instagram?(formatKey||'').toLowerCase()||null:(campaign==='GTAQ'||campaign==='GTAQ2'?'qrt':'original');
+      result.push({code,campaign,sourceRow:i,sourceTab:tab,platform:instagram?'instagram':'x',format,
+        publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
         cost,paid,posted,trackingUrl,clicks:null});
     }
+  }
+  // Tab 16 repeats tab 15 rows. A row that matches a tab 15 placement on publisher, tracking link
+  // and price is a copy unless it has its own evidence (marked paid in tab 16, or its own live post).
+  const qrts=result.filter(p=>p.campaign==='GTAQ');
+  for(const p of result)if(p.campaign==='GTAQ2'){
+    const twin=qrts.find(o=>o.publisher.toLowerCase()===p.publisher.toLowerCase()&&o.trackingUrl===p.trackingUrl&&o.cost===p.cost);
+    if(twin&&!p.paid&&(!p.postUrl||p.postUrl===twin.postUrl))p.duplicateOf={tab:twin.sourceTab,row:twin.sourceRow};
   }
   // Financial rows are authoritative, even when two placements share a post.
   // Analytics deduplicate links/posts separately and exclude ambiguous attribution.
@@ -67,7 +89,7 @@ async function readWorkbook(){
   if(!resp.ok)throw new Error('GTA spreadsheet export HTTP '+resp.status);
   const bytes=await resp.arrayBuffer();if(bytes.byteLength>13_000_000)throw new Error('GTA source workbook too large');
   const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(Buffer.from(bytes));
-  for(const [tab] of SOURCE_TABS)if(!workbook.getWorksheet(tab))throw new Error('GTA source tab missing: '+tab);
+  for(const [tab,id] of SOURCE_TABS)if(!OPTIONAL_TABS.has(id)&&!workbook.getWorksheet(tab))throw new Error('GTA source tab missing: '+tab);
   return parseRows(workbook);
 }
 
@@ -75,7 +97,7 @@ async function readSourceRows(force=false){
   const store=sheetStore();let cache=null;
   try{cache=await store.get('last-good-groups-v2',{type:'json'});}catch{}
   if(!force&&Array.isArray(cache?.rows)&&Date.now()-Date.parse(cache.at)<SHEET_TTL)return {...cache,cached:true};
-  try{const rows=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE'};
+  try{const rows=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:[...new Set(rows.map(p=>p.sourceTab))]};
     try{await store.setJSON('last-good-groups-v2',updated);}catch{}return {...updated,cached:false};
   }catch(e){
     if(!Array.isArray(cache?.rows))for(const key of ['last-good-groups-v1','last-good-shortio-v3','last-good']){
@@ -87,11 +109,17 @@ async function readSourceRows(force=false){
   }
 }
 
+export function excludedCopies(rows){
+  const copies=(rows||[]).filter(p=>p.duplicateOf);
+  return {count:copies.length,recordedCost:Math.round(copies.reduce((n,p)=>n+(p.cost||0),0)*100)/100,tabs:[...new Set(copies.map(p=>p.sourceTab))]};
+}
 async function sourceRows(force=false){
   const source=await readSourceRows(force);
+  // Copied rows never reach spend, clicks or views; they are reported separately.
+  const kept=source.rows.filter(p=>!p.duplicateOf);
   const usage=new Map();
-  for(const p of source.rows){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
-  return {...source,rows:source.rows.map(p=>({...p,sharedTracking:usage.get(p.trackingUrl)?.size>1}))};
+  for(const p of kept){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
+  return {...source,rows:kept.map(p=>({...p,sharedTracking:usage.get(p.trackingUrl)?.size>1})),excludedCopies:excludedCopies(source.rows)};
 }
 
 const mergeMetrics=(rows,metrics)=>rows.map(p=>{
@@ -125,14 +153,15 @@ export async function groupReport(source,metric,{force=false,refreshClicks=false
 
 export async function getReport(options={}){
   const [source,metric]=await Promise.all([sourceRows(options.force),getMetrics()]);
-  const [qrts,originals]=await Promise.all([
-    groupReport({...source,rows:source.rows.filter(p=>p.campaign==='GTAQ'&&p.sourceTab===SOURCE_TABS[0][0])},metric,options),
-    groupReport({...source,rows:source.rows.filter(p=>SOURCE_TABS.slice(1).some(([tab,id])=>p.sourceTab===tab&&p.campaign===id))},metric,options)
-  ]);
+  const [qrts,originals,instagram]=await Promise.all(['qrts','originals','instagram'].map(group=>
+    groupReport({...source,rows:source.rows.filter(p=>inGroup(p,group))},metric,options)));
   const quoteGroups=summariseQuotedOriginals(qrts.publishers,metric.metrics);
   const paidOriginals=new Set(originals.publishers.filter(p=>p.posted&&p.paid).map(p=>xPost(p.postUrl)?.id).filter(Boolean));
   quoteGroups.rows=quoteGroups.rows.map(row=>({...row,paidOriginalMatch:paidOriginals.has(row.originalPostId)}));
-  return {...qrts,originals:{...originals,scope:'published-originals-v1'},quotedOriginals:quoteGroups};
+  const tabs=source.tabs||[...new Set(source.rows.map(p=>p.sourceTab))];
+  return {...qrts,originals:{...originals,scope:'published-originals-v1'},instagram:{...instagram,scope:'instagram-v1'},quotedOriginals:quoteGroups,
+    budget:GTA_BUDGET,excludedCopies:source.excludedCopies,
+    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&!tabs.includes(tab)&&id!=='GTAQ2').map(([tab])=>tab):[]};
 }
 
 export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metricStore(),readSource=sourceRows,readReport=getReport}={}){
@@ -168,7 +197,7 @@ export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metr
     lastManualAt:manual?now:Number(last.lastManualAt||0),updated,total:distinct.length,errors};
   await st.setJSON('latest',next);
   const report=await readReport({refreshClicks:true,cacheOnly:false});
-  return {...report,refreshed:errors.length===0&&!report.sourceStale&&report.shortIo.errors===0&&report.originals.shortIo.errors===0,updated,total:distinct.length,errors,
+  return {...report,refreshed:errors.length===0&&!report.sourceStale&&report.shortIo.errors===0&&report.originals.shortIo.errors===0&&!(report.instagram?.shortIo.errors),updated,total:distinct.length,errors,
     skipped:false,serverNow:Date.now(),nextRefreshAt:manual?now:Number(last.lastManualAt||0)};
 }
 
@@ -202,6 +231,6 @@ export async function runRefreshJob(id){
  if(prior?.data?.id!==id||prior.data.state!=='queued')return;
  const job={...prior.data,state:'running'};
  const claimed=await st.setJSON('refresh-job-v2',job,{onlyIfMatch:prior.etag});if(!claimed.modified)return;
- try{const report=await refreshGtaMetrics({manual:true});await st.setJSON('refresh-job-v2',{...job,state:'complete',expiresAt:0,completedAt:new Date().toISOString(),errors:report.shortIo.errors+report.originals.shortIo.errors+(report.errors?.length||0),updated:report.updated,total:report.total});}
+ try{const report=await refreshGtaMetrics({manual:true});await st.setJSON('refresh-job-v2',{...job,state:'complete',expiresAt:0,completedAt:new Date().toISOString(),errors:report.shortIo.errors+report.originals.shortIo.errors+(report.instagram?.shortIo.errors||0)+(report.errors?.length||0),updated:report.updated,total:report.total});}
  catch{await st.setJSON('refresh-job-v2',{...job,state:'failed',expiresAt:0,error:'Refresh failed; last verified readings retained',completedAt:new Date().toISOString()});}
 }

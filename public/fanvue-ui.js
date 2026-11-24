@@ -170,15 +170,23 @@
     let lo=Math.min(0,...vals),hi=Math.max(0,...vals);
     const nm=niceMax(Math.max(Math.abs(lo),Math.abs(hi)));
     hi=hi>0?nm.max:0;lo=lo<0?-nm.max:0;if(hi===lo)hi=1;
-    const L=W<480?40:52,R=W<480?12:18,T=12,B=26,iw=W-L-R,ih=H-T-B;
     const n=pts.length,bar=type==='bar'||cat;
+    const L=W<480?40:52,R=W<480?12:18,T=12,iw=W-L-R;
+    // Category names that do not fit their slot wrap onto two lines.
+    const wrap=cat&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
+    const B=wrap?42:26,ih=H-T-B;
+    const twoLines=t=>{const w=String(t).split(' ');if(w.length<2)return [String(t)];let best=1,score=1e9;
+      for(let k=1;k<w.length;k++){const d=Math.max(w.slice(0,k).join(' ').length,w.slice(k).join(' ').length);if(d<score){score=d;best=k;}}
+      return [w.slice(0,best).join(' '),w.slice(best).join(' ')];};
     const X=i=>L+(bar?iw*(i+.5)/n:(n===1?iw/2:iw*i/(n-1)));
     const Y=v=>T+ih-(v-lo)/(hi-lo)*ih;
     let s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true" focusable="false">';
     const steps=Math.round((hi-lo)/nm.step);
     for(let i=0;i<=steps;i++){const v=lo+i*nm.step,y=Y(v);s+='<line class="fv-grid'+(v===0?' is-zero':'')+'" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="fv-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+esc(tickText(v,m.format))+'</text>';}
     const every=Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
-    pts.forEach((p,i)=>{if(i%every!==0&&i!==n-1)return;s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle">'+esc(p.label)+'</text>';});
+    pts.forEach((p,i)=>{if(i%every!==0&&i!==n-1)return;
+      const lines=wrap?twoLines(p.label):[p.label];
+      s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
       const bw=Math.max(6,Math.min(40,iw/n*.55));
       pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="3"/>';});
@@ -263,8 +271,10 @@
     const empty=rows.length?'':(cfg.rows||[]).length&&q?
       '<div class="fv-empty"><p>No matching records.</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset search</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
-    const colgroup=cfg.widths&&!hidden.length?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
-    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(cfg.widths&&!hidden.length?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
+    // Fixed widths apply only when they describe exactly the visible columns.
+    const aligned=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
+    const colgroup=aligned?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
+    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(aligned?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
     const count=rows.length?'<div class="fv-count">'+C.full(rows.length)+' '+(cfg.countLabel?cfg.countLabel(rows.length):rows.length===1?'record':'records')+(cfg.footnote?' · '+cfg.footnote:'')+'</div>':'';
     return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+table+count+'</section>';
   }

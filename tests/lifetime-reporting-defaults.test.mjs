@@ -15,7 +15,7 @@ test('Main dashboard headline is lifetime, not a hidden saved-week selection',()
  assert.doesNotMatch(html,/dashboardWeekSelect|Reporting week/);
  assert.match(app,/const placements=state\.placements;/);
  assert.doesNotMatch(between(app,'function renderKpis(){','function notify('),/\.filter\(p=>p\.active!==false\)/);
- assert.match(app,/label:'Paid spend · all time'/);
+ assert.match(app,/label:'Spend · all time'/);
  assert.match(app,/label:'UTM clicks · all time'/);
  assert.match(app,/label:'X views · all time'/);
  assert.match(app,/label:'Published posts · all time'/);
@@ -28,7 +28,7 @@ test('OF Terms lifetime spend includes paid pending placements and all recorded 
  const of=between(app,'function renderOfReport(){','async function loadGtaReport(');
  assert.match(of,/const paid=allPublishers\.filter\(p=>p\.paid===true\)/);
  assert.match(of,/knownClicks\.reduce\(\(sum,p\)=>sum\+number\(p\.clicks\),0\)/);
- assert.match(of,/Paid spend · all time/);
+ assert.match(of,/Spend · all time/);
  assert.match(of,/UTM clicks · all time/);
  assert.match(of,/Published posts · all time/);
  assert.doesNotMatch(of,/This week's UTM clicks|Week UTM clicks|Week [0-9]/);

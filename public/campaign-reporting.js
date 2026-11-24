@@ -143,7 +143,7 @@
       ];
     }else{
       values=[
-        metric('Paid spend · all time',usd(c.paidSpendKnown)),
+        metric('Spend · all time',usd(c.paidSpendKnown)),
         metric('Published posts · all time',hasFeed(c)?format(c.published):'Not connected'),
         metric('X views · all time',num(c.views)===null?'No verified X reading':format(c.views)),
         metric('Tracked clicks · all time',num(clicks(c))===null?'No connected click source':format(clicks(c)))
@@ -233,7 +233,7 @@
       '<details class="rpt-unlinked-detail"><summary>'+esc(format(unlinked.length))+
       ' paid RTs still need original-post links · '+esc(usd(summary.unlinkedPaidSpendKnown))+
       '</summary>'+
-      grid(['Paid RT publisher','Paid spend','Sheet row','Profile'],
+      grid(['Paid RT publisher','Spend','Sheet row','Profile'],
         unlinked.map(p=>[
           '<strong>'+esc(p.publisher)+'</strong>',
           esc(usd(p.cost)),esc(format(p.sourceRow)),link(p.profileUrl,'View profile')
