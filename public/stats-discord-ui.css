@@ -567,7 +567,7 @@
 
 /* Compact fixed-structure menu. One permanent horizontal row of four buttons.
    A narrow screen scrolls this row, never compresses text or creates a 2x2 grid. */
-:root body .app-header .header-row > .mobile-nav {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav {
   display:grid!important;
   grid-column:1 / -1!important;
   grid-row:2!important;
@@ -595,7 +595,7 @@
   background:transparent!important;
   box-shadow:none!important;
 }
-:root body .app-header .header-row > .mobile-nav > .mobile-nav-item {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item {
   display:inline-flex!important;
   flex-direction:row!important;
   flex-wrap:nowrap!important;
@@ -620,14 +620,14 @@
   transition:filter .14s ease,box-shadow .14s ease!important;
   scroll-snap-align:start;
 }
-:root body .app-header .header-row > .mobile-nav > .mobile-nav-item svg {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item svg {
   display:block!important;
   width:18px!important;
   height:18px!important;
   flex:0 0 18px!important;
   margin:0!important;
 }
-:root body .app-header .header-row > .mobile-nav > .mobile-nav-item span {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item span {
   display:block!important;
   width:auto!important;
   max-width:none!important;
@@ -636,14 +636,14 @@
   text-overflow:clip!important;
   flex:0 0 auto!important;
 }
-:root body .app-header .header-row > .mobile-nav > .mobile-nav-item:is(.is-active,[aria-current="page"]) {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item:is(.is-active,[aria-current="page"]) {
   box-shadow:inset 0 0 0 1px #101827,0 2px 7px rgba(14,24,49,.15)!important;
 }
-:root body .app-header .header-row > .mobile-nav > .mobile-nav-item:hover {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item:hover {
   transform:none!important;
   filter:brightness(.94)!important;
 }
-:root body .app-header .header-row > .mobile-nav > .mobile-nav-item:active {
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item:active {
   transform:none!important;
 }
 @media(max-width:760px) {
@@ -651,7 +651,7 @@
   :root body.is-home .app-header .header-row {
     grid-template-rows:auto auto!important;
   }
-  :root body .app-header .header-row > .mobile-nav {
+  :root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav {
     grid-column:1/-1!important;
     grid-row:2!important;
   }
