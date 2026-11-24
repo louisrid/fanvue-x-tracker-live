@@ -98,10 +98,10 @@
     const count=rows.at(-1)?.series||0;
     const html=window.XTrackerMainChart.markup({rows,title:titles[campaign.id]||'Post views over time',
       context:campaign.id==='guru-rts'?'Guru X RTs':campaign.name,metric:'Total X views',unit:'views',
-      note:count+' posts with saved readings. Total views include organic exposure.'});
+      note:count+' posts · organic views included'});
     return html?'<section class="rpt-main-trend rpt-main-trend-'+esc(campaign.id)+' xt-main-chart">'+html+'</section>':'';
   }
-  const note='<p class="rpt-note">All-time X counters, not unique reach. Clicks come from their named tracking source and are not interchangeable. Missing sign-ups, KYC and earning-creator metrics are shown as unavailable, never zero.</p>';
+  const note='<p class="rpt-note">All-time X metrics. Missing readings stay unavailable.</p>';
   function grid(columns,rows,classname='rpt-table'){
     // The table enhancer adds accessible sortable column controls after every
     // render. Keep cell values as DOM text so it can sort numerically.
@@ -125,26 +125,25 @@
     let values;
     if(c.id==='guru-rts'){
       values=[
-        metric('Boosted posts · all time',format(c.published),'Published boosted X originals'),
-        metric('X views · all time',format(c.views),'Cumulative original-post X views'),
-        metric('Interactions · all time',format(interactions),'Likes + reposts + replies on original posts'),
+        metric('Boosted posts · all time',format(c.published)),
+        metric('X views · all time',format(c.views)),
+        metric('Interactions · all time',format(interactions),'Likes + RTs + replies'),
         metric('Engagement',engagement===null?'Not available':engagement.toFixed(2)+'%','Interactions ÷ views')
       ];
     }else if(c.id==='article-rts'){
       values=[
-        metric('Paid RT spend · all time',usd(c.paidSpendKnown),'Verified from Article RTs Sheet'),
-        metric('Paid RT placements · all time',format(c.paidCount),'Paid accounts, including unpublished'),
-        metric('Marked published',format(c.published),'Source sheet POSTED? checkbox only'),
+        metric('Paid RT spend · all time',usd(c.paidSpendKnown)),
+        metric('Paid RT placements · all time',format(c.paidCount),'Includes pending'),
+        metric('Published',format(c.published),'Sheet status'),
         metric('Original X views · all time',format(c.views),
           format(c.originalsWithViews)+' of '+format(c.originalPosts)+' source posts measured'),
         metric('Original interactions · all time',format(c.interactions),
-          'Likes + reposts + replies on unique originals'),
+          'Likes + RTs + replies'),
         metric('Avg. paid RT cost',usd(avgPaid),'Spend ÷ paid placements')
       ];
     }else{
       values=[
-        metric('Paid spend · all time',usd(c.paidSpendKnown),
-          c.id==='x-articles'?(c.spendPeriod||'All tracked X Article placements'):''),
+        metric('Paid spend · all time',usd(c.paidSpendKnown)),
         metric('Published posts · all time',hasFeed(c)?format(c.published):'Not connected'),
         metric('X views · all time',num(c.views)===null?'No verified X reading':format(c.views)),
         metric('Tracked clicks · all time',num(clicks(c))===null?'No connected click source':format(clicks(c)))
@@ -166,8 +165,7 @@
       ['Publisher','RT status','Paid RT spend','Original X views','Tracked clicks','Original X post / publisher']:
       ['Publisher','Status','Spend','X views','Clicks','Links'];
     const rendered=rows.map(r=>[
-      '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>'+
-        (isArticleRt&&Number.isSafeInteger(r.sourceRow)?'<small class="rpt-rowmeta">Sheet row '+esc(r.sourceRow)+'</small>':''),
+      '<strong>'+esc(r.publisher||r.name||r.handle||'Unnamed')+'</strong>',
       isArticleRt?(r.posted?'Marked posted':r.paid?'Paid · not marked posted':'Unconfirmed'):
         (r.posted?'Live':r.paid?'Pending':'Unconfirmed'),
       r.paid?usd(r.cost):'<span class="rpt-missing">Unpaid</span>',
@@ -175,8 +173,7 @@
       num(r.allTimeClicks??r.clicks??null)===null?'<span class="rpt-missing">'+(r.trackingUrl?'Click feed unavailable':'No tracking link')+'</span>':
         esc(format(r.allTimeClicks??r.clicks??null)),linkCell(r)
     ]);
-    return (isArticleRt?'<p class="rpt-note"><strong>Original X views:</strong> unique source-post counters, not impressions attributable to paid RTs. Paid and posted statuses come directly from separate Sheet columns. Click tracking requires a per-placement UTM link.</p>':'')+
-      '<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+
+    return '<div class="result-line rpt-posts-heading"><h2>Posts<span class="heading-accent">.</span></h2><span class="section-count">'+
       format(isArticleRt?rows.length:rows.filter(r=>r.posted).length)+'</span></div>'+
       grid(cols,rendered);
   }
@@ -184,9 +181,9 @@
     const c=item(id);
     if(!c)return empty('Campaign feed unavailable.');
     const scope=id==='x-articles'
-      ?'<p class="rpt-scope-note"><strong>Spend period:</strong> all-time across every tracked X Article placement currently in the tracker. It is not limited to the last 5 days shown in the graph.</p>'
+      ?'<p class="rpt-scope-note">All-time totals · 5-day chart</p>'
       :id==='article-rts'
-        ?'<p class="rpt-scope-note"><strong>Spend period:</strong> all paid article-retweet accounts recorded in the Sheet, not only those marked posted. Source-post statistics are the original X posts’ cumulative counters, not impressions caused by RT accounts.</p>'
+        ?'<p class="rpt-scope-note">All paid RTs included. Source X views include organic traffic.</p>'
         :'';
     return '<section class="rpt-campaign-panel">'+
       (viewStatus(c)==='Connected'?'':badge(c))+
@@ -201,7 +198,7 @@
     if(!summary||num(summary.paidSpendKnown)===null)return '';
     const used=groups.filter(g=>num(g.paidCount)!==null&&g.paidCount>0);
     const pct=v=>num(v)===null?'—':Number(v).toFixed(2)+'%';
-    const title=compact?'Original X posts linked to paid RTs':'Paid RTs by original X post';
+    const title='Linked X posts';
     const linked=used.length?grid(
       ['Original X post','Original X views','Paid RTs','Paid RT spend','Interactions','Details'],
       used.map(g=>{
@@ -240,8 +237,8 @@
     return '<section class="rpt-rt-source-summary rpt-source-compact">'+
       header(title)+
       '<p class="rpt-note">'+esc(format(summary.paidCount))+' paid RTs · '+
-      esc(usd(summary.paidSpendKnown))+' total sheet spend · '+
-      esc(format(used.length))+' linked original X posts. Original views include organic exposure; do not add original-post and RT views as unique reach.</p>'+
+      esc(usd(summary.paidSpendKnown))+' spend · '+
+      esc(format(used.length))+' linked posts. Source views include organic traffic.</p>'+
       linked+unmatched+'</section>';
   }
   function guruContent(){
@@ -254,7 +251,7 @@
     if(!rows.length)return summary+related+empty('No verified boosted original X tweets currently recorded.');
     const missingSpend=rows.filter(r=>num(r.spend)===null).length;
     const spendNote=missingSpend
-      ?'<p class="rpt-note"><strong>Separate ad boost spend is not recorded for '+esc(format(missingSpend))+' of '+esc(format(rows.length))+' originals.</strong> Paid RT costs from Google Sheets are reported below, without confusing them with ad boost spend.</p>'
+      ?'<p class="rpt-note">Ad boost spend missing for '+esc(format(missingSpend))+'/'+esc(format(rows.length))+' posts. RT payments are separate.</p>'
       :'';
     return summary+spendNote+
       '<div class="result-line rpt-posts-heading"><h2>Original X posts<span class="heading-accent">.</span></h2><span class="section-count">'+format(c.published)+'</span></div>'+
@@ -290,10 +287,9 @@
       metric('Approx. server members',snapshot,latest?'Midday '+esc(latest.date)+' · UK time':'First midday snapshot not yet available'),
       metric('Daily member change',daily,'Compared with previous midday reading')
     ].join('')+'</dl>';
-    const connection='<p class="rpt-note"><strong>Discord First Earnings:</strong> no verified campaign posts linked. '+
-      'The creator sign-up, KYC and first-earnings feeds are not connected. This does not prove no posts exist.</p>';
+    const connection='<p class="rpt-note">Discord First Earnings has no connected campaign feed.</p>';
     return header('Fanvue AI Creator Academy','Verified Discord button clicks and daily server snapshots')+
-      counters+'<p class="rpt-note">Member counts are approximate. The daily history graph is on the Dashboard and starts after two recorded midday snapshots.</p>'+
+      counters+'<p class="rpt-note">Member growth needs two daily snapshots.</p>'+
       connection;
   }
   async function refreshDiscordMetrics(force=false){
@@ -361,8 +357,8 @@
     syncCampaignPillStatus();
 
     if(state.loading&&!state.data){status.textContent='Loading…';panel.innerHTML=empty('Loading…');return;}
-    status.textContent=state.error?(state.data?'Saved · refresh failed':'Unavailable'):
-      state.data?'Updated '+date(state.data.checkedAt):'';
+    status.textContent=state.error?(state.data?'Saved data · refresh failed':'Data unavailable'):'';
+    status.title=state.data?'Last checked '+date(state.data.checkedAt):'';
     panel.innerHTML=state.data?content():empty(state.error||'Loading…');
   }
   async function load(force=false){
