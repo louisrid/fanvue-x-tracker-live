@@ -849,3 +849,8 @@
     line-height:1.15!important;
   }
 }
+
+/* Match the two header navigation buttons to the slightly squarer site UI. */
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item{
+  border-radius:9px!important;
+}
