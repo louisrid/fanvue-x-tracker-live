@@ -552,7 +552,7 @@ function scheduleWeekRollover(){
   const now=new Date(),next=ukMidnight(shift(weekStart(now),7));
   rolloverTimer=setTimeout(()=>{render();scheduleWeekRollover();},Math.min(2147483647,Math.max(1,next-now)));
 }
-function selectedStatsWeek(selection=state.statsWeek){
+function selectedStatsWeek(selection='current'){
   const current=currentStatsWeekNumber();
   const requested=selection==='current'?current:Math.max(1,Math.min(current,Number(selection)||current));
   const from=reportingWeekStart(requested),to=shift(from,6);
