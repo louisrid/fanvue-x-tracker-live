@@ -139,6 +139,22 @@ test('components escape every value and give unavailable states a reason on dema
   assert.match(U.value(C.M.loading()),/fv-skel/);
 });
 
+test('unavailable data is shown once: empty columns hide and neighbouring empty slots merge',()=>{
+  const na=C.M.na(C.OUTCOME_REASON);
+  const rows=[{n:'A',v:1},{n:'B',v:2}];
+  const html=U.tablePanel({id:'t2',title:'T',rows,rowKey:r=>r.n,columns:[
+    {key:'n',label:'Name',type:'name'},{key:'v',label:'Value',get:r=>C.M.value(r.v)},{key:'s',label:'Creator signups',get:()=>na}]},{expanded:new Set()});
+  assert.doesNotMatch(html,/<th[^>]*>.*Creator signups/);
+  assert.match(html,/Not shown, no data yet:<\/b> Creator signups/);
+  assert.match(html,/>Value</);
+  const strip=U.strip([{label:'Paid spend',icon:'wallet',metric:C.M.value(5)},{label:'Creator signups',icon:'user',metric:na},
+    {label:'KYC completions',icon:'shield',metric:na},{label:'Earning creators',icon:'check',metric:na}]);
+  assert.equal((strip.match(/class="fv-metric(?: |")/g)||[]).length,2);
+  assert.match(strip,/Creator signups · KYC completions · Earning creators/);
+  assert.match(strip,/Not connected yet/);
+  assert.equal(U.detailGrid([['KYC completions',U.value(na)],['Paid',C.money(5)]]).includes('KYC completions'),false);
+});
+
 test('six-slot strip keeps fixed metric order on every paid campaign page',()=>{
   for(const label of ['Paid spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators','Approved budget','Remaining budget','CIS registrations','Original-post views','Members','Net growth','Course clicks','Joins','Departures'])
     assert.ok(appJs.includes("'"+label+"'"),label);

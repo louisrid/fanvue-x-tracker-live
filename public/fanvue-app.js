@@ -333,7 +333,7 @@
     return placementColumns({clicks:()=>M.notTracked('Paid reposts have no tracked link.'),
       relationship:{key:'original',label:'Original post',type:'link',html:r=>C.safeUrl(r.sourcePostUrl||r.postUrl)?U.extLink(r.sourcePostUrl||r.postUrl,'Original'):U.status('Link missing','warn')}})
       .map(c=>c.key==='views'?{...c,get:()=>M.notTracked('Paid repost impressions are not measured. The original post’s views are in the details.')}:
-        c.key==='live'?{...c,html:()=>U.reasonButton('Not tracked','No repost URL is recorded; the original post link is not evidence of a repost.')}:c);
+        c.key==='live'?{...c,html:undefined,type:'text',get:()=>M.notTracked('No repost URL is recorded; the original post link is not evidence of a repost.')}:c);
   }
   function repostDetail(r){
     return U.detailGrid([

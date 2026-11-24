@@ -69,7 +69,11 @@
   /* ---------- states ---------- */
   const STATE_LABEL={na:'Not available',notConnected:'Not connected',notTracked:'Not tracked',loading:'Loading'};
   let reasonSeq=0;
+  // Creator outcomes (signups, KYC, earning creators, cost per signup) are not connected yet.
+  const isOutcome=reason=>reason===C.OUTCOME_REASON||/connected creator signups/i.test(String(reason||''));
+  const unavailableState=m=>Boolean(m)&&m.state!=='loading'&&(m.value===null||!['value','partial','stale'].includes(m.state));
   function reasonButton(label,reason,cls=''){
+    if(isOutcome(reason))cls+=' is-outcome';
     if(!reason)return '<span class="fv-state '+cls+'">'+esc(label)+'</span>';
     const id='fvr'+(++reasonSeq);
     return '<button type="button" class="fv-state fv-reason '+cls+'" data-reason="'+esc(reason)+'" aria-describedby="'+id+'">'+esc(label)+
@@ -100,20 +104,37 @@
   function chipIcon(name,cls=''){return '<span class="fv-chipicon '+cls+'">'+icon(name,16)+'</span>';}
 
   /* ---------- metric strip (DESIGN §3, §4.1) ---------- */
+  function stripCell(it){
+    const m=it.metric,unavailable=!m||m.value===null||!['value','partial','stale'].includes(m.state);
+    // Rounded figures (1.61M, $4,441) show the exact value on hover and to screen readers.
+    const shown=unavailable?'':formatValue(m.value,it.format||'count');
+    const exact=unavailable?'':formatValue(m.value,/^money/.test(it.format||'')?'money':'count');
+    const precise=!unavailable&&exact!==shown?' data-reason="Exact: '+esc(exact)+'"':'';
+    return '<div class="fv-metric">'+
+      '<div class="fv-metric-label">'+chipIcon(it.icon)+'<span>'+esc(it.label)+'</span></div>'+
+      '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+value(m,it.format||'count')+
+        (precise?'<span class="fv-sr"> (exact '+esc(exact)+')</span>':'')+'</div>'+
+      (it.chip!==undefined?it.chip:chipFor(m,it.note))+
+    '</div>';
+  }
+  /* Neighbouring slots with no data share one cell, so the label appears once. */
+  function mergedCell(run){
+    const reasons=[...new Set(run.map(it=>it.metric.reason).filter(Boolean))];
+    const label=run.every(it=>isOutcome(it.metric.reason))?'Not connected yet':run.every(it=>it.metric.state==='notConnected')?'Not connected':
+      run.every(it=>it.metric.state==='notTracked')?'Not tracked':'Not available';
+    return '<div class="fv-metric is-merged'+(run.length>=3?' is-wide':'')+'" style="--span:'+run.length+'">'+
+      '<div class="fv-metric-label">'+chipIcon(run[0].icon)+'<span>'+run.map(it=>esc(it.label)).join(' · ')+'</span></div>'+
+      '<div class="fv-metric-value is-state">'+reasonButton(label,reasons.join('\n'),'is-na')+'</div></div>';
+  }
   function strip(items){
-    return '<section class="fv-panel fv-strip" style="--n:'+items.length+'" aria-label="Key metrics">'+items.map(it=>{
-      const m=it.metric,unavailable=!m||m.value===null||!['value','partial','stale'].includes(m.state);
-      // Rounded figures (1.61M, $4,441) show the exact value on hover and to screen readers.
-      const shown=unavailable?'':formatValue(m.value,it.format||'count');
-      const exact=unavailable?'':formatValue(m.value,/^money/.test(it.format||'')?'money':'count');
-      const precise=!unavailable&&exact!==shown?' data-reason="Exact: '+esc(exact)+'"':'';
-      return '<div class="fv-metric">'+
-        '<div class="fv-metric-label">'+chipIcon(it.icon)+'<span>'+esc(it.label)+'</span></div>'+
-        '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+value(m,it.format||'count')+
-          (precise?'<span class="fv-sr"> (exact '+esc(exact)+')</span>':'')+'</div>'+
-        (it.chip!==undefined?it.chip:chipFor(m,it.note))+
-      '</div>';
-    }).join('')+'</section>';
+    const cells=[];
+    for(let i=0;i<items.length;i++){
+      let j=i;
+      while(unavailableState(items[i].metric)&&j+1<items.length&&unavailableState(items[j+1].metric))j++;
+      if(j>i){cells.push(mergedCell(items.slice(i,j+1)));i=j;}
+      else cells.push(stripCell(items[i]));
+    }
+    return '<section class="fv-panel fv-strip" style="--n:'+items.length+'" aria-label="Key metrics">'+cells.join('')+'</section>';
   }
 
   /* ---------- panel heads ---------- */
@@ -225,7 +246,18 @@
     const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search records</span><input type="search" placeholder="Search records" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
     const tools=views||search||filters?'<div class="fv-table-tools">'+views+filters+search+'</div>':'';
-    const cols=cfg.columns;
+    // Columns with no data for any record are hidden and listed once above the table.
+    const hidden=[];
+    const cols=(cfg.rows||[]).length&&cfg.hideEmpty!==false?cfg.columns.filter(c=>{
+      if(!c.get||c.keep)return true;
+      const vals=cfg.rows.map(r=>c.get(r));
+      if(!vals.every(v=>v&&typeof v==='object'&&'state' in v&&unavailableState(v)))return true;
+      hidden.push({label:c.label,reason:vals[0]?.reason||''});return false;
+    }):cfg.columns;
+    const groups=new Map();for(const h of hidden){const k=isOutcome(h.reason)?'Creator outcomes (signups, KYC, earning creators) are not connected yet.':h.reason.replace(/^Not (?:connected|tracked): /,'');(groups.get(k)||groups.set(k,[]).get(k)).push(h.label);}
+    // One short line; the reasons show on hover, focus and tap.
+    const hiddenNote=hidden.length?'<p class="fv-hidden-note" tabindex="0" data-reason="'+esc([...groups].map(([reason,labels])=>labels.join(', ')+': '+reason).join('\n'))+'">'+
+      '<b>Not shown, no data yet:</b> '+esc(hidden.map(h=>h.label).join(', '))+'.<span class="fv-sr"> '+esc([...groups].map(([reason])=>reason).join(' '))+'</span></p>':'';
     const head='<tr>'+cols.map(c=>{
       const sorted=st.sort?.key===c.key,dir=sorted?(st.sort.dir>0?'ascending':'descending'):'none';
       const left=['name','text','status','link'].includes(c.type)||c.align==='left';
@@ -244,14 +276,14 @@
     const empty=rows.length?'':(cfg.rows||[]).length&&q?
       '<div class="fv-empty"><p>No matching records.</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset search</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
-    const colgroup=cfg.widths?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
-    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(cfg.widths?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':'')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
+    const colgroup=cfg.widths&&!hidden.length?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
+    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(cfg.widths&&!hidden.length?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':'')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
     const count=rows.length?'<div class="fv-count">'+C.full(rows.length)+' '+(cfg.countLabel?cfg.countLabel(rows.length):rows.length===1?'record':'records')+(cfg.footnote?' · '+cfg.footnote:'')+'</div>':'';
-    return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+(cfg.notice||'')+table+count+'</section>';
+    return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+(cfg.notice||'')+hiddenNote+table+count+'</section>';
   }
 
   /* Detail grid used inside expanded rows. items: [[label, html]] */
-  const detailGrid=items=>'<dl class="fv-detail-grid">'+items.filter(Boolean).map(([k,v])=>'<div><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>').join('')+'</dl>';
+  const detailGrid=items=>'<dl class="fv-detail-grid">'+items.filter(Boolean).filter(([,v])=>!String(v).includes('is-outcome')).map(([k,v])=>'<div><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>').join('')+'</dl>';
   const status=(text,tone='')=>'<span class="fv-status'+(tone?' is-'+tone:'')+'">'+esc(text)+'</span>';
   function extLink(url,label,{iconOnly=false}={}){
     const href=C.safeUrl(url);
@@ -263,7 +295,7 @@
     return plain?'<span class="fv-marker is-plain">'+icon(iconName,15)+'</span>':'<span class="fv-marker" style="background:'+pal.fill+'">'+icon(iconName,15)+'</span>';
   };
   /* Supporting blocks */
-  const inlineMetrics=items=>'<div class="fv-inline-metrics">'+items.map(([label,html])=>'<div><span>'+esc(label)+'</span><b>'+html+'</b></div>').join('')+'</div>';
+  const inlineMetrics=items=>'<div class="fv-inline-metrics">'+items.filter(([,v])=>!String(v).includes('is-outcome')).map(([label,html])=>'<div><span>'+esc(label)+'</span><b>'+html+'</b></div>').join('')+'</div>';
   const supportLine=(left,right='')=>'<div class="fv-support-line"><span>'+left+'</span>'+(right?'<span class="fv-support-right">'+right+'</span>':'')+'</div>';
   const supportPanel=(title,iconName,body,tools='')=>'<section class="fv-panel fv-support">'+panelHead(title,iconName,tools)+body+'</section>';
 
