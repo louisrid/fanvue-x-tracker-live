@@ -674,7 +674,15 @@ function refreshDetails(){
   }
   tickAges();
 }
-function closeEditor(){el('editModal').hidden=true;document.body.classList.remove('modal-open');state.pendingEditor=null;}
+function closeEditor(){el('editModal').hidden=true;document.body.classList.remove('modal-open');state.pendingEditor=null;settleUnlock(false);}
+// The campaign manager reuses this unlock step. The key stays in this closure's memory.
+const unlockWaiters=[];
+function settleUnlock(ok){for(const waiter of unlockWaiters.splice(0))waiter(ok);}
+function requestUnlock(){if(state.adminKey)return Promise.resolve(true);if(!state.adminConfigured){notify('Admin access not configured');return Promise.resolve(false);}
+  return new Promise(resolve=>{openEditor('unlockOnly');unlockWaiters.push(resolve);});}
+async function registryWrite(body){if(!state.adminKey)return {ok:false,status:401,error:'Editing is locked'};
+  const res=await fetch('/.netlify/functions/campaign-registry',{method:'POST',cache:'no-store',headers:{'content-type':'application/json',authorization:'Bearer '+state.adminKey},body:JSON.stringify(body)});
+  const data=await res.json().catch(()=>({ok:false,error:'Unrecognised response'}));if(res.status===401)state.adminKey='';return {...data,status:res.status};}
 function editField(label,name,type='text',value='',extra=''){return `<label class="form-field"><span>${esc(label)}</span><input name="${esc(name)}" type="${type}" value="${esc(value??'')}" ${extra}></label>`;}
 function editSelect(label,name,options,selected){return `<label class="form-field"><span>${esc(label)}</span><select name="${esc(name)}">${options.map(([value,text])=>`<option value="${esc(value)}" ${value===selected?'selected':''}>${esc(text)}</option>`).join('')}</select></label>`;}
 const stages=[['planned','Planned'],['contacted','Contacted'],['booked','Booked'],['published','Published']];
@@ -717,7 +725,9 @@ async function adminSend(body,key=state.adminKey){
 }
 async function onUnlock(form){const key=form.elements.key.value.trim();if(!key)return;
   const button=form.querySelector('button');button.disabled=true;
-  try{await adminSend({type:'check'},key);state.adminKey=key;const {kind,id}=state.pendingEditor;el('editModalBody').innerHTML=editorHtml(kind,id);notify('Editing unlocked');}
+  try{await adminSend({type:'check'},key);state.adminKey=key;const {kind,id}=state.pendingEditor;globalThis.dispatchEvent?.(new CustomEvent('xtracker:unlocked'));
+    if(kind==='unlockOnly'){settleUnlock(true);closeEditor();notify('Editing unlocked');return;}
+    el('editModalBody').innerHTML=editorHtml(kind,id);notify('Editing unlocked');}
   catch(e){notify(String(e.message||e));}
   finally{button.disabled=false;}
 }
@@ -1649,7 +1659,10 @@ window.XTrackerApp=Object.freeze({
   refresh:Object.freeze({all:reloadAllData,x:refreshXStats,of:refreshOfReport,gta:refreshGtaReport,boosts:refreshBoostStats}),
   status:id=>{const node=el(id);return {text:node.textContent||'',error:node.classList.contains('is-error')};},
   showRecords:page=>route(page||'',false),
-  openEditor:(kind,id)=>openEditor(kind,id)
+  openEditor:(kind,id)=>openEditor(kind,id),
+  isUnlocked:()=>Boolean(state.adminKey),
+  requestUnlock,
+  registryWrite
 });
 })();
 

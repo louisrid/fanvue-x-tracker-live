@@ -145,7 +145,7 @@
     const table=U.tablePanel({id:'home-results',title:'Campaign results',icon:'layers',rows,rowKey:r=>r.key,rowLabel:r=>r.def.name,widths:ALIGNED,
       empty:S?'No campaigns.':waiting('Loading campaign results…'),countLabel:n=>n===1?'campaign':'campaigns',
       columns:[
-        {key:'name',label:'Campaign',type:'name',html:r=>'<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(r.def.icon==='x'?'xmark':r.def.icon,r.def.color)+'<span>'+esc(r.def.name)+'</span></a>',sort:r=>r.def.name},
+        {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>';},sort:r=>r.def.name},
         {key:'spend',label:'Paid spend',format:'money',get:r=>r.spend},
         {key:'views',label:'Post views',get:r=>r.views,html:r=>(r.key==='guru-promotion'&&C.hasValue(r.views)?U.reasonButton('Original','Original-post views, not paid repost views.','fv-chip fv-cell-chip')+' ':'')+U.value(r.views)},
         {key:'clicks',label:'Tracked clicks',get:r=>r.clicks,html:r=>(r.clicks?.state==='stale'?U.reasonButton('Stale',r.clicks.reason,'fv-chip is-warn fv-cell-chip')+' ':'')+U.value(r.clicks)},
@@ -530,14 +530,18 @@
   const hooks={addedRoute:null,navExtra:null,headerExtra:null};  // extension points (campaign manager)
   function navHtml(active){
     const item=p=>{
-      const color=p.color?C.PALETTE[p.color]?.icon:p.key==='discord'?'var(--fv-discord)':'#FFFFFF';
-      return '<a class="fv-nav-item" href="#'+esc(p.key)+'" style="--fv-icon:'+esc(color)+'"'+(p.key===active?' aria-current="page"':'')+'>'+U.icon(p.icon==='x'?'xmark':p.icon,17)+'<span>'+esc(p.title)+'</span></a>';
+      const o=p.group==='paid'?look(p.key):null;
+      const color=o?C.PALETTE[o.color]?.icon:p.key==='discord'?'var(--fv-discord)':'#FFFFFF';
+      return '<a class="fv-nav-item" href="#'+esc(p.key)+'" style="--fv-icon:'+esc(color)+'"'+(p.key===active?' aria-current="page"':'')+'>'+U.icon(o?o.icon:p.icon,17)+'<span>'+esc(p.title)+'</span></a>';
     };
     return '<div class="fv-nav" role="group" aria-label="General">'+PAGES.filter(p=>p.group==='general').map(item).join('')+'</div>'+
       '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvPaidLabel">Paid campaigns</span>'+(hooks.navAddButton?hooks.navAddButton():'')+'</div>'+
       '<div class="fv-nav" role="group" aria-labelledby="fvPaidLabel">'+PAGES.filter(p=>p.group==='paid').map(item).join('')+(hooks.navExtra?hooks.navExtra(active):'')+'</div>';
   }
   function setNav(active){$('fvNav').innerHTML=navHtml(active);}
+  // Built-in campaign icon and colour, with any saved override from the campaign manager.
+  function look(key){const d=C.CAMPAIGNS.find(c=>c.key===key);const o=hooks.override?.(key);return {icon:o?.icon?glyphName(o.icon):(d.icon==='x'?'xmark':d.icon),color:o?.color||d.color};}
+  const glyphName=n=>({'trending-up':'trend','user-plus':'userplus','graduation-cap':'graduation'}[n]||n);
   function setTitle(text){document.title=text+' · '+APP_NAME;}
 
   function captureFocus(){
@@ -578,8 +582,9 @@
       setNav(r.key);
     }
     setTitle(page.title);
-    const chipDef=C.CAMPAIGNS.find(c=>c.key===page.chip);
-    $('fvTitleChip').innerHTML=page.chipHtml||(chipDef?'<span class="fv-campaign-chip" style="background:'+C.PALETTE[chipDef.color].fill+'" aria-hidden="true">'+U.icon(chipDef.icon==='x'?'xmark':chipDef.icon,15)+'</span>':'');
+    const chipDef=C.CAMPAIGNS.find(c=>c.key===page.chip),chipLook=chipDef?look(chipDef.key):null;
+    $('fvTitleChip').innerHTML=page.chipHtml||(chipLook?'<span class="fv-campaign-chip" style="background:'+C.PALETTE[chipLook.color].fill+'" aria-hidden="true">'+U.icon(chipLook.icon,15)+'</span>':'');
+    if(chipDef&&hooks.extraBody)page.body+=hooks.extraBody(chipDef.key)||'';
     $('fvTitle').textContent=page.title;
     const upd=$('fvUpdated');
     upd.textContent=page.updated?(page.stale?'Last verified ':'Updated ')+C.stamp(page.updated):'';
@@ -601,7 +606,7 @@
       const m=U.getMeasure(host.id,host.dataset.measure);if(m)U.drawChart(host,m,host.dataset.type);
     }
   }
-  function rerender(){if(current.kind==='records')return;render();}
+  function rerender(){if(current.kind==='records'){setNav(RECORDS[current.key].parent);return;}render();}
 
   /* ---------- events ---------- */
   function go(hash){if(location.hash==='#'+hash)rerender();else location.hash=hash;}
@@ -623,7 +628,8 @@
     let message='',error=false;
     try{
       const k=current.kind==='page'?current.key:'';
-      if(k==='home'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'Refreshed';error=!!s?.error;}
+      if(current.kind==='added'){const ok=await hooks.refresh?.(current);message=ok?'Refreshed':'Campaign registry unavailable; last saved details kept';error=!ok;}
+      else if(k==='home'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'Refreshed';error=!!s?.error;}
       else if(k==='discord'){const ok=await rep?.refreshDiscord?.(true);message=ok?'Discord sources checked':'Discord sources unavailable; last verified figures kept';error=!ok;}
       else{
         const fn={'x-articles':'x','gta-vi':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
