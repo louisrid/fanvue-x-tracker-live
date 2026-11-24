@@ -457,7 +457,7 @@
         window.XTrackerLastGood?.write('campaign-overview',safe,validOverview);
         return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!safe.campaigns.some(c=>c.dataWarning||c.sourceStale);
       }catch(e){state.error=txt(e.message||e);return false;}
-      finally{state.loading=null;render();}
+      finally{state.loading=null;render();window.dispatchEvent(new Event('xtracker:campaign-overview'));}
     })();
     // Render after state.loading is assigned, so direct links never say "Not loaded".
     queueMicrotask(render);
@@ -501,6 +501,7 @@
     // Without this, direct campaign URLs can remain stuck on the loading placeholder.
     const direct=location.hash.match(/^#report-(article-rt|guru|articles)$/);
     if(direct)window.XTrackerCampaignReporting?.show(direct[1]);
+    else if(location.hash==='#x-rts')void load();
   }
   window.XTrackerCampaignReporting={
     show:(selected='article-rt')=>{
