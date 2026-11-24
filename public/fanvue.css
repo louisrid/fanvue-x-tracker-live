@@ -216,7 +216,7 @@ a.fv-name:hover{color:var(--fv-blue)}
 .fv-inline-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .fv-inline-metrics>div{min-width:0;padding:2px 10px;border-right:1px solid var(--fv-border)}
 .fv-inline-metrics>div:last-child{border-right:0}
-.fv-inline-metrics span{display:block;font-size:11px;color:var(--fv-muted)}
+.fv-inline-metrics>div>span{display:block;font-size:11px;color:var(--fv-muted)}
 .fv-inline-metrics b{display:block;margin-top:2px;font-size:17px;line-height:24px;font-weight:680}
 .fv-inline-metrics b .fv-state{font-size:13px}
 .fv-support-line{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px;font-size:12px;color:#3B4758}
