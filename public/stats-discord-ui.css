@@ -1336,3 +1336,17 @@
   }
   :root body.is-home #mainContent #page-dashboard #dashboardDetails .dashboard-detail-indicator > :first-child{display:none!important;}
 }
+
+
+/* The 'Articles this week' drawer showed older articles as current. Remove
+   it from the dashboard until genuine week-level publication status exists.
+   Underlying legacy DOM is retained for JS callers and per-campaign pages. */
+:root body #mainContent #page-dashboard #dashboardDetails.dashboard-article-drawer {
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
