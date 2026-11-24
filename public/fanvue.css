@@ -450,3 +450,4 @@ body.fv-editor-open{overflow:hidden}
 @media (max-width:1100px){.fv-metric.is-merged{grid-column:span 1}.fv-metric.is-merged:nth-child(3n+1):last-child{grid-column:1/-1}}
 .fv-hidden-note{cursor:help}
 @media (max-width:767px){.fv-metric.is-merged{grid-column:1/-1;border-right:0!important}}
+.fv-table td.is-merged{text-align:center}
