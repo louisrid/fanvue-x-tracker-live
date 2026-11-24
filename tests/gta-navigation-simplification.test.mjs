@@ -22,7 +22,7 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
   assert.match(app,/gtaState\.tab==='qrts'/);
   assert.match(app,/renderGtaQuotedSources\(\);/);
   assert.match(app,/class="gta-quoted-collapse"/);
-  assert.match(app,/Source X views and QRT views are separate/);
+  assert.match(app,/Original and QRT views are separate/);
   assert.match(app,/qrt\.trackingUrl/);
   assert.match(app,/qrt\.profileUrl/);
   assert.ok(html.indexOf('id="gtaQuotedSources"')<html.indexOf('id="gtaPublishers"'));
@@ -30,7 +30,7 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
 
 test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
   assert.match(html,/dashboard-campaign-pill is-boosts/);
-  assert.match(html,/Article retweets · separate campaign/);
+  assert.match(html,/dashboard-pill-copy"><strong>X Article Boosts<\/strong>/);
   assert.match(html,/QRTs · Posts/);
   assert.doesNotMatch(reporting,/function articleSources\(\)/);
 });
