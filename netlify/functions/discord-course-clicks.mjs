@@ -11,7 +11,7 @@ const responseHeaders={'cache-control':'no-store, max-age=0'};
 
 export const isCourseBeacon=req=>new URL(req.url).searchParams.get('source')===SOURCE;
 export const isTrustedCourseBeacon=req=>
-  req.method==='HEAD'&&TRUSTED_AGENT.test(req.headers.get('user-agent')||'');
+  (req.method==='HEAD'||req.method==='GET')&&TRUSTED_AGENT.test(req.headers.get('user-agent')||'');
 
 export function summariseCourseBeaconKeys(keys,now=Date.now()){
   let total=0,last7Days=0;
