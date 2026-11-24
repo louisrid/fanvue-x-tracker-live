@@ -954,22 +954,31 @@ function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix
 }
 function renderOfReport(){
   const report=state.ofCampaign,ready=report?.ready===true;
-  const from=weekStart(new Date()),to=shift(from,6),today=day(new Date());
-  const dateLabel=date=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(new Date(date+'T12:00:00Z'));
-  el('ofWeekLabel').textContent=`${dateLabel(from)} – ${dateLabel(to)} · UK time`;
+  const today=day(new Date());
+  el('ofWeekLabel').textContent='Lifetime campaign totals · tracked clicks since tracking began';
   el('ofLiveStatus').textContent=ready?'Campaign report':state.ofSettled?'Report unavailable':'Loading report…';
   el('ofLiveStatus').classList.toggle('is-live',ready);
   el('ofReportError').hidden=ready?!(report.warning||state.ofError):!state.ofSettled;
   el('ofReportError').textContent=report?.warning||state.ofError||'Campaign data temporarily unavailable. Please try again shortly.';
-  const rows=(ready?report.publishers:[]).filter(p=>p.posted===true).map(ofPublisherMetrics),activity=ready?(report.activity||[]):[];
-  const daily=Array.from({length:7},(_,i)=>{const date=shift(from,i);return {date,clicks:activity.filter(e=>e.date===date).reduce((sum,e)=>sum+e.clicks,0)};});
-  const paid=rows.filter(p=>p.paid),posted=rows.filter(p=>p.posted===true),weekly=daily.reduce((sum,d)=>sum+d.clicks,0);
+  const allPublishers=(ready?report.publishers:[]).map(ofPublisherMetrics);
+  const rows=allPublishers.filter(p=>p.posted===true),activity=ready?(report.activity||[]):[];
+  const paid=allPublishers.filter(p=>p.paid===true),posted=rows;
+  const knownClicks=allPublishers.filter(p=>number(p.clicks)!==null);
+  const lifetimeClicks=ready?
+    (knownClicks.length?knownClicks.reduce((sum,p)=>sum+number(p.clicks),0):0):null;
   const paidTotal=paid.some(p=>p.cost===null)?null:paid.reduce((sum,p)=>sum+p.cost,0);
-  const defs=[['spend','Campaign paid total',ready?money(paidTotal):'—',ready?`${paid.length} paid ${paid.length===1?'publisher':'publishers'} · campaign to date`:'Waiting for verified campaign data'],['seven','Combined X views',gtaNumber(posted.some(p=>number(p.xViews)!==null)?posted.reduce((sum,p)=>sum+(number(p.xViews)??0),0):null),`${posted.filter(p=>number(p.xViews)!==null).length} of ${posted.length} live posts with verified views`],['published','Published X posts',ready?fmt(posted.length):'—','Campaign to date · 5-post X threads']];
+  const defs=[['spend','Paid spend · all time',ready?money(paidTotal):'—',ready?
+    `${paid.length} paid placements · ${paid.length-posted.filter(p=>p.paid).length} paid not yet published`:
+    'Waiting for verified campaign data'],
+    ['seven','X views · all time',gtaNumber(posted.some(p=>number(p.xViews)!==null)?
+      posted.reduce((sum,p)=>sum+(number(p.xViews)??0),0):null),
+      `${posted.filter(p=>number(p.xViews)!==null).length} of ${posted.length} published posts verified`],
+    ['published','Published posts · all time',ready?fmt(posted.length):'—','All published campaign X posts']];
   const interactions=interactionSummary(posted);
   defs.push(['interactions','Total interactions',gtaNumber(interactions.total),interactions.note]);
   renderEngagement('of',ready?posted:[]);
-  defs.push(['shortio',"This week's UTM clicks",ready?fmt(weekly):'—','Verified OF click events · Mon–Sun · tap for breakdown']);
+  defs.push(['shortio','UTM clicks · all time',gtaNumber(lifetimeClicks),
+    `${knownClicks.length} of ${allPublishers.length} placement links verified · tap to view posts`]);
   el('ofMetrics').innerHTML=defs.map(([kind,label,value,sub])=>`<${kind==='shortio'?'button type="button" aria-controls="ofPublishers" data-of-clicks':'div'} class="daily-metric daily-metric-${kind}"><span class="daily-metric-label">${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small></${kind==='shortio'?'button':'div'}>`).join('');
   el('ofMetrics').querySelector('[data-of-clicks]')?.addEventListener('click',()=>focusPromoClicks('ofPublishers','UTM clicks'));
 
@@ -981,11 +990,13 @@ function renderOfReport(){
   }else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
   const link=(url,label)=>safeUrl(url)?`<a class="button" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${label}</a>`:'';
   const section=(title,publishers)=>`<section class="of-publisher-section"><div class="result-line"><h2>${title}<span class="heading-accent">.</span></h2><span class="section-count">${publishers.length}</span></div><div class="of-publisher-grid">${publishers.map(p=>{
-    const wc=activity.filter(e=>e.code===p.code&&e.date>=from&&e.date<=to).reduce((sum,e)=>sum+e.clicks,0);
     const live=p.posted===true,url=live?safeUrl(p.postUrl):safeUrl(p.profileUrl);
     const tag=url?'a':'div';
     const attributes=url?` href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(p.publisher)} ${live?'live X post':'X profile'}"`:'';
-    const content=articleCardContent({...p,articleLabel:'X post'},{live,promo:true,metricsOverride:[['clicks','UTM Clicks',ready?p.clicks:null],['week','Week UTM clicks',ready?wc:null],['spend','Paid total',p.paid?money(p.cost):'Unpaid']]});
+    const content=articleCardContent({...p,articleLabel:'X post'},{live,promo:true,
+      metricsOverride:[['clicks','Lifetime UTM clicks',ready?p.clicks:null],
+        ['views','Lifetime X views',p.views??null],
+        ['spend','Paid cost',p.paid?money(p.cost):'Unpaid']]});
     return `<article class="of-publisher-entry"><${tag}${attributes} data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${content}</${tag}><p class="of-last-click">Last click: ${p.lastClick?esc(new Intl.DateTimeFormat('en-GB',{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}).format(new Date(p.lastClick)))+' UK':'None recorded'}</p><div class="of-publisher-links">${link(p.profileUrl,'X profile')}${link(p.postUrl,'View post')}</div></article>`;
   }).join('')||'<div class="empty-state">No posts in this group.</div>'}</div></section>`;
   el('ofPublishers').innerHTML=ready?section('Published X posts',posted):'';
