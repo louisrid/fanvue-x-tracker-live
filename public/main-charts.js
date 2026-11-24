@@ -51,5 +51,30 @@
       '<path class="xt-chart-line" d="'+path+'"/>'+points+dates+'</svg></div>'+
       '<p class="xt-chart-note">'+esc(note)+'</p>';
   }
+  function fitCharts(){
+    const compact=window.innerWidth<=640,W=compact?520:900,L=compact?104:86,R=30;
+    for(const svg of document.querySelectorAll('.xt-main-chart .xt-chart-plot svg')){
+      const box=svg.getAttribute('viewBox').split(/\s+/),oldW=Number(box[2]);
+      if(oldW===W||![520,900].includes(oldW))continue;
+      const oldL=oldW===520?104:86;
+      const project=value=>L+(Number(value)-oldL)/(oldW-oldL-R)*(W-L-R);
+      for(const line of svg.querySelectorAll('.xt-chart-grid')){
+        line.setAttribute('x1',L);line.setAttribute('x2',W-R);
+      }
+      for(const axis of svg.querySelectorAll('.xt-chart-axis'))
+        axis.setAttribute('x',axis.getAttribute('text-anchor')==='end'?L-12:project(axis.getAttribute('x')));
+      for(const point of svg.querySelectorAll('.xt-chart-dot,.xt-chart-hit')){
+        point.setAttribute('cx',project(point.getAttribute('cx')));
+        if(point.classList.contains('xt-chart-hit'))point.setAttribute('r',compact?42:16);
+      }
+      const dots=[...svg.querySelectorAll('.xt-chart-dot')];
+      svg.querySelector('.xt-chart-line').setAttribute('d',dots.map((p,i)=>(i?'L':'M')+
+        Number(p.getAttribute('cx')).toFixed(1)+' '+Number(p.getAttribute('cy')).toFixed(1)).join(' '));
+      svg.setAttribute('viewBox','0 0 '+W+' '+box[3]);
+    }
+    window.XTrackerChartTooltip?.hide(true);
+  }
+  if(typeof window.matchMedia==='function')
+    window.matchMedia('(max-width:640px)').addEventListener('change',fitCharts);
   window.XTrackerMainChart={markup};
 })();
