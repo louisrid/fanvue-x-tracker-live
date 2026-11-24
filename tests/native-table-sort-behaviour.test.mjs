@@ -8,12 +8,12 @@ const src=readFileSync('public/xtracker-tables.js','utf8');
 const start=src.indexOf('  function nativeCellSortText(');
 const end=src.indexOf('  function applyNativeSort(',start);
 assert.ok(start>=0&&end>start,'Browser sorting helper is available');
-const text=cell=>(cell?.textContent||'').replace(/\\s+/g,' ').trim();
-const unknown=/^(?:n\\/?a|unknown|not recorded|not tracked|not entered|not supplied|not linked|not available|no tracking link|click feed unavailable|x reading unavailable|original url missing|original x post not supplied|no matched paid rts|needs ad spend|needs spend|pending|unavailable|—|-|)$/i;
+const text=cell=>(cell?.textContent||'').replace(/\s+/g,' ').trim();
+const unknown=/^(?:n\/?a|unknown|not recorded|not tracked|not entered|not supplied|not linked|not available|no tracking link|click feed unavailable|x reading unavailable|original url missing|original x post not supplied|no matched paid rts|needs ad spend|needs spend|pending|unavailable|—|-|)$/i;
 const numeric=value=>{
  const s=String(value??'').trim();
  if(unknown.test(s))return null;
- const m=s.replace(/,/g,'').match(/^-?\\$?\\s*(-?\\d+(?:\\.\\d+)?)\\s*(?:%|views|clicks)?$/i);
+ const m=s.replace(/,/g,'').match(/^-?\$?\s*(-?\d+(?:\.\d+)?)\s*(?:%|views|clicks)?$/i);
  return m&&Number.isFinite(Number(m[1]))?Number(m[1]):null;
 };
 const {nativeCellSortText,compareCell}=new Function('text','numeric','unknown',
