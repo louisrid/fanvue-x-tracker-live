@@ -23,7 +23,7 @@
   function display(saved){
     total.textContent=saved.total.toLocaleString('en-GB');
     week.textContent=saved.last7Days.toLocaleString('en-GB');
-    info.textContent='Saved click data · refreshing';
+    info.textContent='';
     output.dataset.source='ready';
     syncDisplays();
   }
@@ -41,7 +41,7 @@
         last=data;
         window.XTrackerLastGood?.write('discord-course-clicks',data,validClicks);
         display(data);
-        info.textContent='Clicks recorded since dashboard tracking was connected';
+        info.textContent='';
         syncDisplays();
         return true;
       }catch(error){
