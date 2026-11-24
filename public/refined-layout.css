@@ -1052,3 +1052,62 @@
   :root body #mainContent .site-page .xt-main-chart .xt-chart-summary {margin-top:8px!important;}
   :root body #mainContent .site-page .xt-main-chart h2 {font-size:20px!important;}
 }
+
+/* Resolve older report-specific declarations at the same specificity. */
+:root body #mainContent #page-reporting :is(.rpt-scope-note,.rpt-status,.rpt-note,.rpt-missing,
+  .rpt-rowmeta,.rpt-table th,.rpt-table td,.xt-sort-button) {
+  color:#000!important;-webkit-text-fill-color:#000!important;
+}
+:root body #mainContent #page-reporting .rpt-table {border-spacing:0 3px!important;}
+:root body #mainContent #page-reporting .rpt-table tbody td {padding:8px 9px!important;}
+:root body #mainContent #page-reporting .rpt-table thead th {
+  padding:4px!important;color:#000!important;
+}
+:root body .xtracker-chart-tooltip :is(span,strong) {color:#fff!important;}
+:root body #mainContent #page-reporting .rpt-scroll {margin:6px 0 10px!important;}
+:root body #mainContent #page-reporting .rpt-posts-heading {padding:0!important;margin:8px 0!important;}
+:root body #mainContent #page-reporting .rpt-related {
+  margin:10px 0!important;border:1px solid #dce4ef;border-radius:9px;background:#fff;
+}
+:root body #mainContent #page-reporting .rpt-related > summary {
+  padding:11px 13px;font-size:12px;font-weight:850;cursor:pointer;
+}
+:root body #mainContent #page-reporting .rpt-related > .rpt-source-compact {padding:0 12px 10px!important;}
+:root body #mainContent :is(#page-of,#page-gta-vi,#page-reporting) .xt-main-chart {
+  padding:12px 14px 9px!important;margin-top:0!important;
+}
+:root body #mainContent #page-gta-vi #gtaReportPanel > .daily-overview {margin-bottom:10px!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar > .daily-overview-head:has(.daily-live:empty) {display:none!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar {min-height:40px!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar .gta-tabs {min-height:40px!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar .gta-tab {min-height:32px!important;padding:6px 12px!important;}
+
+@media(min-width:1100px) {
+  :root body #mainContent #page-reporting .rpt-data-layout {
+    display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:20px;align-items:start;
+  }
+  :root body #mainContent #page-reporting .rpt-data-layout > * {min-width:0;}
+  :root body #mainContent #page-reporting .rpt-data-layout > .rpt-source-compact {
+    margin:0!important;padding:0!important;border-top:0!important;
+  }
+  :root body #mainContent #page-reporting .rpt-data-layout .rpt-source-compact .rpt-table {
+    min-width:460px!important;table-layout:auto!important;
+  }
+  :root body #mainContent #page-reporting .rpt-data-layout .rpt-source-compact .rpt-table :is(th,td) {
+    padding:6px!important;white-space:normal!important;
+  }
+  :root body #mainContent #page-reporting .rpt-table thead th {
+    position:sticky!important;top:0!important;z-index:2!important;background:#f1f5fb!important;
+  }
+  :root body #mainContent #page-gta-vi .gta-quoted-sources {
+    display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 16px;
+  }
+  :root body #mainContent #page-gta-vi .gta-quoted-sources[hidden] {display:none!important;}
+  :root body #mainContent #page-gta-vi .gta-quoted-header {margin:0!important;justify-content:flex-start!important;gap:16px!important;}
+  :root body #mainContent #page-gta-vi .gta-quoted-header h2 {margin:0!important;font-size:18px!important;}
+  :root body #mainContent #page-gta-vi .gta-quoted-collapse {grid-column:2;grid-row:1;}
+  :root body #mainContent #page-gta-vi .gta-quoted-collapse[open] {grid-column:1 / -1;grid-row:2;}
+  :root body #mainContent #page-gta-vi .gta-quoted-collapse > summary {min-height:36px!important;padding:8px 11px!important;}
+  :root body #mainContent #page-gta-vi .gta-quoted-footnote,
+  :root body #mainContent #page-gta-vi .gta-quoted-warning {grid-column:1 / -1;margin:2px 0!important;}
+}

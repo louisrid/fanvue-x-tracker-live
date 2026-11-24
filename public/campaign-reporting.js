@@ -105,7 +105,7 @@
   function grid(columns,rows,classname='rpt-table'){
     // The table enhancer adds accessible sortable column controls after every
     // render. Keep cell values as DOM text so it can sort numerically.
-    return '<div class="rpt-scroll xt-table-scroll"><table class="'+classname+'"><thead><tr>'+
+    return '<div class="rpt-scroll xt-table-scroll" tabindex="0" role="region" aria-label="Campaign data table"><table class="'+classname+'"><thead><tr>'+
       columns.map(c=>'<th scope="col"'+(c==='Details'?' data-no-sort-col="true"':'')+'>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+
       rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }
@@ -188,10 +188,12 @@
       :id==='article-rts'
         ?'<p class="rpt-scope-note">All paid RTs included. Source X views include organic traffic.</p>'
         :'';
+    const rows=c.unavailable?empty('Source unavailable'):campaignRows(c);
+    const content=id==='article-rts'?'<div class="rpt-data-layout">'+paidArticleRtGroups(c,true)+
+      '<section class="rpt-post-list">'+rows+'</section></div>':rows;
     return '<section class="rpt-campaign-panel">'+
       (viewStatus(c)==='Connected'?'':badge(c))+
-      scope+overview(c)+(id==='article-rts'?paidArticleRtGroups(c,true):'')+
-      (c.unavailable?empty('Source unavailable'):campaignRows(c))+
+      scope+overview(c)+content+
       (c.trackingWarning?'<p class="rpt-warning">'+esc(c.trackingWarning)+'</p>':'')+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
   }
@@ -249,7 +251,8 @@
     const rows=c.rows||[];
     const percent=v=>num(v)===null?'Not available':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
     const summary=(viewStatus(c)==='Connected'?'':badge(c))+overview(c);
-    const related=paidArticleRtGroups(c);
+    const linked=paidArticleRtGroups(c);
+    const related=linked?'<details class="rpt-related"><summary>Linked paid RTs</summary>'+linked+'</details>':'';
     if(!rows.length)return summary+related+empty('No verified boosted original X tweets currently recorded.');
     const missingSpend=rows.filter(r=>num(r.spend)===null).length;
     const spendNote=missingSpend
