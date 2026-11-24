@@ -311,20 +311,6 @@ function renderWeekly(){
 // sum(price in USD for paid + published articles in that window) × USD/GBP ÷ 7.
 // Payment dates are not required: the user-defined criterion is Paid status
 // AND Posted status, with a verified publication date in the window.
-function fitDailyMetricNumbers(root=el('dailyOverviewMetrics')){
-  if(!root)return;
-  root.querySelectorAll('.daily-metric strong,.daily-projection strong').forEach(value=>{
-    value.style.fontSize='';
-    let size=parseFloat(getComputedStyle(value).fontSize);
-    const available=value.clientWidth;
-    if(!size||!available)return;
-    for(let attempt=0;attempt<4&&value.scrollWidth>available+1;attempt++){
-      size=Math.max(11,size*(available/value.scrollWidth)*.94);
-      value.style.fontSize=size+'px';
-    }
-  });
-}
-
 function renderKpis(){
   const placements=homePlacements(),paid=placements.filter(p=>p.paid===true);
   const totalPaid=paid.reduce((sum,p)=>sum+(number(p.cost)||0),0);
@@ -1385,7 +1371,6 @@ function events(){
   });
   document.querySelectorAll('[data-back]').forEach(button=>button.addEventListener('click',navigateBack));
   window.addEventListener('hashchange',()=>route(location.hash.slice(1),false));
-  window.addEventListener('resize',()=>requestAnimationFrame(()=>fitDailyMetricNumbers()),{passive:true});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){scheduleWeekRollover();tickAges();if(Date.now()-(state.lastRefreshAttemptAt||0)>45000)load();if(Date.now()-(state.ofLastLoadedAt||0)>45000)loadOfReport();}});
   setInterval(()=>{if(!document.hidden)tickAges();},15000);
   setInterval(()=>{if(!document.hidden){if(Date.now()-(state.lastRefreshAttemptAt||0)>45000)load();if(Date.now()-(state.ofLastLoadedAt||0)>45000)loadOfReport();}},60000);
