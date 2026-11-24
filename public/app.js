@@ -1212,7 +1212,6 @@ function renderGtaReport(){
     const tag=link?'a':'div',attributes=link?` href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(p.publisher)} ${live?'live X post':'X profile'}"`:'';
     const prepared={...p,articleLabel:p.campaign==='GTAQ'?'GTA VI QRT':p.campaign==='GTA2'?'GTA VI V2 post':'GTA VI post',xViews:p.views,xLikes:p.likes,xComments:p.replies,xShares:p.reposts,xUpdated:p.metricAt||'',metricStatus:p.metricAt?(p.metricError?'last-known-good':'ok'):'unverified',campaignId:p.campaign,platform:'X',active:true};
     const info=articleCardContent(prepared,{live,promo:true,metricsOverride:[['views','X Views',p.views],['likes','Likes',p.likes],['spend','Paid total',p.paid?gtaMoney(p.cost):'Unpaid']]});
-    const subtitle=p.campaign==='GTAQ'?'GTA VI QRT':p.campaign==='GTA2'?'GTA VI V2':'GTA VI original';
     const clickNote=' · Post-publication clicks: '+gtaNumber(p.clicks)+' · All-time human clicks: '+gtaNumber(p.allTimeClicks);
 
     return `<article class="of-publisher-entry"><${tag}${attributes} data-shortio-tracked="${Boolean(p.trackingUrl&&p.clickTracked!==false)}" data-shortio-clicks="${esc(p.clicks??'')}" data-shortio-cpc="${esc(p.cpc??'')}" data-shortio-note="${esc(p.clickError||clickNote)}" data-placement-code="${esc(p.code)}" data-post-url="${esc(safeUrl(p.postUrl))}" class="article-card of-post-card ${live?'live-article of-is-posted':''}">${info}</${tag}><div class="of-publisher-links">${gtaSafeLink(p.profileUrl,'X profile')}${gtaSafeLink(p.postUrl,'View post')}</div></article>`;
@@ -1537,18 +1536,16 @@ function renderBoosts(){
   if(rtStrip){
     if(rtSummary){
       const waiting=Number(rtSummary.unlinkedPaidCount)||0;
-      rtStrip.textContent='Paid article RTs (Google Sheets): '+
-        boostMoney(rtSummary.paidSpendKnown)+' across '+fmt(rtSummary.paidCount)+' paid accounts · '+
-        boostMoney(rtSummary.linkedPaidSpendKnown)+' linked to '+
-        fmt(rtSummary.originalPosts)+' originals'+
-        (waiting?' · '+boostMoney(rtSummary.unlinkedPaidSpendKnown)+' from '+
-          fmt(waiting)+' accounts still missing original-post links':'')+
-        '. Separate from ad boost spend; X views are original-post totals including organic exposure.';
+      rtStrip.textContent='Paid RTs: '+boostMoney(rtSummary.paidSpendKnown)+' · '+
+        fmt(rtSummary.paidCount)+' accounts · '+
+        boostMoney(rtSummary.linkedPaidSpendKnown)+' matched'+
+        (waiting?' · '+boostMoney(rtSummary.unlinkedPaidSpendKnown)+
+          ' missing source links ('+fmt(waiting)+')':'')+
+        '. Ad boost costs are separate.';
       rtStrip.classList.remove('is-pending');
     }else{
-      rtStrip.textContent='Paid RT sheet data '+(campaigns?.getCampaign?
-        'is temporarily unavailable; existing verified X stats remain visible.':
-        'loading from the connected reporting source…');
+      rtStrip.textContent=campaigns?.getCampaign?
+        'Paid RT data unavailable · saved X stats shown':'Loading paid RT data…';
       rtStrip.classList.add('is-pending');
     }
   }
@@ -1556,7 +1553,7 @@ function renderBoosts(){
   const views=seen.length?seen.reduce((s,t)=>s+t.views,0):null;
   const matched=known.filter(t=>t.views>0),eff=known.length&&matched.length===known.length?1000*matched.reduce((s,t)=>s+t.spend,0)/matched.reduce((s,t)=>s+t.views,0):null;
   const interactions=interactionSummary(rows);
-  el('boostKpis').innerHTML=[['Known ad boost spend · all time',boostMoney(spend),`${known.length} of ${rows.length} with verified spend`],['Original X views · all time',boostNumber(views),`${seen.length} of ${rows.length} with views`],['Ad cost / 1K original views',eff===null?'—':boostMoney(eff),'Known spend + available views'],['Original interactions · all time',boostNumber(interactions.total),interactions.note]].map(([label,value,note],i)=>`<div class="daily-metric daily-metric-${['spend','seven','click','interactions'][i]}"><span class="daily-metric-label">${label}</span><strong>${value}</strong><small>${note}</small></div>`).join('');
+  el('boostKpis').innerHTML=[['Known ad boost spend · all time',boostMoney(spend),`${known.length}/${rows.length} costs entered`],['Original X views · all time',boostNumber(views),`${seen.length}/${rows.length} views tracked`],['Ad cost / 1K original views',eff===null?'—':boostMoney(eff),'Boost spend ÷ views'],['Original interactions · all time',boostNumber(interactions.total),interactions.note]].map(([label,value,note],i)=>`<div class="daily-metric daily-metric-${['spend','seven','click','interactions'][i]}"><span class="daily-metric-label">${label}</span><strong>${value}</strong><small>${note}</small></div>`).join('');
   el('boostStatus').textContent=boostsState.error?(boostsState.loaded?'Saved stats · refresh unavailable':'Data unavailable'):boostsState.loaded?'':'Loading…';
   const sort=el('boostSort').value,field={spend:'spend',rtSpend:'rtSpend',views:'views',engagement:'engagement',efficiency:'efficiency'}[sort];
   rows.sort((a,b)=>{if(!field)return new Date(b.added_at)-new Date(a.added_at)||b.id.localeCompare(a.id);const x=a[field],y=b[field];return x==null?(y==null?0:1):y==null?-1:sort==='efficiency'?x-y:y-x;});
