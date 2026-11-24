@@ -68,9 +68,20 @@
     graph.append(create('polyline',{points:values.map((p,i)=>`${x(i)},${y(p.memberCount)}`).join(' '),
       class:'discord-growth-line',fill:'none'}));
     values.forEach((p,i)=>{
+      const previous=i>0?values[i-1]:null;
+      const first=values[0];
+      const metrics=[
+        {label:'Members',value:format(p.memberCount)},
+        ...(previous?[{label:'Daily change',value:(p.memberCount-previous.memberCount>0?'+':'')+format(p.memberCount-previous.memberCount)}]:[]),
+        ...(i>0?[{label:'Change shown',value:(p.memberCount-first.memberCount>0?'+':'')+format(p.memberCount-first.memberCount)}]:[])
+      ];
       const dot=create('circle',{cx:x(i),cy:y(p.memberCount),r:5,
-        class:'discord-growth-dot',tabindex:'0',role:'img',
-        'aria-label':`${label(p.date)}: ${format(p.memberCount)} approximate members`});
+        class:'discord-growth-dot',tabindex:'0',role:'button',
+        'data-chart-point':'',
+        'data-chart-title':'Discord members',
+        'data-chart-date':label(p.date),
+        'data-chart-metrics':encodeURIComponent(JSON.stringify(metrics)),
+        'aria-label':`${label(p.date)}: ${format(p.memberCount)} approximate members. Hover or focus for details.`});
       dot.append(create('title',{},`${label(p.date)}: ${format(p.memberCount)} members`));
       const describe=()=>{tip.textContent=`${label(p.date)} · ${format(p.memberCount)} members`};
       dot.addEventListener('mouseenter',describe);
