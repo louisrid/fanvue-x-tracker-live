@@ -1,0 +1,390 @@
+/* Final shared layout refinements, 24 Nov 2026.
+   This stylesheet is loaded last to keep the six campaign buttons,
+   report spacing and quoted-post tables consistent without modifying feeds. */
+
+/* A little more white space above the logo, without changing navigation rows. */
+:root body .app-header .header-row,
+:root body.is-home .app-header .header-row {
+  padding-top:24px!important;
+}
+
+/* Every non-home page: clear separation after the fixed-height header. */
+:root body #mainContent > .site-page:not(#page-dashboard) > .subpage-back-row {
+  padding-top:19px!important;
+  padding-bottom:4px!important;
+  min-height:67px!important;
+  height:auto!important;
+  box-sizing:border-box!important;
+  margin-top:0!important;
+  margin-bottom:15px!important;
+}
+
+/* The dashboard's six destination buttons are compact, equal and clickable. */
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin-bottom:16px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
+  grid-column:auto!important;
+  grid-row:auto!important;
+  height:90px!important;
+  min-height:90px!important;
+  padding:13px 17px!important;
+  border-radius:12px!important;
+  box-shadow:inset 0 -2px 0 rgb(0 0 0 / 10%)!important;
+  transform:none!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:hover {
+  box-shadow:inset 0 -2px 0 rgb(0 0 0 / 8%),0 5px 15px rgb(12 20 40 / 11%)!important;
+  filter:brightness(1.035)!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy {
+  max-width:100%!important;
+  gap:5px!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong {
+  font-size:clamp(19px,1.8vw,25px)!important;
+  line-height:1.07!important;
+  letter-spacing:-.045em!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  text-wrap:balance!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-meta {
+  font-size:11px!important;
+  line-height:1.23!important;
+  font-weight:750!important;
+  letter-spacing:0!important;
+  overflow-wrap:normal!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-discord-icon {
+  width:29px!important;
+  height:29px!important;
+  min-width:29px!important;
+  flex:0 0 29px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-arrow {
+  display:none!important;
+}
+/* The overview KPI cards share the more restrained height and type scale. */
+:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.dashboard-snapshot-kpis > .kpi-card {
+  min-height:101px!important;
+  padding:15px!important;
+  border-radius:12px!important;
+  gap:12px!important;
+}
+:root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.dashboard-snapshot-kpis .kpi-value {
+  font-size:clamp(24px,2.45vw,34px)!important;
+}
+:root body #mainContent #page-reporting .rpt-stats .rpt-stat {
+  min-height:96px!important;
+  padding:13px!important;
+  border-radius:12px!important;
+}
+
+/* Both campaign source reports use compact tables and one disclosure per row. */
+#page-gta-vi .gta-quoted-sources {
+  margin:19px 0 23px!important;
+  padding:17px 0 0!important;
+  border-top:1px solid #dce4ef!important;
+}
+#page-gta-vi .gta-quoted-header {
+  align-items:center!important;
+  margin-bottom:11px!important;
+  gap:10px 20px!important;
+}
+#page-gta-vi .gta-quoted-header h2 {
+  font-size:21px!important;
+  margin-bottom:3px!important;
+}
+#page-gta-vi .gta-quoted-header p {
+  color:#52617a!important;
+  font-size:11.5px!important;
+  line-height:1.4!important;
+}
+#page-gta-vi .gta-quoted-summary {
+  display:flex!important;
+  gap:7px 15px!important;
+  font-size:11px!important;
+}
+#page-gta-vi .gta-quoted-summary strong {
+  font-size:15px!important;
+}
+#page-gta-vi .gta-quoted-collapse,
+#page-reporting .rpt-source-compact .rpt-unlinked-detail {
+  border:1px solid #d8e2f0!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+#page-gta-vi .gta-quoted-collapse > summary,
+#page-reporting .rpt-source-compact .rpt-unlinked-detail > summary {
+  display:flex!important;
+  align-items:center!important;
+  min-height:46px!important;
+  padding:11px 14px!important;
+  color:#13243f!important;
+  background:#f7f9fd!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  cursor:pointer!important;
+}
+#page-gta-vi .gta-quoted-collapse > summary:hover,
+#page-reporting .rpt-source-compact .rpt-unlinked-detail > summary:hover {
+  background:#ecf2fb!important;
+}
+#page-gta-vi .gta-quoted-scroll {
+  padding:0!important;
+  overflow-x:auto!important;
+}
+#page-gta-vi table.gta-quoted-table {
+  width:100%!important;
+  min-width:790px!important;
+  margin:0!important;
+  border-spacing:0!important;
+  font-size:12px!important;
+  table-layout:auto!important;
+}
+#page-gta-vi table.gta-quoted-table :is(th,td) {
+  padding:11px 12px!important;
+  border-bottom:1px solid #e6edf6!important;
+  vertical-align:middle!important;
+}
+#page-gta-vi table.gta-quoted-table th {
+  background:#f1f5fb!important;
+  color:#15243c!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+#page-gta-vi .gta-source-handle {
+  display:block!important;
+  margin-bottom:3px!important;
+  font-size:13px!important;
+  line-height:1.25!important;
+  font-weight:900!important;
+  color:#132139!important;
+  overflow-wrap:anywhere!important;
+}
+#page-gta-vi table.gta-quoted-table td small {
+  font-size:10px!important;
+}
+#page-gta-vi .gta-source-details > summary,
+#page-reporting .rpt-source-detail > summary {
+  display:inline-flex!important;
+  min-height:30px!important;
+  padding:6px 9px!important;
+  align-items:center!important;
+  border:1px solid #d5e1f5!important;
+  border-radius:8px!important;
+  background:#f3f7ff!important;
+  color:#1556b9!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  text-decoration:none!important;
+  line-height:1.2!important;
+  cursor:pointer!important;
+}
+#page-gta-vi .gta-source-details[open] > summary,
+#page-reporting .rpt-source-detail[open] > summary {
+  background:#e9f1ff!important;
+}
+#page-gta-vi .gta-source-detail-body,
+#page-reporting .rpt-source-detail-body {
+  padding:11px 0 8px!important;
+  min-width:270px;
+  max-width:340px;
+  font:700 11px/1.5 Inter,system-ui,sans-serif!important;
+  color:#32435c!important;
+}
+#page-gta-vi .gta-source-extra-metrics,
+#page-reporting .rpt-source-detail-body dl {
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px!important;
+  margin:0 0 10px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+#page-gta-vi .gta-source-extra-metrics > div,
+#page-reporting .rpt-source-detail-body dl > div {
+  margin:0!important;
+  padding:0!important;
+  min-width:0!important;
+}
+#page-gta-vi .gta-source-extra-metrics dt,
+#page-reporting .rpt-source-detail-body dt {
+  margin:0 0 2px!important;
+  font-size:9.5px!important;
+  font-weight:750!important;
+  color:#607087!important;
+}
+#page-gta-vi .gta-source-extra-metrics dd,
+#page-reporting .rpt-source-detail-body dd {
+  margin:0!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  color:#11203a!important;
+  font-variant-numeric:tabular-nums!important;
+}
+#page-gta-vi .gta-source-detail-body > p,
+#page-reporting .rpt-source-detail-body > p {
+  font-size:10px!important;
+  margin:7px 0!important;
+  color:#566680!important;
+  font-weight:650!important;
+}
+#page-gta-vi .gta-source-detail-body h4,
+#page-reporting .rpt-source-detail-body h4 {
+  margin:9px 0 5px!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  color:#12233e!important;
+}
+#page-gta-vi .gta-source-detail-body ul,
+#page-reporting .rpt-source-detail-body ul {
+  display:block!important;
+  padding:0!important;
+  margin:0!important;
+  list-style:none!important;
+}
+#page-gta-vi .gta-source-qrt,
+#page-reporting .rpt-source-detail-body li {
+  display:flex!important;
+  align-items:baseline!important;
+  flex-wrap:wrap!important;
+  gap:3px 9px!important;
+  padding:7px 0!important;
+  border-top:1px solid #e7edf7!important;
+  font-size:10.5px!important;
+  font-weight:700!important;
+  line-height:1.45!important;
+}
+#page-gta-vi .gta-source-qrt strong,
+#page-reporting .rpt-source-detail-body li strong {
+  flex:0 0 100%!important;
+  color:#162744!important;
+  font-weight:850!important;
+}
+#page-gta-vi .gta-quoted-footnote,
+#page-reporting .rpt-source-compact .rpt-note {
+  font-size:11px!important;
+  line-height:1.45!important;
+  color:#52627b!important;
+  font-weight:700!important;
+  margin:9px 0 12px!important;
+}
+#page-reporting .rpt-source-compact {
+  padding-top:13px!important;
+  margin-top:13px!important;
+  border-top:1px solid #dfe7f1!important;
+}
+#page-reporting .rpt-source-compact .rpt-section-title h2 {
+  font-size:21px!important;
+}
+#page-reporting .rpt-source-compact .rpt-scroll {
+  margin:9px 0!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+}
+#page-reporting .rpt-source-compact .rpt-table {
+  min-width:780px!important;
+  font-size:12px!important;
+}
+#page-reporting .rpt-source-compact .rpt-table :is(th,td) {
+  padding:10px 12px!important;
+  vertical-align:middle!important;
+}
+#page-reporting .rpt-source-compact .rpt-source-detail-body {
+  max-width:330px!important;
+}
+#page-reporting .rpt-source-compact .rpt-unlinked-detail {
+  margin:9px 0 14px!important;
+}
+
+/* Responsive: halve the button stack on phones; leave the header menu fixed. */
+@media(max-width:1080px){
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
+    height:85px!important;
+    min-height:85px!important;
+    padding:12px 15px!important;
+  }
+}
+@media(max-width:600px){
+  :root body .app-header .header-row,
+  :root body.is-home .app-header .header-row {
+    padding-top:21px!important;
+  }
+  :root body #mainContent > .site-page:not(#page-dashboard) > .subpage-back-row {
+    padding-top:15px!important;
+    padding-bottom:4px!important;
+    min-height:61px!important;
+    margin-bottom:12px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    margin-bottom:14px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
+    grid-column:auto!important;
+    width:100%!important;
+    height:82px!important;
+    min-height:82px!important;
+    padding:12px 11px!important;
+    border-radius:11px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong {
+    font-size:clamp(16px,4.2vw,19px)!important;
+    letter-spacing:-.035em!important;
+    overflow-wrap:normal!important;
+    text-wrap:balance!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-meta {
+    display:none!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-meta {
+    display:block!important;
+    font-size:9px!important;
+    line-height:1.13!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-discord-icon {
+    display:none!important;
+  }
+  :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.dashboard-snapshot-kpis > .kpi-card {
+    min-height:91px!important;
+    padding:12px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard #dashboardLiveSummary #dashboardKpis.dashboard-snapshot-kpis .kpi-value {
+    font-size:clamp(21px,5.6vw,27px)!important;
+  }
+  #page-gta-vi .gta-quoted-header h2 {
+    font-size:19px!important;
+  }
+  #page-gta-vi table.gta-quoted-table {
+    min-width:790px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill {
+    transition:none!important;
+  }
+}
