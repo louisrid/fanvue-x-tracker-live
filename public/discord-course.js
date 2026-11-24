@@ -14,7 +14,7 @@
     if(cardTotal)cardTotal.textContent=total.textContent;
     if(cardWeek)cardWeek.textContent=week.textContent;
     if(courseNote)courseNote.textContent=info.textContent;
-    if(dashboardClicks)dashboardClicks.textContent=total.textContent==='—'?'Clicks unavailable':total.textContent+' course clicks';
+    if(dashboardClicks)dashboardClicks.textContent=total.textContent==='—'?'Clicks unavailable':total.textContent+' clicks';
   }
   const validClicks=data=>data?.ok===true&&Number.isSafeInteger(data.total)&&data.total>=0&&
     Number.isSafeInteger(data.last7Days)&&data.last7Days>=0&&data.last7Days<=data.total;
