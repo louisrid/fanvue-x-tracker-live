@@ -106,7 +106,7 @@
     // The table enhancer adds accessible sortable column controls after every
     // render. Keep cell values as DOM text so it can sort numerically.
     return '<div class="rpt-scroll xt-table-scroll"><table class="'+classname+'"><thead><tr>'+
-      columns.map(c=>'<th scope="col">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+
+      columns.map(c=>'<th scope="col"'+(c==='Details'?' data-no-sort-col="true"':'')+'>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+
       rows.map(row=>'<tr>'+row.map(cell=>'<td>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }
   function empty(message){return '<div class="rpt-empty">'+esc(message)+'</div>';}
