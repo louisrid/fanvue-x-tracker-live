@@ -1,18 +1,19 @@
 /* Fanvue Marketing Dashboard: the single shared design system (DESIGN v3.1 §2-3, §5-6).
    Tokens are defined once here; every page and component uses them. */
 :root{
-  --fv-sidebar:#000000;--fv-sidebar-text:#FFFFFF;--fv-nav-active:#212121;--fv-nav-hover:#151515;--fv-nav-group:#E3E7EC;
-  --fv-outer:#DFE5EC;--fv-canvas:#DFE5EC;--fv-surface:#FFFFFF;
-  --fv-border:#E8EDF3;--fv-rule:#E8EDF3;--fv-hover:#EDF2F8;--fv-field:#F1F4F8;--fv-thead:#E6EEF7;--fv-tint:#F5F8FC;
+  --fv-sidebar:#000000;--fv-sidebar-text:#FFFFFF;--fv-nav-active:#212121;--fv-nav-hover:#151515;--fv-nav-group:#FFFFFF;
+  --fv-outer:#C9D3DF;--fv-canvas:#C9D3DF;--fv-surface:#FFFFFF;
+  --fv-border:#E8EDF3;--fv-rule:#E8EDF3;--fv-hover:#E1EAF5;--fv-field:#E6ECF3;--fv-thead:#E6EEF7;--fv-tint:#EEF3F9;
   --fv-ink:#000000;--fv-muted:#000000;--fv-label:#000000;
   /* Three font sizes, two weights, three radii and one faint line style, used everywhere. */
   --fv-w:720;--fv-w-strong:880;
   --fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;
   --fv-r-s:6px;--fv-r-m:8px;--fv-r-l:10px;
   --fv-dark:#000000;--fv-dark-text:#FFFFFF;--fv-dark-rule:#262626;--fv-dark-soft:#202020;
-  --fv-blue:#1668B8;--fv-line:#168BF3;--fv-area:#E0EFFD;--fv-chip-blue:#E8F3FE;
-  --fv-pos:#176D42;--fv-pos-bg:#E8F6ED;--fv-warn:#8A5500;--fv-warn-bg:#FFF4DD;--fv-bad:#B91C1C;--fv-bad-bg:#FDECEC;
-  --fv-tip:#18212D;--fv-neutral-bg:#E4E9EF;--fv-neutral:#000000;
+  --fv-blue:#0A58B8;--fv-line:#0B6FD6;--fv-area:#B7D8FA;--fv-chip-blue:#D6E8FD;
+  --fv-pos:#000000;--fv-pos-bg:#4ADE80;--fv-warn:#000000;--fv-warn-bg:#FFA94D;--fv-bad:#B00000;--fv-bad-bg:#FFB4B4;
+  --fv-na:#FFE14D;--fv-na-hover:#FFD60A;
+  --fv-tip:#000000;--fv-neutral-bg:#D3DBE5;--fv-neutral:#000000;
   --fv-discord:#A5ABF7;
   --fv-radius:var(--fv-r-l);--fv-bw:1px;--fv-ctl-radius:var(--fv-r-m);--fv-ctl:38px;--fv-row:44px;--fv-head:44px;--fv-gap:20px;--fv-pad:22px;
   --fv-side-w:192px;
@@ -96,7 +97,7 @@ body.fv [hidden]{display:none!important}
 /* Unavailable states read as quiet labels; the reason shows on hover, focus or tap. */
 .fv-state{display:inline-flex;align-items:center;padding:2px 8px;border:0;border-radius:var(--fv-r-s);background:var(--fv-neutral-bg);color:var(--fv-ink);font:inherit;font-size:var(--fv-fs-s);font-weight:var(--fv-w);line-height:18px;letter-spacing:0;white-space:nowrap;text-align:inherit;vertical-align:middle}
 button.fv-state{cursor:help;text-decoration:none}
-button.fv-state:hover{background:#DCE2E9}
+button.fv-state:hover{background:var(--fv-na-hover)}
 .fv-chip{display:inline-flex;align-items:center;align-self:flex-start;gap:4px;padding:2px 6px;border-radius:var(--fv-r-s);background:var(--fv-neutral-bg);color:var(--fv-neutral);font-size:var(--fv-fs-s);line-height:15px;font-weight:var(--fv-w-strong);text-decoration:none;white-space:nowrap}
 button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-chip.is-warn{background:var(--fv-warn-bg);color:var(--fv-warn)}
@@ -130,8 +131,8 @@ button.fv-chip{border:0;cursor:help;text-decoration:none}
 .fv-line.is-dashed{stroke-dasharray:4 4}
 .fv-dot{fill:#fff;stroke:var(--fv-line);stroke-width:2.3}
 .fv-dot.is-incomplete{stroke-dasharray:2 2}
-.fv-bar{fill:#8FC8F8;stroke:var(--fv-line);stroke-width:1.5}
-.fv-bar.is-incomplete{fill:#D5EAFC;stroke-dasharray:3 2}
+.fv-bar{fill:#4FA3F7;stroke:var(--fv-line);stroke-width:1.5}
+.fv-bar.is-incomplete{fill:#B7D8FA;stroke-dasharray:3 2}
 .fv-hits{position:absolute;inset:0}
 .fv-hit{position:absolute;top:0;bottom:22px;padding:0;border:0;background:transparent;border-radius:var(--fv-r-s)}
 .fv-hit:hover,.fv-hit:focus-visible{background:rgba(22,139,243,.06)}
@@ -389,10 +390,10 @@ body.fv-editor-open{overflow:hidden}
 .fv-strip{--fv-border:var(--fv-dark-rule);background:var(--fv-dark);border-color:var(--fv-dark);color:var(--fv-dark-text)}
 .fv-strip .fv-metric-label,.fv-strip .fv-metric-value{color:var(--fv-dark-text)}
 .fv-strip .fv-chipicon{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
-.fv-strip .fv-state{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
-.fv-strip button.fv-state:hover{background:#333333}
+.fv-strip .fv-state{background:var(--fv-na);color:#000000}
+.fv-strip button.fv-state:hover{background:var(--fv-na-hover)}
 .fv-strip .fv-chip{background:var(--fv-dark-soft);color:var(--fv-dark-text)}
-.fv-strip .fv-chip.is-warn{background:#FFE3A3;color:#3D2600}
+.fv-strip .fv-chip.is-warn{background:var(--fv-warn-bg);color:#000000}
 .fv-strip .fv-skel{background:linear-gradient(90deg,#1A1A1A,#2C2C2C,#1A1A1A);background-size:200% 100%}
 .fv-strip :focus-visible{outline-color:#FFFFFF}
 .fv-chipicon{background:var(--fv-dark);color:var(--fv-dark-text)}
@@ -431,3 +432,21 @@ body.fv-editor-open{overflow:hidden}
 /* Fields: white on focus with a clear ring. */
 .fv-search:focus-within,.fv-field input:focus,.fv-field select:focus,.fv-field textarea:focus,.fv-link-row input:focus{background:#fff;border-color:var(--fv-line);box-shadow:0 0 0 2px rgba(22,139,243,.15);outline:none}
 .fv-select select:focus-visible{background:#fff}
+
+/* ---------- clarity: fewer, brighter unavailable labels ---------- */
+.fv-state{background:var(--fv-na);color:#000000;font-weight:var(--fv-w-strong)}
+.fv-state.fv-chip{font-weight:var(--fv-w-strong)}
+.fv-chip.is-warn,.fv-status.is-warn{background:var(--fv-warn-bg);color:#000000}
+.fv-chip.is-pos,.fv-status.is-good{background:var(--fv-pos-bg);color:#000000}
+.fv-status.is-bad{background:var(--fv-bad-bg);color:#000000}
+.fv-chip,.fv-status{font-weight:var(--fv-w-strong)}
+/* A run of slots with no data shares one cell. */
+.fv-metric.is-merged{grid-column:span var(--span,1)}
+.fv-metric.is-merged .fv-metric-label{flex-wrap:wrap}
+.fv-hidden-note{margin:0 0 12px;padding:8px 12px;border-radius:var(--fv-r-m);background:#FFF2A8;color:#000000;font-size:var(--fv-fs-s);line-height:1.45}
+.fv-hidden-note b{font-weight:var(--fv-w-strong)}
+.fv-ext,.fv-chart-empty a,.fv-support-line a,.fv-link-button{font-weight:var(--fv-w-strong)}
+.fv-notice.is-error{color:#000000}
+@media (max-width:1100px){.fv-metric.is-merged{grid-column:span 1}.fv-metric.is-merged:nth-child(3n+1):last-child{grid-column:1/-1}}
+.fv-hidden-note{cursor:help}
+@media (max-width:767px){.fv-metric.is-merged{grid-column:1/-1;border-right:0!important}}
