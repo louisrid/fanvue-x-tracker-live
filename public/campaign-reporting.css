@@ -463,3 +463,85 @@
   color:#0f1b31!important;
   font-weight:950!important;
 }
+
+
+/* Article RT source reconciliation + universal clickable table sorting.
+   Keep the existing design vocabulary; show the actual source data. */
+#page-reporting .rpt-table thead th {
+  padding:0!important;
+  vertical-align:middle!important;
+  white-space:nowrap!important;
+}
+#page-reporting .rpt-table thead th.xt-sort-th .xt-sort-button {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:46px!important;
+  padding:11px 12px!important;
+  gap:9px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#17243b!important;
+  text-align:left!important;
+  font:900 11px/1.2 Inter,system-ui,sans-serif!important;
+  letter-spacing:.005em!important;
+  cursor:pointer!important;
+  touch-action:manipulation!important;
+}
+#page-reporting .rpt-table thead th.xt-sort-th .xt-sort-button:hover {
+  background:#e6edfc!important;
+  color:#004bda!important;
+}
+#page-reporting .rpt-table thead th.xt-sort-th .xt-sort-button:focus-visible {
+  outline:3px solid #0055ff!important;
+  outline-offset:-3px!important;
+}
+#page-reporting .rpt-table thead th.xt-sort-th[aria-sort="ascending"],
+#page-reporting .rpt-table thead th.xt-sort-th[aria-sort="descending"] {
+  background:#e6edff!important;
+  color:#004cdd!important;
+}
+#page-reporting .rpt-table thead th.xt-sort-th[aria-sort="ascending"] .xt-sort-button,
+#page-reporting .rpt-table thead th.xt-sort-th[aria-sort="descending"] .xt-sort-button {
+  color:#004cdd!important;
+}
+#page-reporting .rpt-table tbody td {
+  font-variant-numeric:tabular-nums!important;
+}
+#page-reporting .rpt-links {
+  display:inline-flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:4px!important;
+}
+#page-reporting .rpt-rt-source-summary {
+  margin-top:28px!important;
+  padding-top:17px!important;
+  border-top:2px solid #dbe4f0!important;
+}
+#page-reporting .rpt-rt-source-summary .rpt-note {margin:14px 0 11px!important;}
+#page-reporting .rpt-rt-source-summary .rpt-expanders {margin-top:12px!important;}
+#page-reporting .rpt-campaign-panel .rpt-stats:has(> .rpt-stat:nth-child(5)) {
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+#page-reporting .rpt-stats .rpt-stat {
+  min-width:0!important;
+}
+#page-reporting .rpt-stats .rpt-stat strong {
+  overflow-wrap:anywhere!important;
+}
+@media(max-width:1110px) {
+  #page-reporting .rpt-campaign-panel .rpt-stats:has(> .rpt-stat:nth-child(5)) {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:670px) {
+  #page-reporting .rpt-campaign-panel .rpt-stats:has(> .rpt-stat:nth-child(5)) {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  #page-reporting .rpt-rt-source-summary .rpt-stats {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
