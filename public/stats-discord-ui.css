@@ -563,3 +563,144 @@
   color:#151b25!important;
   -webkit-text-fill-color:#151b25!important;
 }
+
+
+/* Compact fixed-structure menu. One permanent horizontal row of four buttons.
+   A narrow screen scrolls this row, never compresses text or creates a 2x2 grid. */
+:root body .app-header .header-row > .mobile-nav {
+  display:grid!important;
+  grid-column:1 / -1!important;
+  grid-row:2!important;
+  grid-template-columns:repeat(4,176px)!important;
+  grid-template-rows:48px!important;
+  grid-auto-flow:column!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+  width:min(100%,740px)!important;
+  max-width:740px!important;
+  min-width:0!important;
+  height:56px!important;
+  min-height:56px!important;
+  max-height:56px!important;
+  margin:0 auto!important;
+  padding:4px 5px!important;
+  gap:7px!important;
+  border:0!important;
+  border-radius:14px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:thin;
+  scrollbar-color:#b3c1d8 transparent;
+  overscroll-behavior-x:contain;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item {
+  display:inline-flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:176px!important;
+  min-width:176px!important;
+  max-width:176px!important;
+  height:48px!important;
+  min-height:48px!important;
+  max-height:48px!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  gap:8px!important;
+  border-width:2px!important;
+  border-radius:12px!important;
+  font:850 13px/1 Inter,system-ui,sans-serif!important;
+  letter-spacing:-.015em!important;
+  white-space:nowrap!important;
+  text-overflow:clip!important;
+  transform:none!important;
+  transition:filter .14s ease,box-shadow .14s ease!important;
+  scroll-snap-align:start;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item svg {
+  display:block!important;
+  width:18px!important;
+  height:18px!important;
+  flex:0 0 18px!important;
+  margin:0!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item span {
+  display:block!important;
+  width:auto!important;
+  max-width:none!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  text-overflow:clip!important;
+  flex:0 0 auto!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item:is(.is-active,[aria-current="page"]) {
+  box-shadow:inset 0 0 0 1px #101827,0 2px 7px rgba(14,24,49,.15)!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item:hover {
+  transform:none!important;
+  filter:brightness(.94)!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item:active {
+  transform:none!important;
+}
+@media(max-width:760px) {
+  :root body .app-header .header-row,
+  :root body.is-home .app-header .header-row {
+    grid-template-rows:auto auto!important;
+  }
+  :root body .app-header .header-row > .mobile-nav {
+    grid-column:1/-1!important;
+    grid-row:2!important;
+  }
+}
+
+/* Marginally smaller dashboard campaign pills without changing destinations
+   or the established responsive 2-column/1-column arrangement. */
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {
+  gap:15px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:last-child {
+  min-height:169px!important;
+  height:169px!important;
+  padding:21px 30px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:nth-child(-n+2) {
+  min-height:190px!important;
+  height:190px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill .dashboard-pill-arrow {
+  flex:0 0 54px!important;
+  width:54px!important;
+  height:54px!important;
+  font-size:32px!important;
+}
+@media(max-width:830px) {
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {gap:11px!important;}
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:last-child {
+    min-height:143px!important;
+    height:143px!important;
+    padding:19px 23px!important;
+  }
+}
+@media(max-width:600px) {
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {gap:10px!important;}
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > .dashboard-campaign-pill:last-child {
+    min-height:122px!important;
+    height:122px!important;
+    padding:18px 21px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-pill .dashboard-pill-arrow {
+    flex:0 0 44px!important;
+    width:44px!important;
+    height:44px!important;
+    font-size:27px!important;
+  }
+}
