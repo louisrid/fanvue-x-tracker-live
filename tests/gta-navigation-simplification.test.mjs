@@ -31,7 +31,7 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
 test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
   assert.match(html,/dashboard-campaign-pill is-boosts/);
   assert.match(html,/Article retweets · separate campaign/);
-  assert.match(html,/Paid QRTs &amp; standalone posts/);
+  assert.match(html,/QRTs · Posts/);
   assert.doesNotMatch(reporting,/function articleSources\(\)/);
 });
 
