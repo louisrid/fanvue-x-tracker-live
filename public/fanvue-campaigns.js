@@ -68,14 +68,14 @@
   /* ---------- added campaign page ---------- */
   function addedPage(slug){
     const c=find(slug);
-    if(!c&&!reg.loaded)return {title:'Campaign',refreshLabel:'',body:U.strip(['Paid spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators'].map(l=>({label:l,icon:'wallet',metric:M.loading()})))};
+    if(!c&&!reg.loaded)return {title:'Campaign',refreshLabel:'',body:U.strip(['Spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators'].map(l=>({label:l,icon:'wallet',metric:M.loading()})))};
     if(!c)return null;
     const D=window.FanvueApp.data,ov=D.overview(),xa=D.campaign('x-articles');
     const linked=c.dataLink?(xa?.sourceCampaigns||[]).find(s=>s.id===c.dataLink):null;
     const nc=M.notConnected('Not connected: this campaign has no data source yet.');
     const linkNote=linked?'Linked: '+(linked.name||c.dataLink):undefined;
     const strip=U.strip([
-      {label:'Paid spend',icon:'wallet',format:'moneyShort',metric:linked?(C.num(linked.paidSpendKnown)===null?M.na('No paid placements recorded.'):M.value(linked.paidSpendKnown)):nc,note:linkNote},
+      {label:'Spend',icon:'wallet',format:'moneyShort',metric:linked?(C.num(linked.paidSpendKnown)===null?M.na('No paid placements recorded.'):M.value(linked.paidSpendKnown)):nc,note:linkNote},
       {label:'Post views',icon:'eye',format:'compact',metric:linked?(C.num(linked.xViews)===null?M.na('No verified X reading yet.'):M.value(linked.xViews)):nc},
       {label:'Tracked clicks',icon:'cursor',metric:linked?(C.num(linked.trackedClicks)===null?M.na('No tracked clicks recorded.'):M.value(linked.trackedClicks,{reason:'Site redirect clicks for the linked article campaign.'})):nc},
       {label:'Creator signups',icon:'user',metric:M.notConnected(C.OUTCOME_REASON)},

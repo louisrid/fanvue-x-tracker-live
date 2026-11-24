@@ -9,13 +9,13 @@ const reporting=readFileSync('public/campaign-reporting.js','utf8');
 
 test('GTA VI has exactly two actual campaign tabs and no phantom Boosted articles tab',()=>{
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  // v3.1 redesign: GTA VI views are All formats plus the two real X source groups; views
-  // without data (Instagram, not connected) are left out, and there is no boosted-articles view.
+  // GTA VI views are All formats, the two real X source groups and Instagram (read from
+  // IG Accounts 3); there is no boosted-articles view.
   const views=[...shell.matchAll(/\{key:'(all-formats|x-original-posts|x-quote-posts|instagram|[a-z-]*boost[a-z-]*)',label:'[^']+'\}/g)].map(match=>match[1]);
-  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts']);
+  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts','instagram']);
   assert.doesNotMatch(shell,/Boosted articles/);
   assert.doesNotMatch(app,/renderGtaQuotedArticles|gtaTabQuoted|ARTICLES BOOSTED BY QRTS/);
-  assert.match(shell,/IG Accounts 3\) needs a separate approved adapter/);
+  assert.match(readFileSync('netlify/functions/gta-report.mjs','utf8'),/\['IG Accounts 3 \(GTA VI\)','GTAIG'\]/);
 });
 
 test('Quoted original X sources appear as an expandable section within paid QRTs',()=>{
@@ -28,7 +28,7 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
   assert.match(app,/qrt\.profileUrl/);
   // v3.1 redesign: quoted originals are listed inside the expandable X quote posts row.
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/const c=r\.c,isQ=r\.key==='x-quote-posts'/);
+  assert.match(shell,/const isQ=r\.key==='x-quote-posts'/);
   assert.match(shell,/Quoted original posts \('\+esc\(C\.full\(q\.rows\.length\)\)\+'\) · original and quote-post views are separate/);
 });
 
@@ -38,7 +38,7 @@ test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
   // v3.1 redesign: paid article reposts (source ID article-rts) sit under X Articles as
   // the Paid reposts view, never under GTA VI.
   assert.match(core,/\{key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:\['x-articles','article-rts'\]\}/);
-  assert.match(core,/\{key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:\['gta-qrts','gta-originals'\]\}/);
+  assert.match(core,/\{key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:\['gta-qrts','gta-originals','gta-instagram'\]\}/);
   assert.match(shell,/\{key:'paid-reposts',label:'Paid reposts'\}/);
   assert.doesNotMatch(reporting,/function articleSources\(\)/);
 });

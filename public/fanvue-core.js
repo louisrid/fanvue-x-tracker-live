@@ -152,7 +152,7 @@
     return '';
   }
 
-  // Paid spend for one overview object. Unknown costs make the figure partial.
+  // Spend for one overview object. Unknown costs make the figure partial.
   function spendOf(c,{noSpendReason='No paid costs are recorded in this source.'}={}){
     if(notConnected(c)||unavailable(c))return M.na(sourceReason(c,'Spend'));
     const known=num(c.paidSpendKnown),unknown=num(c.unknownPaidCosts)||0,paid=num(c.paidCount)||0;
@@ -200,7 +200,7 @@
   /* Built-in campaign definitions: presentation names only; source IDs unchanged. */
   const CAMPAIGNS=[
     {key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:['x-articles','article-rts']},
-    {key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:['gta-qrts','gta-originals']},
+    {key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:['gta-qrts','gta-originals','gta-instagram']},
     {key:'of-terms',name:'OF Terms',icon:'layers',color:'blue',ids:['of-terms']},
     {key:'cis',name:'CIS',icon:'sparkles',color:'teal',ids:['ai-harness']},
     {key:'guru-promotion',name:'Guru Promotion',icon:'megaphone',color:'pink',ids:['guru-rts']}
@@ -212,6 +212,53 @@
     pink:{icon:'#EE7DB8',fill:'#BE185D',label:'Pink'},violet:{icon:'#A994F0',fill:'#6D28D9',label:'Violet'},
     white:{icon:'#FFFFFF',fill:'#000000',label:'White'}
   };
+
+  /* Cost per click and cost per 1,000 views from matched rows only. A placement counts when it
+     is paid with a recorded cost, published, and has its own verified reading. Untracked or
+     shared readings are left out of both sides of the division, never treated as zero. */
+  function matchedRows(objects){
+    const rows=objects.filter(c=>c&&!unavailable(c)&&!notConnected(c)).flatMap(c=>c.rows||[]);
+    const links=new Map(),posts=new Map();
+    for(const r of rows){if(r.posted!==true)continue;
+      if(r.trackingUrl)links.set(r.trackingUrl,(links.get(r.trackingUrl)||0)+1);
+      const id=postId(r.postUrl);if(id)posts.set(id,(posts.get(id)||0)+1);}
+    const paid=r=>r.paid===true&&num(r.cost)!==null&&r.posted===true;
+    const clickRow=r=>paid(r)&&!!r.trackingUrl&&links.get(r.trackingUrl)===1&&!r.sharedTracking&&r.clickTracked!==false&&num(r.clicks)!==null;
+    const viewRow=r=>paid(r)&&!!postId(r.postUrl)&&num(r.views??r.xViews)!==null;
+    return {rows,clickRow,viewRow,sharedPost:r=>posts.get(postId(r.postUrl))>1};
+  }
+  function efficiency(objects){
+    const {rows,clickRow,viewRow}=matchedRows(objects);
+    const cr=rows.filter(clickRow),spendC=cr.reduce((n,r)=>n+num(r.cost),0),clicks=cr.reduce((n,r)=>n+num(r.clicks),0);
+    const cpc=!cr.length?M.na('No placements have both a recorded cost and tracked clicks.'):clicks>0?
+      M.value(spendC/clicks,{reason:'Matched spend '+money(spendC)+' ÷ '+full(clicks)+' tracked clicks, from '+full(cr.length)+' published placements that have both.'}):M.na('Matched placements have no clicks yet.');
+    const byPost=new Map();
+    for(const r of rows.filter(viewRow)){const id=postId(r.postUrl),g=byPost.get(id)||{cost:0,views:num(r.views??r.xViews)};g.cost+=num(r.cost);byPost.set(id,g);}
+    const spendV=[...byPost.values()].reduce((n,g)=>n+g.cost,0),views=[...byPost.values()].reduce((n,g)=>n+g.views,0);
+    const cpm=!byPost.size?M.na('No placements have both a recorded cost and verified views.'):views>0?
+      M.value(spendV/views*1000,{reason:'Matched spend '+money(spendV)+' ÷ '+full(views)+' views × 1,000, from '+full(byPost.size)+' published posts that have both. Each post is counted once.'}):M.na('Matched posts have no views yet.');
+    return {cpc,cpm};
+  }
+  /* Per-placement CPC and CPM for a table of rows (same matching rules). */
+  function placementEfficiency(rows){
+    const {clickRow,viewRow,sharedPost}=matchedRows([{rows}]),out=new Map();
+    for(const r of rows){
+      const c=num(r.clicks),v=num(r.views??r.xViews);
+      out.set(r,{
+        cpc:clickRow(r)&&c>0?M.value(num(r.cost)/c):M.na('Needs a recorded cost and tracked clicks on this placement.'),
+        cpm:viewRow(r)&&!sharedPost(r)&&v>0?M.value(num(r.cost)/v*1000):M.na('Needs a recorded cost and verified views on its own post.')
+      });
+    }
+    return out;
+  }
+  /* Budget view for a campaign: spend, committed (agreed, not yet paid) and what is left. */
+  function budgetOf(spend,committed,budget){
+    const amount=num(budget?.amount);
+    if(amount===null)return null;
+    const left=hasValue(spend)?amount-spend.value-(num(committed)||0):null;
+    return {budget:M.value(amount),spend,committed:num(committed)===null?M.na('No committed placements recorded.'):M.value(num(committed)),
+      remaining:left===null?M.na('Needs the full spend figure.'):spend.state==='partial'?M.partial(left,'Spend is a known subtotal.'):M.value(left)};
+  }
 
   /* One campaign's comparable summary, from campaign-overview objects. */
   function campaignSummary(overview,key,extras={}){
@@ -229,11 +276,14 @@
         M.value(tracked,{provider:'Site redirect clicks (/r/ and /s/ links)'});
       out.published=unavailable(c)?null:num(c?.published);
       out.paidCount=(num(c?.paidCount)||0)+(num(o['article-rts']?.paidCount)||0);
+      // Paid reposts carry the original post's views and no clicks, so they are not matched.
+      Object.assign(out,efficiency([c]));
     }else if(key==='gta-vi'){
-      out.spend=addSpend([spendOf(o['gta-qrts']),spendOf(o['gta-originals'])],'X quote posts and X original posts');
+      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-instagram']];
+      out.spend=addSpend(parts.map(c=>spendOf(c)),'X quote posts, X original posts and Instagram');
       out.views=viewsOf([o['gta-qrts'],o['gta-originals']]);
-      const pp=[o['gta-qrts'],o['gta-originals']].map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
-      const all=[o['gta-qrts'],o['gta-originals']].map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
+      const pp=parts.map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
+      const all=parts.map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
       const gr=extras.gtaReport;
       const stale=!!(gr&&(gr.shortIo?.stale||gr.originals?.shortIo?.stale));
       if(!pp.length&&!all.length)out.clicks=M.na(unavailable(o['gta-qrts'])?sourceReason(o['gta-qrts'],'Clicks'):'No Short.io reading yet.');
@@ -244,8 +294,11 @@
           lastVerified:gr?.shortIo?.lastSuccessfulAt||null};
         out.clicks=stale?{state:'stale',value:post,reason:reason+' Short.io refresh is overdue; showing the last verified reading'+(gr?.shortIo?.lastSuccessfulAt?' from '+stamp(gr.shortIo.lastSuccessfulAt):'')+'.',...extra}:M.value(post,{...extra,reason});
       }
-      out.published=[o['gta-qrts'],o['gta-originals']].every(unavailable)?null:(num(o['gta-qrts']?.published)||0)+(num(o['gta-originals']?.published)||0);
-      out.paidCount=(num(o['gta-qrts']?.paidCount)||0)+(num(o['gta-originals']?.paidCount)||0);
+      out.published=parts.every(unavailable)?null:parts.reduce((n,c)=>n+(num(c?.published)||0),0);
+      out.paidCount=parts.reduce((n,c)=>n+(num(c?.paidCount)||0),0);
+      out.committed=parts.every(unavailable)?null:Math.round(parts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
+      out.budget=budgetOf(out.spend,out.committed,o['gta-qrts']?.budget);
+      Object.assign(out,efficiency(parts));
     }else if(key==='of-terms'){
       const c=o['of-terms'];
       out.spend=spendOf(c);out.views=viewsOf([c]);
@@ -253,17 +306,20 @@
       out.clicks=unavailable(c)?M.na(sourceReason(c,'Clicks')):t===null?M.na('No OF click events recorded yet.'):
         M.value(t,{provider:'OF link events (/of/ links)',reason:'Events recorded by the /of/ tracking links. A different definition from Short.io human clicks; never combined.'});
       out.published=unavailable(c)?null:num(c?.published);out.paidCount=num(c?.paidCount)||0;
+      Object.assign(out,efficiency([c]));
     }else if(key==='guru-promotion'){
       const c=o['guru-rts'];
       out.spend=spendOf(c,{noSpendReason:'Platform boost spend is not recorded in the boosts feed. Linked paid reposts are counted under X Articles.'});
       out.views=viewsOf([c]);if(out.views)out.views.scope='original';
       out.clicks=unavailable(c)?M.na(sourceReason(c,'Clicks')):M.notTracked('Promoted original posts have no tracked link.');
       out.published=unavailable(c)?null:num(c?.published);out.paidCount=num(c?.paidCount)||0;
+      Object.assign(out,efficiency([c]));
     }else{
       const c=o['ai-harness'];
       const reason='Not connected: no dedicated CIS spend or placement source is linked yet.';
       out.spend=M.na(reason);out.views=M.na(reason);out.clicks=M.na('Not connected: no CIS click definition is connected yet.');
       out.published=null;out.paidCount=null;out.notConnected=notConnected(c);
+      out.cpc=M.na(reason);out.cpm=M.na(reason);
     }
     const lead=Object.values(o).find(Boolean);
     out.signups=outcome(lead,'signups');out.kyc=outcome(lead,'kyc');out.earning=outcome(lead,'earningCreators');
@@ -295,7 +351,7 @@
       const gaps=summaries.filter(s=>!hasValue(s.spend)||s.spend.state==='partial').map(s=>CAMPAIGNS.find(c=>c.key===s.key)?.name);
       spend=gaps.length?M.partial(known,'Known subtotal of recorded paid costs. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{chip:'Paid campaigns'});
     }
-    const placementObjects=['x-articles','gta-qrts','gta-originals','of-terms'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
+    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-instagram','of-terms'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
     const views=viewsOf(placementObjects);
     if(hasValue(views)){
       views.chip='Paid placement posts';
@@ -318,6 +374,6 @@
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
   root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,signed,londonDay,addDays,weekStart,weekLabel,dayShort,dayLong,stamp,
-    eventSeries,snapshotSeries,memberWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,
+    eventSeries,snapshotSeries,memberWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);

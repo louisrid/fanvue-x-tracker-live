@@ -9,7 +9,7 @@ export function summariseQuotedOriginals(publishers=[],metrics={}){
   const byOriginal=new Map(),seenPromos=new Set();
   let matched=0;
   for(const p of publishers){
-    if(p.campaign!=='GTAQ'||p.posted!==true)continue;
+    if((p.campaign!=='GTAQ'&&p.campaign!=='GTAQ2')||p.posted!==true)continue;
     const qrtId=idFromUrl(p.postUrl);
     if(!qrtId||seenPromos.has(qrtId))continue;
     seenPromos.add(qrtId);

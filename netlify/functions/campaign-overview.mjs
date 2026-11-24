@@ -15,6 +15,8 @@ const goodUrl=url=>{try{const u=new URL(String(url||''));return u.protocol==='ht
 const sum=(rows,key)=>{const found=rows.map(key).map(num).filter(v=>v!==null);return found.length?found.reduce((a,b)=>a+b,0):null};
 const uniqueSum=(rows,key)=>{const seen=new Set();return sum(rows.filter(p=>{const id=xPost(p.postUrl);if(!id||seen.has(id))return false;seen.add(id);return true;}),key)};
 const moneyRows=rows=>{const paid=rows.filter(r=>r.paid),known=paid.map(p=>num(p.cost)).filter(v=>v!==null);return {known:known.length?known.reduce((n,v)=>n+v,0):null,unknown:paid.length-known.length,paidCount:paid.length};};
+// Committed: agreed placements with a recorded price that are not marked paid yet.
+const committedRows=rows=>{const open=rows.filter(r=>!r.paid&&num(r.cost)>0);return {known:Math.round(open.reduce((n,r)=>n+num(r.cost),0)*100)/100,count:open.length};};
 const stamped=(o,...paths)=>paths.map(k=>o?.[k]).filter(Boolean)[0]||null;
 const diagnostic=(x)=>x instanceof Error?x.message:String(x||'Unknown source failure');
 const cellValue=c=>{let v=c?.value;if(v==null)return '';if(typeof v!=='object')return v;if(v instanceof Date)return v.toISOString();if('result' in v)return v.result??'';return v.text??v.richText?.map(x=>x.text).join('')??'';};
@@ -193,7 +195,7 @@ export function groupArticleRtSpend(rows=[]){
 
 const converted=()=>({signups:null,kyc:null,earningCreators:null,conversionSource:'NOT_CONNECTED'});
 function normalCampaign(id,name,kind,rows,sourceStatus={},extra={}){
-  const paid=moneyRows(rows),posted=rows.filter(p=>p.posted===true),
+  const paid=moneyRows(rows),committed=committedRows(rows),posted=rows.filter(p=>p.posted===true),
     linked=posted.filter(p=>!!xPost(p.postUrl)),
     reported=linked.filter(p=>num(p.views)!==null),
     views=uniqueSum(linked,p=>p.views),
@@ -205,23 +207,29 @@ function normalCampaign(id,name,kind,rows,sourceStatus={},extra={}){
     id,name,kind,source:sourceStatus.source||'CONNECTED',sourceVerifiedAt:sourceStatus.at||null,
     dataWarning:sourceStatus.warning||null,unavailable:sourceStatus.error||null,
     placements:rows.length,published:posted.length,paidCount:paid.paidCount,
-    paidSpendKnown:paid.known,unknownPaidCosts:paid.unknown,
+    paidSpendKnown:paid.known,unknownPaidCosts:paid.unknown,committedUnpaidKnown:committed.known,committedUnpaidCount:committed.count,
     views,likes,reposts,replies,coverage,rows,
     allTimeHumanClicks:null,postPublicationClicks:null,...converted(),...extra
   };
 }
-function gtaCampaign(data,original=false){
-  const entry=original?data?.originals:data;
-  if(!entry?.ready)return {...normalCampaign(original?'gta-originals':'gta-qrts',original?'GTA VI Originals':'GTA VI QRTs',original?'original':'qrt',[],{source:'UNAVAILABLE',error:'GTA report unavailable'}),unavailable:true};
-  const rows=(entry.publishers||[]).filter(p=>original?p.campaign==='GTA1'||p.campaign==='GTA2':p.campaign==='GTAQ');
-  const report=normalCampaign(original?'gta-originals':'gta-qrts',original?'GTA VI Originals':'GTA VI QRTs',original?'original':'qrt',rows,{
+const GTA_GROUPS={
+  qrts:{id:'gta-qrts',name:'GTA VI QRTs',kind:'qrt',campaigns:['GTAQ','GTAQ2']},
+  originals:{id:'gta-originals',name:'GTA VI Originals',kind:'original',campaigns:['GTA1','GTA2']},
+  instagram:{id:'gta-instagram',name:'GTA VI Instagram',kind:'instagram',campaigns:['GTAIG']}
+};
+function gtaCampaign(data,group='qrts'){
+  const def=GTA_GROUPS[group],entry=group==='qrts'?data:data?.[group];
+  if(!entry?.ready)return {...normalCampaign(def.id,def.name,def.kind,[],{source:'UNAVAILABLE',error:'GTA report unavailable'}),unavailable:true};
+  const rows=(entry.publishers||[]).filter(p=>def.campaigns.includes(p.campaign)&&!p.duplicateOf);
+  const report=normalCampaign(def.id,def.name,def.kind,rows,{
     source:entry.source,at:entry.sourceVerifiedAt,warning:entry.warning
   },{
     allTimeHumanClicks:num(entry.shortIo?.total),
     postPublicationClicks:num(entry.shortIo?.postPublicationTotal),
     sourceStale:!!entry.sourceStale,
     xMetricErrors:(entry.xStatus?.errors||[]).length,
-    quotedOriginals:original?null:data.quotedOriginals||null
+    quotedOriginals:group==='qrts'?data.quotedOriginals||null:null,
+    ...(group==='qrts'?{budget:data.budget||null,excludedCopies:data.excludedCopies||null,missingTabs:data.missingTabs||[]}:{})
   });
   return report;
 }
@@ -333,7 +341,7 @@ export function assembleCampaignOverview(sources){
       sourceNote:'Original X post views are measured automatically; these are NOT individual paid retweet impressions. Individual RTs need their own X post URL to measure impressions separately.'
     });
   const campaigns=[
-    gtaCampaign(gta,false),gtaCampaign(gta,true),ofCampaign(of),boostsCampaign(boosts,linkedArticleRts),
+    gtaCampaign(gta,'qrts'),gtaCampaign(gta,'originals'),gtaCampaign(gta,'instagram'),ofCampaign(of),boostsCampaign(boosts,linkedArticleRts),
     rtCampaign,
     ...dashboardCampaigns(dashboard),
     {...normalCampaign('ai-harness','AI Harness','planned',[],{source:'NOT_CONNECTED',error:'No live campaign-specific feed linked'}),unavailable:true},
