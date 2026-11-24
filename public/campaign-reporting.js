@@ -155,9 +155,14 @@
   function campaignPanel(id,sub){
     const c=item(id);
     if(!c)return empty('Campaign feed unavailable.');
+    const scope=id==='x-articles'
+      ?'<p class="rpt-scope-note"><strong>Spend period:</strong> all-time across every tracked X Article placement currently in the tracker. It is not limited to the last 5 days shown in the graph.</p>'
+      :id==='article-rts'
+        ?'<p class="rpt-scope-note"><strong>Spend period:</strong> all-time across the connected X Article Boost placements. Historical trend is omitted until a verified history feed exists.</p>'
+        :'';
     return '<section class="rpt-campaign-panel">'+
       (viewStatus(c)==='Connected'?'':badge(c))+
-      trendChart(c)+totals(c)+(c.unavailable?empty('Source unavailable'):campaignRows(c))+
+      scope+trendChart(c)+totals(c)+(c.unavailable?empty('Source unavailable'):campaignRows(c))+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
   }
   function articleSources(){
@@ -206,7 +211,7 @@
     const campaign=item('x-articles'),groups=campaign?.sourceCampaigns||[];
     if(!groups.length)return empty('No historical article campaign groups returned.');
     return header('Campaigns')+
-      grid(['Campaign','Status','Placements','Published','Paid spend','X views','Tracked clicks'],groups.map(c=>[
+      grid(['Campaign','Status','Placements','Published','Paid spend · all-time','X views','Tracked clicks'],groups.map(c=>[
         '<strong>'+esc(c.name)+'</strong><small class="rpt-rowmeta">'+esc(c.id)+'</small>',
         esc(c.status||'Recorded'),format(c.placements),format(c.published),
         usd(c.paidSpendKnown),format(c.xViews),format(c.trackedClicks)
