@@ -312,3 +312,137 @@
     font-size:clamp(24px,8vw,34px)!important;
   }
 }
+
+
+/* Main campaign history graph. Rendered only when 2+ genuine historical days exist. */
+#page-reporting .rpt-main-trend,
+:root body #mainContent .campaign-main-history{
+  --history-accent:#175af3;
+  margin:4px 0 16px!important;
+  padding:18px 18px 12px!important;
+  border:1px solid #d5dfed!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:0 5px 16px rgba(15,28,56,.05)!important;
+  overflow:hidden!important;
+}
+#page-reporting .rpt-main-trend-guru-rts{--history-accent:#6a35e8;}
+#page-reporting .rpt-main-trend-x-articles{--history-accent:#175af3;}
+:root body #mainContent #page-gta-vi .campaign-main-history{--history-accent:#ff008c;}
+:root body #mainContent #page-of .campaign-main-history{--history-accent:#17a800;}
+#page-reporting .rpt-trend-head,
+:root body #mainContent .campaign-main-history .daily-graph-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  margin:0 0 10px!important;
+}
+#page-reporting .rpt-trend-head h2,
+:root body #mainContent .campaign-main-history .daily-graph-head h3{
+  margin:3px 0 0!important;
+  color:#0c1424!important;
+  font-size:clamp(22px,2.2vw,30px)!important;
+  line-height:1!important;
+  letter-spacing:-.05em!important;
+  font-weight:950!important;
+}
+#page-reporting .rpt-trend-head p,
+:root body #mainContent .campaign-main-history .daily-graph-head p{
+  margin:7px 0 0!important;
+  color:#63708a!important;
+  font-size:11px!important;
+  line-height:1.35!important;
+  font-weight:800!important;
+}
+#page-reporting .rpt-trend-eyebrow,
+:root body #mainContent .campaign-history-eyebrow{
+  display:block!important;
+  color:var(--history-accent)!important;
+  font-size:9.5px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.11em!important;
+}
+#page-reporting .rpt-trend-latest{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:2px!important;
+  min-width:120px!important;
+}
+#page-reporting .rpt-trend-latest > span{
+  color:#6a758b!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+#page-reporting .rpt-trend-latest strong{
+  color:#0d1422!important;
+  font-size:27px!important;
+  line-height:1!important;
+  letter-spacing:-.055em!important;
+  font-weight:950!important;
+  font-variant-numeric:tabular-nums!important;
+}
+#page-reporting .rpt-trend-latest small{
+  color:var(--history-accent)!important;
+  font-size:9.5px!important;
+  font-weight:900!important;
+}
+#page-reporting .rpt-trend-plot,
+:root body #mainContent .campaign-history-plot{
+  width:100%!important;
+  min-height:210px!important;
+}
+#page-reporting .rpt-trend-plot svg,
+:root body #mainContent .campaign-history-plot svg{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  overflow:visible!important;
+}
+#page-reporting .rpt-trend-grid,
+:root body #mainContent .campaign-history-grid{
+  stroke:#e4eaf3!important;
+  stroke-width:1!important;
+}
+#page-reporting .rpt-trend-area,
+:root body #mainContent .campaign-history-area{
+  fill:var(--history-accent)!important;
+  fill-opacity:.08!important;
+}
+#page-reporting .rpt-trend-line,
+:root body #mainContent .campaign-history-line{
+  fill:none!important;
+  stroke:var(--history-accent)!important;
+  stroke-width:3.2!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+#page-reporting .rpt-trend-dot,
+:root body #mainContent .campaign-history-dot{
+  fill:#fff!important;
+  stroke:var(--history-accent)!important;
+  stroke-width:3!important;
+}
+#page-reporting .rpt-trend-label,
+:root body #mainContent .campaign-history-label{
+  fill:#5c6980!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  font-family:Inter,system-ui,sans-serif!important;
+}
+:root body #mainContent .campaign-main-history[hidden]{display:none!important;}
+@media(max-width:760px){
+  #page-reporting .rpt-main-trend,
+  :root body #mainContent .campaign-main-history{
+    padding:15px 13px 9px!important;
+    border-radius:15px!important;
+  }
+  #page-reporting .rpt-trend-head{gap:10px!important;}
+  #page-reporting .rpt-trend-latest strong{font-size:23px!important;}
+  #page-reporting .rpt-trend-plot,
+  :root body #mainContent .campaign-history-plot{min-height:170px!important;}
+}
