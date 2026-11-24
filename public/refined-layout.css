@@ -854,3 +854,199 @@
 :root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item{
   border-radius:9px!important;
 }
+
+/* Screen-fit refinement: retain the original reports, use the available width,
+   and keep long datasets readable in their own scroll area on desktop. */
+:root body {--text:#000;--secondary:#000;--muted:#000;--muted-text:#000;--xt-secondary:#000;}
+:root body #mainContent {
+  width:calc(100% - 48px)!important;
+  max-width:1720px!important;
+}
+:root body #mainContent > .site-page {padding-bottom:24px!important;}
+:root body .app-header {padding-bottom:0!important;}
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row {
+  padding-top:18px!important;padding-bottom:12px!important;gap:8px!important;
+}
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav {
+  padding:0!important;margin-top:0!important;margin-bottom:0!important;
+  min-height:42px!important;height:42px!important;
+}
+:root body:is(.is-home,:not(.is-home)) .app-header .header-row > .mobile-nav > .mobile-nav-item {
+  height:42px!important;min-height:42px!important;max-height:42px!important;
+}
+:root body #mainContent > .site-page:not(#page-dashboard) > .subpage-back-row {
+  padding-top:14px!important;padding-bottom:4px!important;
+  min-height:54px!important;margin-bottom:4px!important;
+}
+:root body #mainContent .site-page .subpage-back-row .page-back-button {
+  width:36px!important;height:36px!important;min-height:36px!important;
+}
+:root body #mainContent .site-page > .subpage-back-row + .refresh-page-intro {
+  padding:5px 0 10px!important;margin-bottom:10px!important;gap:8px 16px!important;
+}
+:root body #mainContent .site-page:not(#page-dashboard) .page-intro h1 {
+  font-size:clamp(28px,2.6vw,36px)!important;
+}
+:root body #mainContent .site-page :is(.x-refresh-button,.rpt-refresh),
+:root body #mainContent #page-dashboard #reloadAllButton {
+  height:42px!important;min-height:42px!important;min-width:140px!important;
+  padding:0 13px!important;box-shadow:0 2px 0 #ba0066!important;
+}
+:root body.is-home #mainContent #page-dashboard > .dashboard-hub-intro {
+  padding-top:20px!important;padding-bottom:12px!important;margin-bottom:14px!important;
+}
+
+/* Larger campaign buttons, using the established campaign palette. */
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {
+  width:100%!important;max-width:none!important;gap:12px!important;margin-bottom:16px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
+  height:94px!important;min-height:94px!important;padding:15px 18px!important;
+  border-radius:11px!important;border:0!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-gta {background:#ff008c!important;}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-guru {background:#7935df!important;}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-articles {background:#0055ff!important;}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-discord {background:#4424d6!important;}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-of {background:#39ff14!important;}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-boosts {background:#ffd22f!important;}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong {
+  font-size:clamp(20px,1.8vw,26px)!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:is(.is-of,.is-boosts),
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:is(.is-of,.is-boosts) .dashboard-pill-copy strong {
+  color:#000!important;-webkit-text-fill-color:#000!important;
+}
+
+/* True black copy on neutral surfaces. Coloured tiles and action labels retain
+   their contrasting text; links, warnings and chart accents remain distinct. */
+:root body #mainContent .site-page :is(h1,h2,h3,h4,p,small,span,strong,dt,dd,th,td,label,summary,input,select,button):not(:is(
+  .kpi-card,.kpi-card *,.daily-metric,.daily-metric *,.rpt-stat,.rpt-stat *,
+  .discord-highlight-card,.discord-highlight-card *,
+  .dashboard-campaign-pill,.dashboard-campaign-pill *,
+  .x-refresh-button,.x-refresh-button *,.rpt-refresh,.rpt-refresh *,
+  .button-primary,.button-primary *,.button-danger,.button-danger *,
+  a[href] *, .heading-accent,.xt-chart-context,.xt-chart-summary small,
+  .rpt-warning,.is-error,.is-error *
+)) {color:#000!important;-webkit-text-fill-color:#000!important;}
+:root body #mainContent .site-page input::placeholder {color:#000!important;opacity:1!important;}
+:root body #mainContent .site-page :is(.xt-chart-axis,.discord-growth-axis) {fill:#000!important;}
+:root body #mainContent .site-page .xt-sort-button::after {color:#000;opacity:1;}
+
+/* One chart scale across reports, with enough space for axis labels and hover. */
+:root body #mainContent .site-page .xt-main-chart {
+  padding:13px 15px 10px!important;margin:0 0 10px!important;
+  border-radius:10px!important;min-height:0!important;
+}
+:root body #mainContent .site-page .xt-main-chart .xt-chart-head {gap:12px!important;margin-bottom:8px!important;}
+:root body #mainContent .site-page .xt-main-chart h2 {font-size:21px!important;margin:3px 0 5px!important;}
+:root body #mainContent .site-page .xt-main-chart .xt-chart-context {font-size:10px!important;}
+:root body #mainContent .site-page .xt-main-chart .xt-chart-copy p {font-size:11px!important;}
+:root body #mainContent .site-page .xt-main-chart .xt-chart-summary strong {font-size:26px!important;}
+:root body #mainContent .site-page .xt-main-chart .xt-chart-summary :is(span,small) {font-size:11px!important;}
+:root body #mainContent .site-page .xt-main-chart .xt-chart-note {font-size:11px!important;margin-top:4px!important;}
+:root body #mainContent .site-page .xt-main-chart svg {max-height:180px!important;min-height:0!important;}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview {margin:0 0 10px!important;}
+:root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-head {margin-bottom:8px!important;}
+:root body #mainContent #page-of .daily-overview-head:has(.daily-live:empty) {display:none!important;}
+:root body #mainContent #page-gta-vi .gta-report-toolbar {margin-bottom:10px!important;}
+:root body #mainContent #page-gta-vi .gta-tabs {margin-bottom:0!important;padding:4px!important;}
+:root body #mainContent #page-gta-vi .gta-tab {padding:9px 16px!important;font-size:12px!important;}
+:root body #mainContent .site-page :is(.result-line,.rpt-section-title) {margin:8px 0!important;padding-top:0!important;}
+:root body #mainContent .site-page :is(.result-line,.rpt-section-title) h2 {font-size:21px!important;}
+:root body #mainContent .site-page :is(.xt-table-wrap,.rpt-scroll) {margin-top:6px!important;margin-bottom:10px!important;}
+:root body #mainContent .site-page :is(.rpt-table,.xt-data-table) {border-spacing:0 3px!important;}
+:root body #mainContent .site-page :is(.rpt-table,.xt-data-table) :is(th,td),
+:root body #mainContent :is(#page-gta-vi,#page-of) .xt-data-table tbody tr.xt-record-row > td {
+  padding:7px 9px!important;font-size:12px!important;line-height:1.35!important;
+}
+:root body #mainContent #page-reporting .rpt-table thead th.xt-sort-th .xt-sort-button {
+  min-height:34px!important;padding:6px 8px!important;white-space:normal!important;
+}
+:root body #mainContent #page-reporting .rpt-table th {white-space:normal!important;}
+:root body #mainContent .site-page .xt-search {margin-bottom:6px!important;}
+:root body #mainContent .site-page .xt-search input {height:36px!important;min-height:36px!important;}
+:root body #mainContent #page-gta-vi .gta-quoted-sources {margin:10px 0!important;padding-top:10px!important;}
+:root body #mainContent #page-reporting .rpt-source-compact {margin-top:10px!important;padding-top:10px!important;}
+:root body #mainContent #page-reporting .rpt-source-compact .rpt-note {margin:6px 0!important;}
+
+@media(min-width:1100px) {
+  /* Show the historical chart and all headline metrics together. */
+  :root body #mainContent #page-reporting .rpt-overview:has(> .xt-main-chart),
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview:has(> .xt-main-chart:not([hidden])) {
+    display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)!important;
+    gap:12px!important;align-items:stretch!important;
+  }
+  :root body #mainContent #page-reporting .rpt-overview > .xt-main-chart,
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview > .xt-main-chart {
+    grid-column:1!important;margin-bottom:0!important;
+  }
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview > :is(.daily-overview-head,.source-details) {grid-column:1 / -1!important;}
+  :root body #mainContent #page-reporting .rpt-overview:has(> .xt-main-chart) > .rpt-stats,
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview:has(> .xt-main-chart:not([hidden])) > .campaign-metrics {
+    grid-column:2!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;margin:0!important;
+  }
+  :root body #mainContent #page-reporting .rpt-overview:has(> .xt-main-chart) > .rpt-stats:has(> :nth-child(5)),
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview:has(> .xt-main-chart:not([hidden])) > .campaign-metrics {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  :root body #mainContent #page-reporting .rpt-overview:not(:has(> .xt-main-chart)) > .rpt-stats:has(> :nth-child(5)),
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview:not(:has(> .xt-main-chart:not([hidden]))) > .campaign-metrics {
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  }
+  :root body #mainContent #page-reporting .rpt-overview {margin-bottom:10px!important;}
+  :root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric,
+  :root body #mainContent #page-reporting .rpt-stats .rpt-stat {
+    min-height:86px!important;height:auto!important;padding:11px 12px!important;gap:5px!important;
+  }
+  :root body #mainContent :is(#page-of,#page-gta-vi) .campaign-metrics .daily-metric strong,
+  :root body #mainContent #page-reporting .rpt-stats .rpt-stat strong {
+    font-size:clamp(24px,2vw,31px)!important;line-height:1.1!important;
+  }
+  :root body #mainContent .site-page :is(.xt-table-scroll,.gta-quoted-scroll) {
+    max-height:clamp(220px,calc(100dvh - 570px),480px)!important;
+    overflow:auto!important;scrollbar-gutter:stable;
+  }
+  :root body #mainContent .site-page :is(.rpt-table,.xt-data-table,.gta-quoted-table) thead th {
+    position:sticky!important;top:0!important;z-index:2!important;background:#f1f5fb!important;
+  }
+  :root body #mainContent #page-reporting .rpt-table {min-width:650px!important;}
+  :root body #mainContent #page-reporting .rpt-table:has(th:nth-child(10)) {
+    min-width:1180px!important;table-layout:fixed!important;
+  }
+  :root body #mainContent #page-reporting .rpt-table:has(th:nth-child(10)) td {white-space:normal!important;overflow-wrap:anywhere;}
+  :root body #mainContent #page-gta-vi .gta-quoted-collapse[open] .gta-quoted-scroll {max-height:260px!important;}
+}
+@media(max-width:1099px) {
+  :root body #mainContent .site-page .xt-main-chart svg {max-height:170px!important;}
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-metrics.campaign-metrics {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;
+  }
+}
+@media(max-width:600px) {
+  :root body #mainContent {width:calc(100% - 28px)!important;}
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child {
+    min-height:82px!important;height:82px!important;padding:12px 9px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong {
+    font-size:clamp(16px,4.4vw,20px)!important;
+  }
+  :root body #mainContent :is(#page-of,#page-gta-vi) .daily-overview-metrics.campaign-metrics {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  :root body #mainContent .site-page .xt-main-chart .xt-chart-head {display:block!important;}
+  :root body #mainContent .site-page .xt-main-chart .xt-chart-summary {margin-top:8px!important;}
+  :root body #mainContent .site-page .xt-main-chart h2 {font-size:20px!important;}
+}

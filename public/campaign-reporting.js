@@ -177,6 +177,9 @@
       format(isArticleRt?rows.length:rows.filter(r=>r.posted).length)+'</span></div>'+
       grid(cols,rendered);
   }
+  function overview(c){
+    return '<div class="rpt-overview">'+trendChart(c)+totals(c)+'</div>';
+  }
   function campaignPanel(id,sub){
     const c=item(id);
     if(!c)return empty('Campaign feed unavailable.');
@@ -187,7 +190,7 @@
         :'';
     return '<section class="rpt-campaign-panel">'+
       (viewStatus(c)==='Connected'?'':badge(c))+
-      scope+trendChart(c)+totals(c)+(id==='article-rts'?paidArticleRtGroups(c,true):'')+
+      scope+overview(c)+(id==='article-rts'?paidArticleRtGroups(c,true):'')+
       (c.unavailable?empty('Source unavailable'):campaignRows(c))+
       (c.trackingWarning?'<p class="rpt-warning">'+esc(c.trackingWarning)+'</p>':'')+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
@@ -245,7 +248,7 @@
     if(!c)return empty('X RT boost feed is unavailable.');
     const rows=c.rows||[];
     const percent=v=>num(v)===null?'Not available':new Intl.NumberFormat('en-GB',{minimumFractionDigits:1,maximumFractionDigits:2}).format(Number(v))+'%';
-    const summary=(viewStatus(c)==='Connected'?'':badge(c))+trendChart(c)+totals(c);
+    const summary=(viewStatus(c)==='Connected'?'':badge(c))+overview(c);
     const related=paidArticleRtGroups(c);
     if(!rows.length)return summary+related+empty('No verified boosted original X tweets currently recorded.');
     const missingSpend=rows.filter(r=>num(r.spend)===null).length;
