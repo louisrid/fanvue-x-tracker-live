@@ -446,3 +446,20 @@
   #page-reporting .rpt-trend-plot,
   :root body #mainContent .campaign-history-plot{min-height:170px!important;}
 }
+
+
+#page-reporting .rpt-scope-note{
+  margin:2px 0 14px!important;
+  padding:11px 13px!important;
+  border:1px solid #d5dfed!important;
+  border-radius:12px!important;
+  background:#f6f9ff!important;
+  color:#283752!important;
+  font-size:11px!important;
+  line-height:1.45!important;
+  font-weight:750!important;
+}
+#page-reporting .rpt-scope-note strong{
+  color:#0f1b31!important;
+  font-weight:950!important;
+}
