@@ -15,7 +15,7 @@
     if(cardMembers)cardMembers.textContent=amount.textContent;
     if(cardChange)cardChange.textContent=change.textContent;
     if(memberNote)memberNote.textContent=status.textContent;
-    if(dashboardMembers)dashboardMembers.textContent=amount.textContent==='—'?'Members unavailable':'≈'+amount.textContent+' members';
+    if(dashboardMembers)dashboardMembers.textContent=amount.textContent==='—'?'Members unavailable':amount.textContent+' members';
   }
   const canvas=chart.querySelector('[data-discord-chart]');
   const note=chart.querySelector('[data-discord-chart-note]');
@@ -94,8 +94,8 @@
     amount.textContent=format(latest.memberCount);
     change.textContent=Number.isSafeInteger(data.dailyChange)
       ?(data.dailyChange>0?'+':'')+format(data.dailyChange):'—';
-    status.textContent=fromCache?'Saved midday reading · checking for updates':
-      `Approximate · 12:00 UK · ${label(latest.date)}`;
+    status.textContent=fromCache?'Saved Discord count · checking for updates':
+      data.source==='DISCORD_BOT_LIVE'?`Live Discord count · ${label(latest.date)}`:`Midday snapshot · ${label(latest.date)}`;
     verified=true;
     syncDisplays();
   }
