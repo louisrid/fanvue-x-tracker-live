@@ -1321,6 +1321,41 @@ async function load(force=false){if(state.loading)return false;
     if(!state.placements.length&&!state.homeVerified){for(const id of ['weeklyGrid','upcomingGrid','trackerList','accountMobileList','campaignGrid','historicalWeeks'])el(id).innerHTML='<div class="empty-state">Reporting is temporarily unavailable. Please try again shortly.</div>';}return false;}
   finally{state.loading=false;}
 }
+function fiveDayViewHistory(history=[]){
+  const cutoff=shift(day(new Date()),-4),latestBySeriesDay=new Map();
+  for(const h of history){
+    const at=validDate(h?.at),views=number(h?.views),id=String(h?.id||h?.postId||h?.code||'');
+    if(!at||views===null||!id)continue;
+    const date=day(at);if(date<cutoff)continue;
+    const key=date+'|'+id,prior=latestBySeriesDay.get(key);
+    if(!prior||at.getTime()>prior.at)latestBySeriesDay.set(key,{date,id,views,at:at.getTime()});
+  }
+  const days=new Map();
+  for(const h of latestBySeriesDay.values()){
+    const row=days.get(h.date)||{date:h.date,value:0};
+    row.value+=h.views;days.set(h.date,row);
+  }
+  return [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
+}
+function renderFiveDayLine(targetId,cardId,rows,{label='Historical trend',suffix=''}={}){
+  const target=el(targetId),card=el(cardId);if(!target||!card)return false;
+  const data=(rows||[]).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(String(r.date||''))&&number(r.value)!==null)
+    .sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-5);
+  if(data.length<2){card.hidden=true;target.innerHTML='';return false;}
+  card.hidden=false;
+  const W=Math.max(520,target.clientWidth||820),H=230,L=58,R=20,T=24,B=42,pw=W-L-R,ph=H-T-B;
+  const vals=data.map(r=>Number(r.value)),min=Math.min(...vals),max=Math.max(...vals),span=Math.max(1,max-min);
+  const floor=Math.max(0,min-span*.12),ceil=max+span*.12;
+  const X=i=>L+i*pw/Math.max(1,data.length-1),Y=v=>T+ph-(v-floor)/(ceil-floor||1)*ph;
+  const pts=data.map((r,i)=>[X(i),Y(Number(r.value))]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=line+' L'+pts.at(-1)[0].toFixed(1)+' '+(T+ph)+' L'+pts[0][0].toFixed(1)+' '+(T+ph)+' Z';
+  const grid=[0,.5,1].map(r=>{const y=T+ph*r;return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" class="campaign-history-grid"/>';}).join('');
+  const labels=data.map((r,i)=>'<text x="'+X(i)+'" y="'+(H-13)+'" text-anchor="middle" class="campaign-history-label">'+esc(new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(r.date+'T12:00:00Z')))+'</text>').join('');
+  const dots=data.map((r,i)=>'<circle cx="'+X(i)+'" cy="'+Y(Number(r.value))+'" r="4.5" class="campaign-history-dot"><title>'+esc(r.date+': '+fmt(Number(r.value))+(suffix?' '+suffix:''))+'</title></circle>').join('');
+  target.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">'+grid+'<path d="'+area+'" class="campaign-history-area"/><path d="'+line+'" class="campaign-history-line"/>'+dots+labels+'</svg>';
+  return true;
+}
 function renderOfReport(){
   const report=state.ofCampaign,ready=report?.ready===true;
   const from=weekStart(new Date()),to=shift(from,6),today=day(new Date());
@@ -1343,10 +1378,11 @@ function renderOfReport(){
   el('ofMetrics').querySelector('[data-of-clicks]')?.addEventListener('click',()=>focusPromoClicks('ofPublishers','UTM clicks'));
 
   if(ready){
-    const W=Math.max(280,el('ofChart').clientWidth||700),H=240,L=24,T=20,B=40,cw=W-L-15,ch=H-T-B,max=Math.max(1,...daily.map(d=>d.clicks));
-    const bars=daily.map((d,i)=>{const x=L+(i+.5)*cw/7,y=T+ch-d.clicks/max*ch;return `<g><title>${esc(d.date)}: ${d.date>today?'upcoming':d.clicks+' verified clicks'}</title><rect x="${x-Math.min(17,cw/7*.28)}" y="${y}" width="${Math.min(34,cw/7*.56)}" height="${d.clicks/max*ch}" rx="5" fill="#0055ff"/><text x="${x}" y="${Math.max(13,y-7)}" text-anchor="middle" class="daily-axis-label">${d.date>today?'':d.clicks}</text><text x="${x}" y="${H-13}" text-anchor="middle" class="daily-axis-label">${esc(new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',weekday:'short'}).format(new Date(d.date+'T12:00:00Z')))}</text></g>`;}).join('');
-    el('ofChart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily verified OF clicks for the current UK week."><line x1="${L}" y1="${T+ch}" x2="${W-15}" y2="${T+ch}" class="daily-axis-line"/>${bars}</svg>`;
-  }else el('ofChart').innerHTML=state.ofSettled?'<div class="empty-state">Click history is temporarily unavailable.</div>':'<div class="loading-card" role="status">Loading click history…</div>';
+    const start5=shift(today,-4),historyDates=new Set(activity.filter(e=>e.date>=start5&&e.date<=today).map(e=>e.date));
+    const history5=Array.from({length:5},(_,i)=>{const date=shift(start5,i);return {date,value:activity.filter(e=>e.date===date).reduce((sum,e)=>sum+(number(e.clicks)||0),0)};});
+    if(historyDates.size>=2)renderFiveDayLine('ofChart','ofTrendCard',history5,{label:'OF Terms verified UTM clicks over the last five days',suffix:'clicks'});
+    else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
+  }else{el('ofTrendCard').hidden=true;el('ofChart').innerHTML='';}
   const link=(url,label)=>safeUrl(url)?`<a class="button" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${label}</a>`:'';
   const section=(title,publishers)=>`<section class="of-publisher-section"><div class="result-line"><h2>${title}<span class="heading-accent">.</span></h2><span class="section-count">${publishers.length}</span></div><div class="of-publisher-grid">${publishers.map(p=>{
     const wc=activity.filter(e=>e.code===p.code&&e.date>=from&&e.date<=to).reduce((sum,e)=>sum+e.clicks,0);
@@ -1526,7 +1562,7 @@ function renderGtaQuotedArticles(){
 }
 
 function renderGtaReport(){
-  if(gtaState.tab==='quoted'){renderGtaQuotedArticles();return;}
+  if(gtaState.tab==='quoted'){if(el('gtaTrendCard'))el('gtaTrendCard').hidden=true;renderGtaQuotedArticles();return;}
   const originals=gtaState.tab==='originals';
   const report=originals?gtaState.report?.originals:gtaState.report,ready=report?.ready===true;
   const placements=ready?(report.publishers||[]).filter(p=>originals?['GTA1','GTA2'].includes(p.campaign):p.campaign==='GTAQ'):[];
@@ -1543,6 +1579,8 @@ function renderGtaReport(){
   if(!gtaState.refreshing){const sourceStatus=gtaSourceStatus(report);if(sourceStatus){el('gtaRefreshStatus').textContent=sourceStatus.text;el('gtaRefreshStatus').className='x-refresh-status '+(sourceStatus.failed?'is-error':'is-success');el('gtaRefreshStatus').title=[report.shortIo?.lastSuccessfulAt?'Short.io last successful: '+gtaUKDate(report.shortIo.lastSuccessfulAt):'',report.metricLastSuccessfulAt?'X last verified: '+gtaUKDate(report.metricLastSuccessfulAt):''].filter(Boolean).join(' · ');}}
   const error=el('gtaReportError');const issues=rows.flatMap(p=>[p.clickError,p.metricError].filter(Boolean).map(message=>p.publisher+': '+message));const diagnostics=[gtaState.error,report?.warning,...issues].filter(Boolean);error.hidden=!diagnostics.length;error.innerHTML='<summary>Source details</summary><p>'+esc(diagnostics.join(' · '))+'</p>';
   const paid=placements.filter(p=>p.paid),posted=rows.filter(p=>p.posted===true&&safeUrl(p.postUrl));
+  const gtaHistory=fiveDayViewHistory(report?.history||[]);
+  renderFiveDayLine('gtaChart','gtaTrendCard',gtaHistory,{label:(originals?'GTA VI originals':'GTA VI QRTs')+' combined X views over the last five days',suffix:'views'});
   const knownPaid=paid.filter(p=>p.cost!==null&&Number.isFinite(Number(p.cost)));
   const spend=report?.summary?.paidSpend??(ready?knownPaid.reduce((n,p)=>n+Number(p.cost),0):null);
   const seen=posted.filter(p=>p.views!==null&&p.views!==undefined),views=seen.length?seen.reduce((n,p)=>n+Number(p.views),0):null;
