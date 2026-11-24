@@ -60,8 +60,7 @@
     amount.textContent=format(latest.memberCount);
     change.textContent=Number.isSafeInteger(data.dailyChange)
       ?(data.dailyChange>0?'+':'')+format(data.dailyChange):'—';
-    status.textContent=fromCache?'Saved Discord count · checking for updates':
-      data.source==='DISCORD_BOT_LIVE'?`Live Discord count · ${label(latest.date)}`:`Midday snapshot · ${label(latest.date)}`;
+    status.textContent=fromCache?'Checking member count':'';
     verified=true;
     syncDisplays();
   }
