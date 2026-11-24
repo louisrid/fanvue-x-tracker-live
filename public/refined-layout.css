@@ -687,3 +687,165 @@
   min-height:93px!important;
   gap:6px!important;
 }
+
+
+/* Centred campaign navigation: three consistent colours, text-only buttons. */
+:root body .app-header .brand-name{
+  font-size:clamp(36px,3.5vw,43px)!important;
+  line-height:1.07!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item{
+  border-radius:10px!important;
+  gap:0!important;
+  padding-inline:17px!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item svg{
+  display:none!important;
+}
+:root body .app-header .header-row > .mobile-nav > .mobile-nav-item[data-page="discord"]{
+  background:#3d2bba!important;
+  border-color:#3d2bba!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  width:min(100%,930px)!important;
+  max-width:930px!important;
+  margin:0 auto 16px!important;
+  gap:10px!important;
+  justify-items:stretch!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child{
+  grid-column:auto!important;
+  grid-row:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:66px!important;
+  min-height:66px!important;
+  padding:10px 13px!important;
+  border:1px solid rgb(255 255 255 / 9%)!important;
+  border-radius:9px!important;
+  box-shadow:0 2px 6px rgb(13 22 41 / 8%)!important;
+  background-image:none!important;
+  transform:none!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:is(.is-gta,.is-guru,.is-articles){
+  background:#17243c!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:is(.is-of,.is-boosts){
+  background:#2451c9!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill.is-discord{
+  background:#3d2bba!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:hover{
+  filter:brightness(1.08)!important;
+  transform:none!important;
+  box-shadow:0 4px 12px rgb(13 22 41 / 13%)!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:focus-visible{
+  outline:3px solid #2451c9!important;
+  outline-offset:3px!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  max-width:100%!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  gap:3px!important;
+  text-align:center!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-size:clamp(17px,1.5vw,20px)!important;
+  font-weight:850!important;
+  letter-spacing:-.035em!important;
+  line-height:1.13!important;
+  width:auto!important;
+  text-align:center!important;
+  text-wrap:balance!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-meta{
+  display:block!important;
+  margin:0!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  line-height:1.2!important;
+  text-align:center!important;
+  opacity:.9!important;
+}
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-discord-icon,
+:root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid svg{
+  display:none!important;
+}
+:root body #mainContent .site-page :is(.kpi-card,.daily-metric,.discord-highlight-card,
+  .rpt-stat,.article-card,.of-publisher-entry,.rpt-source-compact,.rpt-scroll,
+  .gta-quoted-collapse,.gta-source-details > summary,.rpt-source-detail > summary,
+  .discord-growth-chart,.dashboard-snapshot-card,.dashboard-detail-disclosure,
+  .daily-graph-card,.campaign-main-history,.of-post-card){
+  border-radius:10px!important;
+}
+:root body #mainContent .site-page :is(.page-back-button,.x-refresh-button,.button,
+  .select-control,.sort-by-control,.rpt-tab,.gta-tab,.filter-details,
+  .rpt-unlinked-detail,.source-details,.home-filter-select){
+  border-radius:9px!important;
+}
+@media(max-width:850px){
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    max-width:590px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child{
+    height:66px!important;
+    min-height:66px!important;
+  }
+}
+@media(max-width:560px){
+  :root body .app-header .brand-name{
+    font-size:clamp(27px,7.6vw,33px)!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid{
+    width:100%!important;
+    max-width:390px!important;
+    gap:8px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2),
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:last-child{
+    height:65px!important;
+    min-height:65px!important;
+    padding:9px 8px!important;
+    border-radius:8px!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-pill-copy strong,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid > a.dashboard-campaign-pill:nth-child(-n+2) .dashboard-pill-copy strong,
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-copy strong{
+    font-size:clamp(13px,3.85vw,17px)!important;
+  }
+  :root body.is-home #mainContent #page-dashboard .dashboard-campaign-grid .dashboard-campaign-pill.is-discord .dashboard-pill-meta{
+    font-size:9px!important;
+    line-height:1.15!important;
+  }
+}
