@@ -122,7 +122,7 @@
       return '<circle cx="'+x(i)+'" cy="'+y(d.views)+'" r="5" class="rpt-trend-dot" tabindex="0" role="button" data-chart-point data-chart-title="'+esc(campaign.name||'Campaign history')+'" data-chart-date="'+esc(shortDay(d.date))+'" data-chart-metrics="'+encodeURIComponent(JSON.stringify(metrics))+'" aria-label="'+esc(shortDay(d.date)+': '+format(d.views)+' views. Hover or focus for details.')+'"><title>'+esc(shortDay(d.date)+': '+format(d.views)+' views')+'</title></circle>';
     }).join('');
     return '<section class="rpt-main-trend rpt-main-trend-'+esc(campaign.id)+'">'+
-      '<div class="rpt-trend-head"><div><span class="rpt-trend-eyebrow">5-DAY HISTORY</span><h2>Combined X views<span class="heading-accent">.</span></h2><p>Hover or tap a point for the full verified reading.</p></div>'+
+      '<div class="rpt-trend-head"><div><span class="rpt-trend-eyebrow">5-DAY HISTORY</span><h2>Combined X views<span class="heading-accent">.</span></h2><p>Hover or tap a point for its date and key figures.</p></div>'+
       '<div class="rpt-trend-latest"><span>Latest</span><strong>'+esc(format(latest.views))+'</strong><small>'+esc(deltaText)+'</small></div></div>'+
       '<div class="rpt-trend-plot"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Combined X views over the last five days with verified history">'+grid+
       '<path d="'+area+'" class="rpt-trend-area"/><path d="'+line+'" class="rpt-trend-line"/>'+dots+labels+'</svg></div></section>';
