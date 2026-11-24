@@ -110,19 +110,22 @@ test('Unified lifetime report preserves separate campaign totals without invente
   assert.ok(!('totalPaidSpend' in result));
 });
 
-test('Reporting UI and original GTA tab exist without altering historic campaign routes',()=>{
+test('Reporting routes remain while GTA VI has only QRT and standalone tabs',()=>{
   const html=readFileSync('public/index.html','utf8');
   const app=readFileSync('public/app.js','utf8');
   const ui=readFileSync('public/campaign-reporting.js','utf8');
   assert.match(html,/id="page-reporting"/);
   assert.match(html,/campaign-reporting\.js/);
-  assert.match(html,/data-gta-tab="quoted"/);
+  assert.match(html,/data-gta-tab="qrts"/);
+  assert.match(html,/data-gta-tab="originals"/);
+  assert.doesNotMatch(html,/data-gta-tab="quoted"/);
+  assert.match(html,/id="gtaQuotedSources"/);
+  assert.match(app,/function renderGtaQuotedSources\(\)/);
   assert.match(app,/window\.XTrackerCampaignReporting\?\.show\(reportCode\|\|'article-rt'\)/);
   assert.match(app,/Lifetime campaign performance/);
   assert.match(app,/data-page/);
-  assert.match(ui,/postPublicationClicks/);
-  assert.match(ui,/Not connected/);
-  assert.match(ui,/sourceCampaigns/);
+  assert.match(app,/postPublicationClicks/);
+  assert.match(ui,/X Article Boosts/);
   assert.match(app,/xtracker-gta-report-qrts-v1/);
 });
 
