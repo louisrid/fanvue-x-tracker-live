@@ -189,6 +189,7 @@
     return '<section class="rpt-campaign-panel">'+
       (viewStatus(c)==='Connected'?'':badge(c))+
       scope+trendChart(c)+totals(c)+(c.unavailable?empty('Source unavailable'):campaignRows(c))+
+      (c.trackingWarning?'<p class="rpt-warning">'+esc(c.trackingWarning)+'</p>':'')+
       (c.dataWarning?'<p class="rpt-warning">'+esc(c.dataWarning)+'</p>':'')+'</section>';
   }
   function articleSources(){
