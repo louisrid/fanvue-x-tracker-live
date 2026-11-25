@@ -120,12 +120,15 @@
     // Rounded figures (1.61M, $4,441) show the exact value on hover and to screen readers.
     const shown=unavailable?'':formatValue(m.value,it.format||'count');
     const exact=unavailable?'':formatValue(m.value,/^money/.test(it.format||'')?'money':'count');
-    const precise=!unavailable&&exact!==shown?' data-reason="Exact: '+esc(exact)+'"':'';
+    // No notes under the numbers: scope and coverage (e.g. partial, includes planned) are in the hover text.
+    const tip=[!unavailable&&exact!==shown?'Exact: '+exact:'',!unavailable&&m.state==='partial'?'Partial: '+(m.reason||''):!unavailable&&m.state==='stale'?'Last verified: '+(m.reason||''):(!unavailable&&m.reason)||'',
+      !unavailable&&it.note?it.note:''].filter(Boolean).join(' · ');
+    const precise=tip?' data-reason="'+esc(tip)+'"':'';
     return '<div class="fv-metric">'+
       '<div class="fv-metric-label">'+chipIcon(it.icon)+'<span>'+esc(it.label)+'</span></div>'+
       '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+value(m,it.format||'count')+
         (precise?'<span class="fv-sr"> (exact '+esc(exact)+')</span>':'')+'</div>'+
-      (it.chip!==undefined?it.chip:chipFor(m,it.note))+
+
     '</div>';
   }
   /* Only figures that exist are shown; slots without data are left out. */
