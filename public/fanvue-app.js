@@ -130,8 +130,8 @@
     if(ov?.stale)return '<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>The reporting feed is showing its last verified snapshot.</span></div>';
     return '';
   }
-  // Placement types in each campaign, shown as coloured tags after the name.
-  const CAMPAIGN_TYPES={'x-articles':['original','rt'],'gta-vi':['original','qrt','story'],'of-terms':['original'],'guru-promotion':['original']};
+  // The one type of each campaign, shown as a coloured tag after the name.
+  const CAMPAIGN_TYPES={'x-articles':'article','gta-vi':'mixed','of-terms':'post','guru-promotion':'rt'};
   const summaries=()=>{const ov=D.overview();return ov?C.CAMPAIGNS.map(c=>C.campaignSummary(ov,c.key,{gtaReport:D.gta().report})):null;};
 
   function homePage(st){
@@ -148,7 +148,7 @@
     const table=U.tablePanel({id:'home-results',title:'Campaign results',icon:'layers',rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.def.name,widths:ALIGNED,
       empty:S?'No campaigns.':waiting('Loading campaign results…'),countLabel:n=>n===1?'campaign':'campaigns',
       columns:[
-        {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>'+U.typeTags(CAMPAIGN_TYPES[r.key]);},sort:r=>r.def.name},
+        {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>'+U.typeTag(CAMPAIGN_TYPES[r.key]);},sort:r=>r.def.name},
         {key:'spend',label:'Spend',format:'money',get:r=>r.spend},
         {key:'views',label:'Post views',get:r=>r.views},
         {key:'clicks',label:'Tracked clicks',get:r=>r.clicks,html:r=>(r.clicks?.state==='stale'?U.reasonButton('Stale',r.clicks.reason,'fv-chip is-warn fv-cell-chip')+' ':'')+U.value(r.clicks)},
@@ -363,10 +363,10 @@
     const views=[{key:'all-formats',label:'All formats'},{key:'x-original-posts',label:'X original posts'},{key:'x-quote-posts',label:'X quote posts'},{key:'instagram',label:'Instagram'}];
     let table;
     if(view==='all-formats'){
-      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og,types:['original']},{key:'x-quote-posts',name:'X quote posts',c:qr,types:['qrt']},{key:'instagram',name:'Instagram',c:ig,types:['story']}].filter(r=>r.c):[];
+      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og,type:'post'},{key:'x-quote-posts',name:'X quote posts',c:qr,type:'qrt'},{key:'instagram',name:'Instagram',c:ig,type:'story'}].filter(r=>r.c):[];
       table=U.tablePanel({id:'gta-table',title:'Promotion results',icon:'layers',view,views,rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.name,widths:ALIGNED,empty:waiting('Loading promotion results…'),
         columns:[
-          {key:'name',label:'Promotion type',type:'name',html:r=>'<a class="fv-name" href="#gta-vi/'+esc(r.key)+'">'+U.marker('gamepad','',{plain:true})+'<span>'+esc(r.name)+'</span></a>'+U.typeTags(r.types),sort:r=>r.name},
+          {key:'name',label:'Promotion type',type:'name',html:r=>'<a class="fv-name" href="#gta-vi/'+esc(r.key)+'">'+U.marker('gamepad','',{plain:true})+'<span>'+esc(r.name)+'</span></a>'+U.typeTag(r.type),sort:r=>r.name},
           {key:'spend',label:'Spend',format:'money',get:r=>C.spendOf(r.c)},
           {key:'views',label:'Post views',get:r=>C.viewsOf([r.c])},
           {key:'clicks',label:'Tracked clicks',get:r=>{const v=C.num(r.c.postPublicationClicks);return v===null?M.na(C.num(r.c.allTimeHumanClicks)===null?'No tracking links on these posts.':'No post-publication reading yet.'):M.value(v);}},

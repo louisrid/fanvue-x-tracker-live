@@ -213,16 +213,21 @@ test('a search or filter with no matches keeps the table and its controls',()=>{
   assert.match(U.tablePanel({...cfg,rows:[],empty:'No records.'},{expanded:new Set()}),/data-view="b"[\s\S]*No records\./);
 });
 
-test('placement types carry their own coloured tag on Home and the GTA VI summary',()=>{
+test('each row carries exactly one type tag, each type with its own colour',()=>{
   const shell=readFileSync('public/fanvue-app.js','utf8'),css=readFileSync('public/fanvue.css','utf8');
-  assert.match(shell,/const CAMPAIGN_TYPES=\{'x-articles':\['original','rt'\],'gta-vi':\['original','qrt','story'\],'of-terms':\['original'\],'guru-promotion':\['original'\]\}/);
-  const tags=U.typeTags(['original','qrt','rt','story']);
-  for(const [k,l] of [['original','Original'],['qrt','QRT'],['rt','RT'],['story','Story']]){
-    assert.match(tags,new RegExp('fv-type is-'+k+'[^>]*>'+l));
-    assert.match(css,new RegExp('\\.fv-state\\.fv-type\\.is-'+k+'\\{background:#[0-9A-F]{6}\\}'));
+  assert.match(shell,/const CAMPAIGN_TYPES=\{'x-articles':'article','gta-vi':'mixed','of-terms':'post','guru-promotion':'rt'\}/);
+  assert.match(shell,/type:'post'\},\{key:'x-quote-posts',name:'X quote posts',c:qr,type:'qrt'\},\{key:'instagram',name:'Instagram',c:ig,type:'story'\}/);
+  const colours=new Set();
+  for(const [k,l] of [['article','Article'],['post','Post'],['qrt','QRT'],['rt','RT'],['story','Story'],['mixed','Mixed']]){
+    const tag=U.typeTag(k);
+    assert.equal((tag.match(/fv-type is-/g)||[]).length,1);
+    assert.match(tag,new RegExp('fv-type is-'+k+'[^>]*>'+l));
+    const m=css.match(new RegExp('\\.fv-state\\.fv-type\\.is-'+k+'\\{background:(#[0-9A-F]{6})\\}'));
+    assert.ok(m,k);colours.add(m[1]);
   }
-  assert.equal(U.typeTags([]),'');
-  assert.doesNotMatch(shell,/Needs attention|'Delivery'/);
+  assert.equal(colours.size,6);
+  assert.equal(U.typeTag(undefined),'');
+  assert.doesNotMatch(shell,/Needs attention|'Delivery'|typeTags/);
 });
 
 test('"Spend" replaces "Paid spend" in every visible label',()=>{
