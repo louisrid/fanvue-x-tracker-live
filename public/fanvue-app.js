@@ -219,7 +219,7 @@
       columns:[
         {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>';},sort:r=>r.def.name},
         {key:'spend',label:'Spend',format:'money',get:r=>r.spend},
-        {key:'views',label:'Views',get:r=>r.views,html:r=>(r.key==='guru-promotion'&&C.hasValue(r.views)?U.reasonButton('Original','Original Views: views of the promoted original posts, not of the paid RTs. Not included in the Home Views total.','fv-chip fv-cell-chip')+' ':'')+U.value(r.views)},
+        {key:'views',label:'Views',get:r=>r.key==='guru-promotion'&&C.hasValue(r.views)?{...r.views,reason:'Original Views: views of the promoted original posts, not of the paid RTs. Not included in the Home Views total.'}:r.views},
         {key:'clicks',label:'Clicks',get:r=>r.clicks,html:r=>(r.clicks?.state==='stale'?U.reasonButton('Stale',r.clicks.reason,'fv-chip is-warn fv-cell-chip')+' ':'')+U.value(r.clicks)},
         {key:'cpc',label:'CPC',format:'money',get:r=>r.cpc},
         {key:'live',label:'Live Posts',get:r=>r.live===null?M.na('No X placements.'):M.value(r.live)},
@@ -387,7 +387,7 @@
     const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
     const table=xTable('gta-vi','gta-results',{title:'Results',icon:'gamepad',records,f,empty:s?'No Results':waiting('Loading…'),
       expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Source Post'):'',
-        extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views))+' '+U.reasonButton('Source','Views of the quoted original post, not of this quote post.','fv-chip'):''],
+        extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):''],
           ['All-Time Clicks',count(x.raw.allTimeClicks)],['Click Source',x.raw.trackingUrl?esc('Short.io human clicks'):'']]});}});
     // Shown only when a spreadsheet tab could not be read, so its rows are missing from the totals.
     const tabWarning=(qr?.missingTabs||[]).map(t=>'<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+U.reasonButton('Missing Data',t+' could not be read from the spreadsheet, so its rows are not counted.','fv-notice-reason')+'</span></div>').join('');
