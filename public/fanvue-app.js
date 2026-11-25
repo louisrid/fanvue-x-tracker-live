@@ -614,11 +614,11 @@
     btn.disabled=true;btn.classList.add('is-busy');btn.setAttribute('aria-busy','true');
     status.className='fv-refresh-status';status.textContent='Refreshing…';
     const app=D.app(),rep=D.rep();
-    let message='',error=false;
+    let message='',error=false,summary='';
     try{
       const k=current.kind==='page'?current.key:'';
       if(current.kind==='added'){const ok=await hooks.refresh?.(current);message=ok?'':'Campaign registry unavailable; last saved details kept.';error=!ok;}
-      else if(k==='home'||k==='all-accounts'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'';error=!!s?.error;}
+      else if(k==='home'||k==='all-accounts'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'';error=!!s?.error;summary=s?.summary||'';}
       else if(k==='discord'){const ok=await rep?.refreshDiscord?.(true);message=ok?'':'Discord sources unavailable; last verified figures kept.';error=!ok;}
       else{
         const fn={'x-articles':'x','gta-vi':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
@@ -631,7 +631,8 @@
     finally{btn.disabled=false;btn.classList.remove('is-busy');btn.removeAttribute('aria-busy');}
     // Short visible state; the full source detail stays available on hover and to screen readers.
     const partial=error&&/partial|some|kept|unavailable/i.test(message)&&!/failed/i.test(message);
-    const label=!error?'Updated':partial?'Partial Refresh':'Refresh Failed';
+    // Visible, specific result: which sources were unavailable, or how many posts were deleted on X.
+    const label=summary||(!error?'Updated':partial?'Partial Refresh':'Refresh Failed');
     status.className='fv-refresh-status '+(error?'is-error':'is-ok');status.title=message||label;status.textContent=label;
     status.setAttribute('aria-label',label+(message?': '+message:''));
     rerender();

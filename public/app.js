@@ -813,6 +813,9 @@ async function refreshXStats(){
     while(state.loading)await new Promise(resolve=>setTimeout(resolve,100));
     if(!await load(true))throw new Error('X stats were fetched, but the dashboard could not reload. Please try again.');
     showXRefreshTime(result.lastSuccessfulAt);
+    const errs=Array.isArray(result.errors)?result.errors:[];
+    result.gonePosts=errs.filter(postGone).length;
+    if(!result.ok&&errs.length&&errs.every(postGone))result.ok=true;
     if(result.ok){status.className='x-refresh-status is-success';status.textContent=`Updated ${result.updated} of ${result.total} articles`;}
     else{status.className='x-refresh-status is-error';status.textContent=`Updated ${result.updated} of ${result.total} articles. ${result.errors?.length||0} could not be refreshed; last verified figures remain visible.`;}
     return result;
@@ -823,7 +826,7 @@ async function reloadAllData(){
   const button=el('reloadAllButton'),status=el('reloadAllStatus');
   if(!button||button.disabled||el('refreshXStats').disabled||gtaState.refreshing)return;
   button.disabled=true;button.classList.add('is-refreshing');button.setAttribute('aria-busy','true');
-  const issues=new Set();
+  const issues=new Set();let gone=0;
   const progress=message=>{status.className='x-refresh-status';status.textContent=message;};
   try{
     // The existing dashboard refresh coordinates X Articles, OF Terms and X RTs
@@ -835,7 +838,10 @@ async function reloadAllData(){
     if(!x||x.boosts?.error)issues.add('X RT metrics');
     progress('2/3 · Reloading GTA VI QRTs, standalone posts and quoted X sources…');
     await refreshGtaReport();
-    if(gtaState.error||el('gtaRefreshStatus').classList.contains('is-error'))issues.add('GTA VI metrics');
+    const gtaGroups=[gtaState.report,gtaState.report?.originals,gtaState.report?.mandy,gtaState.report?.instagram].filter(Boolean);
+    const gtaStatus=gtaGroups.map(gtaSourceStatus).filter(Boolean);
+    if(gtaState.error||!gtaState.report||gtaStatus.some(g=>g.failed))issues.add('GTA VI metrics');
+    gone+=gtaStatus.reduce((n,g)=>n+(g.gone||0),0)+(x?.gonePosts||0);
     progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…');
     // These are GETs only. The X data providers were already refreshed above.
     const results=await Promise.allSettled([
@@ -853,9 +859,11 @@ async function reloadAllData(){
     if(results[4].status!=='fulfilled'||results[4].value!==true)issues.add('Discord members');
     if(results[5].status!=='fulfilled'||results[5].value!==true)issues.add('Discord course clicks');
     status.className='x-refresh-status '+(issues.size?'is-error':'is-success');
+    const goneNote=gone?' '+gone+(gone===1?' post was':' posts were')+' deleted on X; '+(gone===1?'its':'their')+' last verified views are kept.':'';
     status.textContent=issues.size
-      ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'
-      : 'All connected sources checked and refreshed. Verified X views, clicks, Discord and campaign data are shown.';
+      ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'+goneNote
+      : 'All connected sources checked and refreshed.'+goneNote;
+    status.dataset.summary=issues.size?'Partial Refresh: '+[...issues].join(', ')+' unavailable':'Updated'+(gone?' · '+gone+' deleted '+(gone===1?'post':'posts')+' on X':'');
   }catch(error){
     status.className='x-refresh-status is-error';
     status.textContent='Reload could not finish: '+String(error?.message||error)+'. Previously verified figures are preserved.';
@@ -1111,16 +1119,21 @@ function focusPromoClicks(id,label){
   window.scrollTo({top:Math.max(0,top),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   target.focus({preventScroll:true});
 }
+// A post X reports as not found (deleted or made private by its publisher) is not a refresh failure:
+// its last verified reading is kept and it is reported separately as deleted.
+function postGone(e){return /not_found|HTTP 404/i.test(String(e?.category||'')+' '+String(e?.error||''));}
 function gtaSourceStatus(report){
+  const postGone=e=>/not_found|HTTP 404/i.test(String(e?.category||'')+' '+String(e?.error||''));
   const x=report?.xStatus,short=report?.shortIo;
   if(!x)return null;
+  const gone=(x.errors||[]).filter(postGone).length,real=(x.errors||[]).filter(e=>!postGone(e)).length;
   const issues=[];
-  if(x.errors?.length||x.unverified)issues.push(`${x.retained} saved X readings retained; ${x.unverified} X posts unverified`);
+  if(real||x.unverified>gone)issues.push(`${x.retained} saved X readings retained; ${x.unverified} X posts unverified`);
   if(short?.errors||short?.stale)issues.push('Short.io has saved or incomplete readings');
   if(report?.warning)issues.push('Sheet source unavailable; saved records retained');
   const failed=issues.length>0;
-  const text=`X: ${x.updated} of ${x.total} posts · Short.io: ${short?.refreshed||0} of ${short?.linkCount||0} links`+(failed?' · '+issues.join(' · '):' · Latest available readings verified');
-  return {failed,text};
+  const text=`X: ${x.updated} of ${x.total} posts · Short.io: ${short?.refreshed||0} of ${short?.linkCount||0} links`+(failed?' · '+issues.join(' · '):' · Latest available readings verified')+(gone?` · ${gone} deleted on X`:'');
+  return {failed,text,gone};
 }
 function renderGtaQuotedSources(){
   const panel=el('gtaQuotedSources');
@@ -1657,7 +1670,7 @@ window.XTrackerApp=Object.freeze({
   boosts:()=>({tweets:boostsState.tweets,loaded:boostsState.loaded,error:boostsState.error}),
   load:force=>load(force),loadOf:force=>loadOfReport(force),loadGta:force=>loadGtaReport(force),loadBoosts:force=>loadBoosts(force),
   refresh:Object.freeze({all:reloadAllData,x:refreshXStats,of:refreshOfReport,gta:refreshGtaReport,boosts:refreshBoostStats}),
-  status:id=>{const node=el(id);return {text:node.textContent||'',error:node.classList.contains('is-error')};},
+  status:id=>{const node=el(id);return {text:node.textContent||'',summary:node.dataset?.summary||'',error:node.classList.contains('is-error')};},
   showRecords:page=>route(page||'',false),
   openEditor:(kind,id)=>openEditor(kind,id),
   isUnlocked:()=>Boolean(state.adminKey),
