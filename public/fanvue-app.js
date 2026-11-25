@@ -489,6 +489,7 @@
     const ov=D.overview();
     const all=ov?[...xaRecords(),...gtaRecords(),...igRecords(),...ofRecords(),...guruRecords()]:[];
     const ts=tableState('all-accounts','acc-table'),f=ts.xf||(ts.xf={camp:'',plat:'',type:''});
+    if(!ts.sort)ts.sort={key:'spend',dir:-1};  // biggest spenders first by default
     const shown=all.filter(x=>(!f.camp||x.parent===f.camp)&&(!f.plat||x.platform===f.plat)&&(!f.type||x.type===f.type));
     const sel=(key,label,opts)=>opts.length<2&&!f[key]?'':'<label class="fv-select fv-filter"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+
       [['',label+': All'],...opts.map(o=>[o,label+': '+o])].map(([v,l])=>'<option value="'+esc(v)+'"'+(f[key]===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'+U.icon('down',14)+'</label>';
