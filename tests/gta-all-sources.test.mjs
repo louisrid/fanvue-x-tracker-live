@@ -246,7 +246,7 @@ test('paid RTs of a Guru account are Guru Promotion spend; the rest stay with X 
   assert.equal(sum.spend.value,50);
   const shell=readFileSync('public/fanvue-app.js','utf8');
   assert.doesNotMatch(shell,/Records and editing/);
-  assert.match(shell,/\(g\?\.paidReposts\|\|\[\]\)\.map\(r=>xRecord\(r,\{campaign:'Guru X RTs',type:'rt'/);
+  assert.match(shell,/\(D\.campaign\('guru-rts'\)\?\.paidReposts\|\|\[\]\)\.map\(r=>xRecord\(r,\{campaign:'Guru X RTs',parent:'Guru X RTs',type:'rt'/);
 });
 
 test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly once',()=>{
@@ -306,6 +306,19 @@ test('tabs are found by permanent ID: renamed tabs, old names and old cached row
   // Rows cached under the old tab name still count.
   assert.ok(inGroup({campaign:'GTAM',sourceTab:'X Accounts 17 (Article QRTs V2)'},'mandy'));
   assert.ok(!inGroup({campaign:'GTAM',sourceTab:'X Accounts 1 (Article 1 + RTs)'},'mandy'));
+});
+
+test('Accounts page: one row per platform + handle across campaigns, from the shared record builders',()=>{
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  assert.match(shell,/\{key:'discord',title:'Discord',icon:'discord',group:'general'\},\n\s*\{key:'all-accounts',title:'Accounts',icon:'users',group:'general'\}/);
+  assert.match(shell,/const all=ov\?\[\.\.\.xaRecords\(\),\.\.\.gtaRecords\(\),\.\.\.igRecords\(\),\.\.\.ofRecords\(\),\.\.\.guruRecords\(\)\]:\[\]/);
+  for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC','CPM'])assert.match(shell,new RegExp("label:'"+label+"'"));
+  // Each campaign page builds its table from the same functions, so figures always agree.
+  assert.match(shell,/const records=xaRecords\(\);/);assert.match(shell,/const records=gtaRecords\(\);/);
+  assert.match(shell,/const records=ofRecords\(\);/);assert.match(shell,/const records=guruRecords\(\);/);
+  assert.match(shell,/k==='home'\|\|k==='all-accounts'\)\{await app\?\.refresh\?\.all/);
+  // One row per account: no expandable placement history.
+  assert.doesNotMatch(shell,/fv-account-history/);
 });
 
 test('"Spend" replaces "Paid spend" in every visible label',()=>{

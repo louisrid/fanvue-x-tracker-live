@@ -35,6 +35,7 @@
   const PAGES=[
     {key:'home',title:'Home',icon:'home',group:'general'},
     {key:'discord',title:'Discord',icon:'discord',group:'general'},
+    {key:'all-accounts',title:'Accounts',icon:'users',group:'general'},
     ...C.CAMPAIGNS.map(c=>({key:c.key,title:c.name,icon:c.icon,group:'paid',color:c.color}))
   ];
   const RECORDS={
@@ -104,13 +105,13 @@
 
   /* ---------- universal X records: one schema and nine columns for every X placement ---------- */
   // Type is one of Post, RT, QRT or Article; threads are posts.
-  const TYPE_NAMES={post:'Post',thread:'Post',original:'Post',rt:'RT',qrt:'QRT',article:'Article'};
+  const TYPE_NAMES={post:'Post',thread:'Post',original:'Post',rt:'RT',qrt:'QRT',article:'Article',story:'Story'};
   const typeName=t=>TYPE_NAMES[String(t||'').toLowerCase()]||'Post';
   // A placement is a booking: it has a price, a payment, a live post, a planned stage or clicks. Contact-list rows are left out.
   const isBooking=r=>C.num(r.cost)!==null||r.paid===true||r.posted===true||!!r.stage||C.num(r.clicks)>0;
-  function xRecord(r,{campaign,type,clicks,views,ownLink=true}){
+  function xRecord(r,{campaign,parent,platform='X',type,clicks,views,ownLink=true}){
     const link=ownLink&&r.posted===true&&C.safeUrl(r.postUrl)&&C.postId(r.postUrl)?r.postUrl:'';
-    return {raw:r,campaign,type:typeName(type),account:r.publisher||r.handle||'',price:C.num(r.cost),
+    return {raw:r,campaign,parent:parent||campaign,platform,type:typeName(type),account:r.publisher||r.handle||'',price:C.num(r.cost),
       live:r.posted===true?true:r.posted===false?false:null,link,paid:r.paid===true,planned:r.planned===true,
       views:views?views(r):viewsOfRow(r),clicks:clicks?clicks(r):M.na('No tracked link for this placement.')};
   }
@@ -132,7 +133,7 @@
   const GROUPS_VERIFIED=new Set(['Mandy','Lucia','Partner Articles','Classic Articles']);
   const X_COLUMNS=[
     {key:'campaign',label:'Campaign',type:'text',keep:true,html:x=>esc(x.campaign),sort:x=>x.campaign},
-    {key:'platform',label:'Platform',type:'text',keep:true,nosort:true,html:()=>'X'},
+    {key:'platform',label:'Platform',type:'text',keep:true,nosort:true,html:x=>esc(x.platform||'X')},
     {key:'type',label:'Type',type:'text',keep:true,html:x=>esc(x.type),sort:x=>x.type},
     {key:'account',label:'Account',type:'name',keep:true,html:x=>accountName(x.raw),sort:x=>x.account.toLowerCase()},
     {key:'price',label:'Price',format:'money',keep:true,get:x=>x.price===null?M.na('No price recorded.'):M.value(x.price)},
@@ -288,14 +289,36 @@
   /* X Articles: every article redirect leads to the Fanvue partner (affiliates) page, so all
      verified placements are Partner Articles. RTs without a matched original stay under X Articles. */
   const articleGroup=r=>/fanvue\.com\/pages\/affiliates/i.test(r.destinationUrl||'')||/\/[rs]\/A\d+/i.test(r.trackingUrl||'')?'Partner Articles':'X Articles';
+  /* ---------- shared record builders (campaign pages and Accounts use the same records) ---------- */
+  function xaRecords(){
+    const xa=D.campaign('x-articles'),rt=D.campaign('article-rts');
+    return [
+      ...(xa?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:articleGroup(r),parent:'X Articles',type:'article',clicks:r=>C.num(r.clicks)===null?M.na('Click storage unavailable.'):M.value(r.clicks,{reason:'Site redirect clicks (/r/ and /s/ links).'})})),
+      ...(rt?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'X Articles',parent:'X Articles',type:'rt',ownLink:false,views:()=>M.na('Repost impressions are not measured; the original post’s views are in the details.'),clicks:()=>M.na('Paid RTs have no tracked link.')}))
+    ];
+  }
+  const gtaClicks=r=>{const v=C.num(r.clicks);if(v!==null)return M.value(v,{reason:'Short.io human clicks since publication.'});return M.na(r.clickError||(r.trackingUrl?(r.posted?'No post-publication reading yet.':'Not live yet.'):'No tracking link in the source sheet.'));};
+  function gtaRecords(){
+    const qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),mq=D.campaign('gta-mandy');
+    return [
+      ...(og?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'post',clicks:gtaClicks})),
+      ...(qr?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'qrt',clicks:gtaClicks})),
+      ...(mq?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'qrt',clicks:gtaClicks}))
+    ];
+  }
+  function igRecords(){
+    return (D.campaign('gta-instagram')?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'GTA VI',parent:'GTA VI',platform:'Instagram',type:r.format==='post'?'post':'story',ownLink:false,
+      views:()=>M.na('Instagram views are not measured.'),clicks:()=>M.na('No tracked link for this placement.')}));
+  }
+  const ofRecords=()=>(D.campaign('of-terms')?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'OnlyFans Terms',parent:'OnlyFans Terms',type:r.type||r.format||'post',clicks:r=>C.num(r.clicks)===null?M.na('No /of/ link events recorded.'):M.value(r.clicks,{reason:'Events on the /of/ tracking link.'})}));
+  const guruRecords=()=>(D.campaign('guru-rts')?.paidReposts||[]).map(r=>xRecord(r,{campaign:'Guru X RTs',parent:'Guru X RTs',type:'rt',ownLink:false,
+    views:()=>M.na('Repost impressions are not measured. The original post’s views are in its group.'),clicks:()=>M.na('Paid RTs have no tracked link.')}));
+
   function xArticlesPage(st){
     ensure('overview');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'x-articles'):null,xa=D.campaign('x-articles'),rt=D.campaign('article-rts'),dash=D.dashboard();
     const names=new Map((dash?.campaigns||[]).map(c=>[c.id,c.name]));
-    const records=[
-      ...(xa?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:articleGroup(r),type:'article',clicks:r=>C.num(r.clicks)===null?M.na('Click storage unavailable.'):M.value(r.clicks,{reason:'Site redirect clicks (/r/ and /s/ links).'})})),
-      ...(rt?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'X Articles',type:'rt',ownLink:false,views:()=>M.na('Repost impressions are not measured; the original post’s views are in the details.'),clicks:()=>M.na('Paid RTs have no tracked link.')}))
-    ];
+    const records=xaRecords();
     applyLegacyView('x-articles','xa-results',st.view);
     const f=xState('x-articles','xa-results'),shown=records.filter(xMatch(f));
     let k;
@@ -328,12 +351,7 @@
   function gtaPage(st){
     ensure('overview');ensure('gta');
     const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),ig=D.campaign('gta-instagram'),mq=D.campaign('gta-mandy');
-    const gtaClicks=r=>{const v=C.num(r.clicks);if(v!==null)return M.value(v,{reason:'Short.io human clicks since publication.'});return M.na(r.clickError||(r.trackingUrl?(r.posted?'No post-publication reading yet.':'Not live yet.'):'No tracking link in the source sheet.'));};
-    const records=[
-      ...(og?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),type:'post',clicks:gtaClicks})),
-      ...(qr?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),type:'qrt',clicks:gtaClicks})),
-      ...(mq?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),type:'qrt',clicks:gtaClicks}))
-    ];
+    const records=gtaRecords();
     const viewKey={'x-original-posts':1,'x-quote-posts':1,'mandy-qrts':1}[st.view]?st.view:'';
     applyLegacyView('gta-vi','gta-results',viewKey);
     const f=xState('gta-vi','gta-results'),shown=records.filter(xMatch(f));
@@ -380,7 +398,7 @@
   function ofPage(st){
     ensure('overview');ensure('of');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'of-terms'):null,c=D.campaign('of-terms'),rep=D.of().report;
-    const records=(c?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'OnlyFans Terms',type:r.type||r.format||'post',clicks:r=>C.num(r.clicks)===null?M.na('No /of/ link events recorded.'):M.value(r.clicks,{reason:'Events on the /of/ tracking link.'})}));
+    const records=ofRecords();
     const f=xState('of-terms','of-results'),shown=records.filter(xMatch(f));
     const k=!s?null:xActive(f)?xKpis(shown):{spend:s.spend,views:s.views,clicks:s.clicks,cpc:s.cpc};
     const strip=!k?loadingStrip(KPI_LOADING):kpiStrip(k);
@@ -404,8 +422,7 @@
     ensure('overview');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'guru-promotion'):null,g=D.campaign('guru-rts');
     const originals=new Map((g?.rows||[]).map(r=>[String(r.id),r]));
-    const records=(g?.paidReposts||[]).map(r=>xRecord(r,{campaign:'Guru X RTs',type:'rt',ownLink:false,
-      views:()=>M.na('Repost impressions are not measured. The original post’s views are in its group.'),clicks:()=>M.na('Paid RTs have no tracked link.')}));
+    const records=guruRecords();
     const f=xState('guru-promotion','guru-results'),shown=records.filter(xMatch(f));
     const spend=!s?null:xActive(f)?xKpis(shown).spend:s.spend;
     const ov2=s?.views;if(ov2&&C.hasValue(ov2))ov2.reason='Original Views: views of the promoted original posts, including organic views. Not RT impressions.';
@@ -442,7 +459,59 @@
       sort:c.sort?r=>c.sort(r.__x||(r.__x=xRecord(r,{campaign:'',type:r.type||'post',clicks}))):undefined}));
   }
 
-  const RENDER={home:homePage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,cis:cisPage,'guru-promotion':guruPage};
+  /* ---------- Accounts: every account across the site's own promotion and article sources ---------- */
+  // One account = one platform + handle (from the profile link), else the recorded name.
+  function accountKey(x){
+    const u=String(x.raw.profileUrl||''),m=u.match(/^https:\/\/(?:www\.)?(x\.com|twitter\.com|instagram\.com)\/([A-Za-z0-9_.]+)/i);
+    const handle=m?m[2]:String(x.raw.handle||x.account||'').replace(/^@/,'').trim();
+    return {key:x.platform+'|'+handle.toLowerCase().replace(/\s+/g,''),handle:m?'@'+m[2]:(x.account||handle)};
+  }
+  function accountRows(records){
+    const by=new Map();
+    for(const x of records){const k=accountKey(x);if(!by.has(k.key))by.set(k.key,{key:k.key,name:k.handle,platform:x.platform,records:[]});by.get(k.key).records.push(x);}
+    return [...by.values()].map(a=>{
+      // Each booking once (tab + row), each post once, each tracking link's clicks once.
+      const seen=new Set(),recs=a.records.filter(x=>{const k=rowKeyOf(x.raw)+'|'+x.parent;if(seen.has(k))return false;seen.add(k);return true;});
+      const own=recs.filter(x=>x.type!=='RT'&&x.platform==='X').map(x=>x.raw);
+      const posts=new Set();let liveNoLink=0;
+      for(const x of recs){if(x.live!==true)continue;const ids=(x.raw.postUrls?.length?x.raw.postUrls:[x.link]).map(u=>C.postId(u)).filter(Boolean);if(ids.length)ids.forEach(i=>posts.add(i));else liveNoLink++;}
+      const paid=recs.filter(x=>x.paid&&x.price!==null),links=new Map();
+      for(const x of recs){if(!C.hasValue(x.clicks))continue;const k=x.raw.trackingUrl||rowKeyOf(x.raw);links.set(k,Math.max(links.get(k)||0,x.clicks.value));}
+      const e=C.efficiency([{source:'ACCOUNTS',rows:own}]);
+      return {...a,records:recs,campaigns:[...new Set(recs.map(x=>x.parent))],posts:posts.size+liveNoLink,
+        spend:paid.length?M.value(paid.reduce((n,x)=>n+x.price,0)):M.na('No paid placements.'),
+        views:C.viewsOf([{source:'ACCOUNTS',rows:own}]),
+        clicks:links.size?M.value([...links.values()].reduce((n,v)=>n+v,0)):M.na('No tracked clicks.'),cpc:e.cpc,cpm:e.cpm};
+    });
+  }
+  function accountsPage(st){
+    ensure('overview');ensure('gta');
+    const ov=D.overview();
+    const all=ov?[...xaRecords(),...gtaRecords(),...igRecords(),...ofRecords(),...guruRecords()]:[];
+    const ts=tableState('all-accounts','acc-table'),f=ts.xf||(ts.xf={camp:'',plat:'',type:''});
+    const shown=all.filter(x=>(!f.camp||x.parent===f.camp)&&(!f.plat||x.platform===f.plat)&&(!f.type||x.type===f.type));
+    const sel=(key,label,opts)=>opts.length<2&&!f[key]?'':'<label class="fv-select fv-filter"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+
+      [['',label+': All'],...opts.map(o=>[o,label+': '+o])].map(([v,l])=>'<option value="'+esc(v)+'"'+(f[key]===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'+U.icon('down',14)+'</label>';
+    const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
+    const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('plat','Platform',present(x=>x.platform,['X','Instagram']))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT','Story']));
+    const rows=accountRows(shown);
+    const table=U.tablePanel({id:'acc-table',title:'Accounts',icon:'users',search:true,filters,rows,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:900,
+      searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Results':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
+      columns:[
+        {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user'),sort:a=>a.name.toLowerCase()},
+        {key:'platform',label:'Platform',type:'text',html:a=>esc(a.platform),sort:a=>a.platform},
+        {key:'campaigns',label:'Campaigns',type:'text',html:a=>esc(a.campaigns.join(', ')),sort:a=>a.campaigns.length},
+        {key:'posts',label:'Posts',get:a=>M.value(a.posts,{reason:'Live posts (each post counted once).'})},
+        {key:'spend',label:'Spend',format:'money',get:a=>a.spend},
+        {key:'views',label:'Views',get:a=>a.views},
+        {key:'clicks',label:'Clicks',get:a=>a.clicks},
+        {key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},
+        {key:'cpm',label:'CPM',format:'money',get:a=>a.cpm}
+      ]},ts);
+    return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+table};
+  }
+
+  const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,cis:cisPage,'guru-promotion':guruPage};
 
   /* ---------- shell rendering ---------- */
   let current=parseHash(),recordsShown=false;
@@ -548,7 +617,7 @@
     try{
       const k=current.kind==='page'?current.key:'';
       if(current.kind==='added'){const ok=await hooks.refresh?.(current);message=ok?'':'Campaign registry unavailable; last saved details kept.';error=!ok;}
-      else if(k==='home'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'';error=!!s?.error;}
+      else if(k==='home'||k==='all-accounts'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'';error=!!s?.error;}
       else if(k==='discord'){const ok=await rep?.refreshDiscord?.(true);message=ok?'':'Discord sources unavailable; last verified figures kept.';error=!ok;}
       else{
         const fn={'x-articles':'x','gta-vi':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
