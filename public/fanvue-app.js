@@ -230,7 +230,7 @@
       metric('Departures','minus',M.notTracked('The member endpoint reports totals only; departures cannot be derived from net growth.'))
     ]);
     // The last four weeks that have snapshots. Earlier weeks are never back-filled.
-    const weeks=C.memberWeeks(members?.history).filter(w=>w.snapshots).slice(-4);
+    const weeks=C.recentWeeks(members?.history,4);
     const netSeries=weeks.filter(w=>w.value!==null);
     const endSeries=weeks.filter(w=>w.end!==null).map(w=>({...w,value:w.end}));
     const first=(members?.history||[]).map(h=>h.date).sort()[0];
@@ -348,6 +348,8 @@
     ]);
   }
 
+  // Sheet tab + row is unique even when one account has two placements.
+  const gtaRowKey=r=>(r.code||'')+'@'+(r.sourceTab||'')+'#'+(r.sourceRow||'');
   const igFormat=f=>f==='story'?'Instagram stories':f==='post'?'Instagram posts':f==='both'?'Instagram posts and stories':'Instagram placements';
   const paidSum=rows=>{const p=rows.filter(r=>r.paid===true&&C.num(r.cost)!==null);return p.length?M.value(p.reduce((n,r)=>n+C.num(r.cost),0)):M.na('No paid placements.');};
   function gtaPage(st){
@@ -400,7 +402,7 @@
     }else if(view==='instagram'){
       const ts=tableState('gta-vi','gta-instagram');
       table=U.tablePanel({id:'gta-instagram',title:'Instagram',icon:'gamepad',view,views,search:true,filters:placementFilter('gta-vi','gta-instagram'),filter:applyFilter(ts.filter),
-        rows:ig?.rows||[],rowKey:r=>r.code||r.sourceRow,rowLabel:r=>r.publisher,searchText:r=>r.publisher,
+        rows:ig?.rows||[],rowKey:gtaRowKey,rowLabel:r=>r.publisher,searchText:r=>r.publisher,
         empty:ig?(ig.unavailable?'Instagram source unavailable.':'No records.'):waiting('Loading records…'),
         columns:[
           {key:'account',label:'Account',type:'name',html:r=>accountName(r),sort:r=>String(r.publisher||'').toLowerCase()},
@@ -413,7 +415,7 @@
     }else{
       const c=view==='x-quote-posts'?qr:og,id='gta-'+view,ts=tableState('gta-vi',id);
       table=U.tablePanel({id,title:view==='x-quote-posts'?'X quote posts':'X original posts',icon:'gamepad',view,views,search:true,filters:placementFilter('gta-vi',id),filter:applyFilter(ts.filter),
-        rows:c?.rows||[],rowKey:r=>r.code||r.sourceRow,rowLabel:r=>r.publisher,minWidth:860,searchText:r=>r.publisher,
+        rows:c?.rows||[],rowKey:gtaRowKey,rowLabel:r=>r.publisher,minWidth:860,searchText:r=>r.publisher,
         empty:c?(c.unavailable?'GTA VI source unavailable.':'No records.'):waiting('Loading records…'),
         columns:placementColumns({clicks:r=>{const v=C.num(r.clicks);if(v!==null)return M.value(v);return M.na(r.clickError||(r.trackingUrl?(r.posted?'No post-publication reading yet.':'Not published yet.'):'No tracking link in the source sheet.'));},eff:C.placementEfficiency(c?.rows||[])}),
         expand:r=>U.detailGrid([
@@ -431,7 +433,7 @@
     }
     const copies=qr?.excludedCopies;
     if(copies?.count)lines.push(U.supportLine(U.status('Excluded')+' '+esc(copies.count+' rows in '+copies.tabs.join(', ')+' copy X Accounts 15 ('+C.money(copies.recordedCost)+' not counted)')));
-    for(const t of qr?.missingTabs||[])lines.push(U.supportLine(U.status('Missing tab','warn')+' '+esc(t+' was not found in the spreadsheet')));
+    for(const t of qr?.missingTabs||[])lines.push(U.supportLine(U.status('Missing tab','warn')+' '+esc(t+' could not be read from the spreadsheet; its rows are not counted')));
     const attention=lines.length?U.supportPanel('Needs attention','alert',lines.join('')):'';
     return {title:'GTA VI',chip:'gta-vi',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||qr?.sourceStale||og?.sourceStale),body:overviewNotice()+strip+budget+chart+table+attention};
   }

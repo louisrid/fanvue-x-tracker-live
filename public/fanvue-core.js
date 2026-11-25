@@ -128,6 +128,9 @@
     });
   }
 
+  /* The most recent weeks that have at least one snapshot. Earlier weeks are never back-filled. */
+  const recentWeeks=(history,n=4,now=Date.now())=>memberWeeks(history,now).filter(w=>w.snapshots).slice(-n);
+
   /* ---------- metric descriptors ---------- */
   const M={
     value:(value,extra={})=>({state:'value',value:num(value),...extra}),
@@ -156,14 +159,15 @@
   function spendOf(c,{noSpendReason='No paid costs are recorded in this source.'}={}){
     if(notConnected(c)||unavailable(c))return M.na(sourceReason(c,'Spend'));
     const known=num(c.paidSpendKnown),unknown=num(c.unknownPaidCosts)||0,paid=num(c.paidCount)||0;
-    if(known===null&&paid===0)return M.na(noSpendReason);
+    // A connected source with no paid placements contributes nothing; it is not a gap.
+    if(known===null&&paid===0)return {...M.na(noSpendReason),noSpend:true};
     if(known===null)return M.na(paid+' paid placements have no recorded cost.');
     if(unknown>0)return M.partial(known,'Known subtotal: '+unknown+' of '+paid+' paid placements have no recorded cost.');
     return M.value(known,{paidCount:paid});
   }
   function addSpend(parts,label){
-    const valid=parts.filter(Boolean);
-    if(!valid.length||valid.every(p=>!hasValue(p)))return valid.find(p=>p.reason)||M.na('No spend recorded.');
+    const all=parts.filter(Boolean),valid=all.filter(p=>!p.noSpend);
+    if(!valid.length||valid.every(p=>!hasValue(p)))return (valid.length?valid:all).find(p=>p.reason)||M.na('No spend recorded.');
     const total=valid.filter(hasValue).reduce((s,p)=>s+p.value,0);
     const missing=valid.filter(p=>!hasValue(p)||p.state==='partial');
     if(missing.length)return M.partial(total,(label?label+': ':'')+'known subtotal. '+missing.map(p=>p.reason).filter(Boolean).join(' '));
@@ -279,7 +283,8 @@
       // Paid reposts carry the original post's views and no clicks, so they are not matched.
       Object.assign(out,efficiency([c]));
     }else if(key==='gta-vi'){
-      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-instagram']];
+      // Instagram is left out only when the feed predates it (no object at all).
+      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-instagram']].filter((c,i)=>c||i<2);
       out.spend=addSpend(parts.map(c=>spendOf(c)),'X quote posts, X original posts and Instagram');
       out.views=viewsOf([o['gta-qrts'],o['gta-originals']]);
       const pp=parts.map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
@@ -374,6 +379,6 @@
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
   root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,signed,londonDay,addDays,weekStart,weekLabel,dayShort,dayLong,stamp,
-    eventSeries,snapshotSeries,memberWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
+    eventSeries,snapshotSeries,memberWeeks,recentWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);
