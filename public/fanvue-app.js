@@ -271,7 +271,13 @@
     // The last four weeks that have snapshots. Earlier weeks are never back-filled.
     const weeks=C.recentWeeks(members?.history,4);
     const netSeries=weeks.filter(w=>w.value!==null);
+    // Daily member growth: change between snapshots on consecutive UK days (last 14 days). Negative days are real.
+    const byDay=new Map((members?.history||[]).filter(h=>/^\d{4}-\d{2}-\d{2}$/.test(String(h?.date||''))&&Number.isSafeInteger(h.memberCount))
+      .sort((x,y)=>x.date.localeCompare(y.date)).map(h=>[h.date,h.memberCount]));
+    const today=C.londonDay(Date.now());
+    const dailyNet=[...byDay].filter(([d])=>byDay.has(C.addDays(d,-1))).map(([d,v])=>({week:d,label:C.dayShort(d),range:C.dayLong(d),value:v-byDay.get(C.addDays(d,-1)),incomplete:d===today})).slice(-14);
     const chart=U.chartPanel({id:'discord-chart',measures:[
+      dailyNet.length>=2?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
       netSeries.length>=1?{key:'net',label:'Member Growth',title:'Member Growth',series:netSeries,format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
     ].filter(Boolean)},pageState('discord').chart);
     const table=U.tablePanel({id:'discord-table',title:'Weekly Stats',icon:'users',dropEmptyRows:true,
