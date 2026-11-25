@@ -48,7 +48,7 @@ test('owner direction: every priced X Accounts 16 account counts as GTA VI spend
   assert.equal(qrts.filter(p=>!p.paid&&p.cost>0).reduce((n,p)=>n+p.cost,0),40);
   assert.deepEqual(publishedQrts(rows).map(p=>p.publisher),['Alpha','Gamma']);
   // Other tabs are never treated as planned.
-  assert.ok(rows.filter(p=>p.planned).every(p=>p.sourceTab===Q16));
+  assert.ok(rows.filter(p=>p.planned).every(p=>p.sourceTab===Q16||p.campaign==='GTAM'));
 });
 
 test('Instagram rows count towards GTA VI spend, including paid placements not yet up',()=>{
@@ -84,7 +84,7 @@ test('campaign feed adds an Instagram group, committed spend and the GTA VI budg
   assert.equal(find('gta-instagram').committedUnpaidKnown,0);
   assert.deepEqual(find('gta-qrts').budget,{amount:10000,currency:'USD'});
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.spend.value,840);assert.equal(s.planned,150);assert.match(s.spend.reason,/Includes \$150\.00 planned in X Accounts 16/);
+  assert.equal(s.spend.value,840);assert.equal(s.planned,150);assert.match(s.spend.reason,/Includes \$150\.00 planned \(not paid yet\)/);
   assert.equal(s.budget.remaining.value,10000-840-40);
 });
 
@@ -265,10 +265,11 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   m.getRow(10).values=['Later','https://x.com/later','','',100,false,false,''];
   m.getRow(11).values=['Reuse','https://x.com/reuse','','https://ex.s.gy/a',20,true,false,''];   // link already used in tab 15
   const rows=countPlannedAsPaid(parseRows(w)),mandy=rows.filter(p=>inGroup(p,'mandy'));
-  assert.deepEqual(mandy.map(p=>[p.publisher,p.purchasedPosts]),[['Kyro',2],['Amna',1],['Later',null],['Reuse',1]]);
+  assert.deepEqual(mandy.map(p=>[p.publisher,p.purchasedPosts,!!p.planned]),[['Kyro',2,false],['Amna',1,false],['Later',null,true],['Reuse',1,false]]);
   // One payment, two posts: spend counted once, both posts kept for metrics.
   assert.equal(mandy[0].cost,180);assert.equal(mandy[0].postUrls.length,2);
-  assert.equal(summarisePlacements(mandy).paidSpend,250);
+  // Owner direction: tab 17's unpaid priced row (Later, $100) counts as planned spend.
+  assert.equal(summarisePlacements(mandy).paidSpend,350);
   assert.ok(mandy.every(p=>p.format==='qrt'));
   // Never part of the other QRT group.
   assert.equal(rows.filter(p=>inGroup(p,'qrts')&&p.campaign==='GTAM').length,0);
@@ -280,9 +281,9 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   const gta={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2']),instagram:group(['GTAIG']),mandy:group(['GTAM']),budget:GTA_BUDGET,missingTabs:[]};
   const ov=assembleCampaignOverview({gta:{data:gta},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const mq=ov.campaigns.find(c=>c.id==='gta-mandy');
-  assert.equal(mq.paidSpendKnown,250);assert.equal(mq.purchasedPosts,4);assert.equal(mq.committedUnpaidKnown,100);
+  assert.equal(mq.paidSpendKnown,350);assert.equal(mq.purchasedPosts,5);assert.equal(mq.committedUnpaidKnown,0);assert.equal(mq.plannedSpendKnown,100);
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.spend.value,400+100+340+250);
+  assert.equal(s.spend.value,400+100+340+350);
   // Two posts on one row each count once for views; CPM waits for both readings.
   const vrow={paid:true,posted:true,cost:180,postUrl:'https://x.com/kyro/status/2124900000000000001',views:300,postViews:{'2124900000000000001':300,'2124900000000000002':null}};
   assert.equal(C.viewsOf([{source:'GOOGLE_SHEETS_LIVE',rows:[vrow]}]).state,'partial');

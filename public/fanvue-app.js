@@ -341,7 +341,7 @@
     const b=s?.budget;
     const budget=b?U.supportPanel('Budget','wallet',U.inlineMetrics([
       ['Total budget',U.value(b.budget,'money')],['Spend',U.value(b.spend,'money')],
-      s.planned>0?['Of which planned',U.value(M.value(s.planned,{reason:'X Accounts 16, counted as if paid.'}),'money')]:null,
+      s.planned>0?['Of which planned',U.value(M.value(s.planned,{reason:'Not paid yet, counted as if paid.'}),'money')]:null,
       ['Committed',U.value(b.committed,'money')],['Remaining unallocated',U.value(b.remaining,'money')]
     ].filter(Boolean))):'';
     const live=c=>c&&!c.unavailable;

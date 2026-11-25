@@ -306,7 +306,7 @@
       out.committed=parts.every(unavailable)?null:Math.round(parts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
       // Planned placements (tab 16) are counted inside spend as if paid; shown separately for clarity.
       out.planned=Math.round(parts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
-      if(out.planned>0&&hasValue(out.spend))out.spend.reason='Includes '+money(out.planned)+' planned in X Accounts 16, counted as if paid.';
+      if(out.planned>0&&hasValue(out.spend))out.spend.reason='Includes '+money(out.planned)+' planned (not paid yet), counted as if paid.';
       out.budget=budgetOf(out.spend,out.committed,o['gta-qrts']?.budget);
       Object.assign(out,efficiency(parts));
     }else if(key==='of-terms'){
