@@ -271,10 +271,8 @@
     // The last four weeks that have snapshots. Earlier weeks are never back-filled.
     const weeks=C.recentWeeks(members?.history,4);
     const netSeries=weeks.filter(w=>w.value!==null);
-    const endSeries=weeks.filter(w=>w.end!==null).map(w=>({...w,value:w.end}));
     const chart=U.chartPanel({id:'discord-chart',measures:[
       netSeries.length>=1?{key:'net',label:'Member Growth',title:'Member Growth',series:netSeries,format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
-      endSeries.length>=2?{key:'members',label:'Members',title:'Members',series:endSeries,unit:'Members',kinds:['line','bar','table']}:null
     ].filter(Boolean)},pageState('discord').chart);
     const table=U.tablePanel({id:'discord-table',title:'Weekly Stats',icon:'users',dropEmptyRows:true,
       rows:weeks.slice().reverse(),rowKey:r=>r.week,
@@ -338,15 +336,14 @@
         {key:'cpc',label:'CPC',format:'money',get:r=>r.k.cpc}
       ]},tableState(page,id));
   }
-  // Views chart from dated per-post readings (last 14 UK days): views gained each day, or the running total.
+  // Views chart from dated per-post readings (last 14 UK days): views gained each day.
+  // Owner (25 Nov): graphs show per-period figures only; totals stay as numbers in the KPI strip.
   // A post's first reading is its starting point, never counted as one day's gain.
   function viewsChart(id,page,history,{idOf=r=>r.id,at=r=>r.at,value=r=>r.views,extra=[],noun='Views'}={}){
     const d=C.dailySeries(history,{id:idOf,at,value}),tip=p=>({...p,extra:p.count+' posts with a reading'});
     const gained=d.gained.filter(p=>p.value!==null).length>=2?d.gained.map(tip):[];
-    const total=d.total.length>=2?d.total.map(tip):[];
     return U.chartPanel({id,measures:[
       gained.length?{key:'gained',label:'Daily '+noun,title:'Daily '+noun,series:gained,period:'Day',format:'compact',tipFormat:'count',unit:'Views Gained',defaultType:'bar'}:null,
-      total.length?{key:'views',label:'Total '+noun,title:'Total '+noun,series:total,period:'Day',format:'compact',tipFormat:'count',unit:'Cumulative Views'}:null,
       ...extra
     ].filter(Boolean)},pageState(page).chart);
   }
