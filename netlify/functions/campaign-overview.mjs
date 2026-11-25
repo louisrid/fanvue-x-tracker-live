@@ -10,6 +10,7 @@ const overviewStore=()=>getStore({name:'fanvue-campaign-overview-v1',consistency
 const blank=v=>v===null||v===undefined||v==='';
 const num=v=>blank(v)?null:Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
 const yes=v=>v===true||String(v).trim().toUpperCase()==='TRUE';
+const handleOf=url=>String(url||'').match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})\/status\/\d+/i)?.[1]||'';
 const xPost=url=>String(url||'').match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/[A-Za-z0-9_]{1,15}\/status\/(\d+)(?:[/?#]|$)/i)?.[1]||null;
 const goodUrl=url=>{try{const u=new URL(String(url||''));return u.protocol==='https:'?u.href:'';}catch{return ''}};
 const sum=(rows,key)=>{const found=rows.map(key).map(num).filter(v=>v!==null);return found.length?found.reduce((a,b)=>a+b,0):null};
@@ -250,14 +251,28 @@ function boostsCampaign(data,articleRows=[]){
   if(!data?.ok||!Array.isArray(data.tweets))return {...normalCampaign('guru-rts','Guru RTs / X Boosts','boost',[],{source:'UNAVAILABLE',error:'X RT boosts feed unavailable'}),
     unavailable:true,articleRtGroups:grouped.originals,articleRtUnlinked:grouped.unlinked,articleRtSummary:grouped.summary};
   const groups=new Map(grouped.originals.map(g=>[g.postId,g]));
-  const rows=data.tweets.map(t=>{
+  const promoted=data.tweets.map(t=>{
     const postUrl='https://x.com/'+t.handle+'/status/'+t.id,rt=groups.get(String(t.id));
     return {...t,publisher:t.name||t.handle,postUrl,
       posted:true,paid:t.spend!==null&&t.spend!==undefined,cost:num(t.spend),views:num(t.views),likes:num(t.likes),
       reposts:num(t.reposts),replies:num(t.replies),metricAt:t.at||null,
       linkedRtPaidSpend:rt?.paidSpendKnown??null,linkedRtPaidCount:rt?.paidCount??0};
   });
-  return {...normalCampaign('guru-rts','Guru RTs / X Boosts','boost',rows,{source:'X_RTS',at:rows.map(t=>t.metricAt).filter(Boolean).sort().at(-1)||null}),
+  // Other posts by the same Guru accounts that were promoted with paid RTs (not in the boosts feed).
+  const known=new Set(promoted.map(r=>String(r.id))),names=new Map(promoted.map(r=>[String(r.handle||'').toLowerCase(),r.publisher]));
+  const extra=grouped.originals.filter(g=>!known.has(g.postId)).map(g=>{
+    const handle=handleOf(g.postUrl);
+    return {id:g.postId,handle,publisher:names.get(handle.toLowerCase())||handle,postUrl:'https://x.com/'+handle+'/status/'+g.postId,
+      posted:true,paid:false,cost:null,views:g.views,likes:g.likes,reposts:g.reposts,replies:g.replies,metricAt:g.metricAt,
+      linkedRtPaidSpend:g.paidSpendKnown,linkedRtPaidCount:g.paidCount,source:'PAID_RT_ORIGINAL'};
+  });
+  const rows=[...promoted,...extra];
+  // Guru Promotion spend is the paid RTs of its accounts' posts (from the Article RTs tab).
+  // X platform boost spend is a different cost type and stays separate.
+  const base=normalCampaign('guru-rts','Guru RTs / X Boosts','boost',rows,{source:'X_RTS',at:rows.map(t=>t.metricAt).filter(Boolean).sort().at(-1)||null});
+  const rtMoney=moneyRows(articleRows),rtOpen=committedRows(articleRows);
+  return {...base,boostSpendKnown:base.paidSpendKnown,paidSpendKnown:rtMoney.known,unknownPaidCosts:rtMoney.unknown,paidCount:rtMoney.paidCount,
+    committedUnpaidKnown:rtOpen.known,committedUnpaidCount:rtOpen.count,paidReposts:articleRows,
     articleRtGroups:grouped.originals,articleRtUnlinked:grouped.unlinked,articleRtSummary:grouped.summary,
     classificationNote:'X boosted original-post spend and sheet-paid RT placements are separate cost types; never combine them.'};
 }
@@ -324,8 +339,13 @@ export function assembleCampaignOverview(sources){
   const src=sources||{},errors=[];
   for(const [name,v] of Object.entries(src))if(v?.error)errors.push(name+': '+diagnostic(v.error));
   const gta=src.gta?.data,of=src.of?.data,boosts=src.boosts?.data,dashboard=src.dashboard?.data,article=src.articleRts?.data;
-  const linkedArticleRts=enrichArticleRtMetrics(article?.rows||[],{gta,of,boosts,dashboard,
+  const allArticleRts=enrichArticleRtMetrics(article?.rows||[],{gta,of,boosts,dashboard,
     articleOriginals:src.articleOriginals?.data});
+  // A paid RT of a Guru Promotion account's post is Guru Promotion spend; every other paid RT
+  // (including RTs with no original-post link) stays with X Articles. Each RT is counted once.
+  const guruHandles=new Set((boosts?.ok&&Array.isArray(boosts.tweets)?boosts.tweets:[]).map(t=>String(t.handle||'').toLowerCase()).filter(Boolean));
+  const isGuruRt=p=>guruHandles.has(handleOf(p.sourcePostUrl||p.postUrl).toLowerCase());
+  const guruRts=allArticleRts.filter(isGuruRt),linkedArticleRts=allArticleRts.filter(p=>!isGuruRt(p));
   const rtGroups=groupArticleRtSpend(linkedArticleRts);
   const rtCampaign=normalCampaign('article-rts','X Article Boosts','rt',linkedArticleRts,
     {source:article?.source||'UNAVAILABLE',at:article?.at,warning:article?.warning,error:article?.error},{
@@ -343,7 +363,7 @@ export function assembleCampaignOverview(sources){
       sourceNote:'Original X post views are measured automatically; these are NOT individual paid retweet impressions. Individual RTs need their own X post URL to measure impressions separately.'
     });
   const campaigns=[
-    gtaCampaign(gta,'qrts'),gtaCampaign(gta,'originals'),...[gtaCampaign(gta,'instagram')].filter(Boolean),ofCampaign(of),boostsCampaign(boosts,linkedArticleRts),
+    gtaCampaign(gta,'qrts'),gtaCampaign(gta,'originals'),...[gtaCampaign(gta,'instagram')].filter(Boolean),ofCampaign(of),boostsCampaign(boosts,guruRts),
     rtCampaign,
     ...dashboardCampaigns(dashboard),
     {...normalCampaign('ai-harness','AI Harness','planned',[],{source:'NOT_CONNECTED',error:'No live campaign-specific feed linked'}),unavailable:true},

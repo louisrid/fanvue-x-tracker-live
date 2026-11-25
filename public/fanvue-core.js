@@ -314,7 +314,9 @@
       Object.assign(out,efficiency([c]));
     }else if(key==='guru-promotion'){
       const c=o['guru-rts'];
-      out.spend=spendOf(c,{noSpendReason:'Platform boost spend is not recorded in the boosts feed. Linked paid reposts are counted under X Articles.'});
+      // Spend = paid RTs of the Guru accounts' posts (Article RTs tab). X boost spend is separate.
+      out.spend=spendOf(c,{noSpendReason:'No paid RTs are recorded for these posts.'});
+      if(hasValue(out.spend))out.spend.reason=full(num(c.paidCount))+' paid RTs of the promoted posts.';
       out.views=viewsOf([c]);if(out.views)out.views.scope='original';
       out.clicks=unavailable(c)?M.na(sourceReason(c,'Clicks')):M.notTracked('Promoted original posts have no tracked link.');
       out.published=unavailable(c)?null:num(c?.published);out.paidCount=num(c?.paidCount)||0;
@@ -341,8 +343,8 @@
     const rowKey=r=>r.sourceTab&&r.sourceRow?('sheet|'+r.sourceTab+'|'+r.sourceRow):r.code?('code|'+r.code):r.id?('id|'+r.id):null;
     const keys=new Map();let duplicates=0,keyless=0;
     for(const s of summaries)for(const c of Object.values(s.objects)){
-      if(!c||c.id==='guru-rts')continue;
-      for(const r of c.rows||[]){
+      if(!c)continue;
+      for(const r of [...(c.rows||[]),...(c.paidReposts||[])]){
         if(r.paid!==true)continue;
         const k=rowKey(r);if(!k){keyless++;continue;}
         if(keys.has(k)&&keys.get(k)!==c.id)duplicates++;keys.set(k,c.id);
