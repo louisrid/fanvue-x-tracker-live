@@ -34,9 +34,9 @@
       const dates=c.startDate||c.endDate?(date(c.startDate)||'Not set')+' – '+(date(c.endDate)||'Not set'):na('No dates recorded.');
       const budget=c.budget&&C.num(c.budget.amount)!==null?esc(new Intl.NumberFormat('en-GB',{style:'currency',currency:c.budget.currency||'USD'}).format(c.budget.amount))+' '+U.status('Budget, not spend'):na('No approved budget recorded.');
       const links=(c.links||[]).map(l=>{const href=C.safeUrl(l.url);return href?'<a class="fv-ext" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(l.label)+' (opens in a new tab)">'+esc(l.label)+U.icon('external',14)+'</a>':'';}).filter(Boolean);
-      return U.supportPanel('Campaign info','info',
+      return U.supportPanel('Campaign Details','info',
         U.detailGrid([
-          ['Status',U.status(c.status||'Planned',statusTone[c.status]||'')],['Dates',dates],['Owner',c.owner?esc(c.owner):na('No owner recorded.')],['Approved budget',budget]
+          ['Status',U.status(c.status||'Planned',statusTone[c.status]||'')],['Dates',dates],['Owner',c.owner?esc(c.owner):na('No owner recorded.')],['Budget',budget]
         ])+
         (c.objective?'<div class="fv-info-block"><h3>Objective</h3><p>'+esc(c.objective).replace(/\n/g,'<br>')+'</p></div>':'')+
         (links.length?'<div class="fv-info-block"><h3>Links</h3><div class="fv-info-links">'+links.join('')+'</div></div>':'')+
@@ -119,7 +119,7 @@
     const dash=window.FanvueApp.data.campaign('x-articles');
     const sources=(dash?.sourceCampaigns||[]).filter(s=>s.placements>0);
     return '<div class="fv-editor-head"><h2 id="fvEditorTitle">'+esc(title)+'</h2><div class="fv-editor-head-tools">'+
-      '<button type="button" class="fv-link-button" data-editor="manage">Manage campaigns</button>'+
+      '<button type="button" class="fv-link-button" data-editor="manage">Manage Campaigns</button>'+
       '<button type="button" class="fv-icon-button" data-editor="close" aria-label="Close editor">'+U.icon('close',18)+'</button></div></div>'+
       '<div class="fv-editor-body">'+
       '<div id="fveePreview">'+render.preview(d)+'</div>'+
@@ -136,7 +136,7 @@
       '<div class="fv-field-row">'+field('Start date','startDate',input('startDate',d.startDate,'type="date"'))+field('End date','endDate',input('endDate',d.endDate,'type="date"'))+'</div>'+
       field('Owner','owner',input('owner',d.owner,'type="text" maxlength="80" autocomplete="off"'))+
       field('Objective','objective','<textarea id="fve-objective" data-input="objective" rows="3" maxlength="500" aria-describedby="fve-objective-error">'+esc(d.objective)+'</textarea>','Up to 500 characters.')+
-      '<div class="fv-field-row">'+field('Approved budget','budget',input('budget',d.budget.amount,'type="text" inputmode="decimal" placeholder="Optional" autocomplete="off"'),'A budget, not spend.')+
+      '<div class="fv-field-row">'+field('Budget','budget',input('budget',d.budget.amount,'type="text" inputmode="decimal" placeholder="Optional" autocomplete="off"'),'A budget, not spend.')+
         field('Currency','budgetCurrency','<select id="fve-budgetCurrency" data-input="budgetCurrency">'+CURRENCIES.map(c=>'<option'+(d.budget.currency===c?' selected':'')+'>'+c+'</option>').join('')+'</select>')+'</div>'+
       '<div class="fv-field" data-field="links"><span class="fv-field-label">Links</span><div class="fv-links-edit">'+
         d.links.map((l,i)=>'<div class="fv-link-row"><input aria-label="Link '+(i+1)+' label" data-link="'+i+'" data-part="label" value="'+esc(l.label)+'" maxlength="40" placeholder="Label">'+
@@ -146,7 +146,7 @@
         (d.links.length<6?'<button type="button" class="fv-control" data-editor="add-link">'+U.icon('plus',14)+'Add link</button>':'')+'</div>'+
         '<p class="fv-field-error" role="alert">'+esc(panel.errors.links||'')+'</p></div>'+
       field('Notes','notes','<textarea id="fve-notes" data-input="notes" rows="3" maxlength="2000" aria-describedby="fve-notes-error">'+esc(d.notes)+'</textarea>')+
-      (builtIn?'':field('Data link','dataLink','<select id="fve-dataLink" data-input="dataLink"><option value="">None (not connected)</option>'+
+      (builtIn?'':field('Data Source','dataLink','<select id="fve-dataLink" data-input="dataLink"><option value="">None (not connected)</option>'+
         sources.map(s=>'<option value="'+esc(s.id)+'"'+(d.dataLink===s.id?' selected':'')+'>'+esc(s.name||s.id)+'</option>').join('')+'</select>',
         'Optional. Shows placements from an existing article campaign. Linked campaigns never change Home totals.'))+
       '<p class="fv-editor-note">'+U.icon('info',14)+esc(NOTE)+'</p>'+
@@ -162,8 +162,8 @@
       '<button type="button" class="fv-icon-button" data-editor="down" data-slug="'+esc(c.slug)+'" aria-label="Move '+esc(c.name)+' down"'+(i===n-1?' disabled':'')+'>'+U.icon('down',15)+'</button>'+
       '<button type="button" class="fv-link-button" data-editor="edit" data-slug="'+esc(c.slug)+'">Edit</button></li>';
     const builtIns=C.CAMPAIGNS.map(b=>{const o=reg.builtIns[b.key]||{};return '<li class="fv-manage-row">'+render.chip({icon:o.icon||(b.icon==='x'?'xmark':b.icon),color:o.color||b.color})+
-      '<span class="fv-manage-name">'+esc(b.name)+'</span><button type="button" class="fv-link-button" data-editor="edit-builtin" data-key="'+b.key+'">Edit icon and info</button></li>';}).join('');
-    return '<div class="fv-editor-head"><h2 id="fvEditorTitle">Manage campaigns</h2><div class="fv-editor-head-tools">'+
+      '<span class="fv-manage-name">'+esc(b.name)+'</span><button type="button" class="fv-link-button" data-editor="edit-builtin" data-key="'+b.key+'">Edit</button></li>';}).join('');
+    return '<div class="fv-editor-head"><h2 id="fvEditorTitle">Manage Campaigns</h2><div class="fv-editor-head-tools">'+
       '<button type="button" class="fv-icon-button" data-editor="close" aria-label="Close editor">'+U.icon('close',18)+'</button></div></div>'+
       '<div class="fv-editor-body"><button type="button" class="fv-control is-primary" data-editor="new" data-autofocus>'+U.icon('plus',14)+'Add campaign</button>'+
       '<h3 class="fv-manage-title">Added campaigns</h3>'+(reg.campaigns.length?'<ol class="fv-manage-list">'+reg.campaigns.map((c,i)=>row(c,i,reg.campaigns.length)).join('')+'</ol>':'<p class="fv-editor-hint">No campaigns added yet.</p>')+

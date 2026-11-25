@@ -11,8 +11,9 @@ test('GTA VI has exactly two actual campaign tabs and no phantom Boosted article
   const shell=readFileSync('public/fanvue-app.js','utf8');
   // GTA VI views are All formats, the two real X source groups and Instagram (read from
   // IG Accounts 3); there is no boosted-articles view.
-  const views=[...shell.matchAll(/\{key:'(all-formats|x-original-posts|x-quote-posts|mandy-qrts|instagram|[a-z-]*boost[a-z-]*)',label:'[^']+'\}/g)].map(match=>match[1]);
-  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts','mandy-qrts','instagram']);
+  // Site recommendations: one results table with Group (Mandy) and Type (Post, QRT) filters; old view URLs map to them.
+  assert.match(shell,/'x-original-posts':\{type:'Post'\},'x-quote-posts':\{type:'QRT'\},'mandy-qrts':\{group:'Mandy'\}/);
+  assert.match(shell,/GROUPS_VERIFIED=new Set\(\['Mandy','Lucia'/);
   assert.doesNotMatch(shell,/Boosted articles/);
   assert.doesNotMatch(app,/renderGtaQuotedArticles|gtaTabQuoted|ARTICLES BOOSTED BY QRTS/);
   assert.match(readFileSync('netlify/functions/gta-report.mjs','utf8'),/\['IG Accounts 3 \(GTA VI\)','GTAIG'\]/);
@@ -28,8 +29,9 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
   assert.match(app,/qrt\.profileUrl/);
   // v3.1 redesign: quoted originals are listed inside the expandable X quote posts row.
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/const isQ=r\.key==='x-quote-posts'/);
-  assert.match(shell,/Quoted original posts \('\+esc\(C\.full\(q\.rows\.length\)\)\+'\) · original and quote-post views are separate/);
+  // Site recommendations: each QRT's details show its source post and Original Views, never as its own views.
+  assert.match(shell,/const quoted=new Map\(\[\.\.\.\(qr\?\.quotedOriginals\?\.rows\|\|\[\]\),\.\.\.\(mq\?\.quotedOriginals\?\.rows\|\|\[\]\)\]/);
+  assert.match(shell,/\['Original Views',o&&C\.num\(o\.views\)!==null/);
 });
 
 test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
@@ -39,7 +41,7 @@ test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
   // the Paid reposts view, never under GTA VI.
   assert.match(core,/\{key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:\['x-articles','article-rts'\]\}/);
   assert.match(core,/\{key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:\['gta-qrts','gta-originals','gta-instagram','gta-mandy'\]\}/);
-  assert.match(shell,/\{key:'paid-reposts',label:'Paid reposts'\}/);
+  assert.match(shell,/'paid-reposts':\{type:'RT'\}/);
   assert.doesNotMatch(reporting,/function articleSources\(\)/);
 });
 

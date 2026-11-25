@@ -42,12 +42,10 @@
       <div class="fv-header" id="fvHeader">
         <div class="fv-title"><span id="fvTitleChip"></span><h1 id="fvTitle">Home</h1></div>
         <div class="fv-head-tools">
+          <span class="fv-period" id="fvRange" title="Totals cover every recorded placement; the sources report lifetime figures.">All Time</span>
           <span class="fv-updated" id="fvUpdated"></span>
           <span id="fvHeaderExtra"></span>
-          <div class="fv-range">
-            <button class="fv-control" id="fvRange" type="button" aria-expanded="false" aria-controls="fvRangePop" aria-label="Reporting period: Lifetime"><span>Lifetime</span></button>
-            <div class="fv-popover" id="fvRangePop" hidden><b>Lifetime</b>Totals cover every recorded placement. The source feeds report lifetime figures only, so date ranges are not offered. Weekly charts show dated history separately.</div>
-          </div>
+
           <button class="fv-control" id="fvRefresh" type="button"><span id="fvRefreshLabel">Refresh</span></button>
           <span class="fv-refresh-status" id="fvRefreshStatus" role="status" aria-live="polite"></span>
         </div>
@@ -55,7 +53,7 @@
       <div class="fv-page" id="fvPage" aria-live="off"></div>
       <div class="fv-records" id="fvRecords" hidden>
       <section class="site-page" id="page-placements" aria-labelledby="placementsTitle" hidden>
-      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="placementsTitle">Article Tracker<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="placementsTitle">Article Tracker<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
       <div class="page-toolbar">
         <div class="toolbar-summary" id="placementsOverview"></div>
         <button class="button button-primary" id="newPlacementButton" type="button">+ Placement</button>
@@ -71,7 +69,7 @@
         <div class="tracker-filter-extras">
         <details class="filter-details tracker-advanced" id="trackerAdvanced"><summary>More filters</summary><div class="tracker-advanced-fields">
           <label>From posted date<input type="date" id="trackerFrom"></label><label>To posted date<input type="date" id="trackerTo"></label>
-          <label>Min UTM clicks<input id="trackerMinClicks" type="number" min="0" step="1" placeholder="Any"></label>
+          <label>Min Clicks<input id="trackerMinClicks" type="number" min="0" step="1" placeholder="Any"></label>
           <label>Min views<input id="trackerMinViews" type="number" min="0" step="1" placeholder="Any"></label>
           <label>Max spend ($)<input id="trackerMaxCost" type="number" min="0" step="0.01" placeholder="Any"></label>
         </div></details>
@@ -84,12 +82,12 @@
       <div class="tracker-list" id="trackerList"><div class="loading-card">Loading</div></div>
     </section>
       <section class="site-page" id="page-accounts" aria-labelledby="accountsTitle" hidden>
-      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="accountsTitle">Accounts<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="accountsTitle">Accounts<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
       <div class="accounts-tools">
         <label class="select-control sort-by-control"><span>Sort By</span><select id="accountSort"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label>
         <label class="search-control"><span class="sr-only">Search accounts</span><input id="accountSearch" type="search" placeholder="Search accounts" autocomplete="off"></label>
         <details class="filter-details" id="accountFilters"><summary>Filters</summary><div class="filter-grid">
-          <label>UTM clicks<input id="filterClicks" type="number" min="0" step="1" placeholder="Min"></label>
+          <label>Clicks<input id="filterClicks" type="number" min="0" step="1" placeholder="Min"></label>
           <label>UTM/$<input id="filterUtmDollar" type="number" min="0" step="0.01" placeholder="Min"></label>
           <label>$ Spent<input id="filterSpent" type="number" min="0" step="1" placeholder="Min"></label>
           <label>Views<input id="filterViews" type="number" min="0" step="1" placeholder="Min"></label>
@@ -104,18 +102,18 @@
         </div></details>
       </div>
       <div class="result-line"><h2>Account performance<span class="heading-accent">.</span></h2><span class="section-count" id="accountCount">0</span></div>
-      <div class="account-table-wrap" id="accountTableWrap"><table class="account-table"><thead><tr><th>Account</th><th>UTM Clicks</th><th>UTM/$</th><th>$ Spent</th><th>Views</th><th>Likes</th><th>Engagement</th><th>Articles</th><th>Last Used</th></tr></thead><tbody id="accountTableBody"></tbody></table></div>
+      <div class="account-table-wrap" id="accountTableWrap"><table class="account-table"><thead><tr><th>Account</th><th>Clicks</th><th>Clicks/$</th><th>$ Spent</th><th>Views</th><th>Likes</th><th>Engagement</th><th>Articles</th><th>Last Used</th></tr></thead><tbody id="accountTableBody"></tbody></table></div>
       <div class="account-mobile-list" id="accountMobileList"></div>
     </section>
       <section class="site-page" id="page-campaigns" aria-labelledby="campaignsTitle" hidden>
-      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="campaignsTitle">Campaigns<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
+      <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div><div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="campaignsTitle">Campaigns<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="x" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh</span></button><details class="x-refresh-time"><summary>Updated</summary><span data-x-refresh-time>Checking refresh time…</span></details><span class="x-refresh-status" data-x-refresh-status role="status" aria-live="polite"></span></div></div>
       <div class="page-toolbar"><div class="toolbar-summary" id="campaignsOverview"></div><button class="button button-primary" type="button" id="newCampaignButton" hidden>+ Campaign</button></div>
       <div class="report-navigation"><a class="button" href="#accounts">Accounts</a><a class="button" href="#placements">Article Tracker</a><a class="button" href="#campaign-C001">OF Terms X Promo</a></div><div class="tracker-controls campaign-controls"><label class="select-control sort-by-control"><span>Sort By</span><select id="campaignSort"><option value="recent" selected>Most Recent</option><option value="clicks">UTM Clicks</option><option value="views">Views</option><option value="priceHigh">Price: High to Low</option><option value="priceLow">Price: Low to High</option></select></label><label class="search-control"><span class="sr-only">Search campaigns</span><input id="campaignSearch" type="search" placeholder="Search campaigns" autocomplete="off"></label></div>
       <div class="campaign-grid" id="campaignGrid"></div>
     </section>
       <section class="site-page key-stats-page" id="page-x-rts" aria-labelledby="boostTitle" hidden>
       <div class="subpage-back-row"><button class="page-back-button" type="button" aria-label="Back" data-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg></button></div>
-      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="boostTitle">Promoted posts<span class="heading-accent">.</span></h1><p>Guru Promotion · all-time X stats</p></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="boosts" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh Stats</span></button><span class="x-refresh-status" id="boostRefreshStatus" role="status" aria-live="polite"></span><span class="x-refresh-status" id="boostRefreshCooldown"></span></div></div>
+      <div class="page-intro compact-intro refresh-page-intro"><div class="refresh-heading-copy"><h1 id="boostTitle">Promoted posts<span class="heading-accent">.</span></h1></div><div class="x-refresh-controls"><button class="x-refresh-button" data-refresh="boosts" type="button"><span class="x-refresh-icon" aria-hidden="true">↻</span><span>Refresh</span></button><span class="x-refresh-status" id="boostRefreshStatus" role="status" aria-live="polite"></span><span class="x-refresh-status" id="boostRefreshCooldown"></span></div></div>
       <div class="daily-overview-metrics" id="boostKpis" aria-live="polite"></div>
        <div class="boost-paid-rt-strip" id="boostPaidRtSummary" role="status" aria-live="polite">Checking paid-retweet data from Google Sheets…</div>
       <p id="boostStatus" role="status"></p>

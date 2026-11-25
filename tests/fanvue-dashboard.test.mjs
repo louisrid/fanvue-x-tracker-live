@@ -77,7 +77,7 @@ test('Home spend is a labelled known subtotal from proven-disjoint paid rows onl
   const T=C.homeTotals(ov,S);
   assert.equal(T.spend.state,'partial');
   assert.equal(T.spend.value,150+25+200+50+80);
-  assert.match(T.spend.reason,/CIS/);assert.match(T.spend.reason,/Guru Promotion/);
+  assert.match(T.spend.reason,/CIS/);assert.match(T.spend.reason,/Guru X RTs/);
   // A paid row appearing in two campaign objects must block the total.
   const dup=overview();dup.campaigns.find(c=>c.id==='of-terms').rows[0]={...dup.campaigns.find(c=>c.id==='gta-qrts').rows[0]};
   const T2=C.homeTotals(dup,C.CAMPAIGNS.map(c=>C.campaignSummary(dup,c.key)));
@@ -148,7 +148,8 @@ test('unavailable data is shown once: empty columns hide and neighbouring empty 
     {key:'n',label:'Name',type:'name'},{key:'v',label:'Value',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)},{key:'s',label:'Creator signups',get:()=>na}]},{expanded:new Set()});
   assert.doesNotMatch(html,/Creator signups/);
   assert.doesNotMatch(html,/Not available|Not shown/);
-  assert.match(html,/class="fv-blank"/);
+  // Site recommendations: an unavailable cell shows one restrained dash with its reason on demand.
+  assert.match(html,/class="fv-dash"[^>]*data-reason="No source\."/);
   assert.match(html,/>1</);
   const dropped=U.tablePanel({id:'t3',title:'T',rows,rowKey:r=>r.n,dropEmptyRows:true,columns:[{key:'n',label:'Name',type:'name'},{key:'v',label:'Value',get:r=>r.v===null?C.M.na('No source.'):C.M.value(r.v)}]},{expanded:new Set()});
   assert.equal((dropped.match(/class="fv-row/g)||[]).length,1);
@@ -163,7 +164,7 @@ test('unavailable data is shown once: empty columns hide and neighbouring empty 
 });
 
 test('six-slot strip keeps fixed metric order on every paid campaign page',()=>{
-  for(const label of ['Spend','Post views','Tracked clicks','CPC','CPM','Creator signups','KYC completions','Earning creators','Original-post views','Members','Net growth','Course clicks','Joins','Departures'])
+  for(const label of ['Spend','Views','Clicks','CPC','Signups','KYC','Earning Creators','Original Views','Live Posts','Members','Member Growth','Course Clicks'])
     assert.ok(appJs.includes("'"+label+"'"),label);
   assert.match(css,/\.fv-strip\{display:grid;grid-template-columns:repeat\(var\(--n,6\)/);
 });
@@ -186,10 +187,10 @@ test('shell: official wordmark, Inter only, flat seven-page navigation and noind
   assert.doesNotMatch(html,/Unbounded/);
   assert.match(html,/family=Inter:wght@400\.\.900/);
   const order=C.CAMPAIGNS.map(c=>c.name);
-  assert.deepEqual(order,['X Articles','GTA VI','OF Terms','CIS','Guru Promotion']);
+  assert.deepEqual(order,['X Articles','GTA VI','OnlyFans Terms','CIS','Guru X RTs']);
   assert.match(appJs,/\{key:'home',title:'Home',icon:'home',group:'general'\}/);
   assert.match(appJs,/\{key:'discord',title:'Discord',icon:'discord',group:'general'\}/);
-  assert.match(appJs,/Paid campaigns/);
+  assert.match(appJs,/>Campaigns<\/span>/);
   assert.match(css,/--fv-sidebar:#000000/);
   assert.match(css,/\.fv-nav-item\[aria-current="page"\]\{background:var\(--fv-nav-active\)/);
   assert.match(css,/--fv-nav-active:#212121/);

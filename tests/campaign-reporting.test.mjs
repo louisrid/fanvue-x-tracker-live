@@ -120,10 +120,11 @@ test('Reporting routes remain while GTA VI has only QRT and standalone tabs',()=
   assert.match(shell,/'report-article-rt':'x-articles\/paid-reposts'/);
   assert.match(shell,/'report-guru':'guru-promotion'/);
   assert.match(html,/campaign-reporting\.js/);
-  // GTA VI views: the two X source groups and Instagram (IG Accounts 3); no quoted view.
-  assert.match(shell,/\{key:'all-formats',label:'All formats'\},\{key:'x-original-posts',label:'X original posts'\},\{key:'x-quote-posts',label:'X quote posts'\},\{key:'mandy-qrts',label:'Mandy QRTs'\},\{key:'instagram',label:'Instagram'\}\]/);
+  // Site recommendations: one GTA VI results table; old format URLs open the matching filter.
+  assert.match(shell,/'x-original-posts':\{type:'Post'\},'x-quote-posts':\{type:'QRT'\},'mandy-qrts':\{group:'Mandy'\}/);
   assert.doesNotMatch(shell,/key:'quoted'/);
-  assert.match(shell,/Quoted original posts/);
+  // Quoted original posts now appear in each QRT's details as Source Post and Original Views.
+  assert.match(shell,/\['Original Views',o&&C\.num\(o\.views\)!==null/);
   assert.match(app,/function renderGtaQuotedSources\(\)/);
   assert.match(app,/el\('gtaWeekLabel'\)\.textContent='All-time stats'/);
   assert.match(app,/data-page/);
@@ -167,11 +168,11 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  const css=readFileSync('public/fanvue.css','utf8');
  const reporting=readFileSync('public/campaign-reporting.js','utf8');
  const shell=readFileSync('public/fanvue-app.js','utf8');
- // v3.1 redesign: one neutral header refresh control. Home labels it "Refresh all"
+ // One header refresh control. Home labels it "Refresh All"
  // and runs the existing reload coordinator unchanged.
  assert.equal((html.match(/id="fvRefresh"/g)||[]).length,1);
  assert.match(html,/id="fvRefreshStatus"/);
- assert.match(shell,/title:'Home',refreshLabel:'Refresh all'/);
+ assert.match(shell,/title:'Home',refreshLabel:'Refresh All'/);
  assert.match(shell,/await app\?\.refresh\?\.all\?\.\(\)/);
  assert.match(app,/refresh:Object\.freeze\(\{all:reloadAllData,/);
  const start=app.indexOf('async function reloadAllData()');

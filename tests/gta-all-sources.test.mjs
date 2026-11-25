@@ -146,7 +146,7 @@ test('Discord shows member count and net growth for the last four weeks with sna
   const shell=readFileSync('public/fanvue-app.js','utf8');
   assert.match(shell,/const weeks=C\.recentWeeks\(members\?\.history,4\)/);
   assert.match(shell,/\{key:'end',label:'Members'/);
-  assert.match(shell,/\{key:'net',label:'Net growth'/);
+  assert.match(shell,/\{key:'net',label:'Member Growth'/);
 });
 
 test('an unreadable optional tab is skipped and reported; required tabs still parse',()=>{
@@ -208,28 +208,20 @@ test('a search or filter with no matches keeps the table and its controls',()=>{
   const html=U.tablePanel(cfg,{expanded:new Set()});
   assert.match(html,/data-filter="t"/);
   assert.match(html,/data-view="b"/);
-  assert.match(html,/No matching records\./);
+  assert.match(html,/No Results/);
   assert.match(html,/data-reset="t"/);
   // No data at all: a plain table is left out, a table with view tabs keeps them.
   assert.equal(U.tablePanel({...cfg,views:null,rows:[]},{expanded:new Set()}),'');
   assert.match(U.tablePanel({...cfg,rows:[],empty:'No records.'},{expanded:new Set()}),/data-view="b"[\s\S]*No records\./);
 });
 
-test('each row carries exactly one type tag, each type with its own colour',()=>{
-  const shell=readFileSync('public/fanvue-app.js','utf8'),css=readFileSync('public/fanvue.css','utf8');
-  assert.match(shell,/const CAMPAIGN_TYPES=\{'x-articles':'article','gta-vi':'mixed','of-terms':'post','guru-promotion':'rt'\}/);
-  assert.match(shell,/type:'post'\},\{key:'x-quote-posts',name:'X quote posts',c:qr,type:'qrt'\},\{key:'mandy-qrts',name:'Mandy QRTs',c:mq,type:'qrt'\},\{key:'instagram',name:'Instagram',c:ig,type:'story'\}/);
-  const colours=new Set();
-  for(const [k,l] of [['article','Article'],['post','Post'],['qrt','QRT'],['rt','RT'],['story','Story'],['mixed','Mixed']]){
-    const tag=U.typeTag(k);
-    assert.equal((tag.match(/fv-type is-/g)||[]).length,1);
-    assert.match(tag,new RegExp('fv-type is-'+k+'[^>]*>'+l));
-    const m=css.match(new RegExp('\\.fv-state\\.fv-type\\.is-'+k+'\\{background:(#[0-9A-F]{6})\\}'));
-    assert.ok(m,k);colours.add(m[1]);
-  }
-  assert.equal(colours.size,6);
-  assert.equal(U.typeTag(undefined),'');
-  assert.doesNotMatch(shell,/Needs attention|'Delivery'|typeTags/);
+test('site recommendations: no type chips beside campaign names; Type is a table column instead',()=>{
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  assert.doesNotMatch(shell,/CAMPAIGN_TYPES|U\.typeTag\(/);
+  assert.match(shell,/\{key:'type',label:'Type',type:'text',keep:true/);
+  const cols=[...shell.matchAll(/\{key:'(\w+)',label:'([^']+)',[^}]*keep:true/g)].map(m=>m[2]);
+  assert.deepEqual(cols,['Campaign','Platform','Type','Account','Price','Live?','Link','Views','Clicks']);
+  assert.doesNotMatch(shell,/Needs attention|'Delivery'/);
 });
 
 test('paid RTs of a Guru account are Guru Promotion spend; the rest stay with X Articles; each counted once',()=>{
@@ -254,7 +246,7 @@ test('paid RTs of a Guru account are Guru Promotion spend; the rest stay with X 
   assert.equal(sum.spend.value,50);
   const shell=readFileSync('public/fanvue-app.js','utf8');
   assert.doesNotMatch(shell,/Records and editing/);
-  assert.match(shell,/const rows=g\?\.paidReposts\|\|\[\];/);
+  assert.match(shell,/\(g\?\.paidReposts\|\|\[\]\)\.map\(r=>xRecord\(r,\{campaign:'Guru X RTs',type:'rt'/);
 });
 
 test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly once',()=>{
@@ -289,7 +281,9 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   assert.equal(C.viewsOf([{source:'GOOGLE_SHEETS_LIVE',rows:[vrow]}]).state,'partial');
   assert.equal(C.efficiency([{source:'GOOGLE_SHEETS_LIVE',rows:[vrow]}]).cpm.state,'na');
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/function mandyPanel\(c\)/);
+  // Site recommendations: filtering to Mandy updates the common KPIs; no separate Mandy panel.
+  assert.match(shell,/const gtaGroup=r=>r\.campaign==='GTAM'\?'Mandy'/);
+  assert.doesNotMatch(shell,/function mandyPanel/);
 });
 
 test('"Spend" replaces "Paid spend" in every visible label',()=>{

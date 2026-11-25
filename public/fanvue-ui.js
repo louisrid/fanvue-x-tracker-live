@@ -224,15 +224,16 @@
      rows,rowKey,expand(row)->html,empty,countLabel,aligned} ; st: {sort:{key,dir},q,expanded:Set} */
   function cellValue(col,row){
     const v=col.get?col.get(row):row[col.key];
-    // Missing data leaves the cell blank (never zero), even for custom cells.
-    if(v&&typeof v==='object'&&'state' in v&&unavailableState(v))return '<span class="fv-blank" aria-label="No data"></span>';
+    // Missing data shows one restrained dash (never zero); the reason is available on hover and focus.
+    if(v&&typeof v==='object'&&'state' in v&&unavailableState(v))return dashCell(v.reason);
     if(col.html)return col.html(row,v);
-    if(v&&typeof v==='object'&&'state' in v)return unavailableState(v)?'<span class="fv-blank" aria-label="No data"></span>':value(v,col.format||'count');
-    if(v===null||v===undefined||v==='')return '<span class="fv-blank" aria-label="No data"></span>';
+    if(v&&typeof v==='object'&&'state' in v)return unavailableState(v)?dashCell(v.reason):value(v,col.format||'count');
+    if(v===null||v===undefined||v==='')return dashCell('');
     if(col.type==='money')return esc(C.money(v));
     if(col.type==='count')return esc(C.full(v));
     return esc(v);
   }
+  const dashCell=reason=>'<span class="fv-dash" tabindex="0" data-reason="'+esc(reason||'Not available.')+'" aria-label="'+esc('No data. '+(reason||''))+'">–</span>';
   function sortValue(col,row){
     if(col.sort)return col.sort(row);
     const v=col.get?col.get(row):row[col.key];
@@ -244,7 +245,7 @@
     let rows=cfg.rows||[];
     const sortCol=st.sort&&cfg.columns.find(c=>c.key===st.sort.key);
     const views=cfg.views&&cfg.views.length>1?'<div class="fv-segments" role="group" aria-label="Table view">'+cfg.views.map(v=>'<button type="button" data-view="'+esc(v.key)+'" data-table="'+esc(cfg.id)+'" aria-pressed="'+(v.key===cfg.view)+'">'+esc(v.label)+'</button>').join('')+'</div>':'';
-    const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search records</span><input type="search" placeholder="Search records" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
+    const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search</span><input type="search" placeholder="Search" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
     const tools=views||search||filters?'<div class="fv-table-tools">'+views+filters+search+'</div>':'';
     // Columns with no data for any record are hidden and listed once above the table.
@@ -270,7 +271,13 @@
       if(c.type==='link'||c.nosort)return '<th scope="col" class="'+(left?'is-left':'')+(c.type==='link'?' is-link':'')+'">'+esc(c.label)+'</th>';
       return '<th scope="col" class="'+(left?'is-left':'')+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'up':'down',12):'')+'</span></button></th>';
     }).join('')+(cfg.expand?'<th scope="col" class="fv-x-col"><span class="fv-sr">Details</span></th>':'')+'</tr>';
+    // Optional grouping: rows stay in their sorted order inside each group, groups in order of first appearance.
+    if(cfg.groupBy){const order=[],by=new Map();for(const r of rows){const k=cfg.groupBy(r);if(!by.has(k)){by.set(k,[]);order.push(k);}by.get(k).push(r);}rows=order.flatMap(k=>by.get(k));}
+    let lastGroup=null;
     const body=rows.map(r=>{
+      const g=cfg.groupBy?cfg.groupBy(r):null;
+      const head=cfg.groupBy&&g!==lastGroup?'<tr class="fv-group-row"><td colspan="'+(cols.length+(cfg.expand?1:0))+'"><div class="fv-group-head">'+cfg.groupHeader(g,rows.filter(x=>cfg.groupBy(x)===g))+'</div></td></tr>':'';
+      lastGroup=g;
       const key=String(cfg.rowKey(r)),open=st.expanded?.has(key);
       const detailId='fvd-'+cfg.id+'-'+key.replace(/[^A-Za-z0-9_-]/g,'_');
       const cells=cols.map(c=>{
@@ -279,10 +286,10 @@
       });
       const tr='<tr class="fv-row'+(open?' is-open':'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
-      return tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
+      return head+tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
     }).join('');
     const empty=rows.length?'':all.length?
-      '<div class="fv-empty"><p>No matching records.</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Show all records</button></div>':
+      '<div class="fv-empty"><p>No Results</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset Filters</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
     // Fixed widths apply only when they describe exactly the visible columns; otherwise the
     // browser sizes columns to their content, which keeps headers on one line.
