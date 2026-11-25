@@ -225,3 +225,17 @@ test('presentation layer only: the shell reads existing adapters and never posts
   assert.match(legacyApp,/window\.XTrackerApp=Object\.freeze\(/);
   assert.match(readFileSync('public/campaign-reporting.js','utf8'),/getData:\(\)=>state\.data/);
 });
+
+test('daily views: gains count only posts read the day before; totals use each post\'s latest reading',()=>{
+  const now=Date.parse('2026-11-25T12:00:00Z');
+  const rows=[
+    {id:'a',at:'2026-11-23T10:00:00Z',views:100},{id:'a',at:'2026-11-24T10:00:00Z',views:150},{id:'a',at:'2026-11-25T10:00:00Z',views:170},
+    {id:'b',at:'2026-11-24T09:00:00Z',views:5000},{id:'b',at:'2026-11-25T09:00:00Z',views:5100}
+  ];
+  const d=C.dailySeries(rows,{now});
+  assert.deepEqual(d.total.map(p=>[p.week,p.value]),[['2026-11-23',100],['2026-11-24',5150],['2026-11-25',5270]]);
+  // Post b's first reading (5,000) is never counted as a day's gain.
+  assert.deepEqual(d.gained.map(p=>[p.week,p.value]),[['2026-11-24',50],['2026-11-25',120]]);
+  assert.equal(d.gained.at(-1).incomplete,true);
+  assert.deepEqual(C.dailySeries([],{now}),{total:[],gained:[]});
+});

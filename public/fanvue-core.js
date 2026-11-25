@@ -111,6 +111,36 @@
     });
   }
 
+  /* Daily view readings from dated per-post snapshots (Europe/London days).
+     total: sum of each post's latest reading at the end of each day.
+     gained: views added that day, counted only for posts that already had a reading
+     the day before, so a post entering the set never shows its lifetime views as one day's gain. */
+  function dailySeries(rows,{id=r=>r.id,at=r=>r.at,value=r=>r.views,now=Date.now(),days=14}={}){
+    const readings=[];
+    for(const r of rows||[]){
+      const key=id(r),d=londonDay(at(r)),v=num(value(r)),t=Date.parse(at(r));
+      if(blank(key)||!d||v===null||!Number.isFinite(t))continue;
+      readings.push({key:String(key),day:d,t,v});
+    }
+    if(!readings.length)return {total:[],gained:[]};
+    readings.sort((a,b)=>a.t-b.t);
+    const today=londonDay(now),first=readings[0].day,start=addDays(today,-(days-1))>first?addDays(today,-(days-1)):first;
+    const latest=new Map();let i=0,prev=null;const total=[],gained=[];
+    const dayPoint=(d,value,extra)=>({week:d,label:dayShort(d),range:dayLong(d),value,incomplete:d===today,...extra});
+    for(let d=first;d<=today;d=addDays(d,1)){
+      while(i<readings.length&&readings[i].day<=d){latest.set(readings[i].key,readings[i].v);i++;}
+      const snap=new Map(latest);
+      if(d>=start){
+        let sum=0;for(const v of snap.values())sum+=v;
+        total.push(dayPoint(d,sum,{count:snap.size}));
+        if(prev){let g=0,n=0;for(const [k,v] of snap){if(prev.has(k)){g+=Math.max(0,v-prev.get(k));n++;}}
+          gained.push(dayPoint(d,n?g:null,{count:n}));}
+      }
+      prev=snap;
+    }
+    return {total,gained};
+  }
+
   /* Discord membership: point-in-time snapshots, never summed. End members is the
      last snapshot in the week; net growth needs the previous week's last snapshot. */
   function memberWeeks(history,now=Date.now()){
@@ -384,7 +414,7 @@
   const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
-  root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,signed,londonDay,addDays,weekStart,weekLabel,dayShort,dayLong,stamp,
+  root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,signed,londonDay,addDays,weekStart,dailySeries,weekLabel,dayShort,dayLong,stamp,
     eventSeries,snapshotSeries,memberWeeks,recentWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);
