@@ -209,6 +209,8 @@ function normalCampaign(id,name,kind,rows,sourceStatus={},extra={}){
     dataWarning:sourceStatus.warning||null,unavailable:sourceStatus.error||null,
     placements:rows.length,published:posted.length,paidCount:paid.paidCount,
     paidSpendKnown:paid.known,unknownPaidCosts:paid.unknown,committedUnpaidKnown:committed.known,committedUnpaidCount:committed.count,
+    // Planned placements counted as if paid (GTA VI tab 16); already inside paidSpendKnown.
+    plannedSpendKnown:Math.round(rows.filter(r=>r.planned===true&&num(r.cost)!==null).reduce((n,r)=>n+num(r.cost),0)*100)/100,
     views,likes,reposts,replies,coverage,rows,
     allTimeHumanClicks:null,postPublicationClicks:null,...converted(),...extra
   };
@@ -223,7 +225,7 @@ function gtaCampaign(data,group='qrts'){
   // A GTA report from before Instagram was read has no group to show; it is not a failure.
   if(group==='instagram'&&data?.ready&&!data.instagram)return null;
   if(!entry?.ready)return {...normalCampaign(def.id,def.name,def.kind,[],{source:'UNAVAILABLE',error:'GTA report unavailable'}),unavailable:true};
-  const rows=(entry.publishers||[]).filter(p=>def.campaigns.includes(p.campaign)&&!p.duplicateOf);
+  const rows=(entry.publishers||[]).filter(p=>def.campaigns.includes(p.campaign));
   const report=normalCampaign(def.id,def.name,def.kind,rows,{
     source:entry.source,at:entry.sourceVerifiedAt,warning:entry.warning
   },{
@@ -232,7 +234,7 @@ function gtaCampaign(data,group='qrts'){
     sourceStale:!!entry.sourceStale,
     xMetricErrors:(entry.xStatus?.errors||[]).length,
     quotedOriginals:group==='qrts'?data.quotedOriginals||null:null,
-    ...(group==='qrts'?{budget:data.budget||null,excludedCopies:data.excludedCopies||null,missingTabs:data.missingTabs||[]}:{})
+    ...(group==='qrts'?{budget:data.budget||null,missingTabs:data.missingTabs||[]}:{})
   });
   return report;
 }

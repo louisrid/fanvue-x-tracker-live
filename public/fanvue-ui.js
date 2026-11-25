@@ -307,7 +307,7 @@
     return plain?'<span class="fv-marker is-plain">'+icon(iconName,15)+'</span>':'<span class="fv-marker" style="background:'+pal.fill+'">'+icon(iconName,15)+'</span>';
   };
   /* Supporting blocks */
-  const inlineMetrics=items=>'<div class="fv-inline-metrics">'+items.filter(hasData).map(([label,html])=>'<div><span>'+esc(label)+'</span><b>'+html+'</b></div>').join('')+'</div>';
+  const inlineMetrics=items=>{const shown=items.filter(Boolean).filter(hasData);return '<div class="fv-inline-metrics" style="--cols:'+Math.max(4,shown.length)+'">'+shown.map(([label,html])=>'<div><span>'+esc(label)+'</span><b>'+html+'</b></div>').join('')+'</div>'}
   const supportLine=(left,right='')=>'<div class="fv-support-line"><span>'+left+'</span>'+(right?'<span class="fv-support-right">'+right+'</span>':'')+'</div>';
   const supportPanel=(title,iconName,body,tools='')=>'<section class="fv-panel fv-support">'+panelHead(title,iconName,tools)+body+'</section>';
 
