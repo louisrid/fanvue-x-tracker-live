@@ -16,7 +16,7 @@ test('GTA VI has exactly two actual campaign tabs and no phantom Boosted article
   assert.match(shell,/GROUPS_VERIFIED=new Set\(\['Mandy','Lucia'/);
   assert.doesNotMatch(shell,/Boosted articles/);
   assert.doesNotMatch(app,/renderGtaQuotedArticles|gtaTabQuoted|ARTICLES BOOSTED BY QRTS/);
-  assert.match(readFileSync('netlify/functions/gta-report.mjs','utf8'),/\['IG Accounts 3 \(GTA VI\)','GTAIG'\]/);
+  assert.match(readFileSync('netlify/functions/gta-report.mjs','utf8'),/\{id:'GTAIG',gid:1589347864,name:'IG Accounts 3 \(GTA VI\)'\}/);
 });
 
 test('Quoted original X sources appear as an expandable section within paid QRTs',()=>{
