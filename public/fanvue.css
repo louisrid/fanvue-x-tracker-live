@@ -476,3 +476,14 @@ body.fv-editor-open{overflow:hidden}
   .fv-strip .fv-metric-label{font-size:var(--fv-fs-s);line-height:16px;min-height:28px}
   .fv-strip .fv-metric-label .fv-chipicon{width:28px;height:28px}
 }
+
+/* ---------- placement-type tags ---------- */
+.fv-types{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+.fv-state.fv-type{padding:1px 7px;line-height:16px;color:#000000;font-weight:var(--fv-w-strong)}
+.fv-state.fv-type.is-original{background:#FFE14D}
+.fv-state.fv-type.is-qrt{background:#8EC5FF}
+.fv-state.fv-type.is-rt{background:#FF9B9B}
+.fv-state.fv-type.is-story{background:#F5A3D3}
+button.fv-state.fv-type:hover{filter:brightness(.92)}
+td.is-name .fv-types{margin-left:6px}
+td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
