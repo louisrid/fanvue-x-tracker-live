@@ -220,7 +220,7 @@
         {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>';},sort:r=>r.def.name},
         {key:'spend',label:'Spend',format:'money',get:r=>r.spend},
         {key:'views',label:'Views',get:r=>r.key==='guru-promotion'&&C.hasValue(r.views)?{...r.views,reason:'Original Views: views of the promoted original posts, not of the paid RTs. Not included in the Home Views total.'}:r.views},
-        {key:'clicks',label:'Clicks',get:r=>r.clicks,html:r=>(r.clicks?.state==='stale'?U.reasonButton('Stale',r.clicks.reason,'fv-chip is-warn fv-cell-chip')+' ':'')+U.value(r.clicks)},
+        {key:'clicks',label:'Clicks',get:r=>r.clicks},
         {key:'cpc',label:'CPC',format:'money',get:r=>r.cpc},
         {key:'live',label:'Live Posts',get:r=>r.live===null?M.na('No X placements.'):M.value(r.live)},
         {key:'signups',label:'Signups',get:r=>r.signups},
