@@ -214,7 +214,7 @@ a.fv-name:hover{color:var(--fv-blue)}
 /* ---------- supporting blocks ---------- */
 .fv-support{padding:var(--fv-pad)}
 .fv-support .fv-panel-head h2{font-size:var(--fv-fs-l);letter-spacing:-.25px}
-.fv-inline-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.fv-inline-metrics{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:12px}
 .fv-inline-metrics>div{min-width:0;padding:2px 10px;border-right:var(--fv-bw) solid var(--fv-border)}
 .fv-inline-metrics>div:last-child{border-right:0}
 .fv-inline-metrics>div>span{display:block;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-muted)}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import ExcelJS from 'exceljs';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {parseRows,inGroup,publishedQrts,excludedCopies,GTA_BUDGET} from '../netlify/functions/gta-report.mjs';
+import {parseRows,inGroup,publishedQrts,countPlannedAsPaid,GTA_BUDGET} from '../netlify/functions/gta-report.mjs';
 import {summarisePlacements} from '../netlify/lib/placement-reporting.mjs';
 import {assembleCampaignOverview} from '../netlify/functions/campaign-overview.mjs';
 
@@ -23,10 +23,11 @@ function book({tab16=true,instagram=true}={}){
   x(O12,[['Orig','https://x.com/orig',null,'',70,true,true,post(2)]]);
   x(O14,[['Orig2','https://x.com/orig2',null,'',30,true,false,'']]);
   if(tab16)x(Q16,[
-    ['Alpha','https://x.com/alpha',null,'https://ex.s.gy/a',50,false,false,''],      // copy of a tab 15 booking
-    ['Beta','https://x.com/beta',null,'https://ex.s.gy/b',100,true,false,''],        // marked paid in tab 16: repeat booking
-    ['Gamma','https://x.com/gamma',null,'https://ex.s.gy/g',40,false,true,post(3)],  // own live post: repeat booking
-    ['Delta','https://x.com/delta',null,'https://ex.s.gy/d',60,false,false,'']       // no tab 15 match: new booking
+    ['Alpha','https://x.com/alpha',null,'https://ex.s.gy/a',50,false,false,''],      // planned, not paid yet
+    ['Beta','https://x.com/beta',null,'https://ex.s.gy/b',100,true,false,''],        // already marked paid
+    ['Gamma','https://x.com/gamma',null,'https://ex.s.gy/g',40,false,true,post(3)],  // planned, already live
+    ['Delta','https://x.com/delta',null,'https://ex.s.gy/d',60,false,false,''],      // planned, not paid yet
+    ['Prospect','https://x.com/prospect',null,'',null,false,false,'']               // no price: not counted
   ]);
   if(instagram){const s=w.addWorksheet(IG);s.getRow(7).values=IG_HEAD;
     s.getRow(8).values=['storyacct','https://www.instagram.com/storyacct/',null,'',null,250,null,250,true,false];
@@ -36,18 +37,18 @@ function book({tab16=true,instagram=true}={}){
   return w;
 }
 
-test('tab 16 rows that copy a tab 15 booking are excluded; repeat bookings with evidence are kept',()=>{
-  const rows=parseRows(book());
+test('owner direction: every priced X Accounts 16 account counts as GTA VI spend, as if paid',()=>{
+  const rows=countPlannedAsPaid(parseRows(book()));
   const t16=rows.filter(p=>p.sourceTab===Q16);
-  assert.deepEqual(t16.map(p=>[p.publisher,!!p.duplicateOf]),[['Alpha',true],['Beta',false],['Gamma',false],['Delta',false]]);
-  assert.deepEqual(t16[0].duplicateOf,{tab:Q15,row:8});
-  assert.deepEqual(excludedCopies(rows),{count:1,recordedCost:50,tabs:[Q16]});
-  // Copies never reach the QRT group, its spend or its published posts.
+  assert.deepEqual(t16.map(p=>[p.publisher,p.paid,!!p.planned]),[['Alpha',true,true],['Beta',true,false],['Gamma',true,true],['Delta',true,true],['Prospect',false,false]]);
   const qrts=rows.filter(p=>inGroup(p,'qrts'));
-  assert.equal(qrts.length,6);
-  assert.ok(qrts.every(p=>!p.duplicateOf));
-  assert.equal(summarisePlacements(qrts).paidSpend,250);
+  // Tab 15 paid 150 + tab 16 250 (Beta paid 100, planned 50 + 40 + 60).
+  assert.equal(summarisePlacements(qrts).paidSpend,400);
+  // Only tab 15's unpaid Gamma is still "committed"; planned rows are already in spend.
+  assert.equal(qrts.filter(p=>!p.paid&&p.cost>0).reduce((n,p)=>n+p.cost,0),40);
   assert.deepEqual(publishedQrts(rows).map(p=>p.publisher),['Alpha','Gamma']);
+  // Other tabs are never treated as planned.
+  assert.ok(rows.filter(p=>p.planned).every(p=>p.sourceTab===Q16));
 });
 
 test('Instagram rows count towards GTA VI spend, including paid placements not yet up',()=>{
@@ -71,17 +72,20 @@ test('tab 16 and Instagram are optional; the original tabs still parse without t
 });
 
 test('campaign feed adds an Instagram group, committed spend and the GTA VI budget',()=>{
-  const rows=parseRows(book()).filter(p=>!p.duplicateOf);
+  const rows=countPlannedAsPaid(parseRows(book()));
   const group=(ids)=>({ok:true,ready:true,source:'GOOGLE_SHEETS_LIVE',sourceVerifiedAt:'2026-11-24T12:00:00Z',publishers:rows.filter(p=>ids.includes(p.campaign)),shortIo:{total:null,postPublicationTotal:null},xStatus:{errors:[]}});
-  const gta={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2']),instagram:group(['GTAIG']),budget:GTA_BUDGET,excludedCopies:{count:1,recordedCost:50,tabs:[Q16]},missingTabs:[]};
+  const gta={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2']),instagram:group(['GTAIG']),budget:GTA_BUDGET,missingTabs:[]};
   const ov=assembleCampaignOverview({gta:{data:gta},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const find=id=>ov.campaigns.find(c=>c.id===id);
-  assert.deepEqual(['gta-qrts','gta-originals','gta-instagram'].map(id=>find(id).paidSpendKnown),[250,100,340]);
-  // Committed = agreed price, not yet paid (Gamma 40 + Gamma repeat 40 + Delta 60).
-  assert.equal(find('gta-qrts').committedUnpaidKnown,140);
+  assert.deepEqual(['gta-qrts','gta-originals','gta-instagram'].map(id=>find(id).paidSpendKnown),[400,100,340]);
+  // Planned tab 16 spend is inside paid spend and reported separately; committed is agreed but unpaid.
+  assert.equal(find('gta-qrts').plannedSpendKnown,150);
+  assert.equal(find('gta-qrts').committedUnpaidKnown,40);
   assert.equal(find('gta-instagram').committedUnpaidKnown,0);
   assert.deepEqual(find('gta-qrts').budget,{amount:10000,currency:'USD'});
-  assert.equal(find('gta-qrts').excludedCopies.count,1);
+  const s=C.campaignSummary(ov,'gta-vi');
+  assert.equal(s.spend.value,840);assert.equal(s.planned,150);assert.match(s.spend.reason,/Includes \$150\.00 planned in X Accounts 16/);
+  assert.equal(s.budget.remaining.value,10000-840-40);
 });
 
 const ctx={console};ctx.globalThis=ctx;ctx.window=ctx;
@@ -170,18 +174,16 @@ test('Instagram needs no link or tracking columns; two priced formats are "both"
   assert.ok(ig.every(p=>p.trackingUrl===''));
 });
 
-test('each tab 15 booking explains at most one tab 16 row; blank rows are never matched',()=>{
-  const w=book(),s=w.getWorksheet(Q16);
-  s.getRow(12).values=['Alpha','https://x.com/alpha',null,'https://ex.s.gy/a',50,false,false,''];   // second copy-like row
-  s.getRow(13).values=['Blank','',null,'',null,false,false,''];
-  const rows=parseRows(w),t16=rows.filter(p=>p.sourceTab===Q16);
-  assert.equal(t16.filter(p=>p.publisher==='Alpha'&&p.duplicateOf).length,1);
-  assert.equal(t16.filter(p=>p.publisher==='Alpha'&&!p.duplicateOf).length,1);
-  assert.equal(t16.find(p=>p.publisher==='Blank').duplicateOf,undefined);
+test('planned spend also applies to rows cached before the change, and only once',()=>{
+  const cached=[{campaign:'GTAQ2',sourceTab:Q16,sourceRow:8,publisher:'Alpha',cost:50,paid:false,posted:false,duplicateOf:{tab:Q15,row:8}},
+    {campaign:'GTAQ',sourceTab:Q15,sourceRow:10,publisher:'Gamma',cost:40,paid:false,posted:false}];
+  const once=countPlannedAsPaid(cached),twice=countPlannedAsPaid(once);
+  assert.deepEqual(once.map(p=>[p.paid,!!p.planned,'duplicateOf' in p]),[[true,true,false],[false,false,false]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(twice)),JSON.parse(JSON.stringify(once)));
 });
 
 test('a GTA report from before Instagram, or a group with no paid rows, never makes spend partial',()=>{
-  const rows=parseRows(book({instagram:false})).filter(p=>!p.duplicateOf);
+  const rows=parseRows(book({instagram:false}));
   const group=(ids)=>({ok:true,ready:true,source:'GOOGLE_SHEETS_LIVE',sourceVerifiedAt:'2026-11-24T12:00:00Z',publishers:rows.filter(p=>ids.includes(p.campaign)),shortIo:{total:null,postPublicationTotal:null},xStatus:{errors:[]}});
   const old={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2'])};
   const ov=assembleCampaignOverview({gta:{data:old},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});

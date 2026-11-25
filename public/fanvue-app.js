@@ -84,8 +84,8 @@
   const money=v=>C.num(v)===null?'':esc(C.money(v));
   const count=v=>C.num(v)===null?'':esc(C.full(v));
   const when=v=>v?esc(C.stamp(v)):'';
-  const pubStatus=r=>r.posted===true?U.status('Published','good'):r.stage==='booked'?U.status('Booked'):r.stage==='planned'?U.status('Planned'):r.paid?U.status('Awaiting publication','warn'):U.status('Not published');
-  const payStatus=r=>r.paid===true?U.status('Paid','good'):C.num(r.cost)!==null?U.status('Unpaid'):U.status('No cost recorded');
+  const pubStatus=r=>r.posted===true?U.status('Published','good'):r.planned===true?U.status('Planned'):r.stage==='booked'?U.status('Booked'):r.stage==='planned'?U.status('Planned'):r.paid?U.status('Awaiting publication','warn'):U.status('Not published');
+  const payStatus=r=>r.planned===true?U.status('Planned, counted as paid'):r.paid===true?U.status('Paid','good'):C.num(r.cost)!==null?U.status('Unpaid'):U.status('No cost recorded');
   const placementSpend=r=>r.paid===true?(C.num(r.cost)===null?M.na('Paid, but no cost is recorded.'):M.value(r.cost)):
     M.na(C.num(r.cost)!==null?'Not paid yet. Agreed cost '+C.money(r.cost)+'.':'Not paid and no cost recorded.');
   const viewsOfRow=r=>{const v=C.num(r.views??r.xViews);if(v!==null)return M.value(v);
@@ -333,7 +333,7 @@
     const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),ig=D.campaign('gta-instagram');
     const clicksChip=s?.clicks&&C.hasValue(s.clicks)&&s.clicks.state!=='stale'&&s.clicks.allTime!==undefined?U.reasonButton(C.full(s.clicks.allTime)+' all-time',s.clicks.reason,'fv-chip'):undefined;
     const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['CPC','cursor'],['CPM','eye']]):U.strip([
-      metric('Spend','wallet',s.spend,'moneyShort'),metric('Post views','eye',s.views,'compact'),
+      metric('Spend','wallet',s.spend,'moneyShort',s.planned>0?'Incl. planned':undefined),metric('Post views','eye',s.views,'compact'),
       {...metric('Tracked clicks','cursor',s.clicks),chip:clicksChip!==undefined?clicksChip:undefined},
       metric('CPC','cursor',s.cpc,'money'),metric('CPM','eye',s.cpm,'money'),
       metric('Creator signups','user',s.signups)
@@ -341,8 +341,9 @@
     const b=s?.budget;
     const budget=b?U.supportPanel('Budget','wallet',U.inlineMetrics([
       ['Total budget',U.value(b.budget,'money')],['Spend',U.value(b.spend,'money')],
+      s.planned>0?['Of which planned',U.value(M.value(s.planned,{reason:'X Accounts 16, counted as if paid.'}),'money')]:null,
       ['Committed',U.value(b.committed,'money')],['Remaining unallocated',U.value(b.remaining,'money')]
-    ])):'';
+    ].filter(Boolean))):'';
     const live=c=>c&&!c.unavailable;
     const igFormats=live(ig)?[...new Set((ig.rows||[]).filter(r=>r.paid===true&&C.num(r.cost)>0).map(r=>r.format||''))]:[];
     const spendCats=s?[

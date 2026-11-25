@@ -22,7 +22,7 @@ export const GROUPS={qrts:['GTAQ','GTAQ2'],originals:['GTA1','GTA2'],instagram:[
 // Approved programme budget for GTA VI (owner-confirmed, USD).
 export const GTA_BUDGET=Object.freeze({amount:10000,currency:'USD'});
 const tabOf=campaign=>SOURCE_TABS.find(([,id])=>id===campaign)?.[0];
-export const inGroup=(p,group)=>GROUPS[group].includes(p.campaign)&&p.sourceTab===tabOf(p.campaign)&&!p.duplicateOf;
+export const inGroup=(p,group)=>GROUPS[group].includes(p.campaign)&&p.sourceTab===tabOf(p.campaign);
 export const publishedOriginals=rows=>(rows||[]).filter(p=>inGroup(p,'originals')&&p.posted===true);
 // Apply the same boundary to live sheets, legacy caches and the verified snapshot.
 export const publishedQrts=rows=>(rows||[]).filter(p=>inGroup(p,'qrts')&&p.posted===true);
@@ -75,16 +75,6 @@ export function parseRows(workbook,report={read:[],skipped:[]}){
         cost,paid,posted,trackingUrl,clicks:null});
     }
   }
-  // Tab 16 repeats tab 15 rows. A row that matches a tab 15 placement on publisher, tracking link
-  // and price is a copy unless it has its own evidence (marked paid in tab 16, or its own live post).
-  // Each tab 15 booking can explain at most one tab 16 row, and a match needs a link or a price.
-  const qrts=result.filter(p=>p.campaign==='GTAQ'),used=new Set();
-  for(const p of result)if(p.campaign==='GTAQ2'&&(p.trackingUrl||p.cost!==null)){
-    const twin=qrts.find(o=>!used.has(o)&&o.publisher.toLowerCase()===p.publisher.toLowerCase()&&o.trackingUrl===p.trackingUrl&&o.cost===p.cost);
-    if(!twin)continue;
-    used.add(twin);
-    if(!p.paid&&(!p.postUrl||p.postUrl===twin.postUrl))p.duplicateOf={tab:twin.sourceTab,row:twin.sourceRow};
-  }
   // Financial rows are authoritative, even when two placements share a post.
   // Analytics deduplicate links/posts separately and exclude ambiguous attribution.
   const counts=new Map();for(const p of result)counts.set(p.code,(counts.get(p.code)||0)+1);
@@ -118,17 +108,18 @@ async function readSourceRows(force=false){
   }
 }
 
-export function excludedCopies(rows){
-  const copies=(rows||[]).filter(p=>p.duplicateOf);
-  return {count:copies.length,recordedCost:Math.round(copies.reduce((n,p)=>n+(p.cost||0),0)*100)/100,tabs:[...new Set(copies.map(p=>p.sourceTab))]};
-}
+// Owner direction (25 Nov 2026): for now, every priced account in X Accounts 16 is GTA VI
+// planned spend, counted as if paid even before payment. Applied to live and cached rows alike.
+export const countPlannedAsPaid=rows=>(rows||[]).map(p=>{
+  const {duplicateOf,...r}=p;
+  return r.campaign==='GTAQ2'&&r.paid!==true&&typeof r.cost==='number'&&r.cost>0?{...r,paid:true,planned:true}:r;
+});
 async function sourceRows(force=false){
   const source=await readSourceRows(force);
-  // Copied rows never reach spend, clicks or views; they are reported separately.
-  const kept=source.rows.filter(p=>!p.duplicateOf);
+  const rows=countPlannedAsPaid(source.rows);
   const usage=new Map();
-  for(const p of kept){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
-  return {...source,rows:kept.map(p=>({...p,sharedTracking:usage.get(p.trackingUrl)?.size>1})),excludedCopies:excludedCopies(source.rows)};
+  for(const p of rows){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
+  return {...source,rows:rows.map(p=>({...p,sharedTracking:usage.get(p.trackingUrl)?.size>1}))};
 }
 
 const mergeMetrics=(rows,metrics)=>rows.map(p=>{
@@ -169,7 +160,7 @@ export async function getReport(options={}){
   quoteGroups.rows=quoteGroups.rows.map(row=>({...row,paidOriginalMatch:paidOriginals.has(row.originalPostId)}));
   const tabs=source.tabs||[...new Set(source.rows.map(p=>p.sourceTab))],skipped=source.skippedTabs||[];
   return {...qrts,originals:{...originals,scope:'published-originals-v1'},instagram:{...instagram,scope:'instagram-v1'},quotedOriginals:quoteGroups,
-    budget:GTA_BUDGET,excludedCopies:source.excludedCopies,
+    budget:GTA_BUDGET,
     // Optional tabs that could not be read (or Instagram missing) are flagged, never silently dropped.
     missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&(skipped.includes(tab)||(id==='GTAIG'&&!tabs.includes(tab)))).map(([tab])=>tab):[]};
 }

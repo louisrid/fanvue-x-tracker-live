@@ -260,7 +260,7 @@
     const amount=num(budget?.amount);
     if(amount===null)return null;
     const left=hasValue(spend)?amount-spend.value-(num(committed)||0):null;
-    return {budget:M.value(amount),spend,committed:num(committed)===null?M.na('No committed placements recorded.'):M.value(num(committed)),
+    return {budget:M.value(amount),spend,planned:null,committed:num(committed)===null?M.na('No committed placements recorded.'):M.value(num(committed)),
       remaining:left===null?M.na('Needs the full spend figure.'):spend.state==='partial'?M.partial(left,'Spend is a known subtotal.'):M.value(left)};
   }
 
@@ -302,6 +302,9 @@
       out.published=parts.every(unavailable)?null:parts.reduce((n,c)=>n+(num(c?.published)||0),0);
       out.paidCount=parts.reduce((n,c)=>n+(num(c?.paidCount)||0),0);
       out.committed=parts.every(unavailable)?null:Math.round(parts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
+      // Planned placements (tab 16) are counted inside spend as if paid; shown separately for clarity.
+      out.planned=Math.round(parts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
+      if(out.planned>0&&hasValue(out.spend))out.spend.reason='Includes '+money(out.planned)+' planned in X Accounts 16, counted as if paid.';
       out.budget=budgetOf(out.spend,out.committed,o['gta-qrts']?.budget);
       Object.assign(out,efficiency(parts));
     }else if(key==='of-terms'){
