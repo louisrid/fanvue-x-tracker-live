@@ -509,3 +509,13 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 #fvRefresh:focus-visible{outline:3px solid #FFB3D9;outline-offset:2px}
 #fvRefresh:disabled{opacity:.75}
 #fvRefresh .fv-icon{color:#FFFFFF}
+
+/* Campaign subpages: Overview first, then one tab per group (scopes KPIs, chart and table). */
+.fv-subnav{display:inline-flex;margin:0 0 16px;background:#fff}
+.fv-subnav button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;color:var(--fv-text,#111);font-weight:var(--fv-w-strong)}
+.fv-subnav button[aria-pressed="true"]{background:var(--fv-dark,#000);color:var(--fv-dark-text,#fff)}
+.fv-subnav-n{min-width:20px;padding:1px 6px;border-radius:999px;background:var(--fv-chip-blue,#E6F0FB);color:#0F5596;font-size:var(--fv-fs-s);line-height:16px;text-align:center}
+.fv-subnav button[aria-pressed="true"] .fv-subnav-n{background:rgba(255,255,255,.18);color:#fff}
+.fv-sub-link{color:inherit;text-decoration:none;font-weight:var(--fv-w-strong)}
+.fv-sub-link:hover,.fv-sub-link:focus-visible{text-decoration:underline;text-underline-offset:3px}
+@media (max-width:767px){.fv-subnav{display:flex;width:100%}}

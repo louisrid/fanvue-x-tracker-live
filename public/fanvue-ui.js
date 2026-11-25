@@ -163,7 +163,7 @@
   function chartBody(m,type){
     if(type==='table'){
       const rows=m.series||m.categories;
-      return '<div class="fv-table-wrap fv-chart-table"><table data-no-sort><thead><tr><th scope="col" class="is-left">'+(m.series?'Week':'Group')+'</th><th scope="col">'+esc(m.unit||m.label)+'</th></tr></thead><tbody>'+
+      return '<div class="fv-table-wrap fv-chart-table"><table data-no-sort><thead><tr><th scope="col" class="is-left">'+(m.series?(m.period||'Week'):'Group')+'</th><th scope="col">'+esc(m.unit||m.label)+'</th></tr></thead><tbody>'+
         rows.map(p=>'<tr><td class="is-left">'+esc(m.series?p.range+(p.incomplete?' (incomplete)':''):p.label)+'</td><td>'+(p.value===null||p.value===undefined?reasonButton(p.state||'Not available',p.reason):esc(formatValue(p.value,m.format)))+'</td></tr>').join('')+'</tbody></table></div>';
     }
     return '<div class="fv-plot" role="img" aria-label="'+esc(m.title)+'. Use the table view for exact values."></div>';
@@ -217,7 +217,7 @@
     s+='</svg>';
     // Focusable hit targets for keyboard, mouse and touch tooltips.
     const hits=pts.map((p,i)=>{const v=C.num(p.value);const w=bar?iw/n:(n===1?iw:iw/(n-1));
-      const tip=(p.range||p.label)+(p.incomplete?' (incomplete week)':'')+'\n'+(m.unit||m.label)+': '+(v===null?(p.state||'Not available'):formatValue(v,m.tipFormat||(m.format==='moneyShort'?'money':m.format)))+(p.extra?'\n'+p.extra:'');
+      const tip=(p.range||p.label)+(p.incomplete?' (incomplete '+(m.period||'Week').toLowerCase()+')':'')+'\n'+(m.unit||m.label)+': '+(v===null?(p.state||'Not available'):formatValue(v,m.tipFormat||(m.format==='moneyShort'?'money':m.format)))+(p.extra?'\n'+p.extra:'');
       return '<button type="button" class="fv-hit" style="left:'+(X(i)-w/2)+'px;width:'+w+'px" data-tip="'+esc(tip)+'" data-x="'+X(i)+'" data-y="'+(v===null?T+ih/2:Y(v))+'" aria-label="'+esc(tip.replace(/\n/g,'. '))+'"></button>';}).join('');
     plot.innerHTML=s+'<div class="fv-hits">'+hits+'</div>';
   }
