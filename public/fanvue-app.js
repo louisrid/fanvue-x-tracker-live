@@ -345,8 +345,8 @@
       body:overviewNotice()+section('Article Performance')+strip+chart+filteredNote(f)+table};
   }
 
-  // GTA VI content groups: Mandy is verified (tab 17). Lucia only once records are verified.
-  const GTA_LUCIA=new Set([]);
+  // GTA VI content groups: Mandy is tab 17; the owner confirmed (25 Nov) that the earlier X tabs 12, 14, 15 and 16 are Lucia.
+  const GTA_LUCIA=new Set(['GTA1','GTA2','GTAQ','GTAQ2']);
   const gtaGroup=r=>r.campaign==='GTAM'?'Mandy':GTA_LUCIA.has(r.campaign)?'Lucia':'GTA VI';
   function gtaPage(st){
     ensure('overview');ensure('gta');
