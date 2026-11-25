@@ -77,7 +77,8 @@ test('Home spend is a labelled known subtotal from proven-disjoint paid rows onl
   const T=C.homeTotals(ov,S);
   assert.equal(T.spend.state,'partial');
   assert.equal(T.spend.value,150+25+200+50+80);
-  assert.match(T.spend.reason,/CIS/);assert.match(T.spend.reason,/Guru X RTs/);
+  // CIS page removed on owner request (25 Nov): it no longer appears as a spend gap.
+  assert.doesNotMatch(T.spend.reason,/CIS/);assert.match(T.spend.reason,/Guru X RTs/);
   // A paid row appearing in two campaign objects must block the total.
   const dup=overview();dup.campaigns.find(c=>c.id==='of-terms').rows[0]={...dup.campaigns.find(c=>c.id==='gta-qrts').rows[0]};
   const T2=C.homeTotals(dup,C.CAMPAIGNS.map(c=>C.campaignSummary(dup,c.key)));
@@ -102,7 +103,8 @@ test('click providers are never combined and missing outcomes are never zero',()
   assert.equal(gta.clicks.value,40);assert.equal(gta.clicks.allTime,55);
   for(const s of S){assert.equal(s.signups.value,null);assert.equal(s.kyc.value,null);assert.equal(s.earning.value,null);assert.equal(s.cps.value,null);}
   assert.equal(S.find(s=>s.key==='guru-promotion').clicks.state,'notTracked');
-  assert.equal(S.find(s=>s.key==='cis').spend.state,'na');
+  // CIS page removed on owner request (25 Nov).
+  assert.equal(S.find(s=>s.key==='cis'),undefined);
 });
 
 test('paid reposts are counted once under X Articles and Guru boost spend stays unavailable',()=>{
@@ -174,7 +176,7 @@ test('every legacy hash maps to a new page, view or retained record list',()=>{
   const expected={dashboard:'home','':'home',stats:'home',historical:'home','report-all':'home',reporting:'home','report-other':'home',
     'report-discord':'discord','report-articles':'x-articles','report-article-rt':'x-articles/paid-reposts',articles:'x-articles/original-posts',
     upcoming:'x-articles/original-posts','report-gta':'gta-vi','campaign-C001':'of-terms','report-of':'of-terms',of:'of-terms',
-    'report-harness':'cis','report-guru':'guru-promotion','boosted-tweets':'x-rts'};
+    'report-harness':'home','report-guru':'guru-promotion','boosted-tweets':'x-rts'};
   for(const [from,to] of Object.entries(expected))assert.equal(legacy[from],to,from);
   for(const page of ['placements','accounts','campaigns','x-rts'])assert.match(appJs,new RegExp("'?"+page+"'?:\\{title:"));
   assert.match(legacyApp,/const RECORD_PAGES=\['placements','accounts','campaigns','x-rts'\]/);
@@ -187,7 +189,7 @@ test('shell: official wordmark, Inter only, flat seven-page navigation and noind
   assert.doesNotMatch(html,/Unbounded/);
   assert.match(html,/family=Inter:wght@400\.\.900/);
   const order=C.CAMPAIGNS.map(c=>c.name);
-  assert.deepEqual(order,['X Articles','GTA VI','OnlyFans Terms','CIS','Guru X RTs']);
+  assert.deepEqual(order,['X Articles','GTA VI','OnlyFans Terms','Guru X RTs']); // CIS removed on owner request (25 Nov)
   assert.match(appJs,/\{key:'home',title:'Home',icon:'home',group:'general'\}/);
   assert.match(appJs,/\{key:'discord',title:'Discord',icon:'discord',group:'general'\}/);
   assert.match(appJs,/>Campaigns<\/span>/);

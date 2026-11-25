@@ -51,7 +51,7 @@
     'report-articles':'x-articles','report-article-rt':'x-articles/paid-reposts',articles:'x-articles/original-posts',upcoming:'x-articles/original-posts',
     'gta-vi':'gta-vi','report-gta':'gta-vi',
     'campaign-C001':'of-terms','report-of':'of-terms',of:'of-terms',
-    'report-harness':'cis',
+    'report-harness':'home',
     'report-guru':'guru-promotion',
     'boosted-tweets':'x-rts'
   };
@@ -412,11 +412,6 @@
       body:overviewNotice()+section('Campaign Performance')+strip+chart+filteredNote(f)+table};
   }
 
-  function cisPage(st){
-    ensure('overview');
-    return {title:'CIS',chip:'cis',refreshLabel:'Refresh',updated:D.overview()?.checkedAt,
-      body:U.supportPanel('CIS','sparkles','<p class="fv-plain">'+U.reasonButton('Not Connected','No dedicated CIS placement source is connected yet. CIS clicks from other campaigns stay with those campaigns.','fv-notice-reason')+'</p>')};
-  }
 
   function guruPage(st){
     ensure('overview');
@@ -512,7 +507,7 @@
     return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+table};
   }
 
-  const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,cis:cisPage,'guru-promotion':guruPage};
+  const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,'guru-promotion':guruPage};
 
   /* ---------- shell rendering ---------- */
   let current=parseHash(),recordsShown=false;
@@ -652,7 +647,7 @@
     if(t.closest('[data-retry]')){void D.rep()?.reload?.();return;}
   }
   const pageKey=()=>current.kind==='page'?current.key:'added:'+current.key;
-  const defaultView=k=>({'x-articles':'articles','gta-vi':'all-formats',discord:'weekly-history',cis:'angles','guru-promotion':'promoted-posts'}[k]||'');
+  const defaultView=k=>({'x-articles':'articles','gta-vi':'all-formats',discord:'weekly-history','guru-promotion':'promoted-posts'}[k]||'');
   function onInput(e){
     const s=e.target.closest('[data-search]');
     if(s){tableState(pageKey(),s.dataset.search).q=s.value;rerender();}

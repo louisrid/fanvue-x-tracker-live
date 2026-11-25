@@ -19,7 +19,8 @@ test('Landing page is concise while keeping six genuine campaign destinations',(
   for(const [route,page] of [['gta-vi','gta-vi'],['campaign-C001','of-terms'],['report-guru','guru-promotion'],['report-article-rt','x-articles\\/paid-reposts'],['report-articles','x-articles'],['discord','discord']]){
     assert.match(shell,new RegExp("'?"+route+"'?:'"+page+"'"));
   }
-  assert.equal((core.match(/\{key:'[a-z-]+',name:'[^']+',icon:/g)||[]).length,5);
+  // Four paid campaigns since the CIS page was removed on owner request (25 Nov).
+  assert.equal((core.match(/\{key:'[a-z-]+',name:'[^']+',icon:/g)||[]).length,4);
   assert.ok(html.indexOf('fanvue-records.css')>html.indexOf('fanvue.css'));
 });
 
@@ -78,6 +79,8 @@ test('Campaign navigation is centred, icon-free and uses one coordinated dark pa
   assert.match(css,/--fv-sidebar:#000000/);
   assert.match(css,/--fv-nav-active:#212121/);
   for(const colour of ['violet','blue','teal','pink'])assert.match(core,new RegExp(colour+":\\{icon:'#"));
-  for(const text of ['X Articles','GTA VI','OnlyFans Terms','CIS','Guru X RTs'])assert.match(core,new RegExp("name:'"+text+"'"));
+  // CIS removed on owner request (25 Nov).
+  assert.doesNotMatch(core,/name:'CIS'/);
+  for(const text of ['X Articles','GTA VI','OnlyFans Terms','Guru X RTs'])assert.match(core,new RegExp("name:'"+text+"'"));
   assert.match(shell,/title:'Discord'/);
 });
