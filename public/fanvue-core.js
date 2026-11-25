@@ -113,8 +113,8 @@
 
   /* Daily view readings from dated per-post snapshots (Europe/London days).
      total: sum of each post's latest reading at the end of each day.
-     gained: views added that day, counted only for posts that already had a reading
-     the day before, so a post entering the set never shows its lifetime views as one day's gain. */
+     gained: views added that day, from each post's last reading the day before, or from its first
+     reading when it was first read that day, so a post never shows its lifetime views as one day's gain. */
   function dailySeries(rows,{id=r=>r.id,at=r=>r.at,value=r=>r.views,now=Date.now(),days=14}={}){
     const readings=[];
     for(const r of rows||[]){
@@ -125,16 +125,17 @@
     if(!readings.length)return {total:[],gained:[]};
     readings.sort((a,b)=>a.t-b.t);
     const today=londonDay(now),first=readings[0].day,start=addDays(today,-(days-1))>first?addDays(today,-(days-1)):first;
-    const latest=new Map();let i=0,prev=null;const total=[],gained=[];
+    const latest=new Map(),firstRead=new Map();let i=0,prev=null;const total=[],gained=[];
     const dayPoint=(d,value,extra)=>({week:d,label:dayShort(d),range:dayLong(d),value,incomplete:d===today,...extra});
     for(let d=first;d<=today;d=addDays(d,1)){
-      while(i<readings.length&&readings[i].day<=d){latest.set(readings[i].key,readings[i].v);i++;}
+      while(i<readings.length&&readings[i].day<=d){const r=readings[i];if(!firstRead.has(r.key))firstRead.set(r.key,r);latest.set(r.key,r.v);i++;}
       const snap=new Map(latest);
       if(d>=start){
         let sum=0;for(const v of snap.values())sum+=v;
         total.push(dayPoint(d,sum,{count:snap.size}));
-        if(prev){let g=0,n=0;for(const [k,v] of snap){if(prev.has(k)){g+=Math.max(0,v-prev.get(k));n++;}}
-          gained.push(dayPoint(d,n?g:null,{count:n}));}
+        // Baseline: the post's last reading the day before, or its first reading if it was first read that day.
+        let g=0,n=0;for(const [k,v] of snap){const base=prev?.has(k)?prev.get(k):firstRead.get(k).day===d?firstRead.get(k).v:null;if(base!==null){g+=Math.max(0,v-base);n++;}}
+        gained.push(dayPoint(d,n?g:null,{count:n}));
       }
       prev=snap;
     }

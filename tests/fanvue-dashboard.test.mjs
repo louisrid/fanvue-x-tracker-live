@@ -234,8 +234,11 @@ test('daily views: gains count only posts read the day before; totals use each p
   ];
   const d=C.dailySeries(rows,{now});
   assert.deepEqual(d.total.map(p=>[p.week,p.value]),[['2026-11-23',100],['2026-11-24',5150],['2026-11-25',5270]]);
-  // Post b's first reading (5,000) is never counted as a day's gain.
-  assert.deepEqual(d.gained.map(p=>[p.week,p.value]),[['2026-11-24',50],['2026-11-25',120]]);
+  // Post b's first reading (5,000) is never counted as a day's gain; a post first read on a day
+  // gains from that first reading (owner, 25 Nov: graphs show from the first day of data).
+  assert.deepEqual(d.gained.map(p=>[p.week,p.value]),[['2026-11-23',0],['2026-11-24',50],['2026-11-25',120]]);
+  const sameDay=C.dailySeries([{id:'m',at:'2026-11-25T08:00:00Z',views:900},{id:'m',at:'2026-11-25T11:00:00Z',views:960}],{now});
+  assert.deepEqual(sameDay.gained.map(p=>[p.week,p.value]),[['2026-11-25',60]]);
   assert.equal(d.gained.at(-1).incomplete,true);
   assert.deepEqual(C.dailySeries([],{now}),{total:[],gained:[]});
 });
