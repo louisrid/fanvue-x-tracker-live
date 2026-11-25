@@ -132,11 +132,85 @@ test('GTA VI totals include Instagram; budget shows spend, committed and remaini
 });
 
 test('Discord shows member count and net growth for the last four weeks with snapshots only',()=>{
+  const now=Date.parse('2026-11-25T12:00:00Z');
+  const hist=[['2026-10-14',400],['2026-10-21',410],['2026-10-28',420],['2026-11-04',430],['2026-11-11',440],['2026-11-24',460]].map(([date,memberCount])=>({date,memberCount}));
+  const weeks=C.recentWeeks(hist,4,now);
+  // Only weeks that have a snapshot; the gap week of 16 Nov is not invented.
+  assert.deepEqual(JSON.parse(JSON.stringify(weeks.map(w=>[w.week,w.end]))),[['2026-10-26',420],['2026-11-02',430],['2026-11-09',440],['2026-11-23',460]]);
+  assert.equal(weeks[0].value,10);
+  assert.equal(C.recentWeeks([],4,now).length,0);
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/C\.memberWeeks\(members\?\.history\)\.filter\(w=>w\.snapshots\)\.slice\(-4\)/);
-  assert.match(shell,/title:'Members by week'/);
+  assert.match(shell,/const weeks=C\.recentWeeks\(members\?\.history,4\)/);
   assert.match(shell,/\{key:'end',label:'Members'/);
   assert.match(shell,/\{key:'net',label:'Net growth'/);
+});
+
+test('an unreadable optional tab is skipped and reported; required tabs still parse',()=>{
+  const w=book();
+  w.getWorksheet(Q16).getRow(7).values=['ACCOUNT','LINK',null,'UTM LINK','ACCOUNT SUM','PAID?','LINK'];   // POSTED? removed
+  const report={read:[],skipped:[]};
+  const rows=parseRows(w,report);
+  assert.deepEqual(report.skipped,[Q16]);
+  assert.ok(report.read.includes(Q15)&&report.read.includes(IG));
+  assert.equal(rows.filter(p=>p.sourceTab===Q16).length,0);
+  // A required tab with a missing column still fails loudly.
+  const bad=book();bad.getWorksheet(Q15).getRow(7).values=['ACCOUNT','LINK',null,'UTM LINK','ACCOUNT SUM','PAID?','LINK'];
+  assert.throws(()=>parseRows(bad),/GTA column missing POSTED\? in X Accounts 15/);
+});
+
+test('Instagram needs no link or tracking columns; two priced formats are "both" with no guessed cost',()=>{
+  const w=book({tab16:false}),s=w.getWorksheet(IG);
+  s.getRow(7).values=['ACCOUNT',null,null,null,'POST','STORY','BOTH','ACCOUNT SUM','PAID?','UP?'];
+  s.getRow(12).values=['mixed',null,null,null,100,150,null,null,true,false];
+  const ig=parseRows(w).filter(p=>inGroup(p,'instagram'));
+  assert.equal(ig.length,5);
+  const mixed=ig.find(p=>p.publisher==='mixed');
+  assert.equal(mixed.format,'both');
+  assert.equal(mixed.cost,null);
+  assert.ok(ig.every(p=>p.trackingUrl===''));
+});
+
+test('each tab 15 booking explains at most one tab 16 row; blank rows are never matched',()=>{
+  const w=book(),s=w.getWorksheet(Q16);
+  s.getRow(12).values=['Alpha','https://x.com/alpha',null,'https://ex.s.gy/a',50,false,false,''];   // second copy-like row
+  s.getRow(13).values=['Blank','',null,'',null,false,false,''];
+  const rows=parseRows(w),t16=rows.filter(p=>p.sourceTab===Q16);
+  assert.equal(t16.filter(p=>p.publisher==='Alpha'&&p.duplicateOf).length,1);
+  assert.equal(t16.filter(p=>p.publisher==='Alpha'&&!p.duplicateOf).length,1);
+  assert.equal(t16.find(p=>p.publisher==='Blank').duplicateOf,undefined);
+});
+
+test('a GTA report from before Instagram, or a group with no paid rows, never makes spend partial',()=>{
+  const rows=parseRows(book({instagram:false})).filter(p=>!p.duplicateOf);
+  const group=(ids)=>({ok:true,ready:true,source:'GOOGLE_SHEETS_LIVE',sourceVerifiedAt:'2026-11-24T12:00:00Z',publishers:rows.filter(p=>ids.includes(p.campaign)),shortIo:{total:null,postPublicationTotal:null},xStatus:{errors:[]}});
+  const old={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2'])};
+  const ov=assembleCampaignOverview({gta:{data:old},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
+  assert.equal(ov.campaigns.some(c=>c.id==='gta-instagram'),false);
+  const s=C.campaignSummary(ov,'gta-vi');
+  assert.equal(s.spend.state,'value');
+  assert.equal(s.spend.value,350);
+  // A connected Instagram group with nothing paid adds $0 rather than a gap.
+  const withEmpty=assembleCampaignOverview({gta:{data:{...old,instagram:group(['GTAIG'])}},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
+  const s2=C.campaignSummary(withEmpty,'gta-vi');
+  assert.equal(s2.spend.state,'value');
+  assert.equal(s2.spend.value,350);
+});
+
+const uctx=vm.createContext({window:{FanvueCore:C},Intl,Date,Math,Number,String,Object,Array,Map,Set,JSON,RegExp,URL});
+vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),uctx);
+const U=uctx.window.FanvueUI;
+
+test('a search or filter with no matches keeps the table and its controls',()=>{
+  const cfg={id:'t',title:'T',rows:[{n:'A',paid:true},{n:'B',paid:false}],rowKey:r=>r.n,views:[{key:'a',label:'A'},{key:'b',label:'B'}],view:'a',
+    filters:'<select data-filter="t"></select>',filter:r=>r.paid===null,columns:[{key:'n',label:'Name',type:'name'}]};
+  const html=U.tablePanel(cfg,{expanded:new Set()});
+  assert.match(html,/data-filter="t"/);
+  assert.match(html,/data-view="b"/);
+  assert.match(html,/No matching records\./);
+  assert.match(html,/data-reset="t"/);
+  // No data at all: a plain table is left out, a table with view tabs keeps them.
+  assert.equal(U.tablePanel({...cfg,views:null,rows:[]},{expanded:new Set()}),'');
+  assert.match(U.tablePanel({...cfg,rows:[],empty:'No records.'},{expanded:new Set()}),/data-view="b"[\s\S]*No records\./);
 });
 
 test('"Spend" replaces "Paid spend" in every visible label',()=>{

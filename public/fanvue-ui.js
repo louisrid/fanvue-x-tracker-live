@@ -232,10 +232,7 @@
   function tablePanel(cfg,st){
     const q=(st.q||'').trim().toLowerCase();
     let rows=cfg.rows||[];
-    if(q)rows=rows.filter(r=>(cfg.searchText?cfg.searchText(r):JSON.stringify(r)).toLowerCase().includes(q));
-    if(cfg.filter)rows=rows.filter(cfg.filter);
     const sortCol=st.sort&&cfg.columns.find(c=>c.key===st.sort.key);
-    if(sortCol)rows=C.sortRows(rows,r=>sortValue(sortCol,r),st.sort.dir);
     const views=cfg.views&&cfg.views.length>1?'<div class="fv-segments" role="group" aria-label="Table view">'+cfg.views.map(v=>'<button type="button" data-view="'+esc(v.key)+'" data-table="'+esc(cfg.id)+'" aria-pressed="'+(v.key===cfg.view)+'">'+esc(v.label)+'</button>').join('')+'</div>':'';
     const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search records</span><input type="search" placeholder="Search records" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
@@ -250,7 +247,13 @@
     }):cfg.columns;
     // Summary tables can drop rows that have no data at all (e.g. a source not connected yet).
     if(cfg.dropEmptyRows)rows=rows.filter(r=>cols.filter(c=>c.get).some(c=>{const v=c.get(r);return !(v&&typeof v==='object'&&'state' in v&&unavailableState(v));}));
-    if(!rows.length&&!q)return '';
+    // A table with no data at all is left out, unless its view tabs are needed to switch back.
+    const all=rows;
+    if(!all.length&&!views)return '';
+    // Search and filter only narrow what is shown; the panel and its controls always stay.
+    if(q)rows=rows.filter(r=>(cfg.searchText?cfg.searchText(r):JSON.stringify(r)).toLowerCase().includes(q));
+    if(cfg.filter)rows=rows.filter(cfg.filter);
+    if(sortCol)rows=C.sortRows(rows,r=>sortValue(sortCol,r),st.sort.dir);
     const head='<tr>'+cols.map(c=>{
       const sorted=st.sort?.key===c.key,dir=sorted?(st.sort.dir>0?'ascending':'descending'):'none';
       const left=['name','text','status','link'].includes(c.type)||c.align==='left';
@@ -268,10 +271,11 @@
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
       return tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
     }).join('');
-    const empty=rows.length?'':(cfg.rows||[]).length&&q?
-      '<div class="fv-empty"><p>No matching records.</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset search</button></div>':
+    const empty=rows.length?'':all.length?
+      '<div class="fv-empty"><p>No matching records.</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Show all records</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
-    // Fixed widths apply only when they describe exactly the visible columns.
+    // Fixed widths apply only when they describe exactly the visible columns; otherwise the
+    // browser sizes columns to their content, which keeps headers on one line.
     const aligned=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
     const colgroup=aligned?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
     const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(aligned?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
@@ -280,7 +284,7 @@
   }
 
   /* Detail grid used inside expanded rows. items: [[label, html]] */
-  const hasData=([,v])=>v!==''&&v!==undefined&&v!==null&&!/\bis-(na|outcome|notTracked|notConnected)\b/.test(String(v));
+  const hasData=([,v])=>v!==''&&v!==undefined&&v!==null&&!/class="[^"]*\bis-(na|outcome|notTracked|notConnected)\b/.test(String(v));
   const detailGrid=items=>'<dl class="fv-detail-grid">'+items.filter(Boolean).filter(hasData).map(([k,v])=>'<div><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>').join('')+'</dl>';
   const status=(text,tone='')=>'<span class="fv-status'+(tone?' is-'+tone:'')+'">'+esc(text)+'</span>';
   function extLink(url,label,{iconOnly=false}={}){

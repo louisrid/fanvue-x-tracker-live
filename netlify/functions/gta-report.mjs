@@ -40,7 +40,7 @@ const safeUrl=(value,host)=>{try{const u=new URL(String(value));return u.protoco
 const X_HOSTS=['x.com','twitter.com'],IG_HOSTS=['www.instagram.com','instagram.com'];
 const xPost=(url)=>{const m=String(url).match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]+)\/status\/(\d+)(?:[/?#]|$)/i);return m?{handle:m[1],id:m[2]}:null;};
 
-export function parseRows(workbook){
+export function parseRows(workbook,report={read:[],skipped:[]}){
   const result=[];
   for(const [tab,campaign] of SOURCE_TABS){
     const sheet=workbook.getWorksheet(tab);
@@ -48,20 +48,25 @@ export function parseRows(workbook){
     const instagram=campaign==='GTAIG',hosts=instagram?IG_HOSTS:X_HOSTS;
     const col={};sheet.getRow(7).eachCell((c,i)=>{const name=txt(c).toUpperCase();if(name&&(!col[name]||name==='LINK'))col[name]=i;});
     // Instagram tabs mark publication as "UP?" and have no separate post-link column.
-    const postedKey=col['POSTED?']?'POSTED?':'UP?';
-    for(const key of ['ACCOUNT','ACCOUNT SUM','PAID?',postedKey,'LINK','UTM LINK'])if(!col[key])throw new Error('GTA column missing '+key+' in '+tab);
+    const postedKey=instagram&&col['UP?']?'UP?':'POSTED?';
+    const required=instagram?['ACCOUNT','ACCOUNT SUM','PAID?',postedKey]:['ACCOUNT','ACCOUNT SUM','PAID?',postedKey,'LINK','UTM LINK'];
+    const missing=required.filter(key=>!col[key]);
+    // An unreadable optional tab is skipped and reported; it never stops the required tabs.
+    if(missing.length){if(OPTIONAL_TABS.has(campaign)){report.skipped.push(tab);continue;}throw new Error('GTA column missing '+missing[0]+' in '+tab);}
+    report.read.push(tab);
     const formats=instagram?['POST','STORY','BOTH'].filter(k=>col[k]):[];
     for(let i=8;i<=sheet.rowCount;i++){
       const r=sheet.getRow(i),cell=key=>r.getCell(col[key]),publisher=txt(cell('ACCOUNT'));
       if(!publisher||publisher.length>100)continue;
-      const formatKey=formats.find(k=>txt(cell(k))!=='');
+      const priced=formats.filter(k=>txt(cell(k))!=='');
+      const formatKey=priced.length===1?priced[0]:priced.length>1?'BOTH':null;
       // Instagram: a blank total with a single priced format (e.g. a $0 post) uses that price.
-      const cost=usd(cell('ACCOUNT SUM'))??(instagram&&formatKey&&formats.filter(k=>txt(cell(k))!=='').length===1?usd(cell(formatKey)):null),paid=yes(cell('PAID?')),posted=yes(cell(postedKey));
+      const cost=usd(cell('ACCOUNT SUM'))??(instagram&&priced.length===1?usd(cell(priced[0])):null),paid=yes(cell('PAID?')),posted=yes(cell(postedKey));
       // Retain every account row; finance, publication and click eligibility are separate.
       const candidate=instagram?'':link(cell('LINK'));
       const postUrl=safeUrl(candidate,X_HOSTS);
       const accountUrl=safeUrl(link(r.getCell(col['ACCOUNT']+1)),hosts);
-      const trackingUrl=trackingLink(link(r.getCell(col['UTM LINK'])))?.url||'';
+      const trackingUrl=col['UTM LINK']?trackingLink(link(r.getCell(col['UTM LINK'])))?.url||'':'';
       const identity=trackingUrl||accountUrl||publisher.toLowerCase();
       const code=campaign+'-'+createHash('sha256').update(identity+'|'+publisher.toLowerCase()).digest('hex').slice(0,20);
       const format=instagram?(formatKey||'').toLowerCase()||null:(campaign==='GTAQ'||campaign==='GTAQ2'?'qrt':'original');
@@ -72,10 +77,13 @@ export function parseRows(workbook){
   }
   // Tab 16 repeats tab 15 rows. A row that matches a tab 15 placement on publisher, tracking link
   // and price is a copy unless it has its own evidence (marked paid in tab 16, or its own live post).
-  const qrts=result.filter(p=>p.campaign==='GTAQ');
-  for(const p of result)if(p.campaign==='GTAQ2'){
-    const twin=qrts.find(o=>o.publisher.toLowerCase()===p.publisher.toLowerCase()&&o.trackingUrl===p.trackingUrl&&o.cost===p.cost);
-    if(twin&&!p.paid&&(!p.postUrl||p.postUrl===twin.postUrl))p.duplicateOf={tab:twin.sourceTab,row:twin.sourceRow};
+  // Each tab 15 booking can explain at most one tab 16 row, and a match needs a link or a price.
+  const qrts=result.filter(p=>p.campaign==='GTAQ'),used=new Set();
+  for(const p of result)if(p.campaign==='GTAQ2'&&(p.trackingUrl||p.cost!==null)){
+    const twin=qrts.find(o=>!used.has(o)&&o.publisher.toLowerCase()===p.publisher.toLowerCase()&&o.trackingUrl===p.trackingUrl&&o.cost===p.cost);
+    if(!twin)continue;
+    used.add(twin);
+    if(!p.paid&&(!p.postUrl||p.postUrl===twin.postUrl))p.duplicateOf={tab:twin.sourceTab,row:twin.sourceRow};
   }
   // Financial rows are authoritative, even when two placements share a post.
   // Analytics deduplicate links/posts separately and exclude ambiguous attribution.
@@ -90,14 +98,15 @@ async function readWorkbook(){
   const bytes=await resp.arrayBuffer();if(bytes.byteLength>13_000_000)throw new Error('GTA source workbook too large');
   const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(Buffer.from(bytes));
   for(const [tab,id] of SOURCE_TABS)if(!OPTIONAL_TABS.has(id)&&!workbook.getWorksheet(tab))throw new Error('GTA source tab missing: '+tab);
-  return parseRows(workbook);
+  const report={read:[],skipped:[]};
+  return {rows:parseRows(workbook,report),report};
 }
 
 async function readSourceRows(force=false){
   const store=sheetStore();let cache=null;
   try{cache=await store.get('last-good-groups-v2',{type:'json'});}catch{}
   if(!force&&Array.isArray(cache?.rows)&&Date.now()-Date.parse(cache.at)<SHEET_TTL)return {...cache,cached:true};
-  try{const rows=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:[...new Set(rows.map(p=>p.sourceTab))]};
+  try{const {rows,report}=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:report.read,skippedTabs:report.skipped};
     try{await store.setJSON('last-good-groups-v2',updated);}catch{}return {...updated,cached:false};
   }catch(e){
     if(!Array.isArray(cache?.rows))for(const key of ['last-good-groups-v1','last-good-shortio-v3','last-good']){
@@ -158,10 +167,11 @@ export async function getReport(options={}){
   const quoteGroups=summariseQuotedOriginals(qrts.publishers,metric.metrics);
   const paidOriginals=new Set(originals.publishers.filter(p=>p.posted&&p.paid).map(p=>xPost(p.postUrl)?.id).filter(Boolean));
   quoteGroups.rows=quoteGroups.rows.map(row=>({...row,paidOriginalMatch:paidOriginals.has(row.originalPostId)}));
-  const tabs=source.tabs||[...new Set(source.rows.map(p=>p.sourceTab))];
+  const tabs=source.tabs||[...new Set(source.rows.map(p=>p.sourceTab))],skipped=source.skippedTabs||[];
   return {...qrts,originals:{...originals,scope:'published-originals-v1'},instagram:{...instagram,scope:'instagram-v1'},quotedOriginals:quoteGroups,
     budget:GTA_BUDGET,excludedCopies:source.excludedCopies,
-    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&!tabs.includes(tab)&&id!=='GTAQ2').map(([tab])=>tab):[]};
+    // Optional tabs that could not be read (or Instagram missing) are flagged, never silently dropped.
+    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&(skipped.includes(tab)||(id==='GTAIG'&&!tabs.includes(tab)))).map(([tab])=>tab):[]};
 }
 
 export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metricStore(),readSource=sourceRows,readReport=getReport}={}){

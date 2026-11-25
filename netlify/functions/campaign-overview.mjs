@@ -219,6 +219,8 @@ const GTA_GROUPS={
 };
 function gtaCampaign(data,group='qrts'){
   const def=GTA_GROUPS[group],entry=group==='qrts'?data:data?.[group];
+  // A GTA report from before Instagram was read has no group to show; it is not a failure.
+  if(group==='instagram'&&data?.ready&&!data.instagram)return null;
   if(!entry?.ready)return {...normalCampaign(def.id,def.name,def.kind,[],{source:'UNAVAILABLE',error:'GTA report unavailable'}),unavailable:true};
   const rows=(entry.publishers||[]).filter(p=>def.campaigns.includes(p.campaign)&&!p.duplicateOf);
   const report=normalCampaign(def.id,def.name,def.kind,rows,{
@@ -341,7 +343,7 @@ export function assembleCampaignOverview(sources){
       sourceNote:'Original X post views are measured automatically; these are NOT individual paid retweet impressions. Individual RTs need their own X post URL to measure impressions separately.'
     });
   const campaigns=[
-    gtaCampaign(gta,'qrts'),gtaCampaign(gta,'originals'),gtaCampaign(gta,'instagram'),ofCampaign(of),boostsCampaign(boosts,linkedArticleRts),
+    gtaCampaign(gta,'qrts'),gtaCampaign(gta,'originals'),...[gtaCampaign(gta,'instagram')].filter(Boolean),ofCampaign(of),boostsCampaign(boosts,linkedArticleRts),
     rtCampaign,
     ...dashboardCampaigns(dashboard),
     {...normalCampaign('ai-harness','AI Harness','planned',[],{source:'NOT_CONNECTED',error:'No live campaign-specific feed linked'}),unavailable:true},

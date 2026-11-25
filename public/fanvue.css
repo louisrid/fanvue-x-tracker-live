@@ -256,6 +256,10 @@ body.fv .toast{position:fixed;right:20px;bottom:20px;z-index:90;max-width:360px;
   .fv-table{min-width:min(760px,calc(var(--cols,6)*150px))}
   .fv-table.is-aligned{min-width:min(860px,calc(var(--cols,6)*150px))}
 }
+@media (min-width:768px) and (max-width:1100px){
+  /* Tablets: a table only scrolls sideways when its content needs it. */
+  .fv-table{min-width:min(760px,calc(var(--cols,6)*150px),100%)}
+}
 @media (max-width:1023px){
   :root{--fv-side-w:168px}
   .fv-sidebar{padding:22px 9px}
