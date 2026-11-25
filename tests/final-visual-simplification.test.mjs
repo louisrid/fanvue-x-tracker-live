@@ -34,7 +34,7 @@ test('Single shared visual override tightens desktop and mobile sizing without r
   assert.match(css,/@media \(max-width:359px\)/);
   assert.match(html,/id="fvHeader"/);
   assert.match(html,/id="fvPage"/);
-  for(const label of ['Spend','Post views','Tracked clicks','Creator signups','KYC completions','Earning creators'])assert.ok(shell.includes("'"+label+"'"),label);
+  for(const label of ['Spend','Views','Clicks','CPC','Signups','KYC','Earning Creators'])assert.ok(shell.includes("'"+label+"'"),label);
 });
 
 test('Routine status chatter is hidden but unavailable-source warnings remain',()=>{
@@ -57,9 +57,10 @@ test('Campaign views, paid QRT evidence, details and links are retained',()=>{
   // v3.1 redesign: GTA quote-post and original-post records keep the live post,
   // tracking link and publisher profile in each row and its details.
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/\['Tracking link',trackingText\(r\.trackingUrl\)\]/);
+  // Site recommendations: one nine-column X table; Link is the live post, details keep tracking link and profile.
+  assert.match(shell,/\['Tracking Link',trackingText\(r\.trackingUrl\)\]/);
   assert.match(shell,/\['Profile',U\.extLink\(r\.profileUrl,'Profile'\)/);
-  assert.match(shell,/key:'live',label:'Live post'/);
+  assert.match(shell,/key:'link',label:'Link'/);
 });
 
 
@@ -77,6 +78,6 @@ test('Campaign navigation is centred, icon-free and uses one coordinated dark pa
   assert.match(css,/--fv-sidebar:#000000/);
   assert.match(css,/--fv-nav-active:#212121/);
   for(const colour of ['violet','blue','teal','pink'])assert.match(core,new RegExp(colour+":\\{icon:'#"));
-  for(const text of ['X Articles','GTA VI','OF Terms','CIS','Guru Promotion'])assert.match(core,new RegExp("name:'"+text+"'"));
+  for(const text of ['X Articles','GTA VI','OnlyFans Terms','CIS','Guru X RTs'])assert.match(core,new RegExp("name:'"+text+"'"));
   assert.match(shell,/title:'Discord'/);
 });

@@ -10,8 +10,9 @@ const between=(source,a,b)=>source.slice(source.indexOf(a),source.indexOf(b,sour
 
 test('Main dashboard headline is lifetime, not a hidden saved-week selection',()=>{
  // v3.1 redesign: the shared header defaults to Lifetime and offers no saved-week selector.
- assert.match(html,/id="fvRange"[^>]*aria-label="Reporting period: Lifetime"/);
- assert.match(html,/The source feeds report lifetime figures only/);
+ // Site recommendations: a plain All Time label, not a period selector.
+ assert.match(html,/id="fvRange"[^>]*>All Time</);
+ assert.match(html,/the sources report lifetime figures/);
  assert.doesNotMatch(html,/dashboardWeekSelect|Reporting week/);
  assert.match(app,/const placements=state\.placements;/);
  assert.doesNotMatch(between(app,'function renderKpis(){','function notify('),/\.filter\(p=>p\.active!==false\)/);
@@ -49,9 +50,8 @@ test('Other campaign sources remain lifetime; history graphs are separate',()=>{
  // v3.1 redesign: GTA VI keeps its two X groups, Discord course clicks stay their own
  // metric, and weekly charts are labelled history, separate from lifetime totals.
  const shell=readFileSync('public/fanvue-app.js','utf8');
- assert.match(shell,/key:'x-quote-posts',label:'X quote posts'/);
- assert.match(shell,/key:'x-original-posts',label:'X original posts'/);
+ assert.match(shell,/'x-original-posts':\{type:'Post'\},'x-quote-posts':\{type:'QRT'\}/);
  assert.doesNotMatch(shell,/key:'quoted'/);
- assert.match(shell,/metric\('Course clicks','graduation'/);
- assert.match(shell,/unit:'Cumulative views at week end'/);
+ assert.match(shell,/metric\('Course Clicks','graduation'/);
+ assert.match(shell,/unit:'Cumulative Views'/);
 });

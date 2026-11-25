@@ -46,7 +46,8 @@ test('live cards show complete UTM, Views and Likes values in order',()=>{
 });
 test('Historical cards use scoped clicks and recorded snapshots instead of current metrics',()=>{
   const card=context.render(article,{live:true,value:123,scope:{xViews:456,xLikes:789}});
-  assert.match(card,/Week UTM clicks/);
+  // Site recommendations: UTM Clicks is shown as Clicks.
+  assert.match(card,/Week Clicks/);
   for(const number of [123,456,789])assert(card.includes('>'+number+'<'));
   assert(!card.includes('123,456'));
 });

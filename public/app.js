@@ -227,11 +227,11 @@ const metricDefs=(extra,records=eligible())=>{
   const v=currentMetrics(records);return [
     {id:'articles',label:'Articles · last 7 days',value:fmt(v.articles)},
     {id:'money',label:extra?(v.monthSpendBasis==='paidAt'?'Spend this month':'Paid total'):'Paid total',value:money(extra?v.monthDollars:v.totalPaid),badge:`${fmt(extra?v.monthPaidCount:records.filter(p=>p.paid).length)} paid articles`},
-    {id:'clicks',label:'UTM clicks · last 7 days',value:display(v.weekClicks),support:'This month',suppValue:display(v.monthClicks)},
+    {id:'clicks',label:'Clicks · last 7 days',value:display(v.weekClicks),support:'This month',suppValue:display(v.monthClicks)},
     {id:'views',label:'Views · last 7 days',value:display(v.views)},
     ...(extra?[{id:'likes',label:'Likes · last 7 days',value:display(v.likes)},
       {id:'money',label:'Total $ booked',value:money(v.totalBooked)},
-      {id:'clicks',label:'Total UTM clicks',value:display(v.allClicks)}]:[])
+      {id:'clicks',label:'Total Clicks',value:display(v.allClicks)}]:[])
   ];
 };
 function kpiCard(k){
@@ -268,7 +268,7 @@ const articleUrl=p=>safeUrl(p.articleUrl)||safeUrl(p.postUrl);
 function articleCardContent(p,{live=isLive(p),value=clicks(p),scope=null,tracker=false,promo=false,metricsOverride=null}={}){
   const views=scope?recordedMetricFor(p,'xViews',scope):p.xViews;
   const likes=scope?recordedMetricFor(p,'xLikes',scope):p.xLikes;
-  const metrics=metricsOverride||[['clicks',scope?'Week UTM clicks':'UTM Clicks',value],
+  const metrics=metricsOverride||[['clicks',scope?'Week Clicks':'Clicks',value],
     ...(live?[['views','Views',views],['likes','Likes',likes]]:[])];
   return `<span class="article-card-header"><strong class="article-publisher" title="${esc(p.publisher)}">${esc(p.publisher)}</strong><span class="article-card-tags">${live?'<span class="state-pill is-live">POSTED</span>'+(!promo&&isNew(p)?'<span class="new-badge">NEW!</span>':''):`<span class="state-pill">${p.paid?'Paid · Scheduled':'Unpaid · Planned'}</span>`}</span></span>
     <span class="article-card-meta">${campaignTag(p)}${metricBadge(p)}${p.articleLabel&&p.articleLabel!==p.code?`<span title="${esc(p.articleLabel)}">${esc(p.articleLabel)}</span>`:''}<span>${esc(p.code)}</span>${postDate(p)?`<span>${esc(pubDate(p))}</span>`:''}<span>${money(p.cost)}</span>${tracker?`<span>UTM/$ ${fixed(ratio(p))}</span>${p.platform&&p.platform!=='X'?`<span>${esc(p.platform)}</span>`:''}${p.unavailable?'<span class="state-pill is-error">Unavailable</span>':''}`:''}</span>
@@ -501,7 +501,7 @@ function renderCampaigns(){
   root.innerHTML=groups.length?groups.map(c=>c.of?`<a class="campaign-accordion campaign-summary of-campaign-summary" href="#campaign-C001"><span class="campaign-summary-heading"><small>C001 · ${fmt(c.rows.length)} publishers</small><strong class="campaign-name-heading">OF Terms X Promo<span class="heading-accent">.</span></strong></span><span class="campaign-summary-clicks"><strong>${display(c.clicks)}</strong><small>Verified clicks to date</small></span></a>`:`<details class="campaign-accordion" data-campaign-key="${esc(c.id)}" ${opened.has(c.id)||state.campaignFocus===c.id?'open':''}>
     <summary class="campaign-summary" aria-label="${esc(c.name)}, ${fmt(c.rows.length)} placements, expand for details">
       <span class="campaign-summary-heading"><small>${esc(c.id)} <span class="campaign-dot" aria-hidden="true"></span> ${fmt(c.rows.length)} placements</small><strong class="campaign-name-heading">${headingHTML(c.name)}</strong></span>
-      <span class="campaign-summary-clicks"><strong>${display(c.clicks)}</strong><small>UTM clicks</small></span>
+      <span class="campaign-summary-clicks"><strong>${display(c.clicks)}</strong><small>Clicks</small></span>
       <svg class="campaign-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>
     </summary>
     <div class="campaign-expanded">
@@ -509,14 +509,14 @@ function renderCampaigns(){
       <div class="campaign-summary-metrics" aria-label="${esc(c.name)} performance">
         <span><small>Posted</small><strong>${fmt(c.published)}</strong></span>
         <span><small>Paid total</small><strong>${money(c.paid)}</strong></span>
-        <span><small>UTM clicks</small><strong>${display(c.clicks)}</strong></span>
+        <span><small>Clicks</small><strong>${display(c.clicks)}</strong></span>
         <span><small>Views recorded</small><strong>${display(c.views)}</strong></span>
       </div>
       <div class="campaign-entries-heading"><h3>Placements<span class="heading-accent">.</span></h3><span class="section-count">${fmt(c.rows.length)}</span></div>
       ${!c.rows.length?'<div class="empty-state">No articles are currently assigned to this campaign.</div>':''}
       <div class="campaign-entries">${c.rows.map(p=>`<button type="button" class="campaign-entry ${isLive(p)?'is-posted':''}" data-detail="${esc(p.code)}" aria-label="View ${esc(p.publisher)} article details">
         <span class="campaign-entry-main"><strong>${esc(p.publisher)}</strong><small>${metricBadge(p)} ${p.articleLabel&&p.articleLabel!==p.code?esc(p.articleLabel)+' · ':''}${esc(p.code)}</small><span class="state-pill ${isLive(p)?'is-live':''}">${isLive(p)?'POSTED':p.paid?'Scheduled':'Planned'}</span></span>
-        <span class="campaign-entry-stats"><span><strong>${display(clicks(p))}</strong><small>UTM clicks</small></span><span><strong>${p.paid?money(p.cost):'Unpaid'}</strong><small>${p.paid?'Paid':'Planned'}</small></span></span>
+        <span class="campaign-entry-stats"><span><strong>${display(clicks(p))}</strong><small>Clicks</small></span><span><strong>${p.paid?money(p.cost):'Unpaid'}</strong><small>${p.paid?'Paid':'Planned'}</small></span></span>
         <svg class="campaign-entry-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
       </button>`).join('')}</div>
     </div>
@@ -646,7 +646,7 @@ function refreshDetails(){
     const delta=changeSince7(p.code,'views');
     body.innerHTML=`<h2 id="modalTitle" class="modal-title">${headingHTML(p.publisher)}</h2>
       <div class="modal-summary">${campaignTag(p)}<span class="state-pill ${isLive(p)?'is-live':''}">${isLive(p)?'POSTED':p.paid?'Scheduled':'Planned'}</span><span>${esc(p.platform||'X')}</span>${postDate(p)?`<span>${esc(pubDate(p))}</span>`:''}${p.unavailable?'<span class="state-pill is-error">Unavailable</span>':''}${metricBadge(p)}${!p.metricError&&metricTime(p)?`<span>Updated ${esc(metricTime(p))}</span>`:''}</div>
-      <div class="modal-primary"><div class="modal-primary-label">UTM clicks</div><div class="modal-primary-number">${display(clicks(p))}</div></div>
+      <div class="modal-primary"><div class="modal-primary-label">Clicks</div><div class="modal-primary-number">${display(clicks(p))}</div></div>
       <div class="modal-metrics"><div class="modal-metric"><span>Views</span><strong>${display(p.xViews)}</strong></div><div class="modal-metric"><span>Likes</span><strong>${display(p.xLikes)}</strong></div><div class="modal-metric"><span>Engagement</span><strong>${number(p.engagementRate)===null?'—':fixed(p.engagementRate)+'%'}</strong></div><div class="modal-metric"><span>UTM/$</span><strong>${fixed(ratio(p))}</strong></div><div class="modal-metric"><span>Price</span><strong>${money(p.cost)}</strong></div><div class="modal-metric"><span>Views Δ7d</span><strong>${delta===null?'—':(delta>=0?'+':'')+fmt(delta)}</strong></div></div>
       <div class="modal-links">${detailsAction(articleUrl(p),'Read article')}${detailsAction(p.postUrl,'View post')}${detailsAction(p.trackingUrl,'Copy UTM link',true)}${detailsAction(p.profileUrl,'Profile')}<button type="button" class="modal-link main-link" data-edit-placement="${esc(p.code)}">Edit</button><button type="button" class="modal-link" data-record-metrics="${esc(p.code)}">Metrics</button></div>`;
   }else if(kind==='account'){
@@ -657,7 +657,7 @@ function refreshDetails(){
     const typical=prices.length>=2?money((prices[Math.floor((prices.length-1)/2)]+prices[Math.floor(prices.length/2)])/2):'—';
     const rows=[...a.items].sort(compareUTMClicks);
     body.innerHTML=`<h2 id="modalTitle" class="modal-title">${headingHTML(a.publisher)}</h2><div class="modal-summary">${esc(a.owner)} · ${esc(a.platform)}</div>
-      <div class="modal-primary"><div class="modal-primary-label">UTM clicks</div><div class="modal-primary-number">${display(a.clicks)}</div></div>
+      <div class="modal-primary"><div class="modal-primary-label">Clicks</div><div class="modal-primary-number">${display(a.clicks)}</div></div>
       <div class="modal-metrics"><div class="modal-metric"><span>UTM/$</span><strong>${fixed(a.utmPerDollar)}</strong></div><div class="modal-metric"><span>Paid $</span><strong>${money(a.spent)}</strong></div><div class="modal-metric"><span>Views</span><strong>${display(a.views)}</strong></div><div class="modal-metric"><span>Likes</span><strong>${display(a.likes)}</strong></div><div class="modal-metric"><span>Engagement</span><strong>${a.engagement===null?'—':fixed(a.engagement)+'%'}</strong></div><div class="modal-metric"><span>Typical rate</span><strong>${typical}</strong></div></div>
       <h3 class="modal-list-heading">Promotion history<span class="heading-accent">.</span></h3><div class="mini-history">${rows.map(p=>`<button type="button" class="history-row ${isLive(p)?'is-posted':''}" data-detail="${esc(p.code)}"><span>${esc(pubDate(p))}</span><strong>${display(clicks(p))} UTM</strong><span>${money(p.cost)}</span><span>${esc(p.code)}</span><span class="state-pill ${isLive(p)?'is-live':''}">${isLive(p)?'POSTED':p.paid?'Scheduled':'Planned'}</span></button>`).join('')}</div>
       <div class="modal-links">${detailsAction(a.profileUrl,'Open profile')}</div>`;
@@ -667,7 +667,7 @@ function refreshDetails(){
     el('modalOwner').textContent=esc(c.id)+' · '+fmt(s.list.length)+' placements';
     body.innerHTML=`<h2 id="modalTitle" class="modal-title">${headingHTML(c.name)}</h2><div class="modal-summary"><span>Budget ${money(number(c.budget))}</span>${c.status?`<span>${esc(c.status)}</span>`:''}</div>
       ${c.brief?`<p class="modal-brief">${esc(c.brief)}</p>`:''}
-      <div class="modal-primary"><div class="modal-primary-label">UTM clicks</div><div class="modal-primary-number">${display(s.clicks)}</div></div>
+      <div class="modal-primary"><div class="modal-primary-label">Clicks</div><div class="modal-primary-number">${display(s.clicks)}</div></div>
       <div class="modal-metrics"><div class="modal-metric"><span>Paid $</span><strong>${money(s.paid)}</strong></div><div class="modal-metric"><span>Booked $</span><strong>${money(s.booked)}</strong></div><div class="modal-metric"><span>Views</span><strong>${display(s.views)}</strong></div></div>
       <div class="modal-links"><button type="button" class="modal-link main-link" data-new-placement-campaign="${esc(c.id)}">+ Placement</button>${!c.legacy?`<button type="button" class="modal-link" data-edit-campaign="${esc(c.id)}">Edit campaign</button>`:''}</div>
       <h3 class="modal-list-heading">Placements<span class="heading-accent">.</span></h3><div class="mini-history">${[...s.list].sort(compareUTMClicks).map(p=>`<button type="button" class="history-row ${isLive(p)?'is-posted':''}" data-detail="${esc(p.code)}"><span>${esc(p.publisher)}</span><strong>${display(clicks(p))} UTM</strong><span>${money(p.cost)}</span><span>${esc(p.stage||'planned')}</span><span class="state-pill ${isLive(p)?'is-live':''}">${isLive(p)?'POSTED':p.paid?'Scheduled':'Planned'}</span></button>`).join('')||'<div class="empty-state">No placements assigned.</div>'}</div>`;
@@ -994,7 +994,7 @@ function renderOfReport(){globalThis.dispatchEvent?.(new CustomEvent('xtracker:d
   defs.push(['shortio','UTM clicks · all time',gtaNumber(lifetimeClicks),
     `${knownClicks.length}/${allPublishers.length} links tracked`]);
   el('ofMetrics').innerHTML=defs.map(([kind,label,value,sub])=>`<${kind==='shortio'?'button type="button" aria-controls="ofPublishers" data-of-clicks':'div'} class="daily-metric daily-metric-${kind}"><span class="daily-metric-label">${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(sub)}</small></${kind==='shortio'?'button':'div'}>`).join('');
-  el('ofMetrics').querySelector('[data-of-clicks]')?.addEventListener('click',()=>focusPromoClicks('ofPublishers','UTM clicks'));
+  el('ofMetrics').querySelector('[data-of-clicks]')?.addEventListener('click',()=>focusPromoClicks('ofPublishers','Clicks'));
 
   if(ready){
     const start5=shift(today,-4),historyDates=new Set(activity.filter(e=>e.date>=start5&&e.date<=today).map(e=>e.date));
@@ -1008,7 +1008,7 @@ function renderOfReport(){globalThis.dispatchEvent?.(new CustomEvent('xtracker:d
     const tag=url?'a':'div';
     const attributes=url?` href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(p.publisher)} ${live?'live X post':'X profile'}"`:'';
     const content=articleCardContent({...p,articleLabel:'X post'},{live,promo:true,
-      metricsOverride:[['clicks','Lifetime UTM clicks',ready?p.clicks:null],
+      metricsOverride:[['clicks','Clicks',ready?p.clicks:null],
         ['views','Lifetime X views',p.views??null],
         ['spend','Paid cost',p.paid?money(p.cost):'Unpaid']]});
     const promoMetrics=JSON.stringify({views:p.views??null,likes:p.likes??null,reposts:p.reposts??null,replies:p.replies??null,clicks:p.clicks??null});
@@ -1621,7 +1621,7 @@ function showBoostDetails(id,focus=true){
 }
 function boostEditorHtml(id){
   const t=boostsState.tweets.find(t=>t.id===id);
-  return `<h2 class="modal-title" id="editModalTitle">${t?'Edit tweet':'Add original tweet'}<span class="heading-accent">.</span></h2><form class="edit-form" id="boostForm" data-id="${esc(id||'')}">${t?`${editField('Original account name','name','text',t.name,'required maxlength="100"')}${editField('Total actual boost spend (USD)','spend','number',t.spend??'','min="0" max="999999999999.99" step="0.01"')}<p>Leave blank when unknown. Enter the combined amount actually paid to amplify this tweet.</p>`:editField('Original X status URL','url','url','','required placeholder="https://x.com/handle/status/…"')}<button class="button button-primary" type="submit">${t?'Save changes':'Add Tweet'}</button>${t?'<button class="button" type="button" id="boostRemove">Remove tweet</button><label id="boostRemoveConfirm" hidden><input name="confirmRemoval" type="checkbox"> Confirm removal from X RTs</label>':''}<p id="boostFormStatus" role="status"></p></form>`;
+  return `<h2 class="modal-title" id="editModalTitle">${t?'Edit Post':'Add Post'}<span class="heading-accent">.</span></h2><form class="edit-form" id="boostForm" data-id="${esc(id||'')}">${t?`${editField('Original account name','name','text',t.name,'required maxlength="100"')}${editField('Total actual boost spend (USD)','spend','number',t.spend??'','min="0" max="999999999999.99" step="0.01"')}<p>Leave blank when unknown. Enter the combined amount actually paid to amplify this tweet.</p>`:editField('Original X status URL','url','url','','required placeholder="https://x.com/handle/status/…"')}<button class="button button-primary" type="submit">${t?'Save changes':'Add Tweet'}</button>${t?'<button class="button" type="button" id="boostRemove">Remove tweet</button><label id="boostRemoveConfirm" hidden><input name="confirmRemoval" type="checkbox"> Confirm removal from X RTs</label>':''}<p id="boostFormStatus" role="status"></p></form>`;
 }
 async function saveBoostForm(form,remove=false){
   const raw=Object.fromEntries(new FormData(form)),id=form.dataset.id,btn=form.querySelector('[type="submit"]');btn.disabled=true;

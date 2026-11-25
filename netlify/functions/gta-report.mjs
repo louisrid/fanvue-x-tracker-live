@@ -166,7 +166,8 @@ export async function groupReport(source,metric,{force=false,refreshClicks=false
     return {...p,clicks:shared?null:attributed,allTimeClicks:reading?.clicks??null,clickAt:reading?.clickAt,postPublicationVerifiedAt:reading?.publicationVerifiedAt,clickStale:!!(reading?.stale||reading?.publicationStale),clickError:shared?'Shared link; see campaign link breakdown.':reading?.clickError||reading?.attributionError||'',clickTracked:!!reading&&!shared,cpc:!shared&&p.paid&&p.cost!==null&&attributed>0?p.cost/attributed:null};
   });
   const xStatus=gtaMetricStatus(source.rows,metric);
-  const ids=new Set(source.rows.map(p=>xPost(p.postUrl)?.id).filter(Boolean).map(String));
+  // History covers every post, including extra posts on a multi-post booking.
+  const ids=new Set(source.rows.flatMap(p=>p.postUrls?.length?p.postUrls:[p.postUrl]).map(u=>xPost(u)?.id).filter(Boolean).map(String));
   const cutoff=Date.now()-6*24*60*60*1000;
   const history=(Array.isArray(metric.history)?metric.history:[])
     .filter(h=>ids.has(String(h.id||''))&&Date.parse(h.at||'')>=cutoff&&Number.isFinite(Number(h.views)));

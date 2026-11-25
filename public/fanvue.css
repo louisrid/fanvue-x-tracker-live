@@ -245,7 +245,7 @@ body.fv .toast{position:fixed;right:20px;bottom:20px;z-index:90;max-width:360px;
   .fv-main{padding:23px 20px 26px}
   .fv-metric{padding:0 12px}
   .fv-metric-value{font-size:var(--fv-fs-xl)}
-  .fv-updated{display:none}
+  .fv-updated{font-size:var(--fv-fs-s)}
 }
 @media (max-width:1100px){
   .fv-strip{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:16px}
@@ -461,7 +461,7 @@ body.fv-editor-open{overflow:hidden}
 
 /* ---------- big key numbers ---------- */
 /* Only figures with data appear, so each slot is wide enough for large numbers. */
-.fv-strip{min-height:180px;padding:30px 0}
+.fv-strip{min-height:158px;padding:24px 0}
 .fv-strip .fv-metric{gap:12px;padding:0 28px;justify-content:flex-start}
 .fv-strip .fv-metric-label{font-size:var(--fv-fs-l);line-height:24px;min-height:34px;gap:12px}
 .fv-strip .fv-metric-label .fv-chipicon{width:34px;height:34px}
@@ -469,7 +469,7 @@ body.fv-editor-open{overflow:hidden}
 .fv-strip .fv-chip{font-size:var(--fv-fs-s);padding:3px 8px}
 .fv-blank{display:inline-block;min-width:1px}
 .fv-plain{margin:0;font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong)}
-@media (min-width:1600px){.fv-strip{min-height:190px}}
+@media (min-width:1600px){.fv-strip{min-height:166px}}
 @media (max-width:1279px){.fv-strip .fv-metric{padding:0 20px}}
 @media (max-width:767px){
   .fv-strip{padding:0;min-height:0}
@@ -490,3 +490,22 @@ body.fv-editor-open{overflow:hidden}
 button.fv-state.fv-type:hover{filter:brightness(.92)}
 td.is-name .fv-types{margin-left:6px}
 td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
+
+/* ---------- site recommendations (Nov 2026) ---------- */
+.fv-section-title{margin:0 2px 10px;font-size:var(--fv-fs-l);line-height:24px;font-weight:var(--fv-w-strong);color:var(--fv-ink)}
+.fv-period{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:var(--fv-ink);padding:4px 10px;border-radius:var(--fv-r-s);background:#FFFFFF}
+.fv-dash,.fv-state.fv-dash{display:inline-block;padding:0 4px;background:none;color:#8A97A8;font-weight:var(--fv-w);cursor:help}
+.fv-state.fv-dash:hover{background:none}
+.fv-dash:focus-visible{outline:2px solid var(--fv-blue);outline-offset:2px;border-radius:4px}
+.fv-group-row td{padding:0;background:#F1F4F8;border-bottom:var(--fv-bw) solid var(--fv-rule)}
+.fv-group-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:10px 12px;font-size:var(--fv-fs-s);font-weight:var(--fv-w)}
+.fv-group-head b{font-weight:var(--fv-w-strong)}
+.fv-group-title{display:inline-flex;align-items:center;gap:8px}
+.fv-filter-note{display:flex;align-items:center;gap:6px;margin:0 2px 10px;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-ink)}
+.fv-notice-reason,.fv-state.fv-notice-reason{background:none;padding:0;color:inherit;font-weight:var(--fv-w-strong)}
+/* Refresh / Refresh All: bright Fanvue pink, bold white text. */
+#fvRefresh{background:#E6007E;border-color:#E6007E;color:#FFFFFF;font-weight:var(--fv-w-strong)}
+#fvRefresh:hover:not(:disabled){background:#C4006B;border-color:#C4006B}
+#fvRefresh:focus-visible{outline:3px solid #FFB3D9;outline-offset:2px}
+#fvRefresh:disabled{opacity:.75}
+#fvRefresh .fv-icon{color:#FFFFFF}
