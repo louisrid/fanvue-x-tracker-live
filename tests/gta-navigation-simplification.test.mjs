@@ -11,8 +11,8 @@ test('GTA VI has exactly two actual campaign tabs and no phantom Boosted article
   const shell=readFileSync('public/fanvue-app.js','utf8');
   // GTA VI views are All formats, the two real X source groups and Instagram (read from
   // IG Accounts 3); there is no boosted-articles view.
-  const views=[...shell.matchAll(/\{key:'(all-formats|x-original-posts|x-quote-posts|instagram|[a-z-]*boost[a-z-]*)',label:'[^']+'\}/g)].map(match=>match[1]);
-  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts','instagram']);
+  const views=[...shell.matchAll(/\{key:'(all-formats|x-original-posts|x-quote-posts|mandy-qrts|instagram|[a-z-]*boost[a-z-]*)',label:'[^']+'\}/g)].map(match=>match[1]);
+  assert.deepEqual([...new Set(views)],['all-formats','x-original-posts','x-quote-posts','mandy-qrts','instagram']);
   assert.doesNotMatch(shell,/Boosted articles/);
   assert.doesNotMatch(app,/renderGtaQuotedArticles|gtaTabQuoted|ARTICLES BOOSTED BY QRTS/);
   assert.match(readFileSync('netlify/functions/gta-report.mjs','utf8'),/\['IG Accounts 3 \(GTA VI\)','GTAIG'\]/);
@@ -38,7 +38,7 @@ test('The real X Article Boosts campaign remains separate from GTA VI',()=>{
   // v3.1 redesign: paid article reposts (source ID article-rts) sit under X Articles as
   // the Paid reposts view, never under GTA VI.
   assert.match(core,/\{key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:\['x-articles','article-rts'\]\}/);
-  assert.match(core,/\{key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:\['gta-qrts','gta-originals','gta-instagram'\]\}/);
+  assert.match(core,/\{key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:\['gta-qrts','gta-originals','gta-instagram','gta-mandy'\]\}/);
   assert.match(shell,/\{key:'paid-reposts',label:'Paid reposts'\}/);
   assert.doesNotMatch(reporting,/function articleSources\(\)/);
 });

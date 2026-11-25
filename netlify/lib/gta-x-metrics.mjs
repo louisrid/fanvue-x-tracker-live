@@ -42,7 +42,7 @@ export async function readGtaXMetric(post,{fetcher=fetch,sleep=ms=>new Promise(r
   }
 }
 export function gtaMetricStatus(rows,state){
-  const ids=[...new Set(rows.filter(p=>p.posted&&p.postUrl).map(p=>p.postUrl.match(/\/status\/(\d+)/)?.[1]).filter(Boolean))];
+  const ids=[...new Set(rows.filter(p=>p.posted&&p.postUrl).flatMap(p=>p.postUrls?.length?p.postUrls:[p.postUrl]).map(u=>u.match(/\/status\/(\d+)/)?.[1]).filter(Boolean))];
   const errors=ids.filter(id=>state.metrics?.[id]?.error).map(id=>({postId:id,error:state.metrics[id].error,category:state.metrics[id].errorCategory||'unknown',lastAttemptAt:state.metrics[id].lastAttemptAt||state.lastAttemptAt||null}));
   const verified=ids.filter(id=>state.metrics?.[id]?.at).length;
   const updated=ids.filter(id=>state.metrics?.[id]?.at&&!state.metrics[id].error).length;

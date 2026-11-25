@@ -5,11 +5,11 @@ const idFromUrl=url=>String(url||'').match(/^https:\/\/(?:www\.)?(?:x\.com|twitt
 const safeQuote=q=>q&&/^\d{1,20}$/.test(String(q.id||''))&&idFromUrl(q.url)===String(q.id);
 const increment=(a,b)=>b==null?a:a==null?b:a+b;
 
-export function summariseQuotedOriginals(publishers=[],metrics={}){
+export function summariseQuotedOriginals(publishers=[],metrics={},campaigns=['GTAQ','GTAQ2']){
   const byOriginal=new Map(),seenPromos=new Set();
   let matched=0;
   for(const p of publishers){
-    if((p.campaign!=='GTAQ'&&p.campaign!=='GTAQ2')||p.posted!==true)continue;
+    if(!campaigns.includes(p.campaign)||p.posted!==true)continue;
     const qrtId=idFromUrl(p.postUrl);
     if(!qrtId||seenPromos.has(qrtId))continue;
     seenPromos.add(qrtId);

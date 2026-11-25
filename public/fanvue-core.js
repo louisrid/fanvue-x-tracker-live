@@ -178,10 +178,10 @@
     const list=objects.filter(Boolean);
     if(!list.length||list.every(c=>notConnected(c)||unavailable(c)))return M.na(sourceReason(list[0],scope));
     const seen=new Map();let withUrl=0,measured=0;
-    for(const c of list)for(const r of c.rows||[]){
-      if(r.posted!==true)continue;
-      const id=postId(r.postUrl);if(!id)continue;
-      const v=num(r.views??r.xViews);
+    // A row can carry several posts (r.postViews by post ID); each post is counted once.
+    const entries=r=>r.postViews?Object.entries(r.postViews).map(([id,v])=>[id,num(v)]):[[postId(r.postUrl),num(r.views??r.xViews)]];
+    for(const c of list)for(const r of c.rows||[])for(const [id,v] of (r.posted===true?entries(r):[])){
+      if(!id)continue;
       const prior=seen.get(id);
       if(!prior){withUrl++;if(v!==null)measured++;seen.set(id,{v,at:Date.parse(r.metricAt||r.xUpdated||'')||0});}
       else if(v!==null&&(prior.v===null||(Date.parse(r.metricAt||r.xUpdated||'')||0)>prior.at)){if(prior.v===null)measured++;seen.set(id,{v,at:Date.parse(r.metricAt||r.xUpdated||'')||0});}
@@ -204,7 +204,7 @@
   /* Built-in campaign definitions: presentation names only; source IDs unchanged. */
   const CAMPAIGNS=[
     {key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:['x-articles','article-rts']},
-    {key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:['gta-qrts','gta-originals','gta-instagram']},
+    {key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:['gta-qrts','gta-originals','gta-instagram','gta-mandy']},
     {key:'of-terms',name:'OF Terms',icon:'layers',color:'blue',ids:['of-terms']},
     {key:'cis',name:'CIS',icon:'sparkles',color:'teal',ids:['ai-harness']},
     {key:'guru-promotion',name:'Guru Promotion',icon:'megaphone',color:'pink',ids:['guru-rts']}
@@ -228,7 +228,8 @@
       const id=postId(r.postUrl);if(id)posts.set(id,(posts.get(id)||0)+1);}
     const paid=r=>r.paid===true&&num(r.cost)!==null&&r.posted===true;
     const clickRow=r=>paid(r)&&!!r.trackingUrl&&links.get(r.trackingUrl)===1&&!r.sharedTracking&&r.clickTracked!==false&&num(r.clicks)!==null;
-    const viewRow=r=>paid(r)&&!!postId(r.postUrl)&&num(r.views??r.xViews)!==null;
+    // CPM only when every post on the payment has a reading, so views are never understated.
+    const viewRow=r=>paid(r)&&!!postId(r.postUrl)&&num(r.views??r.xViews)!==null&&!(r.postViews&&Object.values(r.postViews).some(v=>num(v)===null));
     return {rows,clickRow,viewRow,sharedPost:r=>posts.get(postId(r.postUrl))>1};
   }
   function efficiency(objects){
@@ -284,9 +285,10 @@
       Object.assign(out,efficiency([c]));
     }else if(key==='gta-vi'){
       // Instagram is left out only when the feed predates it (no object at all).
-      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-instagram']].filter((c,i)=>c||i<2);
+      // Instagram and Mandy QRTs are left out only when the feed predates them (no object at all).
+      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-instagram'],o['gta-mandy']].filter((c,i)=>c||i<2);
       out.spend=addSpend(parts.map(c=>spendOf(c)),'X quote posts, X original posts and Instagram');
-      out.views=viewsOf([o['gta-qrts'],o['gta-originals']]);
+      out.views=viewsOf([o['gta-qrts'],o['gta-originals'],o['gta-mandy']]);
       const pp=parts.map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
       const all=parts.map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
       const gr=extras.gtaReport;
@@ -361,7 +363,7 @@
       const gaps=summaries.filter(s=>!hasValue(s.spend)||s.spend.state==='partial').map(s=>CAMPAIGNS.find(c=>c.key===s.key)?.name);
       spend=gaps.length?M.partial(known,'Known subtotal of recorded paid costs. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{chip:'Paid campaigns'});
     }
-    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-instagram','of-terms'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
+    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-instagram','gta-mandy','of-terms'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
     const views=viewsOf(placementObjects);
     if(hasValue(views)){
       views.chip='Paid placement posts';

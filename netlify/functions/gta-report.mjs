@@ -14,11 +14,15 @@ import {seed,seedVerifiedAt} from '../lib/gta-seed.mjs';
 import {summariseQuotedOriginals} from '../lib/quoted-originals.mjs';
 
 const SHEET_ID='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
-// Every GTA VI source tab. The first three are required; tab 16 and Instagram are read when present.
+// Every GTA VI source tab. The first three are required; the others are read when present.
+// A new GTA VI campaign tab is added here (tab, campaign id) and to GROUPS / REPORTED_GROUPS.
 const SOURCE_TABS=[['X Accounts 15 (GTA VI QRTs)','GTAQ'],['X Accounts 12 (GTA)','GTA1'],['X Accounts 14 (GTA VI V2)','GTA2'],
-  ['X Accounts 16 (GTA VI QRTs)','GTAQ2'],['IG Accounts 3 (GTA VI)','GTAIG']];
-const OPTIONAL_TABS=new Set(['GTAQ2','GTAIG']);
-export const GROUPS={qrts:['GTAQ','GTAQ2'],originals:['GTA1','GTA2'],instagram:['GTAIG']};
+  ['X Accounts 16 (GTA VI QRTs)','GTAQ2'],['IG Accounts 3 (GTA VI)','GTAIG'],['X Accounts 17 (Article QRTs V2)','GTAM']];
+const OPTIONAL_TABS=new Set(['GTAQ2','GTAIG','GTAM']);
+export const GROUPS={qrts:['GTAQ','GTAQ2'],originals:['GTA1','GTA2'],instagram:['GTAIG'],mandy:['GTAM']};
+// Groups reported as their own campaign: a tracking link they share with another group is never attributed.
+const SEPARATE_GROUPS=['mandy'];
+const QUOTE_CAMPAIGNS=new Set(['GTAQ','GTAQ2','GTAM']);
 // Approved programme budget for GTA VI (owner-confirmed, USD).
 export const GTA_BUDGET=Object.freeze({amount:10000,currency:'USD'});
 const tabOf=campaign=>SOURCE_TABS.find(([,id])=>id===campaign)?.[0];
@@ -65,14 +69,21 @@ export function parseRows(workbook,report={read:[],skipped:[]}){
       // Retain every account row; finance, publication and click eligibility are separate.
       const candidate=instagram?'':link(cell('LINK'));
       const postUrl=safeUrl(candidate,X_HOSTS);
+      // A row may record more than one live post (one payment for several posts).
+      const linkCell=instagram?null:cell('LINK');
+      const postUrls=instagram?[]:[...new Set([candidate,String(linkCell?.value?.hyperlink||''),txt(linkCell)].join(' ')
+        .match(/https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/[A-Za-z0-9_]+\/status\/\d+/gi)||[])].filter(u=>xPost(u));
+      // Posts bought with this payment: a "N posts" note on the row, otherwise one per paid row.
+      const noted=Number(txt(col['NOTES']?cell('NOTES'):null).match(/\b(\d{1,2})\s*(?:x\s*)?posts?\b/i)?.[1]);
       const accountUrl=safeUrl(link(r.getCell(col['ACCOUNT']+1)),hosts);
       const trackingUrl=col['UTM LINK']?trackingLink(link(r.getCell(col['UTM LINK'])))?.url||'':'';
       const identity=trackingUrl||accountUrl||publisher.toLowerCase();
       const code=campaign+'-'+createHash('sha256').update(identity+'|'+publisher.toLowerCase()).digest('hex').slice(0,20);
-      const format=instagram?(formatKey||'').toLowerCase()||null:(campaign==='GTAQ'||campaign==='GTAQ2'?'qrt':'original');
+      const format=instagram?(formatKey||'').toLowerCase()||null:(QUOTE_CAMPAIGNS.has(campaign)?'qrt':'original');
       result.push({code,campaign,sourceRow:i,sourceTab:tab,platform:instagram?'instagram':'x',format,
         publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
-        cost,paid,posted,trackingUrl,clicks:null});
+        cost,paid,posted,trackingUrl,clicks:null,
+        ...(postUrls.length>1?{postUrls}:{}),...(campaign==='GTAM'?{purchasedPosts:Number.isSafeInteger(noted)&&noted>0?noted:paid?1:null}:{})});
     }
   }
   // Financial rows are authoritative, even when two placements share a post.
@@ -119,10 +130,24 @@ async function sourceRows(force=false){
   const rows=countPlannedAsPaid(source.rows);
   const usage=new Map();
   for(const p of rows){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
-  return {...source,rows:rows.map(p=>({...p,sharedTracking:usage.get(p.trackingUrl)?.size>1}))};
+  // A link used both by a separately reported campaign and by another group cannot be credited to either.
+  const groupOf=p=>Object.keys(GROUPS).find(g=>GROUPS[g].includes(p.campaign));
+  const linkGroups=new Map();
+  for(const p of rows)if(p.trackingUrl){const s=linkGroups.get(p.trackingUrl)||new Set();s.add(groupOf(p));linkGroups.set(p.trackingUrl,s);}
+  const crossed=url=>{const s=linkGroups.get(url);return !!s&&s.size>1&&SEPARATE_GROUPS.some(g=>s.has(g));};
+  return {...source,rows:rows.map(p=>({...p,sharedTracking:usage.get(p.trackingUrl)?.size>1,...(p.trackingUrl&&crossed(p.trackingUrl)?{crossCampaignTracking:true}:{})}))};
 }
 
+const sumKnown=vals=>vals.every(v=>v===null||v===undefined)?null:vals.reduce((n,v)=>n+(v||0),0);
 const mergeMetrics=(rows,metrics)=>rows.map(p=>{
+  if(p.postUrls?.length>1){
+    // Several posts on one payment: each post is read on its own; totals only cover measured posts.
+    const ms=p.postUrls.map(u=>{const id=xPost(u)?.id;return [id,id&&metrics?.[id]?.at?metrics[id]:null];});
+    const ok=ms.filter(([,m])=>m);
+    return {...p,postViews:Object.fromEntries(ms.map(([id,m])=>[id,m?m.views:null])),postsMeasured:ok.length,
+      views:sumKnown(ok.map(([,m])=>m.views)),likes:sumKnown(ok.map(([,m])=>m.likes)),reposts:sumKnown(ok.map(([,m])=>m.reposts)),replies:sumKnown(ok.map(([,m])=>m.replies)),
+      metricAt:ok.map(([,m])=>m.at).sort().at(-1)||null,metricError:ms.map(([,m],i)=>m?'':metrics?.[ms[i][0]]?.error||'').filter(Boolean)[0]||'',metricErrorCategory:'',metricLastAttemptAt:null};
+  }
   const post=xPost(p.postUrl),m=post&&metrics?.[post.id];
   if(!m?.at)return {...p,views:null,likes:null,reposts:null,replies:null,metricAt:null,metricError:m?.error||'',metricErrorCategory:m?.errorCategory||'',metricLastAttemptAt:m?.lastAttemptAt||null};
   return {...p,views:m.views,likes:m.likes,reposts:m.reposts,replies:m.replies,metricAt:m.at,metricError:m.error||'',metricErrorCategory:m.errorCategory||'',metricLastAttemptAt:m.lastAttemptAt||null};
@@ -131,12 +156,12 @@ const mergeMetrics=(rows,metrics)=>rows.map(p=>{
 async function getMetrics(storage=metricStore()){try{return await storage.get('latest',{type:'json'})||{metrics:{},history:[],lastSuccessfulAt:null};}catch{return {metrics:{},history:[],lastSuccessfulAt:null};}}
 
 export async function groupReport(source,metric,{force=false,refreshClicks=false,cacheOnly=true,clickOptions={}}={}){
-  const shortIo=await campaignLinkClicks(source.rows,{force:refreshClicks||force,cacheOnly,...clickOptions});
+  const shortIo=await campaignLinkClicks(source.rows.filter(p=>!p.crossCampaignTracking),{force:refreshClicks||force,cacheOnly,...clickOptions});
   const byLink=new Map(shortIo.links.map(p=>[trackingLink(p.trackingUrl)?.url,p]));
   const publishers=mergeMetrics(source.rows,metric.metrics).map(p=>{
     const reading=byLink.get(trackingLink(p.trackingUrl)?.url);
     const attributed=p.posted&&p.postUrl?reading?.postPublicationClicks??null:null;
-    const shared=p.sharedTracking||source.rows.filter(r=>r.posted&&r.trackingUrl&&r.trackingUrl===p.trackingUrl).length>1;
+    const shared=p.crossCampaignTracking||p.sharedTracking||source.rows.filter(r=>r.posted&&r.trackingUrl&&r.trackingUrl===p.trackingUrl).length>1;
     return {...p,clicks:shared?null:attributed,allTimeClicks:reading?.clicks??null,clickAt:reading?.clickAt,postPublicationVerifiedAt:reading?.publicationVerifiedAt,clickStale:!!(reading?.stale||reading?.publicationStale),clickError:shared?'Shared link; see campaign link breakdown.':reading?.clickError||reading?.attributionError||'',clickTracked:!!reading&&!shared,cpc:!shared&&p.paid&&p.cost!==null&&attributed>0?p.cost/attributed:null};
   });
   const xStatus=gtaMetricStatus(source.rows,metric);
@@ -156,19 +181,23 @@ export async function getReport(options={}){
   const [qrts,originals,instagram]=await Promise.all(['qrts','originals','instagram'].map(group=>
     groupReport({...source,rows:source.rows.filter(p=>inGroup(p,group))},metric,options)));
   const quoteGroups=summariseQuotedOriginals(qrts.publishers,metric.metrics);
+  const mandy=await groupReport({...source,rows:source.rows.filter(p=>inGroup(p,'mandy'))},metric,options);
   const paidOriginals=new Set(originals.publishers.filter(p=>p.posted&&p.paid).map(p=>xPost(p.postUrl)?.id).filter(Boolean));
   quoteGroups.rows=quoteGroups.rows.map(row=>({...row,paidOriginalMatch:paidOriginals.has(row.originalPostId)}));
   const tabs=source.tabs||[...new Set(source.rows.map(p=>p.sourceTab))],skipped=source.skippedTabs||[];
+  // Mandy QRTs is its own campaign inside GTA VI; its quoted original (the viral tweet) is summarised separately.
+  const mandyRead=tabs.includes(tabOf('GTAM'))&&!skipped.includes(tabOf('GTAM'));
   return {...qrts,originals:{...originals,scope:'published-originals-v1'},instagram:{...instagram,scope:'instagram-v1'},quotedOriginals:quoteGroups,
+    ...(mandyRead||mandy.publishers.length?{mandy:{...mandy,scope:'mandy-qrts-v1',quotedOriginals:summariseQuotedOriginals(mandy.publishers,metric.metrics,['GTAM'])}}:{}),
     budget:GTA_BUDGET,
     // Optional tabs that could not be read (or Instagram missing) are flagged, never silently dropped.
-    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&(skipped.includes(tab)||(id==='GTAIG'&&!tabs.includes(tab)))).map(([tab])=>tab):[]};
+    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&(skipped.includes(tab)||(['GTAIG','GTAM'].includes(id)&&!tabs.includes(tab)))).map(([tab])=>tab):[]};
 }
 
 export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metricStore(),readSource=sourceRows,readReport=getReport}={}){
   // A cache read failure must abort rather than overwrite verified history with an empty state.
   const st=storage,last=await st.get('latest',{type:'json'})||{metrics:{},history:[]},now=Date.now();
-  const source=await readSource(manual),posts=source.rows.filter(p=>p.posted).map(p=>({p,post:xPost(p.postUrl)})).filter(x=>x.post);
+  const source=await readSource(manual),posts=source.rows.filter(p=>p.posted).flatMap(p=>(p.postUrls?.length?p.postUrls:[p.postUrl]).map(u=>({p,post:xPost(u)}))).filter(x=>x.post);
   const distinct=[...new Map(posts.map(x=>[x.post.id,x])).values()];
   const metrics={...last.metrics},errors=[];let updated=0;
   for(let i=0;i<distinct.length;i+=6){
@@ -198,7 +227,7 @@ export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metr
     lastManualAt:manual?now:Number(last.lastManualAt||0),updated,total:distinct.length,errors};
   await st.setJSON('latest',next);
   const report=await readReport({refreshClicks:true,cacheOnly:false});
-  return {...report,refreshed:errors.length===0&&!report.sourceStale&&report.shortIo.errors===0&&report.originals.shortIo.errors===0&&!(report.instagram?.shortIo.errors),updated,total:distinct.length,errors,
+  return {...report,refreshed:errors.length===0&&!report.sourceStale&&report.shortIo.errors===0&&report.originals.shortIo.errors===0&&!(report.instagram?.shortIo.errors)&&!(report.mandy?.shortIo.errors),updated,total:distinct.length,errors,
     skipped:false,serverNow:Date.now(),nextRefreshAt:manual?now:Number(last.lastManualAt||0)};
 }
 
@@ -232,6 +261,6 @@ export async function runRefreshJob(id){
  if(prior?.data?.id!==id||prior.data.state!=='queued')return;
  const job={...prior.data,state:'running'};
  const claimed=await st.setJSON('refresh-job-v2',job,{onlyIfMatch:prior.etag});if(!claimed.modified)return;
- try{const report=await refreshGtaMetrics({manual:true});await st.setJSON('refresh-job-v2',{...job,state:'complete',expiresAt:0,completedAt:new Date().toISOString(),errors:report.shortIo.errors+report.originals.shortIo.errors+(report.instagram?.shortIo.errors||0)+(report.errors?.length||0),updated:report.updated,total:report.total});}
+ try{const report=await refreshGtaMetrics({manual:true});await st.setJSON('refresh-job-v2',{...job,state:'complete',expiresAt:0,completedAt:new Date().toISOString(),errors:report.shortIo.errors+report.originals.shortIo.errors+(report.instagram?.shortIo.errors||0)+(report.mandy?.shortIo.errors||0)+(report.errors?.length||0),updated:report.updated,total:report.total});}
  catch{await st.setJSON('refresh-job-v2',{...job,state:'failed',expiresAt:0,error:'Refresh failed; last verified readings retained',completedAt:new Date().toISOString()});}
 }

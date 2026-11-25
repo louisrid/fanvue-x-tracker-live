@@ -330,7 +330,7 @@
   const paidSum=rows=>{const p=rows.filter(r=>r.paid===true&&C.num(r.cost)!==null);return p.length?M.value(p.reduce((n,r)=>n+C.num(r.cost),0)):M.na('No paid placements.');};
   function gtaPage(st){
     ensure('overview');ensure('gta');
-    const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),ig=D.campaign('gta-instagram');
+    const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),ig=D.campaign('gta-instagram'),mq=D.campaign('gta-mandy');
     const clicksChip=s?.clicks&&C.hasValue(s.clicks)&&s.clicks.state!=='stale'&&s.clicks.allTime!==undefined?U.reasonButton(C.full(s.clicks.allTime)+' all-time',s.clicks.reason,'fv-chip'):undefined;
     const strip=!s?loadingStrip([['Spend','wallet'],['Post views','eye'],['Tracked clicks','cursor'],['CPC','cursor'],['CPM','eye']]):U.strip([
       metric('Spend','wallet',s.spend,'moneyShort',s.planned>0?'Incl. planned':undefined),metric('Post views','eye',s.views,'compact'),
@@ -347,10 +347,10 @@
     const live=c=>c&&!c.unavailable;
     const igFormats=live(ig)?[...new Set((ig.rows||[]).filter(r=>r.paid===true&&C.num(r.cost)>0).map(r=>r.format||''))]:[];
     const spendCats=s?[
-      ...[{label:'X original posts',c:og},{label:'X quote posts',c:qr}].map(f=>{const m=C.spendOf(f.c);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};}),
+      ...[{label:'X original posts',c:og},{label:'X quote posts',c:qr},...(mq?[{label:'Mandy QRTs',c:mq}]:[])].map(f=>{const m=C.spendOf(f.c);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};}),
       ...igFormats.map(f=>{const m=paidSum(ig.rows.filter(r=>(r.format||'')===f));return {label:igFormat(f),value:C.hasValue(m)?m.value:null,reason:m.reason};})
     ]:[];
-    const viewCats=s?[{label:'X original posts',c:og},{label:'X quote posts',c:qr}].map(f=>{const m=C.viewsOf([f.c]);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};}):[];
+    const viewCats=s?[{label:'X original posts',c:og},{label:'X quote posts',c:qr},...(mq?[{label:'Mandy QRTs',c:mq}]:[])].map(f=>{const m=C.viewsOf([f.c]);return {label:f.label,value:C.hasValue(m)?m.value:null,reason:m.reason};}):[];
     const weekly=gr?C.snapshotSeries([...(gr.history||[]),...(gr.originals?.history||[])]).map(p=>({...p,extra:p.count+' posts with a reading'})):[];
     const ms=[
       spendCats.length?{key:'spend-format',label:'Spend by platform and type',title:'Spend by platform and type',categories:spendCats,format:'moneyShort',tipFormat:'money',unit:'Spend'}:null,
@@ -359,11 +359,11 @@
     ].filter(Boolean);
     if(weekly.length>=3)ms.unshift(ms.pop());
     const chart=U.chartPanel({id:'gta-chart',measures:ms,empty:{title:'Spend by platform and type',reason:waiting('Loading GTA VI results…')}},pageState('gta-vi').chart);
-    const view=['x-original-posts','x-quote-posts','instagram'].includes(st.view)?st.view:'all-formats';
-    const views=[{key:'all-formats',label:'All formats'},{key:'x-original-posts',label:'X original posts'},{key:'x-quote-posts',label:'X quote posts'},{key:'instagram',label:'Instagram'}];
-    let table;
+    const view=['x-original-posts','x-quote-posts','mandy-qrts','instagram'].includes(st.view)?st.view:'all-formats';
+    const views=[{key:'all-formats',label:'All formats'},{key:'x-original-posts',label:'X original posts'},{key:'x-quote-posts',label:'X quote posts'},{key:'mandy-qrts',label:'Mandy QRTs'},{key:'instagram',label:'Instagram'}];
+    let table,mandyFigures='';
     if(view==='all-formats'){
-      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og,type:'post'},{key:'x-quote-posts',name:'X quote posts',c:qr,type:'qrt'},{key:'instagram',name:'Instagram',c:ig,type:'story'}].filter(r=>r.c):[];
+      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og,type:'post'},{key:'x-quote-posts',name:'X quote posts',c:qr,type:'qrt'},{key:'mandy-qrts',name:'Mandy QRTs',c:mq,type:'qrt'},{key:'instagram',name:'Instagram',c:ig,type:'story'}].filter(r=>r.c):[];
       table=U.tablePanel({id:'gta-table',title:'Promotion results',icon:'layers',view,views,rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.name,widths:ALIGNED,empty:waiting('Loading promotion results…'),
         columns:[
           {key:'name',label:'Promotion type',type:'name',html:r=>'<a class="fv-name" href="#gta-vi/'+esc(r.key)+'">'+U.marker('gamepad','',{plain:true})+'<span>'+esc(r.name)+'</span></a>'+U.typeTag(r.type),sort:r=>r.name},
@@ -390,11 +390,13 @@
         ],
         expand:r=>U.detailGrid([['Payment status',payStatus(r)],['Agreed cost',money(r.cost)],['Format',r.format?esc(igFormat(r.format)):''],['Source row',esc((r.sourceTab||'')+(r.sourceRow?' · row '+r.sourceRow:''))]])},ts);
     }else{
-      const c=view==='x-quote-posts'?qr:og,id='gta-'+view,ts=tableState('gta-vi',id);
-      table=U.tablePanel({id,title:view==='x-quote-posts'?'X quote posts':'X original posts',icon:'gamepad',view,views,search:true,filters:placementFilter('gta-vi',id),filter:applyFilter(ts.filter),
+      const c=view==='x-quote-posts'?qr:view==='mandy-qrts'?mq:og,id='gta-'+view,ts=tableState('gta-vi',id);
+      if(view==='mandy-qrts')mandyFigures=mandyPanel(mq);
+      table=U.tablePanel({id,title:{'x-quote-posts':'X quote posts','mandy-qrts':'Mandy QRT placements'}[view]||'X original posts',icon:'gamepad',view,views,search:true,filters:placementFilter('gta-vi',id),filter:applyFilter(ts.filter),
         rows:c?.rows||[],rowKey:gtaRowKey,rowLabel:r=>r.publisher,minWidth:860,searchText:r=>r.publisher,
         empty:c?(c.unavailable?'GTA VI source unavailable.':'No records.'):waiting('Loading records…'),
-        columns:placementColumns({clicks:r=>{const v=C.num(r.clicks);if(v!==null)return M.value(v);return M.na(r.clickError||(r.trackingUrl?(r.posted?'No post-publication reading yet.':'Not published yet.'):'No tracking link in the source sheet.'));},eff:C.placementEfficiency(c?.rows||[])}),
+        columns:placementColumns({clicks:r=>{const v=C.num(r.clicks);if(v!==null)return M.value(v);return M.na(r.clickError||(r.trackingUrl?(r.posted?'No post-publication reading yet.':'Not published yet.'):'No tracking link in the source sheet.'));},eff:C.placementEfficiency(c?.rows||[]),
+          relationship:view==='mandy-qrts'?{key:'posts',label:'Posts bought',get:r=>C.num(r.purchasedPosts)===null?M.na('No posts bought.'):M.value(r.purchasedPosts,{reason:'Posts bought with this payment, from the sheet.'})}:undefined}),
         expand:r=>U.detailGrid([
           ['Payment status',payStatus(r)],['Agreed cost',money(r.cost)],['All-time human clicks',count(r.allTimeClicks)+(r.clickStale?' '+U.status('Stale','warn'):'')],
           ['Clicks verified',r.postPublicationVerifiedAt||r.clickAt?when(r.postPublicationVerifiedAt||r.clickAt):U.reasonButton('Not available','No Short.io reading.')],
@@ -405,7 +407,23 @@
     }
     // Shown only when a spreadsheet tab could not be read, so its rows are missing from the totals.
     const tabWarning=(qr?.missingTabs||[]).map(t=>'<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+esc(t+' could not be read from the spreadsheet, so its rows are not counted.')+'</span></div>').join('');
-    return {title:'GTA VI',chip:'gta-vi',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||qr?.sourceStale||og?.sourceStale),body:overviewNotice()+tabWarning+strip+budget+chart+table};
+    return {title:'GTA VI',chip:'gta-vi',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||qr?.sourceStale||og?.sourceStale),body:overviewNotice()+tabWarning+strip+budget+chart+mandyFigures+table};
+  }
+  /* Mandy QRTs' own figures, shown on its tab only. The viral original's views are kept
+     apart from the views of our paid quote posts. Unavailable figures are left out. */
+  function mandyPanel(c){
+    if(!c||c.unavailable)return '';
+    const e=C.efficiency([c]),posts=C.num(c.purchasedPosts),pp=C.num(c.postPublicationClicks);
+    const originals=c.quotedOriginals?.rows||[],ov=originals.map(o=>C.num(o.views)).filter(v=>v!==null);
+    return U.supportPanel('Mandy QRTs','gamepad',U.inlineMetrics([
+      ['Spend',U.value(C.spendOf(c),'money')],
+      ['Posts bought',posts===null?'':U.value(M.value(posts),'count')],
+      ['Published posts',U.value(M.value(C.num(c.published)||0),'count')],
+      ['Quote-post views',U.value(C.viewsOf([c]))],
+      ['Original post views',ov.length?U.value(M.value(ov.reduce((a,b)=>a+b,0),{reason:'Views of the quoted original tweet (organic and paid), kept apart from our quote-post views.'})):''],
+      ['Tracked clicks',pp===null?'':U.value(M.value(pp,{reason:'Short.io human clicks since each post was published.'}))],
+      ['CPC',U.value(e.cpc,'money')],['CPM',U.value(e.cpm,'money')]
+    ]));
   }
   function gtaFormatDetail(r,gr){
     const c=r.c;
@@ -417,7 +435,7 @@
         ['Sheet verified',c.sourceVerifiedAt?when(c.sourceVerifiedAt):'']
       ]);
     }
-    const isQ=r.key==='x-quote-posts',io=isQ?gr?.shortIo:gr?.originals?.shortIo,q=isQ?c.quotedOriginals:null;
+    const isQ=r.key==='x-quote-posts'||r.key==='mandy-qrts',io=r.key==='mandy-qrts'?gr?.mandy?.shortIo:isQ?gr?.shortIo:gr?.originals?.shortIo,q=isQ?c.quotedOriginals:null;
     const grid=U.detailGrid([
       ['Records in source',count(c.placements)],['Paid placements',count(c.paidCount)],['Committed',money(c.committedUnpaidKnown)],['Published posts',count(c.published)],
       ['Views coverage',esc(C.full(c.coverage?.withXMetrics)+' of '+C.full(c.coverage?.withPostUrl)+' published posts measured')],
