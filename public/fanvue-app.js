@@ -130,6 +130,8 @@
     if(ov?.stale)return '<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>The reporting feed is showing its last verified snapshot.</span></div>';
     return '';
   }
+  // Placement types in each campaign, shown as coloured tags after the name.
+  const CAMPAIGN_TYPES={'x-articles':['original','rt'],'gta-vi':['original','qrt','story'],'of-terms':['original'],'guru-promotion':['original']};
   const summaries=()=>{const ov=D.overview();return ov?C.CAMPAIGNS.map(c=>C.campaignSummary(ov,c.key,{gtaReport:D.gta().report})):null;};
 
   function homePage(st){
@@ -146,9 +148,9 @@
     const table=U.tablePanel({id:'home-results',title:'Campaign results',icon:'layers',rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.def.name,widths:ALIGNED,
       empty:S?'No campaigns.':waiting('Loading campaign results…'),countLabel:n=>n===1?'campaign':'campaigns',
       columns:[
-        {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>';},sort:r=>r.def.name},
+        {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>'+U.typeTags(CAMPAIGN_TYPES[r.key]);},sort:r=>r.def.name},
         {key:'spend',label:'Spend',format:'money',get:r=>r.spend},
-        {key:'views',label:'Post views',get:r=>r.views,html:r=>(r.key==='guru-promotion'&&C.hasValue(r.views)?U.reasonButton('Original','Original-post views, not paid repost views.','fv-chip fv-cell-chip')+' ':'')+U.value(r.views)},
+        {key:'views',label:'Post views',get:r=>r.views},
         {key:'clicks',label:'Tracked clicks',get:r=>r.clicks,html:r=>(r.clicks?.state==='stale'?U.reasonButton('Stale',r.clicks.reason,'fv-chip is-warn fv-cell-chip')+' ':'')+U.value(r.clicks)},
         {key:'cpc',label:'CPC',format:'money',get:r=>r.cpc},
         {key:'cpm',label:'CPM',format:'money',get:r=>r.cpm},
@@ -165,10 +167,8 @@
       ['Course clicks',clicks?U.value(M.value(clicks.total)):U.value(dd.error?M.na('Course click counter is temporarily unavailable.'):M.loading())],
       ['Creator signups',U.value(M.na(C.OUTCOME_REASON))]
     ]),'<a class="fv-control" href="#discord">View Discord'+U.icon('right',14)+'</a>');
-    const attention=S?needsAttention(ov,S):[];
-    const attn=attention.length?U.supportPanel('Needs attention','alert',attention.slice(0,5).map(a=>U.supportLine(U.status(a.tag,a.tone||'warn')+' '+esc(a.text),'<a href="#'+esc(a.href)+'">Review'+'</a>')).join('')):'';
     return {title:'Home',refreshLabel:'Refresh all',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),
-      body:overviewNotice()+strip+chart+table+discord+attn};
+      body:overviewNotice()+strip+chart+table+discord};
   }
   function homeDetail(r){
     const parts=r.spend?.parts;
@@ -190,22 +190,6 @@
     ];
     const warn=r.warnings.length?'<p class="fv-detail-note">'+r.warnings.map(esc).join(' ')+'</p>':'';
     return U.detailGrid(items)+warn;
-  }
-  function needsAttention(ov,S){
-    const out=[],find=id=>ov.campaigns.find(c=>c.id===id);
-    const pend=(id,label,href)=>{const c=find(id);if(!c||c.unavailable)return;const n=(c.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length;
-      if(n)out.push({tag:'Pending',text:label+': '+n+' paid '+(n===1?'placement':'placements')+' awaiting publication',href,weight:n});};
-    const rt=find('article-rts');
-    if(rt?.articleRtSummary?.unlinkedPaidCount)out.push({tag:'Missing link',text:'X Articles: '+rt.articleRtSummary.unlinkedPaidCount+' paid reposts ('+C.money(rt.articleRtSummary.unlinkedPaidSpendKnown)+') have no original post link',href:'x-articles/paid-reposts',weight:100});
-    const gta=S.find(s=>s.key==='gta-vi');
-    if(gta?.clicks?.state==='stale')out.push({tag:'Stale',text:'GTA VI: Short.io clicks are showing the last verified reading',href:'gta-vi',weight:90});
-    pend('gta-qrts','GTA VI quote posts','gta-vi/x-quote-posts');pend('gta-originals','GTA VI original posts','gta-vi/x-original-posts');pend('gta-instagram','GTA VI Instagram','gta-vi/instagram');
-    const copies=find('gta-qrts')?.excludedCopies;
-    if(copies?.count)out.push({tag:'Excluded',tone:'',text:'GTA VI: '+copies.count+' rows in '+copies.tabs.join(', ')+' copy X Accounts 15 ('+C.money(copies.recordedCost)+' not counted)',href:'gta-vi',weight:4});
-    pend('x-articles','X Articles','x-articles/original-posts');pend('of-terms','OF Terms','of-terms');
-    if(rt&&!rt.unavailable){const n=(rt.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length;if(n)out.push({tag:'Pending',text:'X Articles: '+n+' paid reposts not marked published',href:'x-articles/paid-reposts',weight:n});}
-    for(const s of S)if(s.views?.state==='partial'&&s.key!=='home')out.push({tag:'Coverage',tone:'',text:C.CAMPAIGNS.find(c=>c.key===s.key).name+': '+s.views.reason,href:s.key,weight:5});
-    return out.sort((a,b)=>b.weight-a.weight);
   }
   function netGrowth(members){
     const h=(members?.history||[]).filter(x=>Number.isSafeInteger(x?.memberCount)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
@@ -313,14 +297,7 @@
         empty:rt?(rt.unavailable?'Paid repost source unavailable.':'No paid reposts recorded.'):waiting('Loading paid reposts…'),
         columns:repostColumns(),expand:r=>repostDetail(r)},ts);
     }
-    const pending=(xa?.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length,rtPending=(rt?.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length,unl=rt?.articleRtSummary;
-    const delivery=[
-      pending?U.supportLine(U.status('Pending','warn')+' '+esc(pending+' paid article '+(pending===1?'placement':'placements')+' awaiting publication'),'<a href="#x-articles/original-posts">Review</a>'):'',
-      rtPending?U.supportLine(U.status('Pending','warn')+' '+esc(rtPending+' paid reposts not marked published in the sheet'),'<a href="#x-articles/paid-reposts">Review</a>'):'',
-      unl?.unlinkedPaidCount?U.supportLine(U.status('Missing link','warn')+' '+esc(unl.unlinkedPaidCount+' paid reposts ('+C.money(unl.unlinkedPaidSpendKnown)+') have no original post link; costs are kept'),'<a href="#x-articles/paid-reposts">Review</a>'):''
-    ].join('');
-    const support=(delivery?U.supportPanel('Delivery','check',delivery):'')+
-      U.supportPanel('Records and editing','edit','<div class="fv-records-links"><a class="fv-control" href="#placements">'+U.icon('doc',15)+'Article tracker</a><a class="fv-control" href="#accounts">'+U.icon('users',15)+'Accounts</a><a class="fv-control" href="#campaigns">'+U.icon('layers',15)+'Campaigns</a></div>');
+    const support=U.supportPanel('Records and editing','edit','<div class="fv-records-links"><a class="fv-control" href="#placements">'+U.icon('doc',15)+'Article tracker</a><a class="fv-control" href="#accounts">'+U.icon('users',15)+'Accounts</a><a class="fv-control" href="#campaigns">'+U.icon('layers',15)+'Campaigns</a></div>');
     return {title:'X Articles',chip:'x-articles',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||xa?.sourceStale||xa?.dataWarning),body:overviewNotice()+strip+chart+table+support};
   }
   function articleDetail(r,xa){
@@ -386,10 +363,10 @@
     const views=[{key:'all-formats',label:'All formats'},{key:'x-original-posts',label:'X original posts'},{key:'x-quote-posts',label:'X quote posts'},{key:'instagram',label:'Instagram'}];
     let table;
     if(view==='all-formats'){
-      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og},{key:'x-quote-posts',name:'X quote posts',c:qr},{key:'instagram',name:'Instagram',c:ig}].filter(r=>r.c):[];
+      const rows=s?[{key:'x-original-posts',name:'X original posts',c:og,types:['original']},{key:'x-quote-posts',name:'X quote posts',c:qr,types:['qrt']},{key:'instagram',name:'Instagram',c:ig,types:['story']}].filter(r=>r.c):[];
       table=U.tablePanel({id:'gta-table',title:'Promotion results',icon:'layers',view,views,rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.name,widths:ALIGNED,empty:waiting('Loading promotion results…'),
         columns:[
-          {key:'name',label:'Promotion type',type:'name',html:r=>'<a class="fv-name" href="#gta-vi/'+esc(r.key)+'">'+U.marker('gamepad','',{plain:true})+'<span>'+esc(r.name)+'</span></a>',sort:r=>r.name},
+          {key:'name',label:'Promotion type',type:'name',html:r=>'<a class="fv-name" href="#gta-vi/'+esc(r.key)+'">'+U.marker('gamepad','',{plain:true})+'<span>'+esc(r.name)+'</span></a>'+U.typeTags(r.types),sort:r=>r.name},
           {key:'spend',label:'Spend',format:'money',get:r=>C.spendOf(r.c)},
           {key:'views',label:'Post views',get:r=>C.viewsOf([r.c])},
           {key:'clicks',label:'Tracked clicks',get:r=>{const v=C.num(r.c.postPublicationClicks);return v===null?M.na(C.num(r.c.allTimeHumanClicks)===null?'No tracking links on these posts.':'No post-publication reading yet.'):M.value(v);}},
@@ -426,16 +403,9 @@
           ['KYC completions',U.value(M.na(C.OUTCOME_REASON))],['Earning creators',U.value(M.na(C.OUTCOME_REASON))],['Source row',esc((r.sourceTab||'')+(r.sourceRow?' · row '+r.sourceRow:''))]
         ])},ts);
     }
-    const lines=[];
-    for(const [c,label,key] of [[og,'X original posts','x-original-posts'],[qr,'X quote posts','x-quote-posts'],[ig,'Instagram','instagram']]){
-      const n=(c?.rows||[]).filter(r=>r.paid===true&&r.posted!==true).length;
-      if(n)lines.push(U.supportLine(U.status('Pending','warn')+' '+esc(label+': '+n+' paid '+(n===1?'placement':'placements')+' awaiting publication'),'<a href="#gta-vi/'+key+'">Review</a>'));
-    }
-    const copies=qr?.excludedCopies;
-    if(copies?.count)lines.push(U.supportLine(U.status('Excluded')+' '+esc(copies.count+' rows in '+copies.tabs.join(', ')+' copy X Accounts 15 ('+C.money(copies.recordedCost)+' not counted)')));
-    for(const t of qr?.missingTabs||[])lines.push(U.supportLine(U.status('Missing tab','warn')+' '+esc(t+' could not be read from the spreadsheet; its rows are not counted')));
-    const attention=lines.length?U.supportPanel('Needs attention','alert',lines.join('')):'';
-    return {title:'GTA VI',chip:'gta-vi',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||qr?.sourceStale||og?.sourceStale),body:overviewNotice()+strip+budget+chart+table+attention};
+    // Shown only when a spreadsheet tab could not be read, so its rows are missing from the totals.
+    const tabWarning=(qr?.missingTabs||[]).map(t=>'<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+esc(t+' could not be read from the spreadsheet, so its rows are not counted.')+'</span></div>').join('');
+    return {title:'GTA VI',chip:'gta-vi',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||qr?.sourceStale||og?.sourceStale),body:overviewNotice()+tabWarning+strip+budget+chart+table};
   }
   function gtaFormatDetail(r,gr){
     const c=r.c;

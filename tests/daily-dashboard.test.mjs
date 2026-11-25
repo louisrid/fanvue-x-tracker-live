@@ -32,7 +32,9 @@ test('Dashboard starts with This week and original headline KPI cards; old Perfo
  assert(!html.includes('id="dailyOverview"'));
  assert(!html.includes('id="statsSection"'));
  assert(!html.includes('id="homeChart"'));
- assert(shell.includes('body:overviewNotice()+strip+chart+table+discord+attn'));
+ // Owner direction (25 Nov): the Needs attention panel is removed from Home.
+ assert(shell.includes('body:overviewNotice()+strip+chart+table+discord};'));
+ assert(!shell.includes('Needs attention'));
  assert(js.includes("valid=['summary','articles','upcoming']"));
 });
 test('Key Stats contains the Daily Breakdown, KPI row and graph without a daily table or spacer',()=>{
