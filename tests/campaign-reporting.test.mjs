@@ -149,10 +149,15 @@ test('Article RT views reuse only an exact verified original X post and never du
     articleRts:{data:{rows,at:'2026-11-23T17:00:00Z',source:'GOOGLE_SHEETS_LIVE'}},
     boosts:{data:{ok:true,tweets:feeds.boosts.tweets}}
   });
-  const rts=assembled.campaigns.find(c=>c.id==='article-rts');
-  assert.equal(rts.paidSpendKnown,100);
-  assert.equal(rts.views,15000);
-  assert.equal(rts.coverage.withXMetrics,2);
+  const rts=assembled.campaigns.find(c=>c.id==='article-rts'),guru=assembled.campaigns.find(c=>c.id==='guru-rts');
+  // Owner direction (25 Nov): RTs of a promoted Guru account's post are Guru Promotion spend.
+  // The two RTs of the same original are counted once each; its views are counted once.
+  assert.equal(guru.paidSpendKnown,80);
+  assert.equal(guru.paidCount,2);
+  assert.equal(guru.views,15000);
+  assert.equal(rts.paidSpendKnown,20);
+  assert.equal(rts.paidSpendKnown+guru.paidSpendKnown,100);
+  assert.equal(rts.views,null);
 });
 
 

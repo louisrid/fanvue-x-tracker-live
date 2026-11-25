@@ -69,9 +69,17 @@ test('Source-post metrics attach to pending RT entries but are never multiplied 
   const article=overview.campaigns.find(c=>c.id==='article-rts');
   assert.equal(guru.rows[0].linkedRtPaidSpend,80);
   assert.equal(guru.rows[0].linkedRtPaidCount,2);
-  assert.equal(article.paidSpendKnown,110);
-  assert.equal(article.views,39222);
-  assert.equal(article.published,1);
+  // Owner direction (25 Nov): paid RTs of a Guru account's posts (both ArdzAI0 posts) are
+  // Guru Promotion spend; only the RT with no original-post link stays with X Articles.
+  // Every RT is counted once and source views are never multiplied by reposter count.
+  assert.equal(guru.paidSpendKnown,100);
+  assert.equal(guru.paidCount,3);
+  assert.equal(guru.rows.find(r=>r.id==='2114682794160824473').linkedRtPaidSpend,20);
+  assert.equal(guru.views,39222);
+  assert.equal(article.paidSpendKnown,10);
+  assert.equal(guru.paidSpendKnown+article.paidSpendKnown,grouped.summary.paidSpendKnown);
+  assert.equal(article.views,null);
+  assert.equal(article.published,0);
   assert.equal(article.viewScope,'ORIGINAL_X_POSTS');
   assert.equal(article.trackingWarning.includes('no original X post URL'),true);
 });

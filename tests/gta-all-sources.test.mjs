@@ -230,6 +230,31 @@ test('each row carries exactly one type tag, each type with its own colour',()=>
   assert.doesNotMatch(shell,/Needs attention|'Delivery'|typeTags/);
 });
 
+test('paid RTs of a Guru account are Guru Promotion spend; the rest stay with X Articles; each counted once',()=>{
+  const rt=(publisher,cost,original,row)=>({publisher,cost,paid:true,posted:false,sourcePostUrl:original,postUrl:'',sourceTab:'X Accounts 11 (Article RTs)',sourceRow:row});
+  const rows=[rt('A',30,'https://x.com/GuruOne/status/2117354088690245907',8),rt('B',20,'https://x.com/guruone/status/2114682794160824473',9),
+    rt('C',15,'https://x.com/someoneelse/status/2110000000000000000',10),rt('D',10,'',11)];
+  const tweets=[{id:'2117354088690245907',handle:'GuruOne',name:'Guru One',views:1000,likes:1,reposts:1,replies:1,at:'2026-11-24T10:00:00Z'}];
+  const ov=assembleCampaignOverview({boosts:{data:{ok:true,tweets}},articleRts:{data:{source:'GOOGLE_SHEETS_LIVE',rows,at:'2026-11-24T10:00:00Z'}},gta:{error:'x'},of:{error:'x'},dashboard:{error:'x'}});
+  const guru=ov.campaigns.find(c=>c.id==='guru-rts'),art=ov.campaigns.find(c=>c.id==='article-rts');
+  assert.equal(guru.paidSpendKnown,50);assert.equal(guru.paidCount,2);
+  assert.deepEqual(guru.paidReposts.map(r=>r.publisher),['A','B']);
+  // A second post by the same account appears as its own promoted post with its RT spend.
+  const extra=guru.rows.find(r=>r.id==='2114682794160824473');
+  assert.equal(extra.publisher,'Guru One');assert.equal(extra.linkedRtPaidSpend,20);
+  assert.equal(art.paidSpendKnown,25);
+  assert.deepEqual(art.rows.map(r=>r.publisher),['C','D']);
+  // Without the boosts feed nothing is reassigned, so no RT is lost or double counted.
+  const down=assembleCampaignOverview({boosts:{error:'x'},articleRts:{data:{source:'GOOGLE_SHEETS_LIVE',rows,at:'2026-11-24T10:00:00Z'}},gta:{error:'x'},of:{error:'x'},dashboard:{error:'x'}});
+  assert.equal(down.campaigns.find(c=>c.id==='article-rts').paidSpendKnown,75);
+  // Home sees Guru spend and still proves every paid row is unique.
+  const sum=C.campaignSummary(ov,'guru-promotion');
+  assert.equal(sum.spend.value,50);
+  const shell=readFileSync('public/fanvue-app.js','utf8');
+  assert.doesNotMatch(shell,/Records and editing/);
+  assert.match(shell,/const rows=g\?\.paidReposts\|\|\[\];/);
+});
+
 test('"Spend" replaces "Paid spend" in every visible label',()=>{
   for(const f of ['public/fanvue-app.js','public/fanvue-core.js','public/fanvue-campaigns.js','public/campaign-reporting.js','public/app.js'])
     assert.doesNotMatch(readFileSync(f,'utf8'),/Paid spend/,f);

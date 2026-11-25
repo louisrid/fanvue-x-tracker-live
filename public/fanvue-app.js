@@ -297,8 +297,7 @@
         empty:rt?(rt.unavailable?'Paid repost source unavailable.':'No paid reposts recorded.'):waiting('Loading paid reposts…'),
         columns:repostColumns(),expand:r=>repostDetail(r)},ts);
     }
-    const support=U.supportPanel('Records and editing','edit','<div class="fv-records-links"><a class="fv-control" href="#placements">'+U.icon('doc',15)+'Article tracker</a><a class="fv-control" href="#accounts">'+U.icon('users',15)+'Accounts</a><a class="fv-control" href="#campaigns">'+U.icon('layers',15)+'Campaigns</a></div>');
-    return {title:'X Articles',chip:'x-articles',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||xa?.sourceStale||xa?.dataWarning),body:overviewNotice()+strip+chart+table+support};
+    return {title:'X Articles',chip:'x-articles',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||xa?.sourceStale||xa?.dataWarning),body:overviewNotice()+strip+chart+table};
   }
   function articleDetail(r,xa){
     const rows=(xa?.rows||[]).filter(p=>p.campaignId===r.id);
@@ -469,14 +468,15 @@
   function guruPage(st){
     ensure('overview');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'guru-promotion'):null,g=D.campaign('guru-rts'),rt=D.campaign('article-rts');
-    const strip=!s?loadingStrip([['Original-post views','eye']]):U.strip([
+    const strip=!s?loadingStrip([['Spend','wallet'],['Original-post views','eye']]):U.strip([
       metric('Spend','wallet',s.spend,'moneyShort'),metric('Original-post views','eye',s.views,'compact'),metric('Tracked clicks','cursor',s.clicks),...outcomeItems(s)]);
-    const series=g?C.snapshotSeries((g.rows||[]).flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id})))).map(p=>({...p,extra:p.count+' original posts with a reading'})):[];
+    // The weekly chart is shown only when every post in the total has dated readings, so it never disagrees with the total.
+    const charted=(g?.rows||[]).filter(r=>C.num(r.views)!==null);
+    const series=g&&charted.every(r=>(r.history||[]).length)?C.snapshotSeries(charted.flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id})))).map(p=>({...p,extra:p.count+' original posts with a reading'})):[];
     const chart=U.chartPanel({id:'guru-chart',measures:series.length?[{key:'views',label:'Original-post views (cumulative)',title:'Original-post views by week',series,format:'compact',tipFormat:'count',unit:'Cumulative original-post views at week end',
       note:'Observed views of the original posts, including organic views. Not attributed paid lift.'}]:[],
       empty:{title:'Original-post views by week',reason:g?'No dated readings yet.':waiting('Loading original-post history…')}},pageState('guru-promotion').chart);
-    const ids=new Set((g?.rows||[]).map(r=>String(r.id)));
-    const groups=new Map((rt?.articleRtGroups||g?.articleRtGroups||[]).map(x=>[String(x.postId),x]));
+    const groups=new Map((g?.articleRtGroups||[]).map(x=>[String(x.postId),x]));
     const view=st.view==='paid-reposts'?'paid-reposts':'promoted-posts';
     const views=[{key:'promoted-posts',label:'Promoted posts'},{key:'paid-reposts',label:'Paid reposts'}];
     let table;
@@ -484,29 +484,31 @@
       table=U.tablePanel({id:'guru-table',title:'Promoted posts',icon:'megaphone',view,views,search:true,rows:g?.rows||[],rowKey:r=>r.id,rowLabel:r=>r.publisher,widths:ALIGNED,searchText:r=>[r.publisher,r.handle].join(' '),
         empty:g?(g.unavailable?'Promoted posts feed unavailable.':'No promoted posts.'):waiting('Loading promoted posts…'),
         columns:[
-          {key:'name',label:'Original post',type:'name',html:r=>'<span class="fv-name">'+U.marker('megaphone','',{plain:true})+'<span>'+esc(r.publisher||r.handle)+'</span></span>',sort:r=>String(r.publisher||'')},
-          {key:'spend',label:'Spend',format:'money',get:r=>C.num(r.cost)===null?M.na('Platform boost spend is not recorded for this post.'):M.value(r.cost)},
+          {key:'name',label:'Original post',type:'name',html:r=>'<span class="fv-name">'+U.marker('megaphone','',{plain:true})+'<span>'+esc(guruName(r,g.rows))+'</span></span>',sort:r=>String(r.publisher||'')},
+          {key:'spend',label:'Spend',format:'money',get:r=>C.num(r.linkedRtPaidSpend)!==null?M.value(r.linkedRtPaidSpend,{reason:'Paid RTs of this post.'}):(r.linkedRtPaidCount||0)===0?M.value(0,{reason:'No paid RTs of this post.'}):M.na('Paid RTs have no recorded cost.')},
           {key:'views',label:'Original-post views',get:r=>C.num(r.views)===null?M.na('No verified reading yet.'):M.value(r.views)},
           {key:'clicks',label:'Tracked clicks',get:()=>M.notTracked('Promoted original posts have no tracked link.')},
           {key:'signups',label:'Creator signups',get:()=>M.na(C.OUTCOME_REASON)},
-          {key:'paid',label:'Paid placements',get:r=>M.value(r.linkedRtPaidCount||0,{reason:'Paid reposts linked to this original post by post ID.'})},
+          {key:'paid',label:'Paid placements',get:r=>M.value(r.linkedRtPaidCount||0,{reason:'Paid RTs of this post.'})},
           {key:'live',label:'Live post',type:'link',html:r=>U.extLink(r.postUrl,'Open original post by '+(r.publisher||r.handle),{iconOnly:true})||U.reasonButton('Not available','No post link.')}
         ],expand:r=>guruDetail(r,groups.get(String(r.id)))},tableState('guru-promotion','guru-table'));
     }else{
-      const rows=(rt?.rows||[]).filter(r=>ids.has(String(C.postId(r.sourcePostUrl||r.postUrl))));
+      const rows=g?.paidReposts||[];
       const ts=tableState('guru-promotion','guru-rt');
       const byId=new Map((g?.rows||[]).map(r=>[String(r.id),r]));
       table=U.tablePanel({id:'guru-rt',title:'Paid reposts',icon:'refresh',view,views,search:true,filters:placementFilter('guru-promotion','guru-rt'),filter:applyFilter(ts.filter),
         rows,rowKey:r=>r.id||r.sourceRow,rowLabel:r=>r.publisher,minWidth:900,searchText:r=>r.publisher,
-        empty:rt?'No paid reposts are linked to these original posts.':waiting('Loading paid reposts…'),
+        empty:g?'No paid RTs are recorded for these posts.':waiting('Loading paid reposts…'),
         columns:repostColumns().map(c=>c.key==='original'?{...c,html:r=>{const o=byId.get(String(C.postId(r.sourcePostUrl||r.postUrl)));return U.extLink(r.sourcePostUrl||r.postUrl,o?.publisher||'Original');}}:c),
         expand:r=>repostDetail(r)},ts);
     }
-    const support=U.supportPanel('Records and editing','edit','<div class="fv-records-links"><a class="fv-control" href="#x-rts">'+U.icon('megaphone',15)+'Manage promoted posts</a></div>');
-    return {title:'Guru Promotion',chip:'guru-promotion',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||g?.sourceStale),body:overviewNotice()+strip+chart+table+support};
+    return {title:'Guru Promotion',chip:'guru-promotion',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||g?.sourceStale),body:overviewNotice()+strip+chart+table};
   }
+  // Two promoted posts by the same account are told apart by their post date.
+  const postDay=id=>{try{return C.dayShort(C.londonDay(Number((BigInt(String(id))>>22n)+1288834974657n)));}catch{return '';}};
+  const guruName=(r,rows)=>{const n=r.publisher||r.handle||'Original post';return (rows||[]).filter(x=>(x.publisher||x.handle)===n).length>1?n+' · '+postDay(r.id):n;};
   function guruDetail(r,group){
-    const list=group?.placements?.length?'<div class="fv-detail-list"><h3>Linked paid reposts · counted under X Articles</h3><div class="fv-table-wrap"><table data-no-sort><thead><tr><th class="is-left">Account</th><th class="is-left">Payment</th><th class="is-left">Sheet status</th><th>Cost</th></tr></thead><tbody>'+
+    const list=group?.placements?.length?'<div class="fv-detail-list"><h3>Paid RTs of this post</h3><div class="fv-table-wrap"><table data-no-sort><thead><tr><th class="is-left">Account</th><th class="is-left">Payment</th><th class="is-left">Sheet status</th><th>Cost</th></tr></thead><tbody>'+
       group.placements.map(p=>'<tr><td class="is-left">'+esc(p.publisher)+'</td><td class="is-left">'+payStatus(p)+'</td><td class="is-left">'+(p.posted?U.status('Marked published','good'):U.status('Not marked published'))+'</td><td>'+money(p.cost)+'</td></tr>').join('')+'</tbody></table></div></div>':'';
     return U.detailGrid([
       ['Account','@'+esc(r.handle||'')],['Added',r.added_at?when(r.added_at):U.reasonButton('Not available','')],
@@ -514,7 +516,7 @@
       ['Views gained · 24h',C.num(r.growth24)===null?U.reasonButton('Not available','Needs readings 24 hours apart.'):esc(C.signed(r.growth24))],
       ['Views gained · 7 days',C.num(r.growth7)===null?U.reasonButton('Not available','Needs readings 7 days apart.'):esc(C.signed(r.growth7))],
       ['Platform boost spend',C.num(r.cost)===null?U.reasonButton('Not available','Not recorded in the boosts feed.'):money(r.cost)],
-      ['Linked paid reposts',group?esc(C.full(group.paidCount)+' · '+C.money(group.paidSpendKnown))+(group.unknownPaidCosts?' · '+esc(group.unknownPaidCosts+' without cost'):''):esc('None linked')],
+      ['Paid RTs',group?esc(C.full(group.paidCount)+' · '+C.money(group.paidSpendKnown))+(group.unknownPaidCosts?' · '+esc(group.unknownPaidCosts+' without cost'):''):esc('None linked')],
       ['KYC completions',U.value(M.na(C.OUTCOME_REASON))],['Earning creators',U.value(M.na(C.OUTCOME_REASON))]
     ])+list;
   }

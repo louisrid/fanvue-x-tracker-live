@@ -110,7 +110,8 @@ test('paid reposts are counted once under X Articles and Guru boost spend stays 
   const xa=C.campaignSummary(ov,'x-articles'),guru=C.campaignSummary(ov,'guru-promotion');
   assert.equal(xa.spend.value,175);
   assert.equal(xa.views.value,2000,'original-post views of reposts are not added to article views');
-  assert.equal(guru.spend.state,'na');assert.match(guru.spend.reason,/counted under X Articles/);
+  // Owner direction (25 Nov): Guru spend is its own paid RTs; none are in this fixture, and X boost spend stays separate.
+  assert.equal(guru.spend.state,'na');assert.match(guru.spend.reason,/No paid RTs are recorded/);
   assert.equal(guru.views.scope,'original');
 });
 
