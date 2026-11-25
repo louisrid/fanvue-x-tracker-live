@@ -480,7 +480,9 @@ body.fv-editor-open{overflow:hidden}
 /* ---------- placement-type tags ---------- */
 .fv-types{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle;white-space:nowrap}
 .fv-state.fv-type{padding:1px 7px;line-height:16px;color:#000000;font-weight:var(--fv-w-strong)}
-.fv-state.fv-type.is-original{background:#FFE14D}
+.fv-state.fv-type.is-article{background:#7EE2A8}
+.fv-state.fv-type.is-post{background:#FFE14D}
+.fv-state.fv-type.is-mixed{background:#C9B8FF}
 .fv-state.fv-type.is-qrt{background:#8EC5FF}
 .fv-state.fv-type.is-rt{background:#FF9B9B}
 .fv-state.fv-type.is-story{background:#F5A3D3}

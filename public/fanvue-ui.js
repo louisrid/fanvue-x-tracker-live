@@ -80,15 +80,16 @@
     return '<button type="button" class="fv-state fv-reason '+cls+'" data-reason="'+esc(reason)+'" aria-describedby="'+id+'">'+esc(label)+
       '<span class="fv-sr" id="'+id+'">'+esc(reason)+'</span></button>';
   }
-  /* Placement-type tags: one colour per type, so each row is clear at a glance. */
+  /* One type tag per row, one colour per type, so each row is clear at a glance. */
   const TYPES={
-    original:{label:'Original',reason:'Original X post: the publisher’s own post, not a repost or quote.'},
+    article:{label:'Article',reason:'X Article promotion: publishers post the article.'},
+    post:{label:'Post',reason:'The publisher’s own X post.'},
     qrt:{label:'QRT',reason:'Quote post: the publisher quotes another post with their own comment.'},
-    rt:{label:'RT',reason:'Paid repost of an original post.'},
-    story:{label:'Story',reason:'Instagram story.'}
+    rt:{label:'RT',reason:'Paid repost (RT) of an original post.'},
+    story:{label:'Story',reason:'Instagram story.'},
+    mixed:{label:'Mixed',reason:'More than one format. Open the campaign for the breakdown.'}
   };
-  const typeTag=k=>TYPES[k]?reasonButton(TYPES[k].label,TYPES[k].reason,'fv-type is-'+k):'';
-  const typeTags=kinds=>kinds&&kinds.length?'<span class="fv-types">'+kinds.map(typeTag).join('')+'</span>':'';
+  const typeTag=k=>TYPES[k]?'<span class="fv-types">'+reasonButton(TYPES[k].label,TYPES[k].reason,'fv-type is-'+k)+'</span>':'';
   const formatValue=(v,format)=>format==='money'?C.money(v):format==='money0'?C.money(v,0):format==='moneyShort'?C.moneyShort(v):
     format==='compact'?C.compact(v):format==='signed'?C.signed(v):C.full(v);
   /* Render a metric descriptor: a value (with optional partial/stale chip) or a
@@ -336,5 +337,5 @@
   }
 
   window.FanvueUI=Object.freeze({icon,value,chipFor,reasonButton,strip,panelHead,chipIcon,chartPanel,chartBody,drawChart,getMeasure,tablePanel,detailGrid,status,extLink,marker,
-    inlineMetrics,supportLine,supportPanel,typeTag,typeTags,bindTips,hideTip,formatValue,ICONS:Object.keys(P)});
+    inlineMetrics,supportLine,supportPanel,typeTag,bindTips,hideTip,formatValue,ICONS:Object.keys(P)});
 })();
