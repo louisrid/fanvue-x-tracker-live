@@ -206,7 +206,6 @@
     {key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:['x-articles','article-rts']},
     {key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:['gta-qrts','gta-originals','gta-instagram','gta-mandy']},
     {key:'of-terms',name:'OnlyFans Terms',icon:'layers',color:'blue',ids:['of-terms']},
-    {key:'cis',name:'CIS',icon:'sparkles',color:'teal',ids:['ai-harness']},
     {key:'guru-promotion',name:'Guru X RTs',icon:'megaphone',color:'pink',ids:['guru-rts']}
   ];
   const PALETTE={
@@ -327,9 +326,9 @@
       out.published=unavailable(c)?null:num(c?.published);out.paidCount=num(c?.paidCount)||0;
       Object.assign(out,efficiency([c]));
     }else{
-      const c=o['ai-harness'];
-      const reason='Not connected: no dedicated CIS spend or placement source is linked yet.';
-      out.spend=M.na(reason);out.views=M.na(reason);out.clicks=M.na('Not connected: no CIS click definition is connected yet.');
+      const c=Object.values(o)[0];
+      const reason='Not connected: no spend or placement source is linked for this campaign yet.';
+      out.spend=M.na(reason);out.views=M.na(reason);out.clicks=M.na('Not connected: no click source is linked for this campaign yet.');
       out.published=null;out.paidCount=null;out.notConnected=notConnected(c);
       out.cpc=M.na(reason);out.cpm=M.na(reason);
     }
