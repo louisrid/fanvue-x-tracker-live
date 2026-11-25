@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import ExcelJS from 'exceljs';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {parseRows,inGroup,publishedQrts,countPlannedAsPaid,GTA_BUDGET} from '../netlify/functions/gta-report.mjs';
+import {parseRows,inGroup,publishedQrts,countPlannedAsPaid,GTA_BUDGET,findSheet,matchSheetByContent,SOURCE_TAB_IDS} from '../netlify/functions/gta-report.mjs';
 import {summarisePlacements} from '../netlify/lib/placement-reporting.mjs';
 import {assembleCampaignOverview} from '../netlify/functions/campaign-overview.mjs';
 
@@ -250,7 +250,7 @@ test('paid RTs of a Guru account are Guru Promotion spend; the rest stay with X 
 });
 
 test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly once',()=>{
-  const w=book(),m=w.addWorksheet('X Accounts 17 (Article QRTs V2)');
+  const w=book(),m=w.addWorksheet('X Accounts 17 (Mandy QRTs)');
   m.getRow(7).values=['ACCOUNT','LINK','NOTES','UTM LINK','ACCOUNT SUM','PAID?','POSTED?','LINK'];
   m.getRow(8).values=['Kyro','https://x.com/kyro','Paid | 2 posts | awaiting links','https://ex.s.gy/kyro',180,true,true,'https://x.com/kyro/status/2124900000000000001 https://x.com/kyro/status/2124900000000000002'];
   m.getRow(9).values=['Amna','https://x.com/amna','Paid','https://ex.s.gy/cis',50,true,false,''];
@@ -266,7 +266,7 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   // Never part of the other QRT group.
   assert.equal(rows.filter(p=>inGroup(p,'qrts')&&p.campaign==='GTAM').length,0);
   const src=readFileSync('netlify/functions/gta-report.mjs','utf8');
-  assert.match(src,/\['X Accounts 17 \(Article QRTs V2\)','GTAM'\]/);
+  assert.match(src,/\{id:'GTAM',gid:1700251126,name:'X Accounts 17 \(Mandy QRTs\)',aliases:\['X Accounts 17 \(Article QRTs V2\)'\]\}/);
   assert.match(src,/crossCampaignTracking/);
   // Feed: a separate object; GTA VI and Home totals include it once.
   const group=(ids)=>({ok:true,ready:true,source:'GOOGLE_SHEETS_LIVE',sourceVerifiedAt:'2026-11-25T12:00:00Z',publishers:rows.filter(p=>ids.includes(p.campaign)),shortIo:{total:null,postPublicationTotal:null},xStatus:{errors:[]}});
@@ -284,6 +284,28 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   // Site recommendations: filtering to Mandy updates the common KPIs; no separate Mandy panel.
   assert.match(shell,/const gtaGroup=r=>r\.campaign==='GTAM'\?'Mandy'/);
   assert.doesNotMatch(shell,/function mandyPanel/);
+});
+
+test('tabs are found by permanent ID: renamed tabs, old names and old cached rows keep working',()=>{
+  const mk=name=>{const w=book({tab16:false,instagram:false}),m=w.addWorksheet(name);
+    m.getRow(7).values=['ACCOUNT','LINK','NOTES','UTM LINK','ACCOUNT SUM','PAID?','POSTED?','LINK'];
+    m.getRow(8).values=['Kyro','https://x.com/kyro','','https://ex.s.gy/kyro',180,true,false,''];return w;};
+  const def=SOURCE_TAB_IDS.find(t=>t.id==='GTAM');
+  assert.equal(def.gid,1700251126);
+  for(const name of ['X Accounts 17 (Mandy QRTs)','X Accounts 17 (Article QRTs V2)','X Accounts 17 (Anything New)']){
+    const rows=parseRows(mk(name)).filter(p=>inGroup(p,'mandy'));
+    assert.equal(rows.length,1,name);assert.equal(rows[0].sourceGid,1700251126);
+  }
+  // Tab number changed too: found by matching the tab's CSV (fetched by gid) to a sheet.
+  const w=mk('Brand new tab');
+  assert.equal(findSheet(w,def),null);
+  const csv=['','','','','','',',ACCOUNT,LINK,NOTES,UTM LINK,ACCOUNT SUM,PAID?,POSTED?,LINK',',Kyro,https://x.com/kyro,,https://ex.s.gy/kyro,180,TRUE,FALSE,'].join('\n');
+  const name=matchSheetByContent(w,csv);
+  assert.equal(name,'Brand new tab');
+  assert.equal(parseRows(w,{read:[],skipped:[]},{1700251126:name}).filter(p=>inGroup(p,'mandy')).length,1);
+  // Rows cached under the old tab name still count.
+  assert.ok(inGroup({campaign:'GTAM',sourceTab:'X Accounts 17 (Article QRTs V2)'},'mandy'));
+  assert.ok(!inGroup({campaign:'GTAM',sourceTab:'X Accounts 1 (Article 1 + RTs)'},'mandy'));
 });
 
 test('"Spend" replaces "Paid spend" in every visible label',()=>{

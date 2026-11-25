@@ -14,10 +14,31 @@ import {seed,seedVerifiedAt} from '../lib/gta-seed.mjs';
 import {summariseQuotedOriginals} from '../lib/quoted-originals.mjs';
 
 const SHEET_ID='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
-// Every GTA VI source tab. The first three are required; the others are read when present.
-// A new GTA VI campaign tab is added here (tab, campaign id) and to GROUPS / REPORTED_GROUPS.
-const SOURCE_TABS=[['X Accounts 15 (GTA VI QRTs)','GTAQ'],['X Accounts 12 (GTA)','GTA1'],['X Accounts 14 (GTA VI V2)','GTA2'],
-  ['X Accounts 16 (GTA VI QRTs)','GTAQ2'],['IG Accounts 3 (GTA VI)','GTAIG'],['X Accounts 17 (Article QRTs V2)','GTAM']];
+// Every GTA VI source tab, identified by its permanent Google Sheets tab ID (gid). The first three
+// are required; the others are read when present. The xlsx export carries no gids, so a tab is found
+// by its current name, then any earlier name, then its stable "X Accounts NN" prefix, and finally,
+// only if all of those fail, by matching the tab's own CSV export (fetched by gid) to a sheet.
+// A new GTA VI campaign tab is added here and to GROUPS.
+const SOURCE_TABS=[
+  {id:'GTAQ',gid:1636113127,name:'X Accounts 15 (GTA VI QRTs)'},
+  {id:'GTA1',gid:274433746,name:'X Accounts 12 (GTA)'},
+  {id:'GTA2',gid:1074485134,name:'X Accounts 14 (GTA VI V2)'},
+  {id:'GTAQ2',gid:697482283,name:'X Accounts 16 (GTA VI QRTs)'},
+  {id:'GTAIG',gid:1589347864,name:'IG Accounts 3 (GTA VI)'},
+  {id:'GTAM',gid:1700251126,name:'X Accounts 17 (Mandy QRTs)',aliases:['X Accounts 17 (Article QRTs V2)']}
+];
+export const SOURCE_TAB_IDS=Object.freeze(SOURCE_TABS.map(t=>({...t})));
+const prefixOf=name=>(String(name).match(/^((?:X|IG) Accounts \d+)/i)?.[1]||String(name)).toLowerCase();
+const namesOf=def=>[def.name,...(def.aliases||[])];
+// True when a sheet name belongs to this tab definition (current name, earlier name or same numbered prefix).
+const tabMatches=(def,name)=>{const n=String(name||'');if(namesOf(def).includes(n))return true;
+  const p=prefixOf(def.name),l=n.toLowerCase();return l===p||l.startsWith(p+' ')||l.startsWith(p+'(');};
+export function findSheet(workbook,def,resolved={}){
+  if(resolved[def.gid]&&workbook.getWorksheet(resolved[def.gid]))return workbook.getWorksheet(resolved[def.gid]);
+  for(const n of namesOf(def)){const s=workbook.getWorksheet(n);if(s)return s;}
+  const hits=workbook.worksheets.filter(s=>tabMatches(def,s.name)&&prefixOf(s.name)===prefixOf(def.name));
+  return hits.length===1?hits[0]:null;
+}
 const OPTIONAL_TABS=new Set(['GTAQ2','GTAIG','GTAM']);
 export const GROUPS={qrts:['GTAQ','GTAQ2'],originals:['GTA1','GTA2'],instagram:['GTAIG'],mandy:['GTAM']};
 // Groups reported as their own campaign: a tracking link they share with another group is never attributed.
@@ -25,8 +46,9 @@ const SEPARATE_GROUPS=['mandy'];
 const QUOTE_CAMPAIGNS=new Set(['GTAQ','GTAQ2','GTAM']);
 // Approved programme budget for GTA VI (owner-confirmed, USD).
 export const GTA_BUDGET=Object.freeze({amount:10000,currency:'USD'});
-const tabOf=campaign=>SOURCE_TABS.find(([,id])=>id===campaign)?.[0];
-export const inGroup=(p,group)=>GROUPS[group].includes(p.campaign)&&p.sourceTab===tabOf(p.campaign);
+const defOf=campaign=>SOURCE_TABS.find(t=>t.id===campaign);
+// A row belongs to a group when its campaign matches and it came from that campaign's tab (by gid or name).
+export const inGroup=(p,group)=>GROUPS[group].includes(p.campaign)&&!!defOf(p.campaign)&&(p.sourceGid===defOf(p.campaign).gid||tabMatches(defOf(p.campaign),p.sourceTab));
 export const publishedOriginals=rows=>(rows||[]).filter(p=>inGroup(p,'originals')&&p.posted===true);
 // Apply the same boundary to live sheets, legacy caches and the verified snapshot.
 export const publishedQrts=rows=>(rows||[]).filter(p=>inGroup(p,'qrts')&&p.posted===true);
@@ -44,11 +66,12 @@ const safeUrl=(value,host)=>{try{const u=new URL(String(value));return u.protoco
 const X_HOSTS=['x.com','twitter.com'],IG_HOSTS=['www.instagram.com','instagram.com'];
 const xPost=(url)=>{const m=String(url).match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]+)\/status\/(\d+)(?:[/?#]|$)/i);return m?{handle:m[1],id:m[2]}:null;};
 
-export function parseRows(workbook,report={read:[],skipped:[]}){
-  const result=[];
-  for(const [tab,campaign] of SOURCE_TABS){
-    const sheet=workbook.getWorksheet(tab);
-    if(!sheet){if(campaign==='GTAQ')throw new Error('GTA source tab missing: '+tab);continue;}
+export function parseRows(workbook,report={read:[],skipped:[]},resolved={}){
+  const result=[];report.readIds=report.readIds||[];
+  for(const def of SOURCE_TABS){
+    const campaign=def.id,sheet=findSheet(workbook,def,resolved);
+    if(!sheet){if(campaign==='GTAQ')throw new Error('GTA source tab missing: '+def.name);continue;}
+    const tab=sheet.name,gid=def.gid;
     const instagram=campaign==='GTAIG',hosts=instagram?IG_HOSTS:X_HOSTS;
     const col={};sheet.getRow(7).eachCell((c,i)=>{const name=txt(c).toUpperCase();if(name&&(!col[name]||name==='LINK'))col[name]=i;});
     // Instagram tabs mark publication as "UP?" and have no separate post-link column.
@@ -57,7 +80,7 @@ export function parseRows(workbook,report={read:[],skipped:[]}){
     const missing=required.filter(key=>!col[key]);
     // An unreadable optional tab is skipped and reported; it never stops the required tabs.
     if(missing.length){if(OPTIONAL_TABS.has(campaign)){report.skipped.push(tab);continue;}throw new Error('GTA column missing '+missing[0]+' in '+tab);}
-    report.read.push(tab);
+    report.read.push(tab);report.readIds.push(campaign);
     const formats=instagram?['POST','STORY','BOTH'].filter(k=>col[k]):[];
     for(let i=8;i<=sheet.rowCount;i++){
       const r=sheet.getRow(i),cell=key=>r.getCell(col[key]),publisher=txt(cell('ACCOUNT'));
@@ -80,7 +103,7 @@ export function parseRows(workbook,report={read:[],skipped:[]}){
       const identity=trackingUrl||accountUrl||publisher.toLowerCase();
       const code=campaign+'-'+createHash('sha256').update(identity+'|'+publisher.toLowerCase()).digest('hex').slice(0,20);
       const format=instagram?(formatKey||'').toLowerCase()||null:(QUOTE_CAMPAIGNS.has(campaign)?'qrt':'original');
-      result.push({code,campaign,sourceRow:i,sourceTab:tab,platform:instagram?'instagram':'x',format,
+      result.push({code,campaign,sourceRow:i,sourceTab:tab,sourceGid:gid,platform:instagram?'instagram':'x',format,
         publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
         cost,paid,posted,trackingUrl,clicks:null,
         ...(postUrls.length>1?{postUrls}:{}),...(campaign==='GTAM'?{purchasedPosts:Number.isSafeInteger(noted)&&noted>0?noted:paid?1:null}:{})});
@@ -92,22 +115,59 @@ export function parseRows(workbook,report={read:[],skipped:[]}){
   return result.map(p=>({...p,identityAmbiguous:counts.get(p.code)>1}));
 }
 
+// Only when a tab cannot be found by name or prefix: fetch that tab's CSV by its gid and match it to a
+// sheet by header row and first account names. The mapping is cached so this runs once per rename.
+const cells=line=>{const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];
+  if(q){if(ch==='"'&&line[i+1]==='"'){cur+='"';i++;}else if(ch==='"')q=false;else cur+=ch;}
+  else if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out.map(v=>v.trim());};
+export function matchSheetByContent(workbook,csv){
+  const rows=String(csv).split(/\r?\n/).map(cells);
+  const headRow=(rows[6]||[]).map(v=>v.toUpperCase()),acc=headRow.indexOf('ACCOUNT');
+  const head=headRow.filter(Boolean).join('|');
+  const names=acc<0?[]:rows.slice(7,13).map(r=>r[acc]||'');
+  if(!head||!names.some(Boolean))return null;
+  const hits=workbook.worksheets.filter(s=>{
+    const h=[];let col=0;s.getRow(7).eachCell((c,i)=>{const v=txt(c).toUpperCase();if(v){h.push(v);if(v==='ACCOUNT'&&!col)col=i;}});
+    if(h.join('|')!==head||!col)return false;
+    return names.every((n,i)=>txt(s.getRow(8+i).getCell(col))===n);
+  });
+  return hits.length===1?hits[0].name:null;
+}
+async function resolveRenamedTabs(workbook,fetcher=fetch){
+  const missing=SOURCE_TABS.filter(def=>!findSheet(workbook,def));
+  if(!missing.length)return {};
+  let saved={};try{saved=await sheetStore().get('tab-gids-v1',{type:'json'})||{};}catch{}
+  const resolved={};
+  for(const def of missing){
+    if(saved[def.gid]&&workbook.getWorksheet(saved[def.gid])){resolved[def.gid]=saved[def.gid];continue;}
+    try{
+      const r=await fetcher(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${def.gid}`,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+      if(!r.ok)continue;
+      const name=matchSheetByContent(workbook,await r.text());
+      if(name)resolved[def.gid]=name;
+    }catch{}
+  }
+  if(Object.keys(resolved).length){try{await sheetStore().setJSON('tab-gids-v1',{...saved,...resolved});}catch{}}
+  return resolved;
+}
+
 async function readWorkbook(){
   const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
   const resp=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(19000)});
   if(!resp.ok)throw new Error('GTA spreadsheet export HTTP '+resp.status);
   const bytes=await resp.arrayBuffer();if(bytes.byteLength>13_000_000)throw new Error('GTA source workbook too large');
   const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(Buffer.from(bytes));
-  for(const [tab,id] of SOURCE_TABS)if(!OPTIONAL_TABS.has(id)&&!workbook.getWorksheet(tab))throw new Error('GTA source tab missing: '+tab);
+  const resolved=await resolveRenamedTabs(workbook);
+  for(const def of SOURCE_TABS)if(!OPTIONAL_TABS.has(def.id)&&!findSheet(workbook,def,resolved))throw new Error('GTA source tab missing: '+def.name);
   const report={read:[],skipped:[]};
-  return {rows:parseRows(workbook,report),report};
+  return {rows:parseRows(workbook,report,resolved),report};
 }
 
 async function readSourceRows(force=false){
   const store=sheetStore();let cache=null;
   try{cache=await store.get('last-good-groups-v2',{type:'json'});}catch{}
   if(!force&&Array.isArray(cache?.rows)&&Date.now()-Date.parse(cache.at)<SHEET_TTL)return {...cache,cached:true};
-  try{const {rows,report}=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:report.read,skippedTabs:report.skipped};
+  try{const {rows,report}=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:report.read,tabIds:report.readIds,skippedTabs:report.skipped};
     try{await store.setJSON('last-good-groups-v2',updated);}catch{}return {...updated,cached:false};
   }catch(e){
     if(!Array.isArray(cache?.rows))for(const key of ['last-good-groups-v1','last-good-shortio-v3','last-good']){
@@ -188,12 +248,13 @@ export async function getReport(options={}){
   quoteGroups.rows=quoteGroups.rows.map(row=>({...row,paidOriginalMatch:paidOriginals.has(row.originalPostId)}));
   const tabs=source.tabs||[...new Set(source.rows.map(p=>p.sourceTab))],skipped=source.skippedTabs||[];
   // Mandy QRTs is its own campaign inside GTA VI; its quoted original (the viral tweet) is summarised separately.
-  const mandyRead=tabs.includes(tabOf('GTAM'))&&!skipped.includes(tabOf('GTAM'));
+  const readIds=source.tabIds||[...new Set(source.rows.map(p=>p.campaign))];
+  const mandyRead=readIds.includes('GTAM')&&!skipped.some(n=>tabMatches(defOf('GTAM'),n));
   return {...qrts,originals:{...originals,scope:'published-originals-v1'},instagram:{...instagram,scope:'instagram-v1'},quotedOriginals:quoteGroups,
     ...(mandyRead||mandy.publishers.length?{mandy:{...mandy,scope:'mandy-qrts-v1',quotedOriginals:summariseQuotedOriginals(mandy.publishers,metric.metrics,['GTAM'])}}:{}),
     budget:GTA_BUDGET,
     // Optional tabs that could not be read (or Instagram missing) are flagged, never silently dropped.
-    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(([tab,id])=>OPTIONAL_TABS.has(id)&&(skipped.includes(tab)||(['GTAIG','GTAM'].includes(id)&&!tabs.includes(tab)))).map(([tab])=>tab):[]};
+    missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(def=>OPTIONAL_TABS.has(def.id)&&(skipped.some(n=>tabMatches(def,n))||(['GTAIG','GTAM'].includes(def.id)&&!readIds.includes(def.id)))).map(def=>def.name):[]};
 }
 
 export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metricStore(),readSource=sourceRows,readReport=getReport}={}){
