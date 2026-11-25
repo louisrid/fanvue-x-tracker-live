@@ -67,7 +67,9 @@
 
   /* ---------- per-page interface state ---------- */
   const ui={};
-  const pageState=key=>ui[key]||(ui[key]={chart:{},tables:{},view:''});
+  const pageState=key=>ui[key]||(ui[key]={chart:{},charts:{},tables:{},view:''});
+  // Each chart keeps its own metric and display choice (a page can show a bar card and a main chart).
+  const chartState=(page,id)=>{const s=pageState(page);return s.charts[id]||(s.charts[id]={});};
   const tableState=(page,id)=>{const s=pageState(page);return s.tables[id]||(s.tables[id]={sort:null,q:'',expanded:new Set(),filter:''});};
 
   /* ---------- shared formatting helpers ---------- */
@@ -235,7 +237,17 @@
       ['Course Clicks',clicks?U.value(M.value(clicks.total)):U.value(dd.error?M.na('Course click counter is temporarily unavailable.'):M.loading())]
     ]),'<a class="fv-control" href="#discord">View Discord'+U.icon('right',14)+'</a>');
     return {title:'Home',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),
-      body:overviewNotice()+section('Overall Performance')+strip+table+discord};
+      body:overviewNotice()+section('Overall Performance')+strip+homeCharts(rows)+table+discord};
+  }
+  // Home: Spend / Views / Clicks by campaign (pink card), then Daily Views across every campaign's X posts.
+  function homeCharts(rows){
+    if(!rows.length)return '';
+    const card=rowCard('home-bars','home',rows.map(r=>({name:r.def.name,k:{spend:r.spend,views:r.key==='guru-promotion'?null:r.views,clicks:r.clicks}})),'Campaign');
+    const gr=D.gta().report,dash=D.dashboard();
+    const gIds=postIdsOf(gtaRecords()),xa=xaRecords().filter(x=>x.type!=='RT'),xIds=postIdsOf(xa),codes=new Set(xa.map(x=>String(x.raw.code||'')));
+    const hist=[...(gr?[...(gr.history||[]),...(gr.originals?.history||[]),...(gr.mandy?.history||[])].filter(h=>gIds.has(String(h.id||''))):[]),
+      ...((dash?.history||[]).filter(h=>codes.has(String(h.code||''))||xIds.has(String(h.postId||''))).map(h=>({id:'x:'+(h.postId||h.code),at:h.at,views:h.views})))];
+    return card+viewsChart('home-chart','home',hist);
   }
   function homeDetail(r){
     const b=r.budget;
@@ -277,9 +289,9 @@
     const today=C.londonDay(Date.now());
     const dailyNet=[...byDay].filter(([d])=>byDay.has(C.addDays(d,-1))).map(([d,v])=>({week:d,label:C.dayShort(d),range:C.dayLong(d),value:v-byDay.get(C.addDays(d,-1)),incomplete:d===today})).slice(-14);
     const chart=U.chartPanel({id:'discord-chart',measures:[
-      dailyNet.length>=2?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
+      dailyNet.length>=1?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
       netSeries.length>=1?{key:'net',label:'Member Growth',title:'Member Growth',series:netSeries,format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
-    ].filter(Boolean)},pageState('discord').chart);
+    ].filter(Boolean)},chartState('discord','discord-chart'));
     const table=U.tablePanel({id:'discord-table',title:'Weekly Stats',icon:'users',dropEmptyRows:true,
       rows:weeks.slice().reverse(),rowKey:r=>r.week,
       columns:[
@@ -287,7 +299,9 @@
         {key:'end',label:'Members',get:r=>r.end===null?M.na('No snapshot this week.'):M.value(r.end)},
         {key:'net',label:'Member Growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week’s snapshot.'):M.value(r.value)}
       ]},tableState('discord','discord-table'));
-    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:section('Community Performance')+strip+chart+table};
+    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:section('Community Performance')+strip+pinkCard('discord-bars','discord',[
+      dailyNet.length?{key:'daily',label:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',tip:'signed',unit:'Member Growth'}:null,
+      netSeries.length?{key:'weekly',label:'Weekly Member Growth',series:netSeries,format:'signed',tip:'signed',unit:'Member Growth'}:null])+chart+table};
   }
 
   /* X Articles: every article redirect leads to the Fanvue partner (affiliates) page, so all
@@ -347,11 +361,41 @@
   // A post's first reading is its starting point, never counted as one day's gain.
   function viewsChart(id,page,history,{idOf=r=>r.id,at=r=>r.at,value=r=>r.views,extra=[],noun='Views'}={}){
     const d=C.dailySeries(history,{id:idOf,at,value}),tip=p=>({...p,extra:p.count+' posts with a reading'});
-    const gained=d.gained.filter(p=>p.value!==null).length>=2?d.gained.map(tip):[];
+    const gained=d.gained.some(p=>p.value!==null)?d.gained.map(tip):[];
     return U.chartPanel({id,measures:[
       gained.length?{key:'gained',label:'Daily '+noun,title:'Daily '+noun,series:gained,period:'Day',format:'compact',tipFormat:'count',unit:'Views Gained',defaultType:'bar'}:null,
       ...extra
-    ].filter(Boolean)},pageState(page).chart);
+    ].filter(Boolean)},chartState(page,id));
+  }
+  /* ---------- pink bar cards (secondary comparison view above each main chart) ---------- */
+  // Adds values per label, keeps positive totals, biggest first, top 12.
+  function byLabel(items,get,n=12){
+    const m=new Map();for(const x of items){const v=get(x);if(v===null||v===undefined||!Number.isFinite(v))continue;m.set(x.label,(m.get(x.label)||0)+v);}
+    return [...m].map(([label,value])=>({label,value})).filter(p=>p.value>0).sort((a,b)=>b.value-a.value).slice(0,n);
+  }
+  const recSpend=x=>x.paid&&x.price!==null?x.price:null;
+  const recViews=x=>x.type!=='RT'&&C.hasValue(x.views)?x.views.value:null;
+  const recClicks=x=>C.hasValue(x.clicks)?x.clicks.value:null;
+  const metricVal=m=>m&&C.hasValue(m)?m.value:null;
+  function pinkCard(id,page,list){
+    return U.chartPanel({id,card:true,measures:list.filter(Boolean).map(m=>({key:m.key,label:m.label,title:m.label,categories:m.cats,series:m.series,period:m.period,
+      catLabel:m.catLabel||'Account',format:m.format||'compact',tipFormat:m.tip||'count',unit:m.unit,card:true}))},chartState(page,id));
+  }
+  // Views, Spend and Clicks per account for a set of placement records.
+  function accountCard(id,page,records,{first='views'}={}){
+    const it=records.map(x=>({...x,label:x.account||'Unnamed'}));
+    const list=[{key:'views',label:'Views by Account',cats:byLabel(it,recViews),unit:'Views'},
+      {key:'spend',label:'Spend by Account',cats:byLabel(it,recSpend),format:'moneyShort',tip:'money',unit:'Spend'},
+      {key:'clicks',label:'Clicks by Account',cats:byLabel(it,recClicks),unit:'Clicks'}];
+    return pinkCard(id,page,[...list.filter(m=>m.key===first),...list.filter(m=>m.key!==first)]);
+  }
+  // Views, Spend and Clicks per summary row (group, article or campaign).
+  function rowCard(id,page,rows,catLabel){
+    const it=rows.map(r=>({label:r.name,k:r.k}));
+    return pinkCard(id,page,[
+      {key:'spend',label:'Spend by '+catLabel,cats:byLabel(it,r=>metricVal(r.k.spend)),format:'moneyShort',tip:'money',unit:'Spend',catLabel},
+      {key:'views',label:'Views by '+catLabel,cats:byLabel(it,r=>metricVal(r.k.views)),unit:'Views',catLabel},
+      {key:'clicks',label:'Clicks by '+catLabel,cats:byLabel(it,r=>metricVal(r.k.clicks)),unit:'Clicks',catLabel}]);
   }
   const postIdsOf=records=>new Set(records.flatMap(x=>x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String));
 
@@ -377,10 +421,10 @@
       const by=new Map();for(const x of arts){const cid=x.raw.campaignId||'UNASSIGNED';if(!by.has(cid))by.set(cid,[]);by.get(cid).push(x);}
       const rows=[...by].map(([cid,list])=>summaryRow('a-'+cid,cid==='UNASSIGNED'?'Unassigned Article':names.get(cid)||list[0].raw.articleLabel||cid,list,{view:'articles',icon:'doc'}));
       if(rts.length)rows.push(summaryRow('rts','Paid RTs',rts,{icon:'refresh'}));
-      body=chart+summaryTable('x-articles','xa-summary',{title:'Articles',icon:'doc',nameLabel:'Article',rows,empty:xa?'No Results':waiting('Loading…')});
+      body=rowCard('xa-bars','x-articles',rows,'Article')+chart+summaryTable('x-articles','xa-summary',{title:'Articles',icon:'doc',nameLabel:'Article',rows,empty:xa?'No Results':waiting('Loading…')});
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
-      body=chart+filteredNote(f)+xTable('x-articles',id,{title:tab==='rts'?'Paid RTs':'Original Articles',icon:tab==='rts'?'refresh':'doc',records:scoped,f,
+      body=accountCard('xa-bars-'+tab,'x-articles',shown,{first:tab==='rts'?'spend':'views'})+chart+filteredNote(f)+xTable('x-articles',id,{title:tab==='rts'?'Paid RTs':'Original Articles',icon:tab==='rts'?'refresh':'doc',records:scoped,f,
         empty:xa?'No Results':waiting('Loading…'),
         expand:x=>xDetail(x,eff,{source:x.type==='RT'?(U.extLink(x.raw.sourcePostUrl||'','Source Post')||''):(U.extLink(x.raw.articleUrl,'Article')||''),
           extra:[['Article',x.type==='RT'?'':esc(names.get(x.raw.campaignId)||x.raw.articleLabel||'')],
@@ -435,11 +479,11 @@
     if(tab==='overview'){
       const rows=[['lucia','Lucia','gamepad'],['mandy','Mandy','gamepad'],['other','Other','gamepad']].map(([key,name,icon])=>{const l=group(key==='other'?'GTA VI':name);return l.length?summaryRow(key,name,l,{icon}):null;}).filter(Boolean);
       if(igs.length)rows.push(summaryRow('instagram','Instagram',igs,{icon:'image'}));
-      body=budget+chart+summaryTable('gta-vi','gta-summary',{title:'Groups',icon:'gamepad',rows,empty:s?'No Results':waiting('Loading…')});
+      body=budget+rowCard('gta-bars','gta-vi',rows,'Group')+chart+summaryTable('gta-vi','gta-summary',{title:'Groups',icon:'gamepad',rows,empty:s?'No Results':waiting('Loading…')});
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
       const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
-      body=chart+filteredNote(f)+xTable('gta-vi',id,{title:tabs.find(t=>t.key===tab).label+' Placements',icon:tab==='instagram'?'image':'gamepad',records:scoped,f,groups:false,empty:s?'No Results':waiting('Loading…'),
+      body=accountCard('gta-bars-'+tab,'gta-vi',shown,{first:tab==='instagram'?'spend':'views'})+chart+filteredNote(f)+xTable('gta-vi',id,{title:tabs.find(t=>t.key===tab).label+' Placements',icon:tab==='instagram'?'image':'gamepad',records:scoped,f,groups:false,empty:s?'No Results':waiting('Loading…'),
         expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Source Post'):'',
           extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):''],
             ['All-Time Clicks',count(x.raw.allTimeClicks)],['Click Source',x.raw.trackingUrl?esc('Short.io human clicks'):'']]});}});
@@ -462,15 +506,15 @@
     const strip=!k?loadingStrip(KPI_LOADING):kpiStrip(k);
     const codes=new Set(shown.map(x=>String(x.raw.code)));
     const series=rep?.ready&&Array.isArray(rep.activity)?C.eventSeries(rep.activity,{include:r=>codes.has(String(r.code))}):[];
-    const chart=U.chartPanel({id:'of-chart',measures:series.length?[{key:'clicks',label:'Clicks',title:'Weekly Clicks',series,unit:'Clicks'}]:[]},pageState('of-terms').chart);
+    const chart=U.chartPanel({id:'of-chart',measures:series.length?[{key:'clicks',label:'Clicks',title:'Weekly Clicks',series,unit:'Clicks'}]:[]},chartState('of-terms','of-chart'));
     let body;
     if(tab==='overview'){
       const live=records.filter(x=>x.live===true),waitingRows=records.filter(x=>x.live!==true);
       const rows=[live.length?summaryRow('live','Live',live,{view:'accounts',icon:'check'}):null,waitingRows.length?summaryRow('waiting','Not Live Yet',waitingRows,{view:'accounts',icon:'clock'}):null].filter(Boolean);
-      body=chart+summaryTable('of-terms','of-summary',{title:'Status',icon:'users',nameLabel:'Status',rows,empty:c?'No Results':waiting('Loading…')});
+      body=accountCard('of-bars','of-terms',records,{first:'clicks'})+chart+summaryTable('of-terms','of-summary',{title:'Status',icon:'users',nameLabel:'Status',rows,empty:c?'No Results':waiting('Loading…')});
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
-      body=chart+filteredNote(f)+xTable('of-terms','of-results',{title:'Accounts',icon:'users',records,f,groups:false,empty:c?'No Results':waiting('Loading…'),
+      body=accountCard('of-bars-accounts','of-terms',shown,{first:'clicks'})+chart+filteredNote(f)+xTable('of-terms','of-results',{title:'Accounts',icon:'users',records,f,groups:false,empty:c?'No Results':waiting('Loading…'),
         expand:x=>xDetail(x,eff,{extra:[['Last Click',x.raw.lastClick?when(x.raw.lastClick):''],['Click Source',esc('/of/ link events')]]})});
     }
     return {title:'OnlyFans Terms',chip:'of-terms',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||c?.sourceStale),
@@ -499,7 +543,12 @@
       const rows=(g?.rows||[]).map(r=>{const rts=rtBy.get(String(r.id))||[];const paid=rts.filter(x=>x.paid&&x.price!==null);
         return {key:String(r.id),r,name:guruName(r,g.rows),rts:rts.length,views:C.num(r.views)!==null?M.value(r.views):M.na('No verified X reading yet.'),
           spend:paid.length?M.value(paid.reduce((n,x)=>n+x.price,0)):M.na('No paid RTs of this post.')};});
-      body=chart+U.tablePanel({id:'guru-summary',title:'Promoted Posts',icon:'megaphone',rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:720,hideEmpty:false,
+      const it=rows.map(r=>({label:r.name,views:metricVal(r.views),spend:metricVal(r.spend),rts:r.rts}));
+      const card=pinkCard('guru-bars','guru-promotion',[
+        {key:'views',label:'Original Views by Post',cats:byLabel(it,r=>r.views),unit:'Original Views',catLabel:'Post'},
+        {key:'spend',label:'RT Spend by Post',cats:byLabel(it,r=>r.spend),format:'moneyShort',tip:'money',unit:'RT Spend',catLabel:'Post'},
+        {key:'rts',label:'Paid RTs by Post',cats:byLabel(it,r=>r.rts),unit:'Paid RTs',catLabel:'Post'}]);
+      body=card+chart+U.tablePanel({id:'guru-summary',title:'Promoted Posts',icon:'megaphone',rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:720,hideEmpty:false,
         empty:g?'No Results':waiting('Loading…'),
         columns:[
           {key:'name',label:'Original Post',type:'name',html:r=>accountName({publisher:r.name},'megaphone'),sort:r=>r.name.toLowerCase()},
@@ -510,7 +559,7 @@
         ]},tableState('guru-promotion','guru-summary'));
     }else{
       const ts=tableState('guru-promotion','guru-results');
-      body=chart+filteredNote(f)+U.tablePanel({id:'guru-results',title:'Paid RTs',icon:'megaphone',search:true,filters:xFilters('guru-results',records,f,{groups:false}),filter:xMatch(f),
+      body=accountCard('guru-bars-rts','guru-promotion',shown,{first:'spend'})+chart+filteredNote(f)+U.tablePanel({id:'guru-results',title:'Paid RTs',icon:'megaphone',search:true,filters:xFilters('guru-results',records,f,{groups:false}),filter:xMatch(f),
         rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:900,searchText:x=>[x.account,originals.get(groupKey(x))?.publisher||''].join(' '),
         empty:g?'No Results':waiting('Loading…'),columns:X_COLUMNS,groupBy:groupKey,
         groupHeader:(key,rows)=>{const o=originals.get(key),gp=groups.get(key);const total=rows.reduce((n,x)=>n+(x.paid&&x.price!==null?x.price:0),0);
@@ -585,7 +634,10 @@
         {key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},
         {key:'cpm',label:'CPM',format:'money',get:a=>a.cpm}
       ]},ts);
-    return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+table};
+    return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+pinkCard('acc-bars','all-accounts',[
+      {key:'spend',label:'Spend by Account',cats:byLabel(rows.map(a=>({label:a.name,v:metricVal(a.spend)})),x=>x.v),format:'moneyShort',tip:'money',unit:'Spend'},
+      {key:'views',label:'Views by Account',cats:byLabel(rows.map(a=>({label:a.name,v:metricVal(a.views)})),x=>x.v),unit:'Views'},
+      {key:'clicks',label:'Clicks by Account',cats:byLabel(rows.map(a=>({label:a.name,v:metricVal(a.clicks)})),x=>x.v),unit:'Clicks'}])+table};
   }
 
   const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,'guru-promotion':guruPage};
@@ -722,7 +774,7 @@
     const view=t.closest('[data-view]');
     if(view&&current.kind==='page'){const def=defaultView(current.key);go(current.key+(view.dataset.view===def?'':'/'+view.dataset.view));return;}
     const ct=t.closest('[data-chart-type]');
-    if(ct){const st=pageState(pageKey()).chart;st.type=ct.dataset.chartType;rerender();return;}
+    if(ct){const st=chartState(pageKey(),ct.dataset.chart);st.type=ct.dataset.chartType;rerender();return;}
     const reset=t.closest('[data-reset]');
     if(reset){const st=tableState(pageKey(),reset.dataset.reset);st.q='';st.filter='';if(st.xf)st.xf={group:'',type:'',live:'',pay:''};rerender();return;}
     if(t.closest('[data-retry]')){void D.rep()?.reload?.();return;}
@@ -735,7 +787,7 @@
   }
   function onChange(e){
     const m=e.target.closest('[data-chart-measure]');
-    if(m){const st=pageState(pageKey()).chart;st.measure=m.value;st.type='';rerender();return;}
+    if(m){const st=chartState(pageKey(),m.dataset.chartMeasure);st.measure=m.value;st.type='';rerender();return;}
     const xf=e.target.closest('[data-xfilter]');
     if(xf){const st=tableState(pageKey(),xf.dataset.table);(st.xf||(st.xf={group:'',type:'',live:'',pay:''}))[xf.dataset.xfilter]=xf.value;rerender();return;}
     const f=e.target.closest('[data-filter]');

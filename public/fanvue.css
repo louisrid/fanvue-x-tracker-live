@@ -519,3 +519,17 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 .fv-sub-link{color:inherit;text-decoration:none;font-weight:var(--fv-w-strong)}
 .fv-sub-link:hover,.fv-sub-link:focus-visible{text-decoration:underline;text-underline-offset:3px}
 @media (max-width:767px){.fv-subnav{display:flex;width:100%}}
+
+/* Pink bar card: secondary comparison view above each main chart (owner trial, 25 Nov). */
+.fv-bar-card{padding:20px 22px 14px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.fv-bar-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+.fv-bar-card-head h2{margin:0;color:#000;font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong);letter-spacing:-.4px}
+.fv-bar-card .fv-plot{height:260px}
+.is-pink .fv-bar{fill:#E6007E;stroke:none}
+.is-pink .fv-bar.is-incomplete{fill:#F49AC8;stroke:none}
+.is-pink .fv-grid{stroke:#E5E7EB;stroke-dasharray:none}
+.is-pink .fv-grid.is-zero{stroke:#C9CED6}
+.is-pink .fv-axis{fill:#000;font-weight:var(--fv-w-strong)}
+.fv-bar-val{fill:#000;font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);font-family:var(--fv-font);font-variant-numeric:tabular-nums}
+.is-pink .fv-hit:hover,.is-pink .fv-hit:focus-visible{background:rgba(230,0,126,.07)}
+@media (max-width:767px){.fv-bar-card{padding:16px 14px 10px}.fv-bar-card .fv-plot{height:230px}}
