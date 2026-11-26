@@ -20,20 +20,21 @@ export function parseDirectory(book){
   }
   return [...accounts.values()];
 }
-export const handler=async()=>{
-  const store=getStore({name:'fanvue-publisher-directory-v1',consistency:'strong'});let saved=null;
-  try{saved=await store.get('last-good',{type:'json'});}catch{}
-  if(saved&&Date.now()-Date.parse(saved.checkedAt)<7_200_000)return {statusCode:200,body:JSON.stringify(saved)};
+export function createDirectoryHandler({storeFactory=()=>getStore({name:'fanvue-publisher-directory-v1',consistency:'strong'}),fetcher=fetch}={}){return async()=>{
+  let store=null,saved=null;
+  try{store=storeFactory();saved=await store.get('last-good',{type:'json'});}catch{}
+  if(saved&&Date.now()-Date.parse(saved.checkedAt)<7_200_000)return Response.json(saved);
   try{
-    const res=await fetch('https://docs.google.com/spreadsheets/d/'+SHEET+'/export?format=xlsx',{signal:AbortSignal.timeout(15000)});
+    const res=await fetcher('https://docs.google.com/spreadsheets/d/'+SHEET+'/export?format=xlsx',{signal:AbortSignal.timeout(10000)});
     if(!res.ok)throw Error('Directory unavailable');
     const bytes=await res.arrayBuffer();if(bytes.byteLength>8_000_000)throw Error('Directory exceeds size limit');
     const book=new ExcelJS.Workbook();await book.xlsx.load(Buffer.from(bytes));
     const accounts=parseDirectory(book);if(!accounts.length)throw Error('Directory has no verifiable identities');
     const data={ok:true,checkedAt:new Date().toISOString(),accounts};
-    try{await store.setJSON('last-good',data);}catch{}
-    return {statusCode:200,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)};
+    try{await store?.setJSON('last-good',data);}catch{}
+    return Response.json(data);
   }catch{
-    return {statusCode:200,headers:{'Content-Type':'application/json'},body:JSON.stringify({...snapshot,...saved,ok:true,stale:true})};
+    return Response.json({...snapshot,...saved,ok:true,stale:true});
   }
-};
+};}
+export default createDirectoryHandler();

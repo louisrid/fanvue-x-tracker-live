@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 import ExcelJS from 'exceljs';
 import {countPlannedAsPaid} from '../netlify/functions/gta-report.mjs';
 import {assembleCampaignOverview} from '../netlify/functions/campaign-overview.mjs';
-import {parseDirectory} from '../netlify/functions/publisher-directory.mjs';
+import {parseDirectory,createDirectoryHandler} from '../netlify/functions/publisher-directory.mjs';
 await import('../public/fanvue-core.js');
 const C=globalThis.FanvueCore;
 const url=n=>'https://x.com/publisher/status/'+n;
@@ -68,4 +68,9 @@ test('OF Terms has one publisher results page; Accounts has history, filters and
   const a=app({campaigns:[campaign('of-terms',[])]});
   const of=a.pages['of-terms']({}).body,accounts=a.pages['all-accounts']({}).body;
   assert.doesNotMatch(of,/fv-subnav/);assert.doesNotMatch(accounts,/acc-chart/);
+});
+
+test('directory returns a safe dated snapshot even when storage and source are unavailable',async()=>{
+  const handler=createDirectoryHandler({storeFactory:()=>{throw Error('private environment error')},fetcher:async()=>{throw Error('source offline')}});
+  const response=await handler();assert.equal(response.status,200);const data=await response.json();assert.equal(data.ok,true);assert.equal(data.stale,true);assert.equal(data.accounts.length,342);assert.ok(data.checkedAt);assert.ok(!JSON.stringify(data).includes('private environment error'));
 });
