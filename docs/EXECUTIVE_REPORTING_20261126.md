@@ -23,8 +23,10 @@ No operational spreadsheet rows, provider keys, redirect URLs, historical data o
 
 ## Validation
 
-- Reporting CI: 130 tests passed, including ten new financial, date, privacy and alias regression cases.
-- Standard suite: 137/165 passed; all 28 failures also existed in the untouched production baseline, with no new failing test names. These legacy layout/version assertions are not represented as passing.
+- Reporting CI: 131 tests passed, including eleven new financial, date, privacy and alias regression cases.
+- Standard suite: 138/166 passed; all 28 failures also existed in the untouched production baseline, with no new failing test names. These legacy layout/version assertions are not represented as passing.
 - Chromium at 1440px and 390px: 26 route/subsection cases, table expansion and account search; no JavaScript errors or document overflow. Fixtures use captured read-only reporting responses plus isolated Discord cases. Charts and missing-history cases are exercised without opening tracking links.
 
 Live preview verification also exercised missing directory storage configuration. The directory uses the modern Netlify handler and returns the safe dated snapshot if either storage or source loading fails.
+
+Final live sidebar checks caught overflowing chart hover targets on short series. Hit areas are now bounded to the plot, with regression coverage for one, two, three and twenty points.

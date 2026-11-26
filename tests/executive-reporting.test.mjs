@@ -74,3 +74,15 @@ test('directory returns a safe dated snapshot even when storage and source are u
   const handler=createDirectoryHandler({storeFactory:()=>{throw Error('private environment error')},fetcher:async()=>{throw Error('source offline')}});
   const response=await handler();assert.equal(response.status,200);const data=await response.json();assert.equal(data.ok,true);assert.equal(data.stale,true);assert.equal(data.accounts.length,342);assert.ok(data.checkedAt);assert.ok(!JSON.stringify(data).includes('private environment error'));
 });
+
+test('chart hover targets remain inside the plot and cannot cover sidebar navigation',()=>{
+  const context=vm.createContext({window:{FanvueCore:C},URL,Intl,Date,Math,Number,String,Array,Object,Map,Set,JSON});
+  vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),context);
+  const plot={clientWidth:600,clientHeight:230,innerHTML:''};
+  for(const n of [1,2,3,20]){
+    const series=Array.from({length:n},(_,i)=>({week:'2026-11-'+String(i+1).padStart(2,'0'),label:String(i+1),value:i+1}));
+    context.window.FanvueUI.drawChart({querySelector:()=>plot},{series,title:'Views'},'line');
+    const targets=[...plot.innerHTML.matchAll(/class="fv-hit" style="left:([0-9.-]+)px;width:([0-9.-]+)px/g)];
+    assert.equal(targets.length,n);for(const hit of targets){assert.ok(Number(hit[1])>=0);assert.ok(Number(hit[1])+Number(hit[2])<=600);}
+  }
+});
