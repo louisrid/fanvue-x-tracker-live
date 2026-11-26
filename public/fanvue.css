@@ -674,7 +674,7 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 @media (min-width:768px){.fv-nav-more{margin-top:4px;padding-top:0}}
 
 /* ---------- Style 74 (owner pick, 26 Nov): text logo, tall header, black period cards with gradient tiles ---------- */
-:root{--fv-display:'Montserrat',Inter,sans-serif;--fv-w-black:900;--fv-fs-m:13px;--fv-fs-title:22px;--fv-fs-num:34px;--fv-fs-logo:34px}
+:root{--fv-display:'Montserrat',Inter,sans-serif;--fv-w-black:900;--fv-fs-m:13px;--fv-fs-title:22px;--fv-fs-num:40px;--fv-fs-logo:34px}
 .fv-logo-text{display:block;font-family:var(--fv-display);font-size:var(--fv-fs-xl);font-weight:var(--fv-w-black);line-height:1;letter-spacing:-.03em;color:#fff}
 .fv-wordmark{text-decoration:none!important}
 @media (max-width:767px){
@@ -698,9 +698,11 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 .fv-tiles+.fv-tiles{margin-top:8px}
 .fv-tile,.fv-period-card.is-all .fv-tile{border-radius:10px;padding:13px 11px 12px;min-height:84px;box-shadow:none;color:#fff}
 /* Owner (26 Nov): every gradient now goes light (top-left) -> dark (bottom-right); This Week recoloured pinkish-red to bright red. */
-.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#FF8FA3,#FF3B3B)}
-.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#7A7FF2,#5B8DFF)}
-.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#9DA1A8,#6E7177)}
+/* Owner (26 Nov): the pastel/candy gradients read as childish, and the dark corner looked like a drop shadow.
+   Deep, fully saturated jewel tones instead, never fading toward pastel or near-black. */
+.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#E11D74,#9F1239)}
+.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#4F46E5,#1E3A8A)}
+.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#6B6F76,#2E3036)}
 .fv-tile-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);white-space:nowrap;color:#fff}
 .fv-tile-label .fv-icon{display:none}
 .fv-tile-value,.fv-tile-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;color:#fff}
@@ -720,14 +722,14 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 /* ---------- Style 74 across every page (owner, 26 Nov) ---------- */
 /* Page colours: tiles, graph lines and active pills take the page's campaign colour. */
 /* Owner (26 Nov): every page gradient goes light (top-left) -> dark (bottom-right); Viral QRTs brightened from a murky amber to a vivid yellow-orange. */
-.fv-shell{--fv-tile:linear-gradient(135deg,#FF8A3D 0%,#FF645F 34%,#FF46A2 74%,#FC2D9D 100%);--fv-accent:#F0357C;--fv-card:#0B0B0C;--fv-card-2:#1C1C1F}
-.fv-shell.pg-gta-vi{--fv-tile:linear-gradient(135deg,#A855F7,#7C3AED);--fv-accent:#8B5CF6}
-.fv-shell.pg-viral-qrts{--fv-tile:linear-gradient(135deg,#FFD60A,#FF7A1A);--fv-accent:#F59E0B}
-.fv-shell.pg-x-articles{--fv-tile:linear-gradient(135deg,#64748B,#334155);--fv-accent:#64748B}
-.fv-shell.pg-of-terms{--fv-tile:linear-gradient(135deg,#6366F1,#3B82F6);--fv-accent:#3B82F6}
-.fv-shell.pg-guru-promotion{--fv-tile:linear-gradient(135deg,#FF8A3D 0%,#FF645F 34%,#FF46A2 74%,#FC2D9D 100%);--fv-accent:#F0357C}
-.fv-shell.pg-discord{--fv-tile:linear-gradient(135deg,#7C83FD,#5865F2);--fv-accent:#5865F2}
-.fv-shell.pg-all-accounts{--fv-tile:linear-gradient(135deg,#FF8A3D 0%,#FF645F 34%,#FF46A2 74%,#FC2D9D 100%);--fv-accent:#F0357C}
+.fv-shell{--fv-tile:linear-gradient(135deg,#DB2777,#9F1239);--fv-accent:#F0357C;--fv-card:#0B0B0C;--fv-card-2:#1C1C1F}
+.fv-shell.pg-gta-vi{--fv-tile:linear-gradient(135deg,#7C3AED,#4C1D95);--fv-accent:#8B5CF6}
+.fv-shell.pg-viral-qrts{--fv-tile:linear-gradient(135deg,#D97706,#7C2D12);--fv-accent:#F59E0B}
+.fv-shell.pg-x-articles{--fv-tile:linear-gradient(135deg,#475569,#1E293B);--fv-accent:#64748B}
+.fv-shell.pg-of-terms{--fv-tile:linear-gradient(135deg,#2563EB,#1E3A8A);--fv-accent:#3B82F6}
+.fv-shell.pg-guru-promotion{--fv-tile:linear-gradient(135deg,#DB2777,#9F1239);--fv-accent:#F0357C}
+.fv-shell.pg-discord{--fv-tile:linear-gradient(135deg,#4F46E5,#312E81);--fv-accent:#5865F2}
+.fv-shell.pg-all-accounts{--fv-tile:linear-gradient(135deg,#DB2777,#9F1239);--fv-accent:#F0357C}
 
 /* Owner (26 Nov): one small back control, top-left, above everything, the same on every page. */
 .fv-back{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px 0 7px;margin:0 0 10px;border:1.5px solid #E3E6EB;border-radius:999px;background:#fff;color:#111;font-family:var(--fv-font);font-weight:var(--fv-w-light);font-size:var(--fv-fs-s)}
@@ -760,7 +762,8 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 .fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){background:var(--fv-tile);border:0;border-radius:10px;padding:14px 12px 13px;min-height:96px;justify-content:space-between;gap:10px}
 .fv-panel.fv-strip .fv-metric-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);min-height:0;color:#fff}
 .fv-panel.fv-strip .fv-metric-label .fv-chipicon{display:none}
-.fv-panel.fv-strip .fv-metric-value,.fv-panel.fv-strip .fv-metric-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-xl);font-weight:var(--fv-w-black);letter-spacing:-.02em;color:#fff}
+/* Owner (26 Nov): same larger size as the Dashboard tiles, not a smaller one just for campaign pages. */
+.fv-panel.fv-strip .fv-metric-value,.fv-panel.fv-strip .fv-metric-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);letter-spacing:-.02em;color:#fff}
 .fv-panel.fv-strip .fv-chip,.fv-panel.fv-strip .fv-metric-note{display:none}
 @media (max-width:767px){
   .fv-panel.fv-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}
@@ -867,9 +870,9 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 /* Owner (26 Nov): the Dashboard's second row looked randomly uncoloured next to the first. Tint it in the
    same card colour, muted, so every tile reads as one coloured card instead of half-and-half. */
 /* Owner (26 Nov): the muted tint read as murky, not coloured. Row 2 now matches row 1 exactly, same gradient, full brightness. */
-.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#FF8FA3,#FF3B3B)}
-.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#7A7FF2,#5B8DFF)}
-.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#9DA1A8,#6E7177)}
+.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#E11D74,#9F1239)}
+.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#4F46E5,#1E3A8A)}
+.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#6B6F76,#2E3036)}
 .fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#26262A}
 @media (max-width:767px){
   .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#26262A}
