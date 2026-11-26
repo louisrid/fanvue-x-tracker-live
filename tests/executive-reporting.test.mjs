@@ -82,7 +82,40 @@ test('chart hover targets remain inside the plot and cannot cover sidebar naviga
   for(const n of [1,2,3,20]){
     const series=Array.from({length:n},(_,i)=>({week:'2026-11-'+String(i+1).padStart(2,'0'),label:String(i+1),value:i+1}));
     context.window.FanvueUI.drawChart({querySelector:()=>plot},{series,title:'Views'},'line');
-    const targets=[...plot.innerHTML.matchAll(/class="fv-hit" style="left:([0-9.-]+)px;width:([0-9.-]+)px/g)];
+    const targets=[...plot.innerHTML.matchAll(/class="fv-hit"[^>]*style="left:([0-9.-]+)px;width:([0-9.-]+)px/g)];
     assert.equal(targets.length,n);for(const hit of targets){assert.ok(Number(hit[1])>=0);assert.ok(Number(hit[1])+Number(hit[2])<=600);}
   }
+});
+
+test('history is a period bar chart, never a running total, and sparse histories are omitted',()=>{
+  const context=vm.createContext({window:{FanvueCore:C},URL,Intl,Date,Math,Number,String,Array,Object,Map,Set,JSON});
+  vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),context);const U=context.window.FanvueUI;
+  const series=[5,3,9].map((value,i)=>({week:'2026-11-'+String(i*7+2).padStart(2,'0'),value,label:String(i)}));
+  const html=U.chartPanel({id:'weekly',measures:[{key:'clicks',title:'Weekly Clicks',series}]},{});
+  assert.match(html,/data-type="bar"/);assert.doesNotMatch(html,/fv-switch/);
+  assert.deepEqual([...U.getMeasure('weekly','clicks').series].map(r=>r.value),[5,3,9]);
+  assert.equal(U.chartPanel({id:'short',measures:[{key:'gain',title:'Daily Views',period:'Day',series:series.slice(0,2)}]},{}),'');
+  const daily=Array.from({length:5},(_,i)=>({week:'2026-11-'+(20+i),value:i,label:String(i)}));
+  assert.match(U.chartPanel({id:'daily',measures:[{key:'gain',title:'Daily Views',period:'Day',series:daily}]},{}),/data-type="bar"/);
+});
+test('Dashboard uses one selected period and one click figure; the Viral view is not added again',()=>{
+  const ov={campaigns:[campaign('gta-qrts',[],{postPublicationClicks:10}),campaign('gta-originals',[]),campaign('gta-instagram',[]),campaign('gta-mandy',[],{postPublicationClicks:5}),campaign('x-articles',[],{trackedClicks:50}),campaign('article-rts',[]),campaign('of-terms',[],{trackedClicks:20}),campaign('guru-rts',[],{paidReposts:[]})]};
+  const a=app(ov),all=a.pages.home({view:'all-time'}).body;
+  assert.equal((all.match(/aria-label="Key metrics"/g)||[]).length,1);assert.match(all,/>85</);
+  assert.doesNotMatch(all,/fv-period-card|fv-click-breakdown|fv-coverage/);
+  for(const p of ['this-week','last-week','all-time'])assert.match(all,new RegExp('data-view="'+p+'"'));
+  const week=a.pages.home({view:'this-week'}).body;assert.match(week,/data-view="this-week" aria-pressed="true"/);
+  assert.doesNotMatch(week,/fv-period-card/);
+});
+test('published headlines remain tied to the verified post identity',async()=>{
+  const {parseXResponse,applyMetrics}=await import('../netlify/lib/metrics.mjs');
+  const m=parseXResponse({tweet:{id:'123',views:10,likes:1,replies:0,retweets:0,article:{title:'Verified public headline'}}},'123','2026-11-26T12:00:00Z');
+  assert.equal(m.articleTitle,'Verified public headline');
+  assert.equal(applyMetrics([{code:'P1',postUrl:url(123)}],{metrics:{P1:m}})[0].articleTitle,'Verified public headline');
+  assert.equal(applyMetrics([{code:'P1',postUrl:url(124)}],{metrics:{P1:m}})[0].articleTitle,undefined);
+});
+
+test('daily click bars report each day independently, including verified zero-event days',()=>{
+  const series=C.dailyEventSeries([{date:'2026-11-22',clicks:1},{date:'2026-11-23',clicks:10},{date:'2026-11-24',clicks:64},{date:'2026-11-26',clicks:3}],{now:Date.parse('2026-11-26T15:00:00Z')});
+  assert.deepEqual(series.map(r=>r.value),[1,10,64,0,3]);assert.equal(series[0].week,'2026-11-22');assert.equal(series.at(-1).incomplete,true);
 });

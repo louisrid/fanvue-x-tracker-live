@@ -8,8 +8,8 @@
      or loading, plus a reason that the interface shows on demand.
    - Overlapping campaign-overview objects are never summed. Home totals are only
      built from records proven disjoint at runtime; otherwise they are labelled.
-   - Click providers (site redirects, Short.io human clicks, OF events) are
-     never combined.
+   - Click providers retain their counting definitions. A mixed-source recorded
+     click aggregate must disclose those definitions and cannot imply unique or human-only visitors.
    - Weekly series come only from dated events or dated snapshots, bucketed into
      Monday-Sunday Europe/London weeks, with the current week marked incomplete. */
 (function(root){
@@ -93,6 +93,17 @@
     if(!first)return [];
     const current=weekStart(londonDay(now));
     return weeksFrom(first,now).map(w=>point(w,totals.get(w)||0,current));
+  }
+
+  // Daily event counts from verified dated counters. Never a running total and
+  // never backfilled before the first observed tracking date.
+  function dailyEventSeries(rows,{day=r=>r.date,value=r=>r.clicks,include=()=>true,now=Date.now(),days=14}={}){
+    const totals=new Map();let first='';
+    for(const r of rows||[]){if(!include(r))continue;const d=day(r),v=num(value(r));if(!validDay(d)||v===null)continue;if(!first||d<first)first=d;totals.set(d,(totals.get(d)||0)+v);}
+    if(!first)return [];
+    const today=londonDay(now),start=addDays(today,-days+1)>first?addDays(today,-days+1):first,out=[];
+    for(let d=start;d<=today;d=addDays(d,1))out.push({week:d,label:dayShort(d),range:dayLong(d),value:totals.get(d)||0,incomplete:d===today});
+    return out;
   }
 
   /* Cumulative latest-reading totals at each week end, from dated snapshots of
@@ -412,11 +423,11 @@
       const gaps=summaries.filter(s=>!hasValue(s.spend)||s.spend.state==='partial').map(s=>CAMPAIGNS.find(c=>c.key===s.key)?.name);
       spend=gaps.length?M.partial(known,'Known subtotal of recorded paid costs. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{chip:'Paid campaigns'});
     }
-    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-instagram','gta-mandy','of-terms'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
+    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-instagram','gta-mandy','of-terms','guru-rts'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
     const views=viewsOf(placementObjects);
     if(hasValue(views)){
-      views.chip='Paid placement posts';
-      views.reason=(views.reason?views.reason+' ':'')+'Deduplicated by post ID across X Articles, GTA VI and OF Terms placements. Excludes Guru original-post views and the original posts behind paid reposts.';
+      views.chip='Promoted post exposure';
+      views.reason=(views.reason?views.reason+' ':'')+'Deduplicated by post ID across X Articles, GTA VI, OF Terms and Guru promoted originals. Includes organic exposure; excludes the external viral originals behind purchased QRTs. This is exposure, not unique reach or paid-only impressions.';
     }
     const clicks=M.na('Click providers differ (site redirects, Short.io human clicks and OF events), so they are not added together. See each campaign.');
     return {spend,views,clicks};
@@ -435,6 +446,6 @@
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
   root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,rate,signed,londonDay,addDays,weekStart,dailySeries,weekLabel,dayShort,dayLong,stamp,
-    eventSeries,snapshotSeries,memberWeeks,recentWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
+    eventSeries,dailyEventSeries,snapshotSeries,memberWeeks,recentWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);

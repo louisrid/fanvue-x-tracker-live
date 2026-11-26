@@ -147,7 +147,7 @@ test('Discord shows member count and net growth for the last four weeks with sna
   assert.match(shell,/const weeks=C\.recentWeeks\(members\?\.history,4\)/);
   assert.match(shell,/\{key:'end',label:'Members'/);
   // Owner (26 Nov): renamed "Member Growth" to "Weekly Member Growth" for Period+Metric naming, matching "Daily Member Growth" and OF Terms' "Weekly Clicks".
-  assert.match(shell,/\{key:'net',label:'Weekly Member Growth'/);
+  assert.match(shell,/\{key:'daily',label:'Daily Member Growth'/);
 });
 
 test('an unreadable optional tab is skipped and reported; required tabs still parse',()=>{
