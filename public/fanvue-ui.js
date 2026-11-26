@@ -101,7 +101,7 @@
     if(m.value===null||!['value','partial','stale'].includes(m.state))
       return reasonButton(STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
     const text=esc(formatValue(m.value,format));
-    if(m.reason&&m.state!=='value')return '<span class="fv-num" tabindex="0" data-reason="'+esc(m.reason)+'">'+text+'<small class="fv-coverage">'+(m.state==='partial'?'partial':'cached')+'</small></span>';
+    if(m.reason&&m.state!=='value')return '<span class="fv-num" tabindex="0" data-reason="'+esc(m.reason)+'">'+text+'</span>';
     return '<span class="fv-num">'+text+'</span>';
   }
   function chipFor(m,note){
@@ -149,19 +149,14 @@
   const measureRegistry=new Map();
   const getMeasure=(id,key)=>measureRegistry.get(id+'|'+key)||null;
   function chartPanel(opts,state){
-    const measures=(opts.measures||[]).filter(m=>(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=2)||(m.categories&&m.categories.length));
+    const measures=(opts.measures||[]).filter(m=>(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=(m.period==='Day'?5:3))||(m.categories&&m.categories.length));
     for(const m of measures)measureRegistry.set(opts.id+'|'+m.key,m);
     if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];
-    // Owner (26 Nov): graphs only (no table view); time series open as a line with point markers.
-    // A line needs two readings: a series with a single reading opens as a bar until a second day arrives.
-    const points=(sel.series||[]).filter(p=>p.value!==null&&p.value!==undefined).length;
-    const kinds=sel.categories?['bar']:points<2?['bar','line']:['line','bar'];
-    const type=kinds.includes(state.type)?state.type:kinds[0];
+    const type='bar';
     const select=measures.length>1?'<label class="fv-select"><span class="fv-sr">Chart metric</span><select data-chart-measure="'+esc(opts.id)+'">'+
       measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('down',14)+'</label>':'';
-    const sw='<div class="fv-switch" role="group" aria-label="Chart display">'+kinds.map(k=>'<button type="button" data-chart-type="'+k+'" data-chart="'+esc(opts.id)+'" aria-pressed="'+(k===type)+'" aria-label="'+(k==='line'?'Line chart':k==='bar'?'Bar chart':'Table')+'">'+icon(k==='line'?'line':k==='bar'?'bars':'table',15)+'</button>').join('')+'</div>';
-    return '<section class="fv-panel fv-chart-panel" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(sel.title,'trend',select+sw,opts.id+'-t')+
+    return '<section class="fv-panel fv-chart-panel" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(sel.title,'trend',select,opts.id+'-t')+
       '<div class="fv-chart" id="'+esc(opts.id)+'" data-type="'+type+'" data-measure="'+esc(sel.key)+'">'+chartBody(sel,type)+'</div>'+
       '</section>';
   }
@@ -183,13 +178,13 @@
   function drawChart(host,m,type){
     const plot=host.querySelector('.fv-plot');if(!plot)return;
     const W=Math.max(260,plot.clientWidth||600),H=plot.clientHeight||190;
-    const pts=m.series||m.categories,cat=!m.series;
+    const allPoints=m.series||m.categories,pts=m.period==='Day'?allPoints.slice(W<480?-7:-14):allPoints,cat=!m.series;
     const vals=pts.map(p=>C.num(p.value)).filter(v=>v!==null);
     let lo=Math.min(0,...vals),hi=Math.max(0,...vals);
     const nm=niceMax(Math.max(Math.abs(lo),Math.abs(hi)));
     hi=hi>0?nm.max:0;lo=lo<0?-nm.max:0;if(hi===lo)hi=1;
     const n=pts.length,bar=type==='bar'||cat;
-    const L=W<480?42:56,R=W<480?14:22,T=20,iw=W-L-R;
+    const L=W<480?12:48,R=W<480?10:18,T=W<480?12:20,iw=W-L-R;
     // Category names that do not fit their slot wrap onto two lines.
     const wrap=cat&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
     const B=wrap?46:32,ih=H-T-B;
@@ -200,15 +195,15 @@
     const Y=v=>T+ih-(v-lo)/(hi-lo)*ih;
     let s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true" focusable="false">';
     const steps=Math.round((hi-lo)/nm.step);
-    for(let i=0;i<=steps;i++){const v=lo+i*nm.step,y=Y(v);s+='<line class="fv-grid'+(v===0?' is-zero':'')+'" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="fv-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+esc(tickText(v,m.format))+'</text>';}
+    for(let i=0;i<=steps;i++){const v=lo+i*nm.step,y=Y(v);if(W<480&&v!==0)continue;s+='<line class="fv-grid'+(v===0?' is-zero':'')+'" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="fv-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+esc(tickText(v,m.format))+'</text>';}
     const every=Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
     // Every few labels, always the last; a label too close to the last one is skipped so they never overlap.
     pts.forEach((p,i)=>{if(i!==n-1&&(i%every!==0||n-1-i<every))return;
       const lines=wrap?twoLines(p.label):[p.label];
       s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
-      const bw=Math.max(6,Math.min(40,iw/n*.55));
-      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="3"/>';});
+      const bw=Math.max(6,Math.min(52,iw/n*.68));
+      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="8"/>';if(W>=480&&n<=10)s+='<text class="fv-bar-value" x="'+X(i)+'" y="'+(v>=0?Math.max(12,y-7):y+15)+'" text-anchor="middle">'+esc(formatValue(v,m.format==='compact'?'compact':m.format||'count'))+'</text>';});
     }else{
       const seg=[];pts.forEach((p,i)=>{const v=C.num(p.value);if(v!==null)seg.push([X(i),Y(v),p]);});
       if(seg.length){
@@ -224,7 +219,7 @@
     // Focusable hit targets for keyboard, mouse and touch tooltips.
     const hits=pts.map((p,i)=>{const v=C.num(p.value);const w=bar?iw/n:(n===1?iw:iw/(n-1)),left=Math.max(L,X(i)-w/2),right=Math.min(W-R,X(i)+w/2);
       const tip=(p.range||p.label)+(p.incomplete?' (incomplete '+(m.period||'Week').toLowerCase()+')':'')+'\n'+(m.unit||m.label)+': '+(v===null?(p.state||'Not available'):formatValue(v,m.tipFormat||(m.format==='moneyShort'?'money':m.format)))+(p.extra?'\n'+p.extra:'');
-      return '<button type="button" class="fv-hit" style="left:'+left+'px;width:'+Math.max(1,right-left)+'px" data-tip="'+esc(tip)+'" data-x="'+X(i)+'" data-y="'+(v===null?T+ih/2:Y(v))+'" aria-label="'+esc(tip.replace(/\n/g,'. '))+'"></button>';}).join('');
+      return '<button type="button" class="fv-hit" data-index="'+i+'" style="left:'+left+'px;width:'+Math.max(1,right-left)+'px" data-tip="'+esc(tip)+'" data-x="'+X(i)+'" data-y="'+(v===null?T+ih/2:Y(v))+'" aria-label="'+esc(tip.replace(/\n/g,'. '))+'"></button>';}).join('');
     plot.innerHTML=s+'<div class="fv-hits">'+hits+'</div>';
   }
 
@@ -333,26 +328,27 @@
   const supportPanel=(title,iconName,body,tools='')=>'<section class="fv-panel fv-support">'+panelHead(title,iconName,tools)+body+'</section>';
 
   /* ---------- shared tooltip (reasons and chart points) ---------- */
-  let tip;
+  let tip,tipTimer,activeBar;
   function ensureTip(){if(!tip){tip=document.createElement('div');tip.className='fv-tooltip';tip.setAttribute('role','tooltip');tip.hidden=true;document.body.appendChild(tip);}return tip;}
   function showTip(target,text){
-    const t=ensureTip();t.textContent='';
-    String(text).split('\n').forEach((line,i)=>{const d=document.createElement(i?'span':'b');d.textContent=line;t.appendChild(d);});
+    clearTimeout(tipTimer);if(activeBar){activeBar.classList.remove('is-hovered');activeBar=null;}
+    const t=ensureTip(),chart=target.classList.contains('fv-hit'),lines=String(text||'').split('\n');t.textContent='';t.classList.toggle('is-chart',chart);
+    lines.forEach((line,i)=>{const d=document.createElement(i?'span':'b');d.className=i===1&&chart?'fv-tip-result':'';const parts=i===1&&chart?line.match(/^(.+?): (.+)$/):null;d.textContent=parts?parts[2]+' '+parts[1].toLowerCase():line;t.appendChild(d);});
     t.hidden=false;
     const r=target.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight;
     let x=r.left+r.width/2-tw/2,y=r.top-th-8;
-    if(target.classList.contains('fv-hit')){const host=target.closest('.fv-plot').getBoundingClientRect();x=host.left+Number(target.dataset.x)-tw/2;y=host.top+Number(target.dataset.y)-th-12;}
-    x=Math.max(8,Math.min(window.innerWidth-tw-8,x));if(y<8)y=r.bottom+8;
+    if(chart){const plot=target.closest('.fv-plot'),host=plot.getBoundingClientRect();activeBar=plot.querySelector('[data-bar="'+target.dataset.index+'"]');activeBar?.classList.add('is-hovered');x=host.left+Number(target.dataset.x)-tw/2;y=host.top+Number(target.dataset.y)-th-12;}
+    x=Math.max(8,Math.min(window.innerWidth-tw-8,x));if(y<8)y=Math.min(window.innerHeight-th-8,r.bottom+8);
     t.style.left=x+'px';t.style.top=y+'px';
   }
-  function hideTip(){if(tip)tip.hidden=true;}
+  function hideTip(){clearTimeout(tipTimer);if(tip)tip.hidden=true;if(activeBar){activeBar.classList.remove('is-hovered');activeBar=null;}}
   function bindTips(root){
     const target=e=>e.target.closest?.('[data-reason],.fv-hit');
     root.addEventListener('mouseover',e=>{const t=target(e);if(t)showTip(t,t.dataset.reason||t.dataset.tip);});
-    root.addEventListener('mouseout',e=>{const t=target(e);if(t&&!t.contains(e.relatedTarget))hideTip();});
+    root.addEventListener('mouseout',e=>{const t=target(e);if(t&&!t.contains(e.relatedTarget))tipTimer=setTimeout(hideTip,180);});
     root.addEventListener('focusin',e=>{const t=target(e);if(t)showTip(t,t.dataset.reason||t.dataset.tip);});
     root.addEventListener('focusout',e=>{if(target(e))hideTip();});
-    root.addEventListener('click',e=>{const t=target(e);if(t){e.preventDefault();showTip(t,t.dataset.reason||t.dataset.tip);}});
+    root.addEventListener('click',e=>{const t=target(e);if(t){e.preventDefault();showTip(t,t.dataset.reason||t.dataset.tip);if(t.classList.contains('fv-hit'))tipTimer=setTimeout(hideTip,3500);}});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')hideTip();});
     window.addEventListener('scroll',hideTip,{passive:true});
   }

@@ -1,9 +1,10 @@
 import {CLICK_COUNT_START_AT} from '../lib/click-baseline.mjs';
-import {readMetricState,readMetricHistory,applyMetrics} from '../lib/metrics.mjs';
+import {readMetricState,readMetricHistory,applyMetrics,postIdentity} from '../lib/metrics.mjs';
 import {homePaidCodes} from '../lib/home-scope.mjs';
 import {json,readFeed,readEvents,getCounts,buildDestination,SITE_URL,FANVUE_SITE_URL,adminKey} from '../lib/shared.mjs';
 import {cachedReport} from '../lib/report-cache.mjs';
 import metricsHandler from './metrics.mjs';
+import articleHeadlines from '../lib/article-headlines.mjs';
 
 function ukDay(when){
   const date=new Date(when);if(Number.isNaN(date.getTime()))return '';
@@ -39,7 +40,8 @@ async function dashboard(req){
     const metricState=metricResult,metricHistory=historyResult;
     const placements=applyMetrics(feed.placements,metricState).map(p=>{
       const clicks=counts[p.code]||{};
-      return {...p,trackingUrl:`${SITE_URL}/r/${p.code}`,fanvueTrackingUrl:`${FANVUE_SITE_URL}/s/${p.code}`,
+      const title=p.articleTitle||articleHeadlines[postIdentity(p.postUrl)?.id];
+      return {...p,...(title?{articleTitle:title}:{}),trackingUrl:`${SITE_URL}/r/${p.code}`,fanvueTrackingUrl:`${FANVUE_SITE_URL}/s/${p.code}`,
         destinationUrl:buildDestination(p.code,'FANVUE'),
         clicks:clickError?null:(clicks.clicks||0),redirectClicks:clickError?null:(clicks.clicks||0),
         legacyClicks:clicks.prismClicks||0,fanvueClicks:clicks.signupClicks||0,

@@ -87,13 +87,13 @@ test('Home spend is a labelled known subtotal from proven-disjoint paid rows onl
   assert.equal(T2.spend.state,'na');assert.equal(T2.spend.value,null);
 });
 
-test('Home post views deduplicate paid placement posts and exclude original-post scopes',()=>{
+test('Home exposure includes distinct Guru originals without counting external viral originals',()=>{
   const ov=overview();
   const T=C.homeTotals(ov,C.CAMPAIGNS.map(c=>C.campaignSummary(ov,c.key)));
   // x-articles 2000 + gta 1000 (+ one unmeasured) + 500 + of 300; Guru 700 excluded.
-  assert.equal(T.views.value,3800);
+  assert.equal(T.views.value,4500);
   assert.equal(T.views.state,'partial');
-  assert.match(T.views.reason,/Excludes Guru original-post views/);
+  assert.match(T.views.reason,/Includes organic exposure/);
 });
 
 test('click providers are never combined and missing outcomes are never zero',()=>{

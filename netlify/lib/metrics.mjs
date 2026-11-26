@@ -17,7 +17,8 @@ export function parseXResponse(data,expectedId,at=new Date().toISOString()){
   const n=v=>v!==null&&v!==''&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
   const views=n(t.views),likes=n(t.likes),comments=n(t.replies),shares=n(t.retweets);
   if([views,likes,comments,shares].some(v=>v===null))throw new Error('X provider did not return all four metrics');
-  return {postId:expectedId,views,likes,comments,shares,at,
+  const title=typeof t.article?.title==='string'?t.article.title.trim():'';
+  return {postId:expectedId,views,likes,comments,shares,at,...(title&&title.length<=300?{articleTitle:title}:{}),
     engagementRate:views>0&&comments!==null&&shares!==null?Math.round(10000*(likes+comments+shares)/views)/100:null};
 }
 export async function refreshMetrics(placements,{fetcher=fetch,storage=bucket()}={}){
@@ -69,7 +70,7 @@ export function applyMetrics(placements,state,now=Date.now()){
       xUpdated:m.at,engagementRate:m.engagementRate,metricSource:'FxTwitter'}:{...p};
     const lastVerifiedAt=current.xUpdated||'';
     const failed=Boolean(m.error);
-    return {...current,metricError:m.error||'',metricLastVerifiedAt:lastVerifiedAt,
+    return {...current,...(m.articleTitle?{articleTitle:m.articleTitle}:{}),metricError:m.error||'',metricLastVerifiedAt:lastVerifiedAt,
       metricStatus:failed?(lastVerifiedAt?'last-known-good':'unverified'):
         (!lastVerifiedAt?'unverified':now-Date.parse(lastVerifiedAt)>metricAgeLimit?'stale':'ok'),
       metricNote:failed&&lastVerifiedAt?'X stats temporarily unavailable. Showing last recorded figures.':''};
