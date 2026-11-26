@@ -247,8 +247,8 @@
   const CAMPAIGNS=[
     {key:'x-articles',name:'X Articles',icon:'x',color:'white',ids:['x-articles','article-rts']},
     {key:'gta-vi',name:'GTA VI',icon:'gamepad',color:'violet',ids:['gta-qrts','gta-originals','gta-instagram','gta-mandy']},
-    {key:'of-terms',name:'OnlyFans Terms',icon:'layers',color:'blue',ids:['of-terms']},
-    {key:'guru-promotion',name:'Guru X RTs',icon:'megaphone',color:'pink',ids:['guru-rts']}
+    {key:'of-terms',name:'OF Terms',icon:'layers',color:'blue',ids:['of-terms']},
+    {key:'guru-promotion',name:'Guru RTs',icon:'megaphone',color:'pink',ids:['guru-rts']}
   ];
   const PALETTE={
     slate:{icon:'#94A3B8',fill:'#475569',label:'Slate'},blue:{icon:'#6AA8F0',fill:'#1D5FB8',label:'Blue'},

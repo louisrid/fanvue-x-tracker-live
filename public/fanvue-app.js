@@ -32,11 +32,15 @@
   }
 
   /* ---------- routes ---------- */
+  // Viral QRTs is a view of GTA VI's Mandy group (owner, 26 Nov): its own page, but counted once, inside GTA VI.
+  const VIRAL={key:'viral-qrts',name:'Viral QRTs',icon:'zap',color:'amber'};
+  // Menu order (owner, 26 Nov): Dashboard; campaigns by size and kind; community; Accounts last.
+  const NAV_ORDER=['gta-vi','viral-qrts','x-articles','of-terms','guru-promotion'];
   const PAGES=[
-    {key:'home',title:'Home',icon:'home',group:'general'},
-    {key:'discord',title:'Discord',icon:'discord',group:'general'},
-    {key:'all-accounts',title:'Accounts',icon:'users',group:'general'},
-    ...C.CAMPAIGNS.map(c=>({key:c.key,title:c.name,icon:c.icon,group:'paid',color:c.color}))
+    {key:'home',title:'Dashboard',icon:'home',group:'general'},
+    ...NAV_ORDER.map(k=>k==='viral-qrts'?VIRAL:C.CAMPAIGNS.find(c=>c.key===k)).filter(Boolean).map(c=>({key:c.key,title:c.name,icon:c.icon,group:'paid',color:c.color})),
+    {key:'discord',title:'Discord',icon:'discord',group:'community'},
+    {key:'all-accounts',title:'Accounts',icon:'users',group:'more'}
   ];
   const RECORDS={
     placements:{title:'Article tracker',parent:'x-articles'},
@@ -210,68 +214,68 @@
     return seen.size;
   }
 
+  /* Dashboard (owner, 26 Nov): three sections only — This Week (orange), Last Week (blue), All Time (black).
+     Each shows the campaigns' Spend, Views and Live Posts and Discord's Course Clicks, Member Growth and Members. */
   function homePage(st){
     ensure('overview');ensure('discord');ensure('gta');
     const ov=D.overview(),S=summaries();
-    const strip=!S?loadingStrip([['Spend','wallet'],['Views','eye'],['Live Posts','check']]):(()=>{
+    const today=C.londonDay(Date.now()),ws=C.weekStart(today),lws=C.addDays(ws,-7),lwe=C.addDays(ws,-1);
+    const dc=discordStats(ws,today,lws,lwe);
+    const load=M.loading();
+    let wk={spend:load,views:load,posts:load},lw=wk,all=wk;
+    if(S){
+      wk=periodTotals(ws,today);lw=periodTotals(lws,lwe);
       const T=C.homeTotals(ov,S),lp=livePosts(ov,Object.values(LIVE_SOURCES).flat());
-      if(C.hasValue(T.views)){T.views.chip=undefined;}
-      return U.strip([metric('Spend','wallet',T.spend,'moneyShort'),metric('Views','eye',T.views,'compact'),
-        metric('Live Posts','check',M.value(lp,{reason:'Distinct paid X posts that are live, across X Articles, GTA VI and OnlyFans Terms.'}))]);
-    })();
-    const rows=S?S.map(s=>({...s,def:C.CAMPAIGNS.find(c=>c.key===s.key),live:LIVE_SOURCES[s.key]?livePosts(ov,LIVE_SOURCES[s.key]):null})):[];
-    const table=U.tablePanel({id:'home-results',title:'Campaign Performance',icon:'layers',rows,dropEmptyRows:true,rowKey:r=>r.key,rowLabel:r=>r.def.name,
-      empty:S?'No Results':waiting('Loading…'),countLabel:n=>n===1?'campaign':'campaigns',
-      columns:[
-        {key:'name',label:'Campaign',type:'name',html:r=>{const l=look(r.key);return '<a class="fv-name" href="#'+esc(r.key)+'">'+U.marker(l.icon,l.color)+'<span>'+esc(r.def.name)+'</span></a>';},sort:r=>r.def.name},
-        {key:'spend',label:'Spend',format:'money',get:r=>r.spend},
-        {key:'views',label:'Views',get:r=>r.key==='guru-promotion'&&C.hasValue(r.views)?{...r.views,reason:'Original Views: views of the promoted original posts, not of the paid RTs. Not included in the Home Views total.'}:r.views},
-        {key:'clicks',label:'Clicks',get:r=>r.clicks},
-        {key:'cpc',label:'CPC',format:'money',get:r=>r.cpc},
-        {key:'live',label:'Live Posts',get:r=>r.live===null?M.na('No X placements.'):M.value(r.live)},
-        {key:'signups',label:'Signups',get:r=>r.signups},
-        {key:'cps',label:'CPS',format:'money',get:r=>r.cps}
-      ],
-      expand:r=>homeDetail(r)},tableState('home','home-results'));
-    const discord=discordPeriods();
-    return {title:'Home',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),
-      body:overviewNotice()+weekSection(S)+section('Overall Performance')+strip+table+discord};
+      if(C.hasValue(T.views))T.views.chip=undefined;
+      all={spend:T.spend,views:T.views,posts:M.value(lp,{reason:'Distinct paid X posts that are live, across X Articles, GTA VI and OF Terms.'})};
+    }
+    const sections=[
+      {cls:'is-week',title:'This Week',sub:weekRange(ws),c:wk,d:dc.week},
+      {cls:'is-last',title:'Last Week',sub:weekRange(lws),c:lw,d:dc.last},
+      {cls:'is-all',title:'All Time',sub:'Every recorded placement',c:all,d:dc.all}
+    ];
+    return {title:'Dashboard',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),
+      body:overviewNotice()+sections.map(periodSection).join('')};
+  }
+  // One tile per figure: label and value in their own light box; missing data is one dash with its reason.
+  function tile(label,iconName,m,format){
+    const na=!m||['na','notConnected','notTracked'].includes(m.state);
+    return '<div class="fv-tile"><span class="fv-tile-label">'+U.icon(iconName,15)+esc(label)+'</span><b class="fv-tile-value"'+(!na&&m.reason?' data-reason="'+esc(m.reason)+'" tabindex="0"':'')+'>'+(na?dash(m?.reason):U.value(m,format))+'</b></div>';
+  }
+  function periodSection(p){
+    const id='fvp-'+p.cls;
+    return '<section class="fv-period-card '+p.cls+'" aria-labelledby="'+id+'"><div class="fv-period-card-head"><h2 id="'+id+'">'+esc(p.title)+'</h2><span>'+esc(p.sub)+'</span></div>'+
+      '<h3 class="fv-period-group">Campaigns</h3><div class="fv-tiles">'+tile('Spend','wallet',p.c.spend,'moneyShort')+tile('Views','eye',p.c.views,'compact')+tile('Live Posts','check',p.c.posts)+'</div>'+
+      '<h3 class="fv-period-group">Discord</h3><div class="fv-tiles">'+tile('Course Clicks','graduation',p.d.clicks)+tile('Member Growth','trend',p.d.growth,'signed')+tile('Members','users',p.d.members)+'</div></section>';
   }
   /* ---------- Home: This Week (owner, 26 Nov) ---------- */
   // UK week, Monday to today.
   const weekRange=ws=>{const we=C.addDays(ws,6);return C.dayShort(ws).split(' ')[0]+(ws.slice(5,7)===we.slice(5,7)?'':' '+C.dayShort(ws).split(' ')[1])+'–'+C.dayShort(we);};
   const postIdsOfRecord=x=>(x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String);
-  // Spend: paid placements whose X post went live this week. Views: views gained since Monday on tracked X posts.
-  // Live Posts: distinct paid X posts published this week. Posts without a dated X link (RTs, Instagram) are not included.
-  function weekTotals(){
-    const ws=C.weekStart(C.londonDay(Date.now()));
+  // For a UK date range: Spend = paid placements whose X post went live in the range; Views = views gained in the range
+  // on tracked X posts (new posts count from publication); Live Posts = distinct paid X posts published in the range.
+  // Posts without a dated X link (RTs, Instagram) are not included.
+  function periodTotals(from,to){
     const all=[...xaRecords(),...gtaRecords(),...ofRecords()];
     const seen=new Set(),posts=new Set();let spend=0,bookings=0;
+    const span=C.dayShort(from)+(from===to?'':' to '+C.dayShort(to));
     for(const x of all){
       if(x.live!==true||!x.paid)continue;
-      const fresh=postIdsOfRecord(x).filter(id=>{const t=postBorn(id);return t&&C.londonDay(t)>=ws;});
-      if(!fresh.length)continue;
-      fresh.forEach(id=>posts.add(id));
+      const inRange=postIdsOfRecord(x).filter(id=>{const t=postBorn(id);const d=t?C.londonDay(t):'';return d&&d>=from&&d<=to;});
+      if(!inRange.length)continue;
+      inRange.forEach(id=>posts.add(id));
       const k=rowKeyOf(x.raw)+'|'+x.parent;if(seen.has(k)||x.price===null)continue;seen.add(k);spend+=x.price;bookings++;
     }
-    const gained=C.dailySeries(xHistory(all),{born:postBorn}).gained.filter(p=>p.week>=ws&&p.value!==null);
-    return {ws,
-      spend:M.value(spend,{reason:'Paid cost of '+bookings+' '+(bookings===1?'placement':'placements')+' whose X post went live since Monday '+C.dayShort(ws)+'.'}),
-      views:gained.length?M.value(gained.reduce((n,p)=>n+p.value,0),{reason:'Views gained since Monday '+C.dayShort(ws)+' on tracked X posts (GTA VI and X Articles). New posts count from publication.'}):M.na('No dated view readings this week yet.'),
-      posts:M.value(posts.size,{reason:'Distinct paid X posts published since Monday '+C.dayShort(ws)+', across X Articles, GTA VI and OnlyFans Terms.'})};
-  }
-  function weekSection(S){
-    const labels=[['Spend','wallet'],['Views','eye'],['Live Posts','check']];
-    if(!S)return section('This Week')+loadingStrip(labels);
-    const w=weekTotals();
-    return '<h2 class="fv-section-title">This Week <span class="fv-section-sub">'+esc(weekRange(w.ws))+'</span></h2>'+
-      U.strip([metric('Spend','wallet',w.spend,'moneyShort'),metric('Views','eye',w.views,'compact'),metric('Live Posts','check',w.posts)],{cls:'is-week'});
+    const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
+    return {
+      spend:M.value(spend,{reason:'Paid cost of '+bookings+' '+(bookings===1?'placement':'placements')+' whose X post went live '+span+'.'}),
+      views:gained.length?M.value(gained.reduce((n,p)=>n+p.value,0),{reason:'Views gained '+span+' on tracked X posts (GTA VI and X Articles). New posts count from publication.'}):M.na('No dated view readings for '+span+'.'),
+      posts:M.value(posts.size,{reason:'Distinct paid X posts published '+span+', across X Articles, GTA VI and OF Terms.'})};
   }
 
   /* ---------- Home: Discord performance by period (This Week, Last Week, All Time) ---------- */
-  function discordPeriods(){
+  function discordStats(ws,today,lws,lwe){
     const dd=D.discord(),members=dd.members,clicks=dd.clicks;
-    const today=C.londonDay(Date.now()),ws=C.weekStart(today),lws=C.addDays(ws,-7);
     const snaps=(members?.history||[]).filter(h=>/^\d{4}-\d{2}-\d{2}$/.test(String(h?.date||''))&&Number.isSafeInteger(h.memberCount)).slice().sort((a,b)=>a.date.localeCompare(b.date));
     const first=snaps[0],latest=members?.latest&&Number.isSafeInteger(members.latest.memberCount)?members.latest:snaps.at(-1);
     const began=first?' Member tracking began '+C.dayLong(first.date)+'.':'';
@@ -299,17 +303,12 @@
       return gap?M.partial(n,'Course button clicks with a recorded time ('+C.full(covered)+' of '+C.full(clicks.total)+' clicks have one).'):M.value(n,{reason:'Course button clicks recorded in this period.'});
     };
     const allGrowth=first&&latest&&latest.date!==first.date?M.value(latest.memberCount-first.memberCount,{reason:'Change since tracking began on '+C.dayLong(first.date)+'.'}):naM('Needs two member snapshots.'+began);
-    const rows=[
-      {cls:'is-week',title:'This Week',sub:weekRange(ws),...period(ws,today,true),clicks:clicksIn(ws,today)},
-      {cls:'is-last',title:'Last Week',sub:weekRange(lws),...period(lws,C.addDays(ws,-1),false),clicks:clicksIn(lws,C.addDays(ws,-1))},
-      {cls:'is-all',title:'All Time',sub:first?'Since '+C.dayShort(first.date):'',members:latest?M.value(latest.memberCount,{reason:'Current member count.'}):naM('Member count unavailable.'),growth:allGrowth,
+    return {
+      week:{...period(ws,today,true),clicks:clicksIn(ws,today)},
+      last:{...period(lws,lwe,false),clicks:clicksIn(lws,lwe)},
+      all:{members:latest?M.value(latest.memberCount,{reason:'Current member count.'}):naM('Member count unavailable.'),growth:allGrowth,
         clicks:clicks?M.value(clicks.total,{reason:'All course button clicks since the counter was enabled. Not signups or enrolments.'}):clicksIn('','')}
-    ];
-    // Unavailable figures show one dash; the reason is on hover and focus.
-    const cell=(label,m,format)=>'<div><span>'+esc(label)+'</span><b>'+(m&&['na','notConnected','notTracked'].includes(m.state)?dash(m.reason):U.value(m,format))+'</b></div>';
-    const body='<div class="fv-dperiods">'+rows.map(r=>'<div class="fv-dperiod '+r.cls+'"><div class="fv-dperiod-head"><h3>'+esc(r.title)+'</h3>'+(r.sub?'<span>'+esc(r.sub)+'</span>':'')+'</div>'+
-      '<div class="fv-dperiod-metrics">'+cell('Members',r.members)+cell('Growth',r.growth,'signed')+cell('Course Clicks',r.clicks)+'</div></div>').join('')+'</div>';
-    return U.supportPanel('Discord Performance','discord',body,'<a class="fv-control fv-discord-btn" href="#discord">'+U.icon('discord',15)+'View Discord</a>');
+    };
   }
   function homeDetail(r){
     const b=r.budget;
@@ -388,8 +387,8 @@
     return (D.campaign('gta-instagram')?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'GTA VI',parent:'GTA VI',platform:'Instagram',type:r.format==='post'?'post':'story',ownLink:false,
       views:()=>M.na('Instagram views are not measured.'),clicks:()=>M.na('No tracked link for this placement.')}));
   }
-  const ofRecords=()=>(D.campaign('of-terms')?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'OnlyFans Terms',parent:'OnlyFans Terms',type:r.type||r.format||'post',clicks:r=>C.num(r.clicks)===null?M.na('No /of/ link events recorded.'):M.value(r.clicks,{reason:'Events on the /of/ tracking link.'})}));
-  const guruRecords=()=>(D.campaign('guru-rts')?.paidReposts||[]).map(r=>xRecord(r,{campaign:'Guru X RTs',parent:'Guru X RTs',type:'rt',ownLink:false,
+  const ofRecords=()=>(D.campaign('of-terms')?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'OF Terms',parent:'OF Terms',type:r.type||r.format||'post',clicks:r=>C.num(r.clicks)===null?M.na('No /of/ link events recorded.'):M.value(r.clicks,{reason:'Events on the /of/ tracking link.'})}));
+  const guruRecords=()=>(D.campaign('guru-rts')?.paidReposts||[]).map(r=>xRecord(r,{campaign:'Guru RTs',parent:'Guru RTs',type:'rt',ownLink:false,
     views:()=>M.na('Repost impressions are not measured. The original post’s views are in its group.'),clicks:()=>M.na('Paid RTs have no tracked link.')}));
 
   /* ---------- campaign subpages ---------- */
@@ -535,6 +534,26 @@
       body:overviewNotice()+tabWarning+subTabs(tabs,tab)+section(label)+strip+body};
   }
 
+  // Viral QRTs: the Mandy QRTs of the viral video (X Accounts 17). Same records as GTA VI → Mandy.
+  function viralPage(st){
+    ensure('overview');ensure('gta');
+    const ov=D.overview(),gr=D.gta().report,mq=D.campaign('gta-mandy');
+    const records=gtaRecords().filter(x=>x.campaign==='Mandy');
+    const f=xState('viral-qrts','viral-results'),shown=records.filter(xMatch(f));
+    const strip=!ov?loadingStrip(KPI_LOADING):kpiStrip(xKpis(shown));
+    const ids=postIdsOf(shown);
+    const chart=viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[]);
+    const eff=C.placementEfficiency(shown.map(x=>x.raw));
+    const quoted=new Map((mq?.quotedOriginals?.rows||[]).flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
+    const table=xTable('viral-qrts','viral-results',{title:'Placements',icon:'zap',records,f,groups:false,empty:ov?'No Results':waiting('Loading…'),
+      expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Original Video'):'',
+        extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):''],['All-Time Clicks',count(x.raw.allTimeClicks)],['Click Source',x.raw.trackingUrl?esc('Short.io human clicks'):'']]});}});
+    const l=look(VIRAL.key);
+    return {title:'Viral QRTs',chipHtml:'<span class="fv-campaign-chip" style="background:'+C.PALETTE[l.color].fill+'" aria-hidden="true">'+U.icon(l.icon,15)+'</span>',
+      refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||mq?.sourceStale),
+      body:overviewNotice()+section('Campaign Performance')+strip+chart+filteredNote(f)+table};
+  }
+
   function ofPage(st){
     ensure('overview');ensure('of');
     const ov=D.overview(),s=ov?C.campaignSummary(ov,'of-terms'):null,c=D.campaign('of-terms'),rep=D.of().report;
@@ -557,7 +576,7 @@
       body=chart+filteredNote(f)+xTable('of-terms','of-results',{title:'Accounts',icon:'users',records,f,groups:false,empty:c?'No Results':waiting('Loading…'),
         expand:x=>xDetail(x,eff,{extra:[['Last Click',x.raw.lastClick?when(x.raw.lastClick):''],['Click Source',esc('/of/ link events')]]})});
     }
-    return {title:'OnlyFans Terms',chip:'of-terms',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||c?.sourceStale),
+    return {title:'OF Terms',chip:'of-terms',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||c?.sourceStale),
       body:overviewNotice()+subTabs(tabs,tab)+section('Campaign Performance')+strip+body};
   }
 
@@ -605,7 +624,7 @@
         expand:x=>xDetail(x,null,{source:U.extLink(x.raw.sourcePostUrl||x.raw.postUrl||'','Source Post')||'',
           extra:[['X Ad Spend',C.num(originals.get(groupKey(x))?.cost)!==null?money(originals.get(groupKey(x)).cost):'']]})},ts);
     }
-    return {title:'Guru X RTs',chip:'guru-promotion',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||g?.sourceStale),
+    return {title:'Guru RTs',chip:'guru-promotion',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||g?.sourceStale),
       body:overviewNotice()+subTabs(tabs,tab)+section('Campaign Performance')+strip+body};
   }
   // Two promoted posts by the same account are told apart by their post date.
@@ -672,7 +691,7 @@
     return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+viewsChart('acc-chart','all-accounts',xHistory(shown))+table};
   }
 
-  const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'of-terms':ofPage,'guru-promotion':guruPage};
+  const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'viral-qrts':viralPage,'of-terms':ofPage,'guru-promotion':guruPage};
 
   /* ---------- shell rendering ---------- */
   let current=parseHash(),recordsShown=false;
@@ -685,11 +704,14 @@
     };
     return '<div class="fv-nav" role="group" aria-label="General">'+PAGES.filter(p=>p.group==='general').map(item).join('')+'</div>'+
       '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvPaidLabel">Campaigns</span>'+(hooks.navAddButton?hooks.navAddButton():'')+'</div>'+
-      '<div class="fv-nav" role="group" aria-labelledby="fvPaidLabel">'+PAGES.filter(p=>p.group==='paid').map(item).join('')+(hooks.navExtra?hooks.navExtra(active):'')+'</div>';
+      '<div class="fv-nav" role="group" aria-labelledby="fvPaidLabel">'+PAGES.filter(p=>p.group==='paid').map(item).join('')+(hooks.navExtra?hooks.navExtra(active):'')+'</div>'+
+      '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvCommunityLabel">Community</span></div>'+
+      '<div class="fv-nav" role="group" aria-labelledby="fvCommunityLabel">'+PAGES.filter(p=>p.group==='community').map(item).join('')+'</div>'+
+      '<div class="fv-nav fv-nav-more" role="group" aria-label="More">'+PAGES.filter(p=>p.group==='more').map(item).join('')+'</div>';
   }
   function setNav(active){$('fvNav').innerHTML=navHtml(active);}
   // Built-in campaign icon and colour, with any saved override from the campaign manager.
-  function look(key){const d=C.CAMPAIGNS.find(c=>c.key===key);const o=hooks.override?.(key);return {icon:o?.icon?glyphName(o.icon):(d.icon==='x'?'xmark':d.icon),color:o?.color||d.color};}
+  function look(key){const d=C.CAMPAIGNS.find(c=>c.key===key)||(key===VIRAL.key?VIRAL:null);const o=hooks.override?.(key);return {icon:o?.icon?glyphName(o.icon):(d.icon==='x'?'xmark':d.icon),color:o?.color||d.color};}
   const glyphName=n=>({'trending-up':'trend','user-plus':'userplus','graduation-cap':'graduation'}[n]||n);
   function setTitle(text){document.title=text+' · '+APP_NAME;}
 
@@ -724,7 +746,7 @@
     $('fvHeader').hidden=false;$('fvPage').hidden=false;
     let page;
     if(r.kind==='added'){page=hooks.addedRoute?hooks.addedRoute(r.key):null;
-      if(!page)page={title:'Campaign not found',refreshLabel:'',body:'<section class="fv-panel fv-notfound"><h2>Campaign not found</h2><p>This campaign does not exist or has been archived.</p><a class="fv-control" href="#home">'+U.icon('home',15)+'Go to Home</a></section>'};
+      if(!page)page={title:'Campaign not found',refreshLabel:'',body:'<section class="fv-panel fv-notfound"><h2>Campaign not found</h2><p>This campaign does not exist or has been archived.</p><a class="fv-control" href="#home">'+U.icon('home',15)+'Go to Dashboard</a></section>'};
       setNav(page.navKey||'');
     }else{
       page=RENDER[r.key]({view:r.view});
@@ -781,8 +803,8 @@
       else if(k==='home'||k==='all-accounts'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'';error=!!s?.error;summary=s?.summary||'';}
       else if(k==='discord'){const ok=await rep?.refreshDiscord?.(true);message=ok?'':'Discord sources unavailable; last verified figures kept.';error=!ok;}
       else{
-        const fn={'x-articles':'x','gta-vi':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
-        const ids={'x-articles':'xRefreshStatus','gta-vi':'gtaRefreshStatus','of-terms':'ofRefreshStatus','guru-promotion':'boostRefreshStatus'};
+        const fn={'x-articles':'x','gta-vi':'gta','viral-qrts':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
+        const ids={'x-articles':'xRefreshStatus','gta-vi':'gtaRefreshStatus','viral-qrts':'gtaRefreshStatus','of-terms':'ofRefreshStatus','guru-promotion':'boostRefreshStatus'};
         if(fn){await app?.refresh?.[fn]?.();const s=app?.status?.(ids[k]);message=s?.text||'';error=!!s?.error;}
         const ok=await rep?.reload?.();
         if(ok===false){error=true;message=(message?message+' ':'')+'Campaign summary kept from last verified data.';}
@@ -833,14 +855,18 @@
   function init(){
     // Header icons are injected so static HTML stays text-only.
     $('fvRefresh').insertAdjacentHTML('afterbegin',U.icon('refresh',15));
-    $('fvMenu').innerHTML=U.icon('menu',22);$('fvDrawerClose').innerHTML=U.icon('close',20);
+    $('fvMenu').innerHTML=U.icon('grid',26);$('fvDrawerClose').innerHTML=U.icon('close',20);
     U.bindTips(document.body);
     const page=$('fvPage');
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);
     $('fvRefresh').addEventListener('click',onRefresh);
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('fvShell').classList.contains('is-nav-open')){$('fvShell').classList.remove('is-nav-open');$('fvMenu').focus();}}});
-    $('fvMenu').addEventListener('click',()=>{$('fvShell').classList.add('is-nav-open');$('fvMenu').setAttribute('aria-expanded','true');setTimeout(()=>$('fvNav').querySelector('a')?.focus(),50);});
-    const close=()=>{$('fvShell').classList.remove('is-nav-open');$('fvMenu').setAttribute('aria-expanded','false');};
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('fvShell').classList.contains('is-nav-open')){$('fvShell').classList.remove('is-nav-open');$('fvMenu').setAttribute('aria-expanded','false');$('fvMenu').focus();}}});
+    // The menu button opens the dropdown under the header and closes it again.
+    const close=()=>{$('fvShell').classList.remove('is-nav-open');$('fvMenu').setAttribute('aria-expanded','false');$('fvMenu').setAttribute('aria-label','Open menu');};
+    $('fvMenu').addEventListener('click',()=>{
+      if($('fvShell').classList.contains('is-nav-open')){close();return;}
+      $('fvShell').classList.add('is-nav-open');$('fvMenu').setAttribute('aria-expanded','true');$('fvMenu').setAttribute('aria-label','Close menu');
+      setTimeout(()=>$('fvNav').querySelector('[aria-current="page"],a')?.focus({preventScroll:true}),60);});
     $('fvDrawerClose').addEventListener('click',close);$('fvScrim').addEventListener('click',close);
     $('fvNav').addEventListener('click',e=>{if(e.target.closest('a'))close();});
     window.addEventListener('hashchange',onHash);

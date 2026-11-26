@@ -15,7 +15,8 @@ test('Landing page is concise while keeping six genuine campaign destinations',(
   assert.doesNotMatch(html,/Choose a campaign to open its report|Articles this week/);
   // v3.1 redesign: Home is the landing page; Discord and the five paid campaigns are the
   // six destinations, and every old destination link still opens its page.
-  assert.match(shell,/\{key:'home',title:'Home'/);
+  // Owner (26 Nov): Home is named Dashboard; OnlyFans Terms is OF Terms; Guru X RTs is Guru RTs.
+  assert.match(shell,/\{key:'home',title:'Dashboard'/);
   for(const [route,page] of [['gta-vi','gta-vi'],['campaign-C001','of-terms'],['report-guru','guru-promotion'],['report-article-rt','x-articles\\/paid-reposts'],['report-articles','x-articles'],['discord','discord']]){
     assert.match(shell,new RegExp("'?"+route+"'?:'"+page+"'"));
   }
@@ -81,6 +82,7 @@ test('Campaign navigation is centred, icon-free and uses one coordinated dark pa
   for(const colour of ['violet','blue','teal','pink'])assert.match(core,new RegExp(colour+":\\{icon:'#"));
   // CIS removed on owner request (25 Nov).
   assert.doesNotMatch(core,/name:'CIS'/);
-  for(const text of ['X Articles','GTA VI','OnlyFans Terms','Guru X RTs'])assert.match(core,new RegExp("name:'"+text+"'"));
+  // Owner (26 Nov): Home is named Dashboard; OnlyFans Terms is OF Terms; Guru X RTs is Guru RTs.
+  for(const text of ['X Articles','GTA VI','OF Terms','Guru RTs'])assert.match(core,new RegExp("name:'"+text+"'"));
   assert.match(shell,/title:'Discord'/);
 });
