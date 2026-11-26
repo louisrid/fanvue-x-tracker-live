@@ -284,11 +284,16 @@
     const waiting=dd.loading||(!members&&!dd.error);
     const naM=r=>waiting?M.loading():M.na(r);
     // Members at the end of a period, and the change from the previous period's last snapshot (or from the first snapshot, if tracking began inside the period).
+    // A gap in the snapshot history should show the best known answer, not a dash: 0 change rather than "unknown" (owner, 26 Nov).
+    const growthFallback=reason=>waiting?M.loading():M.value(0,{reason});
     const period=(from,to,isNow)=>{
       const end=isNow?latest:lastOnOrBefore(to);
-      if(!end)return {members:naM('No member snapshot in this period.'+began),growth:naM('No member snapshot in this period.'+began)};
+      if(!end){
+        if(!first)return {members:naM('No member snapshot in this period.'+began),growth:naM('No member snapshot in this period.'+began)};
+        return {members:M.value(first.memberCount,{reason:'No snapshot in this period; the earliest recorded count, from '+C.dayLong(first.date)+'.'}),growth:growthFallback('No member snapshot in this period to measure change.'+began)};
+      }
       const before=lastOnOrBefore(C.addDays(from,-1)),base=before||snaps.find(h=>h.date>=from&&h.date<=to);
-      const growth=!base||base===end||(base.date===end.date&&!isNow)?M.na('Needs two member snapshots.'+began):
+      const growth=!base||base===end||(base.date===end.date&&!isNow)?growthFallback('Needs two member snapshots.'+began):
         M.value(end.memberCount-base.memberCount,{reason:before?'Change since the last snapshot before '+C.dayShort(from)+'.':'Change since tracking began on '+C.dayLong(base.date)+'.'});
       return {members:M.value(end.memberCount,{reason:isNow?'Current member count.':'Members at the last snapshot of the week ('+C.dayLong(end.date)+').'}),growth};
     };
@@ -296,14 +301,14 @@
     const clicksIn=(from,to)=>{
       if(!clicks)return dd.error?M.na('Course click counter is temporarily unavailable.'):M.loading();
       if(!days)return M.na('Daily course clicks are not available yet.');
-      // Before the first day with a recorded click time the count is unknown, never zero.
+      // Before the first day with a recorded click time, show 0 rather than a dash (owner, 26 Nov).
       const firstDay=Object.keys(days).sort()[0];
-      if(!firstDay||to<firstDay)return M.na('Course clicks per day are recorded from '+(firstDay?C.dayLong(firstDay):'the next click')+'.');
+      if(!firstDay||to<firstDay)return M.value(0,{reason:'No course clicks tracked before '+(firstDay?C.dayLong(firstDay):'click tracking began')+'.'});
       const n=Object.entries(days).filter(([d])=>d>=from&&d<=to).reduce((a,[,v])=>a+(Number(v)||0),0);
       const covered=C.num(clicks.daysTotal),gap=covered!==null&&covered<clicks.total;
       return gap?M.partial(n,'Course button clicks with a recorded time ('+C.full(covered)+' of '+C.full(clicks.total)+' clicks have one).'):M.value(n,{reason:'Course button clicks recorded in this period.'});
     };
-    const allGrowth=first&&latest&&latest.date!==first.date?M.value(latest.memberCount-first.memberCount,{reason:'Change since tracking began on '+C.dayLong(first.date)+'.'}):naM('Needs two member snapshots.'+began);
+    const allGrowth=first&&latest&&latest.date!==first.date?M.value(latest.memberCount-first.memberCount,{reason:'Change since tracking began on '+C.dayLong(first.date)+'.'}):growthFallback('Needs two member snapshots.'+began);
     return {
       week:{...period(ws,today,true),clicks:clicksIn(ws,today)},
       last:{...period(lws,lwe,false),clicks:clicksIn(lws,lwe)},
