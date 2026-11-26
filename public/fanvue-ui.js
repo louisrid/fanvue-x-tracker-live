@@ -93,7 +93,7 @@
   };
   const typeTag=k=>TYPES[k]?'<span class="fv-types">'+reasonButton(TYPES[k].label,TYPES[k].reason,'fv-type is-'+k)+'</span>':'';
   const formatValue=(v,format)=>format==='money'?C.money(v):format==='money0'?C.money(v,0):format==='moneyShort'?C.moneyShort(v):
-    format==='compact'?C.compact(v):format==='signed'?C.signed(v):C.full(v);
+    format==='compact'?C.compact(v):format==='signed'?C.signed(v):format==='rate'?C.rate(v):C.full(v);
   /* Render a metric descriptor: a value (with optional partial/stale chip) or a
      labelled state whose reason is available on hover, focus and tap. */
   function value(m,format='count',{chipText}={}){
