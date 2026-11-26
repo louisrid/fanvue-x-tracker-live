@@ -546,13 +546,14 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 
 /* Roomier cards: more space inside every title bar and around every chart. */
 .fv-panel>.fv-panel-head{padding:16px var(--fv-pad);min-height:68px}
-.fv-chart{min-height:310px;padding:6px 4px 0}
-.fv-plot{height:310px}
+/* Owner (26 Nov): campaign pages read as too short; a taller chart gives the page real content to scroll through. */
+.fv-chart{min-height:400px;padding:6px 4px 0}
+.fv-plot{height:400px}
 @media (max-width:767px){
   :root{--fv-pad:16px}
   .fv-panel>.fv-panel-head{padding:14px var(--fv-pad);min-height:60px}
-  .fv-chart{min-height:270px}
-  .fv-plot{height:270px}
+  .fv-chart{min-height:320px}
+  .fv-plot{height:320px}
 }
 
 /* Discord performance on Home: This Week (orange), Last Week (blue), All Time (black). */
@@ -781,6 +782,8 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 .fv-table th,.fv-table th:first-child,.fv-table th:last-child{background:var(--fv-card-2);color:#fff;border-bottom:1px solid #2A2A2E}
 .fv-table th .fv-sort{color:#fff}
 .fv-table td{color:#fff;border-bottom:1px solid #222226}
+/* Owner (26 Nov): the old light hover made white row text unreadable. Hover lightens the dark row instead. */
+.fv-table tbody tr.fv-row:hover td{background:#242428}
 .fv-table .fv-name,.fv-table .fv-sub-link,.fv-table a{color:#fff}
 .fv-table .fv-dash,.fv-panel .fv-dash{color:#8E939C}
 .fv-detail td,.fv-detail-inner{background:var(--fv-card-2);color:#fff}
