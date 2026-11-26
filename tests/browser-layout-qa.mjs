@@ -60,16 +60,18 @@ try{
    const q=s=>document.querySelector(s);
    const top='#fvPage > ';
    const chart=q(top+'.fv-chart-panel'),table=q(top+'.fv-table-panel'),strip=q(top+'.fv-strip');
-   return {title:box(q('#fvTitle')).slice(0,2),header:box(q('#fvHeader')),strip:box(strip),card:box(strip.querySelector('.fv-metric')),chart:box(chart),plot:box(chart.querySelector('.fv-plot')),list:box(table).slice(0,3),toolbar:box(table.querySelector('.fv-table-tools')),cols:[...table.querySelectorAll('thead th')].map(e=>box(e)[2]),overflow:document.documentElement.scrollWidth>innerWidth+1,slots:chart.querySelectorAll('.fv-hit').length,bars:chart.querySelectorAll('[data-bar]').length,labels:chart.querySelectorAll('.fv-bar-value').length,cards:strip.querySelectorAll('.fv-metric').length};
+   const contained=(el,outer)=>{const a=el.getBoundingClientRect(),b=outer.getBoundingClientRect();return a.left>=b.left-1&&a.top>=b.top-1&&a.right<=b.right+1&&a.bottom<=b.bottom+1;};
+   const heads=[chart,table].every(panel=>{const header=panel.querySelector('.fv-panel-head'),title=header.querySelector('h2');return contained(header,panel)&&contained(title,header)&&title.getBoundingClientRect().left>=panel.getBoundingClientRect().left+10;});
+   return {heads,title:box(q('#fvTitle')).slice(0,2),header:box(q('#fvHeader')),strip:box(strip),card:box(strip.querySelector('.fv-metric')),chart:box(chart),plot:box(chart.querySelector('.fv-plot')),list:box(table).slice(0,3),toolbar:box(table.querySelector('.fv-table-tools')),cols:[...table.querySelectorAll('thead th')].map(e=>box(e)[2]),overflow:document.documentElement.scrollWidth>innerWidth+1,slots:chart.querySelectorAll('.fv-hit').length,bars:chart.querySelectorAll('[data-bar]').length,labels:chart.querySelectorAll('.fv-bar-value').length,cards:strip.querySelectorAll('.fv-metric').length};
   });
   let reference,cols;
   for(const [route,title] of routes){
    await open(route,title);const g=await geometry();
-   assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
+   assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
    if(!reference)reference=g;
    for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(g[k],reference[k],viewport.width+' '+route+' '+k);
    if(route!=='discord'&&viewport.width>=768){if(!cols)cols=g.cols;close(g.cols,cols,route+' column widths');}
-   if(viewport.width===1440&&['of-terms','x-articles','discord'].includes(route))await page.screenshot({path:dir+'/'+route+'.png'});
+   if(['of-terms','x-articles','discord'].includes(route))await page.screenshot({path:dir+'/'+viewport.width+'-'+route+'.png'});
   }
   await open('gta-vi','GTA VI');
   const before=await geometry();
@@ -83,12 +85,15 @@ try{
   await page.evaluate(()=>location.hash='all-accounts');
   await page.waitForFunction(()=>document.querySelector('#acc-table .fv-account-plain'));
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge,#acc-table .is-best-value').count(),0);
+  const accountBounds=await page.evaluate(()=>{const panel=document.querySelector('#acc-table'),head=panel.querySelector('.fv-panel-head'),title=head.querySelector('h2'),a=panel.getBoundingClientRect(),b=head.getBoundingClientRect(),c=title.getBoundingClientRect();return {contained:b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&c.left>=a.left+10&&c.top>=b.top-1&&c.bottom<=b.bottom+1,title:[document.querySelector('#fvTitle').getBoundingClientRect().x,document.querySelector('#fvTitle').getBoundingClientRect().y+scrollY],header:[...['x','y','width','height'].map(k=>document.querySelector('#fvHeader').getBoundingClientRect()[k])]};});
+  assert.ok(accountBounds.contained,'Accounts heading must stay inside its panel');
+  close(accountBounds.title,reference.title,viewport.width+' Accounts title');
   const accountHeader=await page.locator('#acc-table thead').innerText().catch(()=> '');
   if(viewport.width>=768)assert.match(accountHeader,/Last Post/);
   await page.locator('#acc-table [data-search]').fill('unused');assert.equal(await page.locator('#acc-table .fv-account-plain').innerText(),'@unused');
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('used');assert.equal(await page.locator('#acc-table .fv-account-plain').count(),0);
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('');await page.locator('#acc-table [data-search]').fill('');
-  if(viewport.width===1440)await page.screenshot({path:dir+'/accounts.png'});
+  await page.screenshot({path:dir+'/'+viewport.width+'-accounts.png'});
   await open('home','Dashboard');assert.equal(await page.locator('#home-chart .fv-hit').count(),7);
   await page.locator('[data-view="last-week"]').click();
   await page.waitForFunction(()=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks');return location.hash==='#home/last-week'&&m?.weekFrom===C.addDays(C.weekStart(C.londonDay(Date.now())),-7)&&document.querySelector('[data-view="last-week"]')?.getAttribute('aria-current')==='page';});
