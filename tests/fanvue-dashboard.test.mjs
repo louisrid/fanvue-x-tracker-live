@@ -242,3 +242,16 @@ test('daily views: gains count only posts read the day before; totals use each p
   assert.equal(d.gained.at(-1).incomplete,true);
   assert.deepEqual(C.dailySeries([],{now}),{total:[],gained:[]});
 });
+
+test('daily views: a post published that day counts from 0; an older post first read late does not spike',()=>{
+  // Synthetic readings only.
+  const now=Date.parse('2026-11-26T01:00:00Z');
+  const pub=Date.parse('2026-11-25T15:00:00Z'),old=Date.parse('2026-11-10T12:00:00Z');
+  const rows=[
+    {id:'new',at:'2026-11-25T18:00:00Z',views:1000},{id:'new',at:'2026-11-25T22:00:00Z',views:1200},{id:'new',at:'2026-11-26T00:00:00Z',views:1250},
+    {id:'old',at:'2026-11-25T18:00:00Z',views:50000},{id:'old',at:'2026-11-25T22:00:00Z',views:50100}
+  ];
+  const d=C.dailySeries(rows,{now,born:k=>k==='new'?pub:old});
+  // 25 Nov: the new post's 1,200 views since publication, plus 100 on the older post (its first reading is its baseline).
+  assert.deepEqual(d.gained.map(p=>[p.week,p.value,p.fresh]),[['2026-11-25',1300,1],['2026-11-26',50,0]]);
+});
