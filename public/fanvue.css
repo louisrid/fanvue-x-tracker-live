@@ -664,11 +664,11 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
   .fv-sidebar .fv-nav-group-label{text-align:center}
   .fv-sidebar .fv-nav-item{justify-content:center;height:52px;gap:12px;font-size:var(--fv-fs-l);border-radius:14px}
   .fv-sidebar .fv-nav-item .fv-icon{width:21px;height:21px}
-  .fv-sidebar .fv-nav-more{margin-top:14px;padding-top:12px}
+  .fv-sidebar .fv-nav-more{margin-top:4px;padding-top:0}
 }
 @media (max-width:767px) and (prefers-reduced-motion:reduce){.fv-sidebar,.fv-shell.is-nav-open .fv-sidebar,.fv-scrim{transition:none}}
-/* Owner (26 Nov): no divider between Discord and Accounts. */
-@media (min-width:768px){.fv-nav-more{margin-top:18px;padding-top:12px}}
+/* Owner (26 Nov): Accounts sits right under Discord, no gap and no divider. */
+@media (min-width:768px){.fv-nav-more{margin-top:4px;padding-top:0}}
 
 /* ---------- Style 74 (owner pick, 26 Nov): text logo, tall header, black period cards with gradient tiles ---------- */
 :root{--fv-display:'Montserrat',Inter,sans-serif;--fv-w-black:900;--fv-fs-m:13px;--fv-fs-title:22px;--fv-fs-num:34px;--fv-fs-logo:34px}
@@ -854,8 +854,9 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 /* Colour only in small groups: key numbers (up to 4) and the Dashboard's top row. Everything else is dark tiles. */
 /* Owner (26 Nov): the Dashboard's second row looked randomly uncoloured next to the first. Tint it in the
    same card colour, muted, so every tile reads as one coloured card instead of half-and-half. */
-.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,rgba(252,45,157,.6),rgba(255,100,95,.6) 55%,rgba(255,138,61,.6)),#2A1016}
-.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,rgba(91,141,255,.6),rgba(122,127,242,.6)),#141A33}
+/* Owner (26 Nov): the muted tint read as murky, not coloured. Row 2 now matches row 1 exactly, same gradient, full brightness. */
+.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%)}
+.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#5B8DFF,#7A7FF2)}
 .fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#6E7177,#9DA1A8)}
 .fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#26262A}
 @media (max-width:767px){
