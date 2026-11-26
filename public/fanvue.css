@@ -7,6 +7,8 @@
   --fv-ink:#000000;--fv-muted:#000000;--fv-label:#000000;
   /* Three font sizes, two weights, three radii and one faint line style, used everywhere. */
   --fv-w:720;--fv-w-strong:880;
+  /* Owner (26 Nov): a thinner weight, for small text only (the back button). */
+  --fv-w-light:500;
   --fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;--fv-fs-hero:46px;
   --fv-r-s:6px;--fv-r-m:8px;--fv-r-l:10px;
   --fv-dark:#000000;--fv-dark-text:#FFFFFF;--fv-dark-rule:#262626;--fv-dark-soft:#202020;
@@ -695,10 +697,10 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 .fv-tiles{gap:8px}
 .fv-tiles+.fv-tiles{margin-top:8px}
 .fv-tile,.fv-period-card.is-all .fv-tile{border-radius:10px;padding:13px 11px 12px;min-height:84px;box-shadow:none;color:#fff}
-.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%)}
-/* Owner (26 Nov): brightened to match This Week's gradient; All Time lightened from charcoal to silver. */
-.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#5B8DFF,#7A7FF2)}
-.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#6E7177,#9DA1A8)}
+/* Owner (26 Nov): every gradient now goes light (top-left) -> dark (bottom-right); This Week recoloured pinkish-red to bright red. */
+.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#FF8FA3,#FF3B3B)}
+.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#7A7FF2,#5B8DFF)}
+.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#9DA1A8,#6E7177)}
 .fv-tile-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);white-space:nowrap;color:#fff}
 .fv-tile-label .fv-icon{display:none}
 .fv-tile-value,.fv-tile-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;color:#fff}
@@ -717,14 +719,21 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 
 /* ---------- Style 74 across every page (owner, 26 Nov) ---------- */
 /* Page colours: tiles, graph lines and active pills take the page's campaign colour. */
-.fv-shell{--fv-tile:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%);--fv-accent:#F0357C;--fv-card:#0B0B0C;--fv-card-2:#1C1C1F}
-.fv-shell.pg-gta-vi{--fv-tile:linear-gradient(135deg,#7C3AED,#A855F7);--fv-accent:#8B5CF6}
-.fv-shell.pg-viral-qrts{--fv-tile:linear-gradient(135deg,#F59E0B,#F97316);--fv-accent:#F59E0B}
-.fv-shell.pg-x-articles{--fv-tile:linear-gradient(135deg,#334155,#64748B);--fv-accent:#64748B}
-.fv-shell.pg-of-terms{--fv-tile:linear-gradient(135deg,#3B82F6,#6366F1);--fv-accent:#3B82F6}
-.fv-shell.pg-guru-promotion{--fv-tile:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%);--fv-accent:#F0357C}
-.fv-shell.pg-discord{--fv-tile:linear-gradient(135deg,#5865F2,#7C83FD);--fv-accent:#5865F2}
-.fv-shell.pg-all-accounts{--fv-tile:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%);--fv-accent:#F0357C}
+/* Owner (26 Nov): every page gradient goes light (top-left) -> dark (bottom-right); Viral QRTs brightened from a murky amber to a vivid yellow-orange. */
+.fv-shell{--fv-tile:linear-gradient(135deg,#FF8A3D 0%,#FF645F 34%,#FF46A2 74%,#FC2D9D 100%);--fv-accent:#F0357C;--fv-card:#0B0B0C;--fv-card-2:#1C1C1F}
+.fv-shell.pg-gta-vi{--fv-tile:linear-gradient(135deg,#A855F7,#7C3AED);--fv-accent:#8B5CF6}
+.fv-shell.pg-viral-qrts{--fv-tile:linear-gradient(135deg,#FFD60A,#FF7A1A);--fv-accent:#F59E0B}
+.fv-shell.pg-x-articles{--fv-tile:linear-gradient(135deg,#64748B,#334155);--fv-accent:#64748B}
+.fv-shell.pg-of-terms{--fv-tile:linear-gradient(135deg,#6366F1,#3B82F6);--fv-accent:#3B82F6}
+.fv-shell.pg-guru-promotion{--fv-tile:linear-gradient(135deg,#FF8A3D 0%,#FF645F 34%,#FF46A2 74%,#FC2D9D 100%);--fv-accent:#F0357C}
+.fv-shell.pg-discord{--fv-tile:linear-gradient(135deg,#7C83FD,#5865F2);--fv-accent:#5865F2}
+.fv-shell.pg-all-accounts{--fv-tile:linear-gradient(135deg,#FF8A3D 0%,#FF645F 34%,#FF46A2 74%,#FC2D9D 100%);--fv-accent:#F0357C}
+
+/* Owner (26 Nov): one small back control, top-left, above everything, the same on every page. */
+.fv-back{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px 0 7px;margin:0 0 10px;border:1.5px solid #E3E6EB;border-radius:999px;background:#fff;color:#111;font-family:var(--fv-font);font-weight:var(--fv-w-light);font-size:var(--fv-fs-s)}
+.fv-back:hover{background:#F6F7F9;border-color:#C9CFD8}
+.fv-back:focus-visible{outline:3px solid #C9CFD8}
+.fv-back .fv-icon{width:13px;height:13px}
 
 /* White page; no timestamp or "All Time" label; plain Refresh on the right; title in the display font. */
 body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
@@ -858,9 +867,9 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 /* Owner (26 Nov): the Dashboard's second row looked randomly uncoloured next to the first. Tint it in the
    same card colour, muted, so every tile reads as one coloured card instead of half-and-half. */
 /* Owner (26 Nov): the muted tint read as murky, not coloured. Row 2 now matches row 1 exactly, same gradient, full brightness. */
-.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%)}
-.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#5B8DFF,#7A7FF2)}
-.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#6E7177,#9DA1A8)}
+.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#FF8FA3,#FF3B3B)}
+.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#7A7FF2,#5B8DFF)}
+.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#9DA1A8,#6E7177)}
 .fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#26262A}
 @media (max-width:767px){
   .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#26262A}

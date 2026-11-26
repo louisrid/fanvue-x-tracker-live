@@ -212,7 +212,8 @@ test('both shared stylesheets are present and use the same small scale',()=>{
   for(const sheet of [css,records]){
     // Owner (26 Nov, style 74) adds four steps to the scale: tile label (m), period title, tile number, logo; and a 900 weight.
     assert.deepEqual([...new Set([...sheet.matchAll(/font-size:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-fs-(s|m|l|xl|hero|title|num|logo)\)$/.test(v)),[]);
-    assert.deepEqual([...new Set([...sheet.matchAll(/font-weight:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-w(-strong|-black)?\)$/.test(v)),[]);
+    // Owner (26 Nov): added --fv-w-light, a thinner weight used only for the small back button.
+    assert.deepEqual([...new Set([...sheet.matchAll(/font-weight:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-w(-light|-strong|-black)?\)$/.test(v)),[]);
   }
   assert.match(css,/--fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;/);
   // The big key-number size is used only by the key-numbers strip.

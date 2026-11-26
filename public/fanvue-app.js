@@ -356,8 +356,9 @@
     const today=C.londonDay(Date.now());
     const dailyNet=[...byDay].filter(([d])=>byDay.has(C.addDays(d,-1))).map(([d,v])=>({week:d,label:C.dayShort(d),range:C.dayLong(d),value:v-byDay.get(C.addDays(d,-1)),incomplete:d===today})).slice(-14);
     const chart=U.chartPanel({id:'discord-chart',measures:[
-      dailyNet.length>=1?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
-      netSeries.length>=1?{key:'net',label:'Member Growth',title:'Member Growth',series:netSeries,format:'signed',unit:'Member Growth',kinds:['bar','line','table']}:null,
+      dailyNet.length>=1?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line']}:null,
+      // Owner (26 Nov): "Weekly X" naming, matching OF Terms' "Weekly Clicks"; no table view (line/bar only, per every other chart).
+      netSeries.length>=1?{key:'net',label:'Weekly Member Growth',title:'Weekly Member Growth',series:netSeries,format:'signed',unit:'Member Growth',kinds:['bar','line']}:null,
     ].filter(Boolean)},chartState('discord','discord-chart'));
     const table=U.tablePanel({id:'discord-table',title:'Weekly Stats',icon:'users',dropEmptyRows:true,
       rows:weeks.slice().reverse(),rowKey:r=>r.week,
@@ -366,7 +367,9 @@
         {key:'end',label:'Members',get:r=>r.end===null?M.na('No snapshot this week.'):M.value(r.end)},
         {key:'net',label:'Member Growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week’s snapshot.'):M.value(r.value)}
       ]},tableState('discord','discord-table'));
-    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:strip+chart};
+    // Owner (26 Nov): a short line saying what this page actually tracks, and the Weekly Stats table (previously built but never shown).
+    const intro='<p class="fv-filter-note">'+U.icon('discord',14)+'<span>How the Fanvue Academy community is growing: member count, net new members, and clicks on the free course button.</span></p>';
+    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:intro+strip+chart+table};
   }
 
   /* X Articles: every article redirect leads to the Fanvue partner (affiliates) page, so all
@@ -461,7 +464,8 @@
     const own=(tab==='rts'?arts:shown).filter(x=>x.type!=='RT'),codes=new Set(own.map(x=>String(x.raw.code||''))),ids=postIdsOf(own);
     const hist=dash?(dash.history||[]).filter(h=>codes.has(String(h.code||''))||ids.has(String(h.postId||''))):[];
     const clickSeries=dash&&dash.activityReady?C.eventSeries(dash.activity,{include:r=>codes.has(String(r.code))}):[];
-    const chart=viewsChart('xa-chart','x-articles',hist,{idOf:r=>r.postId||r.code,noun:tab==='rts'?'Article Views':'Views',extra:[clickSeries.length?{key:'clicks',label:'Weekly Clicks',title:'Weekly Clicks',series:clickSeries,unit:'Clicks'}:null]});
+    // Owner (26 Nov): one chart name, "Daily Views", everywhere a views-over-time chart appears.
+    const chart=viewsChart('xa-chart','x-articles',hist,{idOf:r=>r.postId||r.code,extra:[clickSeries.length?{key:'clicks',label:'Weekly Clicks',title:'Weekly Clicks',series:clickSeries,unit:'Clicks'}:null]});
     let body;
     if(tab==='overview'){
       const by=new Map();for(const x of arts){const cid=x.raw.campaignId||'UNASSIGNED';if(!by.has(cid))by.set(cid,[]);by.get(cid).push(x);}
@@ -524,7 +528,8 @@
     if(tab==='overview'){
       const rows=[['lucia','Lucia','gamepad'],['mandy','Mandy','gamepad'],['other','Other','gamepad']].map(([key,name,icon])=>{const l=group(key==='other'?'GTA VI':name);return l.length?summaryRow(key,name,l,{icon}):null;}).filter(Boolean);
       if(igs.length)rows.push(summaryRow('instagram','Instagram',igs,{icon:'image'}));
-      body=budget+chart+summaryTable('gta-vi','gta-summary',{title:'Groups',icon:'gamepad',rows,empty:s?'No Results':waiting('Loading…')});
+      // Owner (26 Nov): Strip -> Chart -> Table first, same position as every other campaign page; Budget is a supplemental block that follows.
+      body=chart+summaryTable('gta-vi','gta-summary',{title:'Groups',icon:'gamepad',rows,empty:s?'No Results':waiting('Loading…')})+budget;
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
       const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
@@ -599,7 +604,8 @@
     const strip=!s?loadingStrip([['Spend','wallet'],['Original Views','eye']]):U.strip([metric('Spend','wallet',spend,'moneyShort'),metric('Original Views','eye',s.views,'compact')]);
     // Original Views over time, from each promoted post's dated readings.
     const charted=(g?.rows||[]).filter(r=>C.num(r.views)!==null);
-    const chart=viewsChart('guru-chart','guru-promotion',charted.flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id}))),{noun:'Original Views'});
+    // Owner (26 Nov): one chart name, "Daily Views", everywhere a views-over-time chart appears.
+    const chart=viewsChart('guru-chart','guru-promotion',charted.flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id}))));
     const groupKey=x=>String(C.postId(x.raw.sourcePostUrl||x.raw.postUrl)||'');
     const groups=new Map((g?.articleRtGroups||[]).map(x=>[String(x.postId),x]));
     let body;
@@ -739,6 +745,8 @@
     const r=current;
     const shell=$('fvShell');shell.classList.remove('is-nav-open');
     shell.classList.toggle('is-home',r.kind==='page'&&r.key==='home');
+    // Owner (26 Nov): a small back control, top-left, above every page but the Dashboard itself.
+    $('fvBack').hidden=r.kind==='page'&&r.key==='home';
     // Page colour for tiles, graphs and pills (owner, 26 Nov, style 74).
     shell.className=shell.className.replace(/\bpg-[\w-]+/g,'').trim()+' pg-'+(r.kind==='page'?r.key:r.kind);
     if(r.kind==='records'){
@@ -793,7 +801,7 @@
     set(size);
     for(let i=0;i<40&&over();i++){size-=0.5;set(size);}
   }
-  function fitTiles(){
+  function runFitTiles(){
     const page=$('fvPage');
     // Each period card sizes its own tiles (owner, 26 Nov): a short "Last Week" figure shouldn't be
     // shrunk to match a longer "All Time" one three cards away.
@@ -801,6 +809,16 @@
     if(cards.length)cards.forEach(card=>fitGroup([...card.querySelectorAll('.fv-tile-value')],[...card.querySelectorAll('.fv-tile-label')]));
     else fitGroup([...page.querySelectorAll('.fv-tile-value')],[...page.querySelectorAll('.fv-tile-label')]);
     for(const strip of page.querySelectorAll('.fv-panel.fv-strip'))fitGroup([...strip.querySelectorAll('.fv-metric-value')],[...strip.querySelectorAll('.fv-metric-label')]);
+  }
+  // Several independent background refreshes (GTA, Discord, boosts) can all resolve within the
+  // same tick after a tab regains focus, each calling fitTiles. Coalesce them into one pass so
+  // they can't pile up redundant synchronous reflow work on the page (owner, 26 Nov: this was
+  // making the site freeze after visiting Discord, switching tabs, then opening a campaign).
+  let fitPending=false;
+  function fitTiles(){
+    if(fitPending)return;
+    fitPending=true;
+    requestAnimationFrame(()=>{fitPending=false;runFitTiles();});
   }
   function drawCharts(){
     fitTiles();setTimeout(fitTiles,400);
@@ -890,6 +908,8 @@
     // Header icons are injected so static HTML stays text-only.
     $('fvRefresh').insertAdjacentHTML('afterbegin',U.icon('refresh',15));
     $('fvMenu').innerHTML=U.icon('grid',26);$('fvDrawerClose').innerHTML=U.icon('close',20);
+    $('fvBack').innerHTML=U.icon('back',14)+'<span>Back</span>';
+    $('fvBack').addEventListener('click',()=>history.back());
     U.bindTips(document.body);
     const page=$('fvPage');
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);
