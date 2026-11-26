@@ -2,7 +2,7 @@
    Tokens are defined once here; every page and component uses them. */
 :root{
   --fv-sidebar:#000000;--fv-sidebar-text:#FFFFFF;--fv-nav-active:#212121;--fv-nav-hover:#151515;--fv-nav-group:#FFFFFF;
-  --fv-outer:#C9D3DF;--fv-canvas:#C9D3DF;--fv-surface:#FFFFFF;
+  --fv-outer:#E1E7EE;--fv-canvas:#E1E7EE;--fv-surface:#FFFFFF;
   --fv-border:#E8EDF3;--fv-rule:#E8EDF3;--fv-hover:#E1EAF5;--fv-field:#E6ECF3;--fv-thead:#E6EEF7;--fv-tint:#EEF3F9;
   --fv-ink:#000000;--fv-muted:#000000;--fv-label:#000000;
   /* Three font sizes, two weights, three radii and one faint line style, used everywhere. */
@@ -529,3 +529,75 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
   .fv-strip[data-n="4"] .fv-metric{padding:0 14px}
 }
 @media (min-width:768px) and (max-width:960px){.fv-strip[data-n="4"] .fv-metric-value{font-size:var(--fv-fs-xl)}}
+
+/* ---------- 26 Nov owner refinements ---------- */
+/* Key numbers: one separate card each, never an empty slot. */
+.fv-panel.fv-strip{background:transparent;border:0;border-radius:0;padding:0;min-height:0;gap:14px}
+.fv-panel.fv-strip .fv-metric{background:var(--fv-dark);color:var(--fv-dark-text);border:0;border-radius:var(--fv-radius);padding:24px 26px;min-height:150px}
+.fv-panel.fv-strip.is-week .fv-metric{background:#E8590C}
+.fv-panel.fv-strip.is-week .fv-chipicon{background:rgba(255,255,255,.22);color:#fff}
+.fv-section-sub{margin-left:8px;color:var(--fv-muted);font-weight:var(--fv-w)}
+@media (min-width:768px) and (max-width:1100px){.fv-panel.fv-strip .fv-metric{padding:20px 18px}}
+@media (max-width:767px){
+  .fv-panel.fv-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .fv-panel.fv-strip .fv-metric{padding:16px;min-height:112px;border:0}
+  .fv-panel.fv-strip[data-n="1"] .fv-metric,.fv-panel.fv-strip[data-n="3"] .fv-metric:last-child{grid-column:1/-1}
+}
+
+/* Roomier cards: more space inside every title bar and around every chart. */
+.fv-panel>.fv-panel-head{padding:16px var(--fv-pad);min-height:68px}
+.fv-chart{min-height:310px;padding:6px 4px 0}
+.fv-plot{height:310px}
+@media (max-width:767px){
+  :root{--fv-pad:16px}
+  .fv-panel>.fv-panel-head{padding:14px var(--fv-pad);min-height:60px}
+  .fv-chart{min-height:270px}
+  .fv-plot{height:270px}
+}
+
+/* Discord performance on Home: This Week (orange), Last Week (blue), All Time (black). */
+.fv-dperiods{display:grid;gap:12px}
+.fv-dperiod{border-radius:var(--fv-r-m);padding:16px 18px;color:#fff}
+.fv-dperiod.is-week{background:#E8590C}
+.fv-dperiod.is-last{background:#1D5FD6}
+.fv-dperiod.is-all{background:var(--fv-dark)}
+.fv-dperiod-head{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.fv-dperiod-head h3{margin:0;font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong);color:#fff}
+.fv-dperiod-head span{font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:rgba(255,255,255,.82)}
+.fv-dperiod-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fv-dperiod-metrics>div{min-width:0}
+.fv-dperiod-metrics span{display:block;font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:rgba(255,255,255,.85)}
+.fv-dperiod-metrics b{display:block;margin-top:2px;font-size:var(--fv-fs-xl);line-height:1.15;font-weight:var(--fv-w-strong);color:#fff}
+.fv-dperiod-metrics b .fv-num{font-size:var(--fv-fs-xl);color:#fff}
+.fv-dperiod-metrics .fv-dash{color:#fff}
+.fv-panel>.fv-panel-head .fv-control.fv-discord-btn{background:#5865F2;border-color:#5865F2;color:#fff;gap:8px}
+.fv-panel>.fv-panel-head .fv-control.fv-discord-btn:hover{background:#4752C4;border-color:#4752C4}
+@media (max-width:767px){.fv-dperiod{padding:14px}.fv-dperiod-metrics{gap:8px}}
+
+/* Tables read as part of their card: the header row runs edge to edge, no inner box. */
+.fv-table-panel .fv-table-wrap{width:auto;margin:0 calc(-1*var(--fv-pad));border-radius:0}
+.fv-table th,.fv-table td{padding:0 14px}
+.fv-table th:first-child,.fv-table td:first-child{padding-left:var(--fv-pad)}
+.fv-table th:last-child,.fv-table td:last-child{padding-right:var(--fv-pad)}
+.fv-table th,.fv-table th:first-child,.fv-table th:last-child{background:#EEF2F7;color:#000;border-radius:0;border-bottom:var(--fv-bw) solid var(--fv-rule)}
+.fv-table th .fv-sort{color:#000}
+.fv-table th button:focus-visible{outline-color:var(--fv-dark)}
+/* Wide tables keep a minimum width on larger screens (scrolling sideways inside their card). */
+@media (min-width:768px){.fv-table[style*="--min-w"]{min-width:var(--min-w)}}
+/* Phones: each row becomes a labelled card; no sideways scrolling. */
+@media (max-width:767px){
+  .fv-table-panel .fv-table-wrap{margin:0;overflow:visible}
+  .fv-table,.fv-table tbody{display:block;width:100%;min-width:0}
+  .fv-table thead,.fv-table colgroup{display:none}
+  .fv-table tr.fv-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;position:relative;margin:0 0 10px;padding:14px;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-r-m);background:var(--fv-surface)}
+  .fv-table tr.fv-row td,.fv-table tr.fv-row td:first-child,.fv-table tr.fv-row td:last-child{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:3px;height:auto;min-height:0;padding:0;border:0;text-align:left;white-space:normal}
+  .fv-table tr.fv-row td::before{content:attr(data-label);font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-muted)}
+  .fv-table tr.fv-row td.is-name{order:-1;grid-column:1/-1;padding-right:44px}
+  .fv-table tr.fv-row td.is-name::before,.fv-table tr.fv-row td.fv-x-col::before{content:none}
+  .fv-table tr.fv-row td.fv-x-col{position:absolute;top:10px;right:10px}
+  .fv-table tr.fv-row.is-open{border-radius:var(--fv-r-m) var(--fv-r-m) 0 0;margin-bottom:0}
+  .fv-table tr.fv-group-row,.fv-table tr.fv-detail{display:block}
+  .fv-table tr.fv-group-row td,.fv-table tr.fv-detail td{display:block;height:auto;padding:0;border:0}
+  .fv-table tr.fv-detail{margin:0 0 10px;border:var(--fv-bw) solid var(--fv-border);border-top:0;border-radius:0 0 var(--fv-r-m) var(--fv-r-m);overflow:hidden}
+  .fv-table tr.fv-group-row{margin:6px 0 8px}
+}

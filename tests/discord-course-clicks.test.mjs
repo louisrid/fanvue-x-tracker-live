@@ -39,3 +39,15 @@ test('reports unavailable on storage errors; never invents zero',async()=>{
   assert.equal(json.ok,false);
   assert.equal('total' in json,false);
 });
+
+test('course clicks per UK day come from the beacon timestamps',async()=>{
+  const {courseClicksByDay}=await import('../netlify/functions/discord-course-clicks.mjs');
+  const id='0123abcd-0123-4abc-8def-0123456789ab';
+  const days=courseClicksByDay([
+    'click-'+Date.parse('2026-11-24T10:00:00Z')+'-'+id,
+    'click-'+Date.parse('2026-11-24T23:30:00Z')+'-'+id,   // 23:30 UTC is still 24 Nov in London (GMT)
+    'click-'+Date.parse('2026-11-25T08:00:00Z')+'-'+id,
+    'not-a-click'
+  ],Date.parse('2026-11-26T00:00:00Z'));
+  assert.deepEqual(days,{'2026-11-24':2,'2026-11-25':1});
+});
