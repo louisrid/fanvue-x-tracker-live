@@ -94,10 +94,28 @@ try{
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('used');assert.equal(await page.locator('#acc-table .fv-account-plain').count(),0);
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('');await page.locator('#acc-table [data-search]').fill('');
   await page.screenshot({path:dir+'/'+viewport.width+'-accounts.png'});
-  await open('home','Dashboard');assert.equal(await page.locator('#home-chart .fv-hit').count(),7);
-  await page.locator('[data-view="last-week"]').click();
-  await page.waitForFunction(()=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks');return location.hash==='#home/last-week'&&m?.weekFrom===C.addDays(C.weekStart(C.londonDay(Date.now())),-7)&&document.querySelector('[data-view="last-week"]')?.getAttribute('aria-current')==='page';});
-  const past=await page.evaluate(()=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks');return m.weekFrom===C.addDays(C.weekStart(C.londonDay(Date.now())),-7);});assert.ok(past,'last week chart must use last week');
+  await open('home','Dashboard');
+  let homeReference;
+  for(const period of ['all-time','this-week','last-week','all-time']){
+   await page.locator('[data-view="'+period+'"]').click();
+   await page.waitForFunction(period=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks'),week=C.weekStart(C.londonDay(Date.now()));return document.querySelector('[data-view="'+period+'"]')?.getAttribute('aria-current')==='page'&&m&&m.weekFrom===(period==='all-time'?undefined:period==='this-week'?week:C.addDays(week,-7));},period);
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);
+   for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
+   if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
+   assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
+   assert.equal(await page.locator('.fv-home-discord .fv-community-summary>div').count(),3);
+   await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png'});
+  }
+  await page.evaluate(()=>{window.__qaChart=document.querySelector('#home-chart');window.__qaCard=document.querySelector('#fvPage .fv-metric');});
+  if(viewport.width>=768)await page.locator('#home-comparison [data-sort="spend"]').click();
+  else await page.locator('#home-comparison [data-mobile-sort]').selectOption('spend:-1');
+  const sorted=await geometry();for(const k of ['strip','chart','plot','list','toolbar','cols'])close(sorted[k],homeReference[k],viewport.width+' Dashboard sort '+k);
+  assert.equal(await page.evaluate(()=>window.__qaChart===document.querySelector('#home-chart')&&window.__qaCard===document.querySelector('#fvPage .fv-metric')),true);
+  await page.locator('#home-comparison [data-search]').fill('GTA');
+  assert.equal(await page.locator('#home-comparison .fv-row').count(),1);
+  const filteredHome=await geometry();for(const k of ['strip','chart','plot','list','toolbar','cols'])close(filteredHome[k],homeReference[k],viewport.width+' Dashboard search '+k);
+  await page.locator('#home-comparison [data-search]').fill('');
   assert.deepEqual(errors,[],'browser errors at '+viewport.width);
   console.log('PASS '+viewport.width+'px: '+routes.length+' campaign/community views, Accounts, Dashboard, sorting, filters, seven-day charts');
   await page.close();

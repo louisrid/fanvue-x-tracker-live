@@ -1299,3 +1299,32 @@ html{scrollbar-gutter:stable}
  .fv-shell:has(#fvPage.fv-accounts-layout) .fv-updated{max-width:180px;overflow:hidden;text-overflow:ellipsis}
  .fv-shell:has(#fvPage.fv-accounts-layout) #fvRefreshStatus{position:absolute;right:0;top:100%;z-index:3;max-width:300px;pointer-events:none;background:#24242D;border-radius:6px}
 }
+
+/* Dashboard shares the campaign frame, including the empty back-button space.
+   Only its period selector and community summary have dashboard-specific content. */
+.is-home #fvBack[hidden]{display:inline-flex!important;visibility:hidden;pointer-events:none}
+.is-home .fv-updated{display:block}
+#fvPage.fv-dashboard-layout>.fv-executive-controls{height:42px;min-height:42px;max-height:42px;margin:0;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;overflow-x:auto;box-sizing:border-box}
+#fvPage.fv-dashboard-layout>.fv-executive-controls>.fv-subnav{display:flex;flex:0 0 auto;flex-wrap:nowrap;align-items:center;height:42px;min-height:42px;max-height:42px;margin:0;padding:0;gap:8px}
+#fvPage.fv-dashboard-layout>.fv-executive-controls .fv-subnav button{height:40px;min-height:40px;padding:0 16px;white-space:nowrap;flex:0 0 auto}
+#fvPage.fv-dashboard-layout .fv-executive-date{flex:0 0 auto;white-space:nowrap;font-size:var(--fv-fs-s);color:#CCC9D7}
+#fvPage.fv-dashboard-layout>#home-comparison .fv-table.is-aligned{min-width:var(--min-w)}
+#fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:60px}
+#fvPage.fv-dashboard-layout>.fv-home-discord{padding:0;margin:0;overflow:hidden;border:1px solid #62528E;border-radius:12px;background:#141419}
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{background:#211A3D;border-bottom:1px solid #62528E}
+#fvPage.fv-dashboard-layout .fv-home-discord-link{display:inline-flex;align-items:center;gap:7px;background:#5865F2;color:#fff;border-color:#858DFF;white-space:nowrap}
+#fvPage.fv-dashboard-layout .fv-community-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0;margin:0;padding:16px;border:0;border-radius:0;background:none}
+#fvPage.fv-dashboard-layout .fv-community-summary>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;min-height:84px;padding:14px 16px;border:1px solid #62528E;border-radius:8px;background:#211A3D}
+#fvPage.fv-dashboard-layout .fv-community-summary>div>span{font-size:var(--fv-fs-s);font-weight:var(--fv-w);white-space:nowrap}
+#fvPage.fv-dashboard-layout .fv-community-summary strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+@media(max-width:767px){
+ #fvPage.fv-dashboard-layout>.fv-executive-controls{gap:10px}
+ #fvPage.fv-dashboard-layout>.fv-executive-controls>.fv-subnav{gap:5px}
+ #fvPage.fv-dashboard-layout>.fv-executive-controls .fv-subnav button{padding:0 10px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table.is-aligned{min-width:0}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:auto;max-height:none}
+ #fvPage.fv-dashboard-layout .fv-community-summary{gap:8px;padding:10px}
+ #fvPage.fv-dashboard-layout .fv-community-summary>div{padding:10px;min-height:75px}
+ #fvPage.fv-dashboard-layout .fv-community-summary strong,#fvPage.fv-dashboard-layout .fv-community-summary .fv-num{font-size:var(--fv-fs-l)}
+ #fvPage.fv-dashboard-layout .fv-community-summary>div>span{white-space:normal}
+}

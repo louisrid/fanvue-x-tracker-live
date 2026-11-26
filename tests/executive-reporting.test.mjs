@@ -170,3 +170,21 @@ test('campaign and Discord views reserve four cards, a chart and listings even w
  }
  assert.doesNotMatch(A.pages['all-accounts']({}).body,/fv-account-tag|fv-value-badge|is-best-value/);
 });
+
+test('dashboard always reserves campaign rows and follows the shared frame, even while loading',()=>{
+ const html=app(null).pages.home({view:'all-time'}).body;
+ const k=html.indexOf('fv-strip'),g=html.indexOf('fv-chart-panel'),l=html.indexOf('home-comparison'),d=html.indexOf('fv-home-discord');
+ assert.ok(k>=0&&k<g&&g<l&&l<d);
+ assert.equal((html.match(/class="fv-metric"/g)||[]).length,4);
+ assert.equal((html.match(/class="fv-row"/g)||[]).length,5);
+});
+test('dashboard weekly clicks include scoped Short.io readings exactly once, not lifetime totals',()=>{
+ const day=C.londonDay(Date.now());
+ const post='https://x.com/test/status/'+String(BigInt(Date.now()-86400000-1288834974657)<<22n);
+ const row={code:'G1',campaign:'GTAM',publisher:'Test',paid:true,posted:true,postUrl:post,trackingUrl:'https://example.com/g1',cost:20,clicks:999};
+ const ar={code:'A1',publisher:'Article',paid:true,posted:true,postUrl:url(1),cost:20,clicks:888};
+ const of={code:'O1',publisher:'OF',paid:true,posted:true,postUrl:url(2),cost:20,clicks:777};
+ const ov={campaigns:[campaign('gta-mandy',[row]),campaign('x-articles',[ar]),campaign('of-terms',[of])]};
+ const a=app(ov,{gta:{mandy:{activity:[{code:'G1',date:day,clicks:7},{code:'G1',date:day,clicks:7}]}},dashboard:{activityReady:true,activity:[{code:'A1',date:day,clicks:3},{code:'UNRELATED',date:day,clicks:1000}]},of:{ready:true,activity:[{code:'O1',date:day,clicks:2}]}});
+ assert.equal(a.periodTotals(day,day).clicks.value,12);
+});
