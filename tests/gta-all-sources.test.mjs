@@ -246,7 +246,7 @@ test('paid RTs of a Guru account are Guru Promotion spend; the rest stay with X 
   assert.equal(sum.spend.value,50);
   const shell=readFileSync('public/fanvue-app.js','utf8');
   assert.doesNotMatch(shell,/Records and editing/);
-  assert.match(shell,/\(D\.campaign\('guru-rts'\)\?\.paidReposts\|\|\[\]\)\.map\(r=>xRecord\(r,\{campaign:'Guru X RTs',parent:'Guru X RTs',type:'rt'/);
+  assert.match(shell,/\(D\.campaign\('guru-rts'\)\?\.paidReposts\|\|\[\]\)\.map\(r=>xRecord\(r,\{campaign:'Guru RTs',parent:'Guru RTs',type:'rt'/); // renamed by the owner (26 Nov)
 });
 
 test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly once',()=>{
@@ -310,7 +310,8 @@ test('tabs are found by permanent ID: renamed tabs, old names and old cached row
 
 test('Accounts page: one row per platform + handle across campaigns, from the shared record builders',()=>{
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/\{key:'discord',title:'Discord',icon:'discord',group:'general'\},\n\s*\{key:'all-accounts',title:'Accounts',icon:'users',group:'general'\}/);
+  // Owner (26 Nov): Discord sits under Community and Accounts is the last menu item.
+  assert.match(shell,/\{key:'discord',title:'Discord',icon:'discord',group:'community'\},\n\s*\{key:'all-accounts',title:'Accounts',icon:'users',group:'more'\}/);
   assert.match(shell,/const all=ov\?\[\.\.\.xaRecords\(\),\.\.\.gtaRecords\(\),\.\.\.igRecords\(\),\.\.\.ofRecords\(\),\.\.\.guruRecords\(\)\]:\[\]/);
   for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC','CPM'])assert.match(shell,new RegExp("label:'"+label+"'"));
   // Each campaign page builds its table from the same functions, so figures always agree.

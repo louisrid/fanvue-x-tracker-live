@@ -601,3 +601,70 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
   .fv-table tr.fv-detail{margin:0 0 10px;border:var(--fv-bw) solid var(--fv-border);border-top:0;border-radius:0 0 var(--fv-r-m) var(--fv-r-m);overflow:hidden}
   .fv-table tr.fv-group-row{margin:6px 0 8px}
 }
+
+/* ---------- Dashboard periods (owner, 26 Nov): This Week, Last Week, All Time ---------- */
+.fv-period-card{border-radius:var(--fv-radius);padding:22px 22px 20px;margin:0 0 var(--fv-gap);color:#fff}
+.fv-period-card.is-week{background:#E8590C}
+.fv-period-card.is-last{background:#1D5FD6}
+.fv-period-card.is-all{background:var(--fv-dark)}
+.fv-period-card-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin:0 0 6px}
+.fv-period-card-head h2{margin:0;font-size:var(--fv-fs-xl);line-height:1.1;font-weight:var(--fv-w-strong);letter-spacing:-.5px;color:#fff}
+.fv-period-card-head span{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:rgba(255,255,255,.85)}
+.fv-period-group{margin:14px 0 8px;font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.85)}
+.fv-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fv-tile{display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.16)}
+.fv-period-card.is-all .fv-tile{background:rgba(255,255,255,.11)}
+.fv-tile-label{display:flex;align-items:center;gap:6px;font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:rgba(255,255,255,.92)}
+.fv-tile-label .fv-icon{width:15px;height:15px;flex:none}
+.fv-tile-value{display:block;margin-top:6px;font-size:var(--fv-fs-xl);line-height:1.1;font-weight:var(--fv-w-strong);color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fv-tile-value .fv-num{font-size:var(--fv-fs-xl);color:#fff}
+.fv-tile-value .fv-dash{color:#fff}
+.fv-tile-value:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:4px}
+@media (max-width:767px){
+  .fv-period-card{padding:16px 14px}
+  .fv-tiles{gap:8px}
+  .fv-tile{padding:11px 10px;border-radius:12px}
+  .fv-tile-label .fv-icon{display:none}
+  /* Phones: figures one step smaller so values like 24,273 or $2,240 always fit, never cut off. */
+  .fv-tile-value,.fv-tile-value .fv-num{font-size:var(--fv-fs-l);white-space:normal;overflow:visible}
+  .fv-tile-label{line-height:1.25}
+}
+
+/* ---------- White cards: each label and figure sits in its own very light grey rounded box ---------- */
+.fv-inline-metrics{gap:10px}
+.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){padding:12px 14px;border:0;border-radius:12px;background:#F2F4F7}
+.fv-detail-grid{gap:8px}
+.fv-detail-grid>div{padding:9px 11px;border-radius:10px;background:#F2F4F7}
+@media (max-width:767px){
+  .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.fv-table tr.fv-row td:first-child:not(.is-name),.fv-table tr.fv-row td:last-child:not(.fv-x-col){padding:9px 11px;border-radius:10px;background:#F2F4F7}
+  .fv-table tr.fv-row{gap:8px}
+}
+
+/* ---------- Mobile header and dropdown menu (owner, 26 Nov) ---------- */
+@media (max-width:767px){
+  :root{--fv-top-h:68px}
+  .fv-mobile-top{height:var(--fv-top-h);padding:0 12px 0 18px;z-index:70}
+  .fv-mobile-top .fv-wordmark img{width:112px}
+  .fv-menu-button{width:52px;height:52px;border-radius:14px;background:#1C1C1C;transition:background-color 160ms ease,transform 160ms ease}
+  .fv-menu-button:active{transform:scale(.94)}
+  .fv-menu-button .fv-icon{width:26px;height:26px}
+  .fv-menu-button .fv-icon rect{transition:fill 200ms ease}
+  .fv-shell.is-nav-open .fv-menu-button{background:#2A2A2A}
+  .fv-shell.is-nav-open .fv-menu-button .fv-icon rect{fill:currentColor}
+  /* The menu drops down from the header: a black panel that extends the header, bounces into place and folds back up. */
+  .fv-sidebar{position:fixed;inset:var(--fv-top-h) 0 auto 0;width:auto;max-height:calc(100vh - var(--fv-top-h));z-index:65;padding:6px 18px 24px;
+    border-radius:0 0 24px 24px;overflow-y:auto;transform:translateY(-110%);visibility:hidden;box-shadow:0 22px 44px rgba(0,0,0,.28);
+    transition:transform 280ms cubic-bezier(.5,0,.75,0),visibility 0s linear 280ms}
+  .fv-sidebar::before{content:"";position:absolute;left:0;right:0;top:-60px;height:60px;background:var(--fv-sidebar)}
+  .fv-shell.is-nav-open .fv-sidebar{transform:none;visibility:visible;transition:transform 560ms cubic-bezier(.3,1.5,.55,1),visibility 0s}
+  .fv-sidebar .fv-wordmark,.fv-drawer-close{display:none!important}
+  .fv-scrim{display:block;top:var(--fv-top-h);z-index:60;opacity:0;pointer-events:none;transition:opacity 260ms ease}
+  .fv-shell.is-nav-open .fv-scrim{opacity:1;pointer-events:auto}
+  .fv-sidebar .fv-nav-group{justify-content:center;margin:16px 0 6px;padding:0}
+  .fv-sidebar .fv-nav-group-label{text-align:center}
+  .fv-sidebar .fv-nav-item{justify-content:center;height:52px;gap:12px;font-size:var(--fv-fs-l);border-radius:14px}
+  .fv-sidebar .fv-nav-item .fv-icon{width:21px;height:21px}
+  .fv-sidebar .fv-nav-more{margin-top:14px;padding-top:12px;border-top:1px solid #262626}
+}
+@media (max-width:767px) and (prefers-reduced-motion:reduce){.fv-sidebar,.fv-shell.is-nav-open .fv-sidebar,.fv-scrim{transition:none}}
+@media (min-width:768px){.fv-nav-more{margin-top:18px;padding-top:12px;border-top:1px solid #262626}}

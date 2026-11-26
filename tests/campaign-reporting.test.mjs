@@ -172,7 +172,8 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  // and runs the existing reload coordinator unchanged.
  assert.equal((html.match(/id="fvRefresh"/g)||[]).length,1);
  assert.match(html,/id="fvRefreshStatus"/);
- assert.match(shell,/title:'Home',refreshLabel:'Refresh All'/);
+// Owner (26 Nov): Home is named Dashboard; OnlyFans Terms is OF Terms; Guru X RTs is Guru RTs.
+  assert.match(shell,/title:'Dashboard',refreshLabel:'Refresh All'/);
  assert.match(shell,/await app\?\.refresh\?\.all\?\.\(\)/);
  assert.match(app,/refresh:Object\.freeze\(\{all:reloadAllData,/);
  const start=app.indexOf('async function reloadAllData()');
