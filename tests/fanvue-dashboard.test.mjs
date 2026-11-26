@@ -35,10 +35,12 @@ const overview=(over={})=>({ok:true,checkedAt:'2026-11-24T12:00:00Z',campaigns:[
 ]});
 
 test('formatting uses UK English, tabular-friendly compact figures and explicit currency',()=>{
-  assert.equal(C.compact(1611537),'1.61M');
+  assert.equal(C.compact(1611537),'1.6M'); // owner (26 Nov): one decimal max
+  assert.equal(C.compact(10000),'10K');
   assert.equal(C.compact(24168),'24.2K');
   assert.equal(C.compact(9999),'9,999');
-  assert.equal(C.money(2830),'$2,830.00');
+  assert.equal(C.money(2830),'$2,830'); // owner (26 Nov): max one decimal, no trailing .0
+  assert.equal(C.money(6.26),'$6.3');
   assert.equal(C.moneyShort(10225.85),'$10,226');
   assert.equal(C.signed(-12),'−12');
   assert.equal(C.weekLabel('2026-10-26'),'26 Oct – 1 Nov 2026');
@@ -162,11 +164,11 @@ test('unavailable data is shown once: empty columns hide and neighbouring empty 
   assert.equal(U.strip([{label:'X',icon:'wallet',metric:na}]),'');
   assert.equal(U.chartPanel({id:'c1',measures:[]},{}),'');
   assert.equal(U.detailGrid([['KYC completions',U.value(na)],['Owner',U.reasonButton('Not recorded','x')],['Paid',C.money(5)]]).includes('KYC completions'),false);
-  assert.ok(U.detailGrid([['Paid',C.money(5)]]).includes('$5.00'));
+  assert.ok(U.detailGrid([['Paid',C.money(5)]]).includes('$5<')); // owner (26 Nov): no trailing .00
 });
 
 test('six-slot strip keeps fixed metric order on every paid campaign page',()=>{
-  for(const label of ['Spend','Views','Clicks','CPC','Signups','KYC','Earning Creators','Original Views','Live Posts','Members','Member Growth','Course Clicks'])
+  for(const label of ['Spend','Views','Clicks','CPC','Signups','KYC','Earning Creators','Original Views','Live Posts','Members','Growth','Clicks'])  // owner (26 Nov, style 74): short labels
     assert.ok(appJs.includes("'"+label+"'"),label);
   assert.match(css,/\.fv-strip\{display:grid;grid-template-columns:repeat\(var\(--n,6\)/);
 });
@@ -184,8 +186,9 @@ test('every legacy hash maps to a new page, view or retained record list',()=>{
 
 test('shell: official wordmark, Inter only, flat seven-page navigation and noindex',()=>{
   assert.match(html,/<meta name="robots" content="noindex,nofollow">/);
-  assert.match(html,/brand\/fanvue-wordmark-white-240w\.png/);
-  assert.match(html,/fanvue-wordmark-white-360w\.png 3x/);
+  // Owner (26 Nov, style 74): "Fanvue" as text in the display font replaces the wordmark image.
+  assert.equal((html.match(/<span class="fv-logo-text">Fanvue<\/span>/g)||[]).length,2);
+  assert.match(html,/family=Montserrat:wght@700;800;900/);
   assert.doesNotMatch(html,/Unbounded/);
   assert.match(html,/family=Inter:wght@400\.\.900/);
   const order=C.CAMPAIGNS.map(c=>c.name);
@@ -207,8 +210,9 @@ test('both shared stylesheets are present and use the same small scale',()=>{
   assert.ok(records.length>10000,'fanvue-records.css has content');
   for(const rule of ['.fv-records .xt-data-table','.modal-shade{','.article-modal .form-grid','.fv-records .account-table'])assert.ok(records.includes(rule),rule);
   for(const sheet of [css,records]){
-    assert.deepEqual([...new Set([...sheet.matchAll(/font-size:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-fs-(s|l|xl|hero)\)$/.test(v)),[]);
-    assert.deepEqual([...new Set([...sheet.matchAll(/font-weight:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-w(-strong)?\)$/.test(v)),[]);
+    // Owner (26 Nov, style 74) adds four steps to the scale: tile label (m), period title, tile number, logo; and a 900 weight.
+    assert.deepEqual([...new Set([...sheet.matchAll(/font-size:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-fs-(s|m|l|xl|hero|title|num|logo)\)$/.test(v)),[]);
+    assert.deepEqual([...new Set([...sheet.matchAll(/font-weight:([^;}]+)/g)].map(m=>m[1]))].filter(v=>!/^var\(--fv-w(-strong|-black)?\)$/.test(v)),[]);
   }
   assert.match(css,/--fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;/);
   // The big key-number size is used only by the key-numbers strip.

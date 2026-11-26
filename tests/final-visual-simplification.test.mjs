@@ -76,7 +76,8 @@ test('Campaign navigation is centred, icon-free and uses one coordinated dark pa
   const header=html.slice(html.indexOf('id="fvHeader"'),html.indexOf('id="fvPage"'));
   assert.doesNotMatch(header,/<svg\b/);
   assert.doesNotMatch(html,/dashboard-discord-icon|class="brandmark"/);
-  assert.match(html,/alt="Fanvue"/);
+  // Owner (26 Nov, style 74): the logo is the word "Fanvue" as text.
+  assert.match(html,/<span class="fv-logo-text">Fanvue<\/span>/);
   assert.match(css,/--fv-sidebar:#000000/);
   assert.match(css,/--fv-nav-active:#212121/);
   for(const colour of ['violet','blue','teal','pink'])assert.match(core,new RegExp(colour+":\\{icon:'#"));

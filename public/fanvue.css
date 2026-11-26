@@ -668,3 +668,215 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 }
 @media (max-width:767px) and (prefers-reduced-motion:reduce){.fv-sidebar,.fv-shell.is-nav-open .fv-sidebar,.fv-scrim{transition:none}}
 @media (min-width:768px){.fv-nav-more{margin-top:18px;padding-top:12px;border-top:1px solid #262626}}
+
+/* ---------- Style 74 (owner pick, 26 Nov): text logo, tall header, black period cards with gradient tiles ---------- */
+:root{--fv-display:'Montserrat',Inter,sans-serif;--fv-w-black:900;--fv-fs-m:13px;--fv-fs-title:22px;--fv-fs-num:25px;--fv-fs-logo:34px}
+.fv-logo-text{display:block;font-family:var(--fv-display);font-size:var(--fv-fs-xl);font-weight:var(--fv-w-black);line-height:1;letter-spacing:-.03em;color:#fff}
+.fv-wordmark{text-decoration:none!important}
+@media (max-width:767px){
+  :root{--fv-top-h:104px}
+  .fv-mobile-top{height:var(--fv-top-h);padding:14px 14px 0 20px}
+  .fv-mobile-top .fv-logo-text{font-size:var(--fv-fs-logo)}
+  .fv-menu-button,.fv-shell.is-nav-open .fv-menu-button{width:56px;height:56px;background:none}
+  .fv-menu-button .fv-icon{width:34px;height:34px}
+}
+/* Dashboard page: white page, no page title or timestamp, plain Refresh button on the right. */
+.fv-shell.is-home,.fv-shell.is-home .fv-main{background:#fff}
+.is-home .fv-title,.is-home .fv-updated,.is-home #fvRange{display:none}
+.is-home .fv-header{justify-content:flex-end}
+.is-home #fvRefresh{background:#fff;border:1.5px solid #D5DAE1;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
+.is-home #fvRefresh:hover{background:#F6F7F9}
+.fv-period-card,.fv-period-card.is-week,.fv-period-card.is-last,.fv-period-card.is-all{background:#0B0B0C;color:#fff;border-radius:16px;padding:20px 14px 18px;box-shadow:none;font-family:var(--fv-display)}
+.fv-period-card-head{margin:0 0 14px}
+.fv-period-card-head h2{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-strong);letter-spacing:-.02em}
+.fv-period-card-head span,.fv-period-group{display:none}
+.fv-tiles{gap:8px}
+.fv-tiles+.fv-tiles{margin-top:8px}
+.fv-tile,.fv-period-card.is-all .fv-tile{border-radius:10px;padding:13px 11px 12px;min-height:84px;box-shadow:none;color:#fff}
+.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%)}
+.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#3B82F6,#6366F1)}
+.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#2E2E30,#4A4A4E)}
+.fv-tile-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);white-space:nowrap;color:#fff}
+.fv-tile-label .fv-icon{display:none}
+.fv-tile-value,.fv-tile-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;color:#fff}
+@media (min-width:768px){.fv-tile,.fv-period-card.is-all .fv-tile{min-height:104px;padding:16px 16px 14px}}
+@media (max-width:767px){
+  .fv-period-card,.fv-period-card.is-week,.fv-period-card.is-last,.fv-period-card.is-all{padding:20px 14px 18px;border-radius:16px}
+  .fv-tile,.fv-period-card.is-all .fv-tile{padding:13px 11px 12px;min-height:84px;border-radius:10px}
+  .fv-tile-value,.fv-tile-value .fv-num{font-size:var(--fv-fs-num);white-space:nowrap;overflow:hidden}
+}
+.is-home .fv-head-tools{justify-content:flex-end;width:auto}
+.is-home #fvRefresh .fv-icon,.is-home #fvRefresh svg{color:#111;stroke:currentColor}
+.fv-tile-value .fv-dash{font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);color:#fff;padding:0}
+.fv-tile-value{text-overflow:clip}
+.is-home #fvRefresh:hover:not(:disabled){background:#F6F7F9;border-color:#C9CFD8;color:#111}
+.is-home #fvRefresh:focus-visible{outline:3px solid #C9CFD8}
+
+/* ---------- Style 74 across every page (owner, 26 Nov) ---------- */
+/* Page colours: tiles, graph lines and active pills take the page's campaign colour. */
+.fv-shell{--fv-tile:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%);--fv-accent:#F0357C;--fv-card:#0B0B0C;--fv-card-2:#1C1C1F}
+.fv-shell.pg-gta-vi{--fv-tile:linear-gradient(135deg,#7C3AED,#A855F7);--fv-accent:#8B5CF6}
+.fv-shell.pg-viral-qrts{--fv-tile:linear-gradient(135deg,#F59E0B,#F97316);--fv-accent:#F59E0B}
+.fv-shell.pg-x-articles{--fv-tile:linear-gradient(135deg,#334155,#64748B);--fv-accent:#64748B}
+.fv-shell.pg-of-terms{--fv-tile:linear-gradient(135deg,#3B82F6,#6366F1);--fv-accent:#3B82F6}
+.fv-shell.pg-guru-promotion{--fv-tile:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%);--fv-accent:#F0357C}
+.fv-shell.pg-discord{--fv-tile:linear-gradient(135deg,#5865F2,#7C83FD);--fv-accent:#5865F2}
+.fv-shell.pg-all-accounts{--fv-tile:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%);--fv-accent:#F0357C}
+
+/* White page; no timestamp or "All Time" label; plain Refresh on the right; title in the display font. */
+body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
+.fv-updated,#fvRange{display:none}
+.fv-header{align-items:flex-end}
+.fv-head-tools{justify-content:flex-end;width:auto;margin-left:auto}
+.fv-title h1{font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-black);letter-spacing:-.02em}
+#fvRefresh,#fvRefresh:hover:not(:disabled){background:#fff;border:1.5px solid #D5DAE1;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
+#fvRefresh:hover:not(:disabled){background:#F6F7F9;border-color:#C9CFD8}
+#fvRefresh .fv-icon,#fvRefresh svg{color:#111}
+#fvRefresh:focus-visible{outline:3px solid #C9CFD8}
+.fv-section-title{font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+.fv-nav-item{font-family:var(--fv-display)}
+
+/* Tabs: tight pills; the active tab is black with white text. */
+.fv-subnav,.fv-segments.fv-subnav{display:flex;flex-wrap:wrap;gap:6px;padding:0;border:0;background:none}
+.fv-subnav button,.fv-segments.fv-subnav button{height:38px;padding:0 14px;border:1.5px solid #E3E6EB;border-radius:999px;background:#fff;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
+.fv-subnav button[aria-pressed="true"],.fv-segments.fv-subnav button[aria-pressed="true"]{background:#0B0B0C;border-color:#0B0B0C;color:#fff}
+.fv-subnav-n{background:#EEF1F5;color:#111}
+.fv-subnav button[aria-pressed="true"] .fv-subnav-n{background:rgba(255,255,255,.2);color:#fff}
+
+/* Key numbers: one black card holding gradient tiles. */
+.fv-panel.fv-strip{background:var(--fv-card);border-radius:16px;padding:14px;gap:8px;min-height:0}
+.fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){background:var(--fv-tile);border:0;border-radius:10px;padding:14px 12px 13px;min-height:96px;justify-content:space-between;gap:10px}
+.fv-panel.fv-strip .fv-metric-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);min-height:0;color:#fff}
+.fv-panel.fv-strip .fv-metric-label .fv-chipicon{display:none}
+.fv-panel.fv-strip .fv-metric-value,.fv-panel.fv-strip .fv-metric-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-xl);font-weight:var(--fv-w-black);letter-spacing:-.02em;color:#fff}
+.fv-panel.fv-strip .fv-chip,.fv-panel.fv-strip .fv-metric-note{display:none}
+@media (max-width:767px){
+  .fv-panel.fv-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}
+  .fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){padding:13px 11px 12px;min-height:84px}
+  .fv-panel.fv-strip .fv-metric-value,.fv-panel.fv-strip .fv-metric-value .fv-num{font-size:var(--fv-fs-num)}
+}
+
+/* Every other card: black, with white text. */
+.fv-panel:not(.fv-strip){background:var(--fv-card);border:0;border-radius:16px;color:#fff}
+.fv-panel>.fv-panel-head{background:var(--fv-card);border-radius:16px 16px 0 0}
+.fv-panel>.fv-panel-head h2{font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+.fv-panel>.fv-panel-head .fv-chipicon{display:none}
+.fv-panel .fv-count,.fv-panel .fv-empty,.fv-panel .fv-empty p{color:#C9CDD4}
+/* Budget and other figure rows: gradient tiles. */
+.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:var(--fv-tile);border-radius:10px;padding:13px 12px}
+.fv-inline-metrics>div>span{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong)}
+.fv-inline-metrics b,.fv-inline-metrics b .fv-num{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-black)}
+/* Graphs: white plot inside the black card, line in the page colour. */
+.fv-chart-panel .fv-chart{background:#fff;border-radius:12px;padding:10px 6px 4px;color:#111}
+.fv-line{stroke:var(--fv-accent)}
+.fv-area{fill:var(--fv-accent);opacity:.16}
+.fv-dot{stroke:var(--fv-accent)}
+.fv-bar{fill:var(--fv-accent);stroke:none}
+.fv-hit:hover,.fv-hit:focus-visible{background:rgba(0,0,0,.04)}
+.fv-switch{background:#fff;border-radius:10px}
+
+/* Tables inside black cards. */
+.fv-table th,.fv-table th:first-child,.fv-table th:last-child{background:var(--fv-card-2);color:#fff;border-bottom:1px solid #2A2A2E}
+.fv-table th .fv-sort{color:#fff}
+.fv-table td{color:#fff;border-bottom:1px solid #222226}
+.fv-table .fv-name,.fv-table .fv-sub-link,.fv-table a{color:#fff}
+.fv-table .fv-dash,.fv-panel .fv-dash{color:#8E939C}
+.fv-detail td,.fv-detail-inner{background:var(--fv-card-2);color:#fff}
+.fv-detail-grid>div{background:#26262A;color:#fff}
+.fv-detail-grid dt{color:#B9BEC6}.fv-detail-grid dd{color:#fff}
+.fv-group-row td{background:var(--fv-card-2);color:#fff}
+.fv-show-all{margin-right:12px;padding:8px 14px;border:1.5px solid #3A3A40;border-radius:10px;background:#fff;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
+.fv-count{display:flex;align-items:center;justify-content:flex-end}
+
+@media (max-width:767px){
+  /* Phone rows as cards on the black card. */
+  .fv-table tr.fv-row{background:var(--fv-card-2);border:0}
+  .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.fv-table tr.fv-row td:first-child:not(.is-name),.fv-table tr.fv-row td:last-child:not(.fv-x-col){background:#26262A;color:#fff}
+  .fv-table tr.fv-row td::before{color:#B9BEC6}
+  .fv-expand{color:#fff}
+  /* Summary tables (groups, articles, status, promoted posts): gradient tiles. */
+  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:var(--fv-tile)}
+  .is-summary .fv-table tr.fv-row td::before{color:rgba(255,255,255,.9)}
+  /* Long lists: one compact row per account (Account, Price, Views, Clicks); tap the arrow for details. */
+  .is-list .fv-table tr.fv-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:12px}
+  .is-list .fv-table tr.fv-row td[data-label="Campaign"],.is-list .fv-table tr.fv-row td[data-label="Platform"],.is-list .fv-table tr.fv-row td[data-label="Type"],
+  .is-list .fv-table tr.fv-row td[data-label="Live?"],.is-list .fv-table tr.fv-row td[data-label="Link"],
+  .is-accounts .fv-table tr.fv-row td[data-label="Campaigns"],.is-accounts .fv-table tr.fv-row td[data-label="Posts"],.is-accounts .fv-table tr.fv-row td[data-label="CPC"],.is-accounts .fv-table tr.fv-row td[data-label="CPM"]{display:none}
+  .is-list .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col){padding:7px 9px}
+}
+.fv-panel .fv-select,.fv-panel .fv-select select,.fv-panel .fv-search,.fv-panel .fv-search input{color:#111}
+.fv-panel .fv-select select,.fv-panel .fv-search{background:#fff}
+.fv-panel .fv-show-all{color:#111;background:#fff}
+.fv-table td.is-link a,.fv-table td.is-link a .fv-icon,.fv-table td.is-link svg,.fv-group-head a,.fv-group-head .fv-icon{color:#fff}
+.fv-table td.is-name,.fv-table td.is-name *{color:#fff}
+
+/* ---------- Owner fixes (26 Nov): summary tiles like the key numbers; Discord matches; posts lists minimal white ---------- */
+/* Summary cards: bold labels and big heavy figures, same as the key-number tiles. */
+.is-summary .fv-table td,.is-summary .fv-table td *{font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+@media (max-width:767px){
+  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){font-size:var(--fv-fs-title);padding:13px 12px 12px;border-radius:10px;gap:8px;min-height:84px;justify-content:space-between}
+  .is-summary .fv-table tr.fv-row td::before{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);color:#fff}
+  .is-summary .fv-table tr.fv-row td .fv-dash{font-size:var(--fv-fs-title);color:#fff}
+  .is-summary .fv-table tr.fv-row td.is-name{font-size:var(--fv-fs-l)}
+}
+.fv-name-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+.fv-open-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:#fff;color:#111!important;font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);text-decoration:none;white-space:nowrap}
+.fv-open-btn .fv-icon{width:13px;height:13px;color:#111!important}
+/* Discord: three key numbers side by side, same size as other pages. */
+.pg-discord .fv-panel.fv-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pg-discord .fv-panel.fv-strip .fv-metric:last-child{grid-column:auto}
+/* Posts and accounts lists: minimal white boxes. */
+.fv-panel.is-list{background:#fff;border:1px solid #E6E8EC;color:#111}
+.fv-panel.is-list>.fv-panel-head{background:#fff;border-bottom:1px solid #EEF0F3}
+.fv-panel.is-list>.fv-panel-head h2{color:#111}
+.is-list .fv-table th,.is-list .fv-table th:first-child,.is-list .fv-table th:last-child{background:#F7F8FA;color:#111;border-bottom:1px solid #E6E8EC}
+.is-list .fv-table th .fv-sort{color:#111}
+.is-list .fv-table td,.is-list .fv-table td.is-name,.is-list .fv-table td.is-name *,.is-list .fv-table .fv-name,.is-list .fv-table a,.is-list .fv-table td.is-link a,.is-list .fv-table td.is-link svg,.is-list .fv-expand{color:#111}
+.is-list .fv-table td{border-bottom:1px solid #EEF0F3}
+.is-list .fv-count,.is-list .fv-empty,.is-list .fv-empty p{color:#5B6573}
+.is-list .fv-show-all{border-color:#D5DAE1}
+.is-list .fv-detail td,.is-list .fv-detail-inner,.is-list .fv-group-row td{background:#F7F8FA;color:#111}
+.is-list .fv-detail-grid>div{background:#fff;border:1px solid #EEF0F3;color:#111}
+.is-list .fv-detail-grid dt{color:#5B6573}.is-list .fv-detail-grid dd{color:#111}
+.is-list .fv-group-head a,.is-list .fv-group-head .fv-icon{color:#111}
+@media (max-width:767px){
+  .is-list .fv-table tr.fv-row{background:#fff;border:1px solid #E6E8EC}
+  .is-list .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-list .fv-table tr.fv-row td:first-child:not(.is-name),.is-list .fv-table tr.fv-row td:last-child:not(.fv-x-col){background:none;color:#111;padding:2px 0;font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+  .is-list .fv-table tr.fv-row td::before{color:#6B7380;font-weight:var(--fv-w-strong)}
+}
+.is-list .fv-table td.is-name .fv-marker,.is-list .fv-table td.is-name .fv-marker *{color:#fff}
+.fv-panel:not(.is-list) .fv-status{color:#111}
+
+
+/* ---------- Owner (26 Nov): fewer coloured tiles together; tidy sizing, spacing and corners ---------- */
+/* Colour only in small groups: key numbers (up to 4) and the Dashboard's top row. Everything else is dark tiles. */
+.fv-period-card .fv-tiles+.fv-tiles .fv-tile{background:#26262A}
+.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#26262A}
+@media (max-width:767px){
+  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#26262A}
+  .is-summary .fv-table tr.fv-row td::before{color:#B9BEC6}
+}
+/* No extra headings, counts or status pills. */
+.fv-section-title,.fv-panel .fv-status,.fv-group-row .fv-status{display:none}
+#fvTitleChip:empty{display:none}
+.fv-title{gap:10px}
+.fv-header{margin-bottom:16px}
+/* Slightly squarer corners everywhere. */
+.fv-panel,.fv-panel.fv-strip,.fv-period-card,.fv-period-card.is-week,.fv-period-card.is-last,.fv-period-card.is-all{border-radius:12px}
+.fv-panel>.fv-panel-head{border-radius:12px 12px 0 0}
+.fv-tile,.fv-period-card.is-all .fv-tile,.fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n),.fv-inline-metrics>div{border-radius:8px}
+.fv-chart-panel .fv-chart{border-radius:8px}
+#fvRefresh,.fv-show-all,.fv-select select,.fv-search{border-radius:8px}
+.fv-subnav button,.fv-segments.fv-subnav button{border-radius:8px}
+/* Consistent spacing between cards. */
+.fv-panel,.fv-period-card{margin:0 0 12px}
+.fv-panel.fv-strip{gap:8px;padding:12px}
+/* Graph cards: title and the line/bar switch on one row; compact switch. */
+.fv-chart-panel>.fv-panel-head{flex-wrap:nowrap;align-items:center;min-height:56px}
+.fv-chart-panel .fv-tools{width:auto;flex:none}
+.fv-switch button{width:34px;height:30px}
+@media (max-width:767px){
+  .fv-panel>.fv-panel-head{min-height:52px;padding:12px var(--fv-pad)}
+  .fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){min-height:80px;padding:12px 11px}
+  .pg-discord .fv-panel.fv-strip .fv-metric{padding:12px 10px}
+}

@@ -7,7 +7,8 @@ test('all-caps centred enlarged logo with soft blur and webfont fallback',()=>{
  // v3.1 redesign: no blurred text logo or Unbounded display font. The wordmark is the
  // supplied image, Inter is the only web font and no font files are bundled.
  assert.doesNotMatch(html,/brand-name|Unbounded/);
- assert.match(html,/alt="Fanvue"/);
+ // Owner (26 Nov, style 74): the logo is now the word "Fanvue" as text, not the wordmark image.
+ assert.match(html,/<span class="fv-logo-text">Fanvue<\/span>/);
  assert.match(html,/family=Inter:wght@400\.\.900/);
  assert(!readdirSync(new URL('../public/',import.meta.url)).some(f=>/\.(woff2?|otf|ttf)$/i.test(f)),'No font files are bundled');
 });

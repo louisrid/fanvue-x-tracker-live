@@ -12,7 +12,8 @@ function versionOf(s) { return s.match(/(?:APP_VERSION|uiVersion)\s*[:=]\s*'([0-
 
 test('wordmark is centred and all caps without requiring a font download from user',()=>{
   // v3.1 redesign: the wordmark is the official PNG, so no display-font download is needed.
-  assert.match(html,/src="\/brand\/fanvue-wordmark-white-240w\.png"/);
+  // Owner (26 Nov, style 74): the logo is now the word "Fanvue" as text, not the wordmark image.
+  assert.match(html,/<span class="fv-logo-text">Fanvue<\/span>/);
   assert.doesNotMatch(html,/Unbounded|brand-name/);
   assert.ok(readdirSync(new URL('public/brand/',root)).includes('fanvue-wordmark-white.png'));
 });

@@ -27,7 +27,8 @@ test('wordmark has larger top than bottom padding and navigation is centred',()=
   assert(fv.includes('.fv-sidebar{width:var(--fv-side-w);flex-shrink:0;background:var(--fv-sidebar);color:var(--fv-sidebar-text);padding:26px 13px 22px}'));
   assert(fv.includes('.fv-wordmark{display:block;margin:2px 11px 31px;line-height:0}'));
   assert(html.includes('id="fvMenu"'));
-  assert(html.includes('alt="Fanvue"'));
+  // Owner (26 Nov, style 74): the logo is now the word "Fanvue" as text, not the wordmark image.
+  assert(html.includes('<span class="fv-logo-text">Fanvue</span>'));
 });
 
 test('mobile home filters are compact scrollable and the placement advanced filters are accessible',()=>{

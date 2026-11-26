@@ -84,7 +84,7 @@ test('campaign feed adds an Instagram group, committed spend and the GTA VI budg
   assert.equal(find('gta-instagram').committedUnpaidKnown,0);
   assert.deepEqual(find('gta-qrts').budget,{amount:10000,currency:'USD'});
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.spend.value,840);assert.equal(s.planned,150);assert.match(s.spend.reason,/Includes \$150\.00 planned \(not paid yet\)/);
+  assert.equal(s.spend.value,840);assert.equal(s.planned,150);assert.match(s.spend.reason,/Includes \$150 planned \(not paid yet\)/); // owner (26 Nov): no trailing .00
   assert.equal(s.budget.remaining.value,10000-840-40);
 });
 

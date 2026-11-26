@@ -25,14 +25,17 @@
   function compact(v){
     const n=num(v);if(n===null)return '';
     const a=Math.abs(n);
-    if(a>=1e9)return sig3(n/1e9)+'B';
-    if(a>=1e6)return sig3(n/1e6)+'M';
-    if(a>=1e4)return sig3(n/1e3)+'K';
+    // Owner (26 Nov): at most one decimal place, and none when it is .0 (2.65M -> 2.7M, 10.0K -> 10K).
+    const d1=x=>String(Math.abs(x)>=100?Math.round(x):Math.round(x*10)/10);
+    if(a>=1e9)return d1(n/1e9)+'B';
+    if(a>=1e6)return d1(n/1e6)+'M';
+    if(a>=1e4)return d1(n/1e3)+'K';
     return nf.format(Math.round(n));
   }
-  function money(v,dp=2){
+  // Owner (26 Nov): money shows at most one decimal place and drops a trailing .0 ($6.26 -> $6.3, $10,000.00 -> $10,000).
+  function money(v,dp=1){
     const n=num(v);if(n===null)return '';
-    return (n<0?'-':'')+'$'+new Intl.NumberFormat('en-GB',{minimumFractionDigits:dp,maximumFractionDigits:dp}).format(Math.abs(n));
+    return (n<0?'-':'')+'$'+new Intl.NumberFormat('en-GB',{minimumFractionDigits:0,maximumFractionDigits:dp}).format(Math.abs(n));
   }
   // Strip money: whole dollars below $100K, compact above.
   const moneyShort=v=>{const n=num(v);if(n===null)return '';return Math.abs(n)>=1e5?'$'+compact(n):money(n,0);};
