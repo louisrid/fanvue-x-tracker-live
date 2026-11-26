@@ -684,12 +684,12 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
   .fv-menu-button,.fv-shell.is-nav-open .fv-menu-button{width:56px;height:56px;background:none}
   .fv-menu-button .fv-icon{width:34px;height:34px}
 }
-/* Dashboard page: white page, no page title or timestamp, plain Refresh button on the right. */
-.fv-shell.is-home,.fv-shell.is-home .fv-main{background:#fff}
+/* Dashboard page: black page, no page title or timestamp, plain outline Refresh button on the right. */
+.fv-shell.is-home,.fv-shell.is-home .fv-main{background:#0A0A0C}
 .is-home .fv-title,.is-home .fv-updated,.is-home #fvRange{display:none}
 .is-home .fv-header{justify-content:flex-end}
-.is-home #fvRefresh{background:#fff;border:1.5px solid #D5DAE1;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
-.is-home #fvRefresh:hover{background:#F6F7F9}
+.is-home #fvRefresh{background:transparent;border:1px solid #2A2A30;color:#B9BEC6;font-family:var(--fv-display);font-weight:var(--fv-w)}
+.is-home #fvRefresh:hover{background:#17171A}
 .fv-period-card,.fv-period-card.is-week,.fv-period-card.is-last,.fv-period-card.is-all{background:#0B0B0C;color:#fff;border-radius:16px;padding:20px 14px 18px;box-shadow:none;font-family:var(--fv-display)}
 .fv-period-card-head{margin:0 0 14px}
 .fv-period-card-head h2{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-strong);letter-spacing:-.02em}
@@ -697,13 +697,11 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 .fv-tiles{gap:8px}
 .fv-tiles+.fv-tiles{margin-top:8px}
 .fv-tile,.fv-period-card.is-all .fv-tile{border-radius:10px;padding:13px 11px 12px;min-height:84px;box-shadow:none;color:#fff}
-/* Owner (26 Nov): every gradient now goes light (top-left) -> dark (bottom-right); This Week recoloured pinkish-red to bright red. */
-/* Owner (26 Nov): the pastel/candy gradients read as childish, and the dark corner looked like a drop shadow.
-   Deep, fully saturated jewel tones instead, never fading toward pastel or near-black. */
-.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#E11D74,#9F1239)}
-.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#4F46E5,#1E3A8A)}
-.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#6B6F76,#2E3036)}
-.fv-tile-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);white-space:nowrap;color:#fff}
+/* Owner (26 Nov): no colour fill on cards. A dark tile with a left accent stripe instead. */
+.fv-period-card.is-week .fv-tile{background:#141417;border-left:3px solid #E11D74}
+.fv-period-card.is-last .fv-tile{background:#141417;border-left:3px solid #4F46E5}
+.fv-period-card.is-all .fv-tile{background:#141417;border-left:3px solid #9DA1A8}
+.fv-tile-label{font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w);white-space:nowrap;color:#fff}
 .fv-tile-label .fv-icon{display:none}
 .fv-tile-value,.fv-tile-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;color:#fff}
 @media (min-width:768px){.fv-tile,.fv-period-card.is-all .fv-tile{min-height:104px;padding:16px 16px 14px}}
@@ -713,11 +711,11 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
   .fv-tile-value,.fv-tile-value .fv-num{font-size:var(--fv-fs-num);white-space:nowrap;overflow:hidden}
 }
 .is-home .fv-head-tools{justify-content:flex-end;width:auto}
-.is-home #fvRefresh .fv-icon,.is-home #fvRefresh svg{color:#111;stroke:currentColor}
+.is-home #fvRefresh .fv-icon,.is-home #fvRefresh svg{color:#B9BEC6;stroke:currentColor}
 .fv-tile-value .fv-dash{font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);color:#fff;padding:0}
 .fv-tile-value{text-overflow:clip}
-.is-home #fvRefresh:hover:not(:disabled){background:#F6F7F9;border-color:#C9CFD8;color:#111}
-.is-home #fvRefresh:focus-visible{outline:3px solid #C9CFD8}
+.is-home #fvRefresh:hover:not(:disabled){background:#17171A;border-color:#3A3A40;color:#fff}
+.is-home #fvRefresh:focus-visible{outline:2px solid #3A3A40}
 
 /* ---------- Style 74 across every page (owner, 26 Nov) ---------- */
 /* Page colours: tiles, graph lines and active pills take the page's campaign colour. */
@@ -732,35 +730,39 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 .fv-shell.pg-all-accounts{--fv-tile:linear-gradient(135deg,#DB2777,#9F1239);--fv-accent:#F0357C}
 
 /* Owner (26 Nov): one small back control, top-left, above everything, the same on every page. */
-.fv-back{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px 0 7px;margin:0 0 10px;border:1.5px solid #E3E6EB;border-radius:999px;background:#fff;color:#111;font-family:var(--fv-font);font-weight:var(--fv-w-light);font-size:var(--fv-fs-s)}
-.fv-back:hover{background:#F6F7F9;border-color:#C9CFD8}
-.fv-back:focus-visible{outline:3px solid #C9CFD8}
-.fv-back .fv-icon{width:13px;height:13px}
+.fv-back{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px 0 7px;margin:0 0 10px;border:1px solid #2A2A30;border-radius:999px;background:transparent;font-family:var(--fv-display);font-weight:var(--fv-w);font-size:var(--fv-fs-s)}
+/* Owner (26 Nov): body.fv button{color:inherit} (line 28) outranks a single class; match its specificity. */
+body.fv button.fv-back{color:#B9BEC6}
+body.fv button.fv-back:hover{color:#fff}
+.fv-back:hover{background:#17171A;border-color:#3A3A40}
+.fv-back:focus-visible{outline:2px solid #3A3A40}
+.fv-back .fv-icon{width:13px;height:13px;color:#B9BEC6}
+.fv-back:hover .fv-icon{color:#fff}
 
-/* White page; no timestamp or "All Time" label; plain Refresh on the right; title in the display font. */
-body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
+/* Black page; no timestamp or "All Time" label; plain outline Refresh on the right; title in the display font. */
+body.fv,.fv-shell,.fv-shell .fv-main{background:#0A0A0C}
 .fv-updated,#fvRange{display:none}
 .fv-header{align-items:flex-end}
 .fv-head-tools{justify-content:flex-end;width:auto;margin-left:auto}
-.fv-title h1{font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-black);letter-spacing:-.02em}
-#fvRefresh,#fvRefresh:hover:not(:disabled){background:#fff;border:1.5px solid #D5DAE1;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
-#fvRefresh:hover:not(:disabled){background:#F6F7F9;border-color:#C9CFD8}
-#fvRefresh .fv-icon,#fvRefresh svg{color:#111}
-#fvRefresh:focus-visible{outline:3px solid #C9CFD8}
-.fv-section-title{font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+.fv-title h1{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-black);letter-spacing:-.02em}
+#fvRefresh,#fvRefresh:hover:not(:disabled){background:transparent;border:1px solid #2A2A30;color:#B9BEC6;font-family:var(--fv-display);font-weight:var(--fv-w)}
+#fvRefresh:hover:not(:disabled){background:#17171A;border-color:#3A3A40;color:#fff}
+#fvRefresh .fv-icon,#fvRefresh svg{color:#B9BEC6}
+#fvRefresh:focus-visible{outline:2px solid #3A3A40}
+.fv-section-title{font-family:var(--fv-display);font-weight:var(--fv-w);color:#fff}
 .fv-nav-item{font-family:var(--fv-display)}
 
-/* Tabs: tight pills; the active tab is black with white text. */
+/* Tabs: tight pills, no fill. The active tab is a lighter outline, not filled. */
 .fv-subnav,.fv-segments.fv-subnav{display:flex;flex-wrap:wrap;gap:6px;padding:0;border:0;background:none}
-.fv-subnav button,.fv-segments.fv-subnav button{height:38px;padding:0 14px;border:1.5px solid #E3E6EB;border-radius:999px;background:#fff;color:#111;font-family:var(--fv-display);font-weight:var(--fv-w-strong)}
-.fv-subnav button[aria-pressed="true"],.fv-segments.fv-subnav button[aria-pressed="true"]{background:#0B0B0C;border-color:#0B0B0C;color:#fff}
-.fv-subnav-n{background:#EEF1F5;color:#111}
-.fv-subnav button[aria-pressed="true"] .fv-subnav-n{background:rgba(255,255,255,.2);color:#fff}
+.fv-subnav button,.fv-segments.fv-subnav button{height:30px;padding:0 12px;border:1px solid #2A2A30;border-radius:999px;background:transparent;color:#B9BEC6;font-family:var(--fv-display);font-weight:var(--fv-w);font-size:var(--fv-fs-s)}
+.fv-subnav button[aria-pressed="true"],.fv-segments.fv-subnav button[aria-pressed="true"]{background:transparent;border-color:#6B7076;color:#fff}
+.fv-subnav-n{background:#232327;color:#B9BEC6}
+.fv-subnav button[aria-pressed="true"] .fv-subnav-n{background:#2E2E34;color:#fff}
 
-/* Key numbers: one black card holding gradient tiles. */
+/* Key numbers: one black card holding dark tiles, each with a left accent stripe, no colour fill. */
 .fv-panel.fv-strip{background:var(--fv-card);border-radius:16px;padding:14px;gap:8px;min-height:0}
-.fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){background:var(--fv-tile);border:0;border-radius:10px;padding:14px 12px 13px;min-height:96px;justify-content:space-between;gap:10px}
-.fv-panel.fv-strip .fv-metric-label{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);min-height:0;color:#fff}
+.fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){background:#141417;border:0;border-left:3px solid var(--fv-accent);border-radius:10px;padding:14px 12px 13px;min-height:96px;justify-content:space-between;gap:10px}
+.fv-panel.fv-strip .fv-metric-label{font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w);min-height:0;color:#fff}
 .fv-panel.fv-strip .fv-metric-label .fv-chipicon{display:none}
 /* Owner (26 Nov): same larger size as the Dashboard tiles, not a smaller one just for campaign pages. */
 .fv-panel.fv-strip .fv-metric-value,.fv-panel.fv-strip .fv-metric-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);letter-spacing:-.02em;color:#fff}
@@ -774,21 +776,22 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 /* Every other card: black, with white text. */
 .fv-panel:not(.fv-strip){background:var(--fv-card);border:0;border-radius:16px;color:#fff}
 .fv-panel>.fv-panel-head{background:var(--fv-card);border-radius:16px 16px 0 0}
-.fv-panel>.fv-panel-head h2{font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+.fv-panel>.fv-panel-head h2{font-family:var(--fv-display);font-weight:var(--fv-w);color:#fff}
 .fv-panel>.fv-panel-head .fv-chipicon{display:none}
 .fv-panel .fv-count,.fv-panel .fv-empty,.fv-panel .fv-empty p{color:#C9CDD4}
-/* Budget and other figure rows: gradient tiles. */
-.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:var(--fv-tile);border-radius:10px;padding:13px 12px}
-.fv-inline-metrics>div>span{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong)}
+/* Budget and other figure rows: dark tiles with a left accent stripe, no colour fill. */
+.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#141417;border-left:3px solid var(--fv-accent);border-radius:10px;padding:13px 12px}
+.fv-inline-metrics>div>span{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w)}
 .fv-inline-metrics b,.fv-inline-metrics b .fv-num{color:#fff;font-family:var(--fv-display);font-size:var(--fv-fs-title);font-weight:var(--fv-w-black)}
-/* Graphs: white plot inside the black card, line in the page colour. */
-.fv-chart-panel .fv-chart{background:#fff;border-radius:12px;padding:10px 6px 4px;color:#111}
+/* Graphs: dark plot inside the black card, line in the page colour, axis numbers light so they're readable. */
+.fv-chart-panel .fv-chart{background:#141417;border-radius:12px;padding:10px 6px 4px;color:#fff}
+.fv-axis,.fv-axis.is-muted{fill:#9CA3AF}
 .fv-line{stroke:var(--fv-accent)}
 .fv-area{fill:var(--fv-accent);opacity:.16}
 .fv-dot{stroke:var(--fv-accent)}
 .fv-bar{fill:var(--fv-accent);stroke:none}
-.fv-hit:hover,.fv-hit:focus-visible{background:rgba(0,0,0,.04)}
-.fv-switch{background:#fff;border-radius:10px}
+.fv-hit:hover,.fv-hit:focus-visible{background:rgba(255,255,255,.04)}
+.fv-switch{background:#141417;border:1px solid #2A2A30;border-radius:10px}
 
 /* Tables inside black cards. */
 .fv-table th,.fv-table th:first-child,.fv-table th:last-child{background:var(--fv-card-2);color:#fff;border-bottom:1px solid #2A2A2E}
@@ -812,7 +815,7 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
   .fv-table tr.fv-row td::before{color:#B9BEC6}
   .fv-expand{color:#fff}
   /* Summary tables (groups, articles, status, promoted posts): gradient tiles. */
-  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:var(--fv-tile)}
+  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#141417;border-left:3px solid var(--fv-accent)}
   .is-summary .fv-table tr.fv-row td::before{color:rgba(255,255,255,.9)}
   /* Long lists: one compact row per account (Account, Price, Views, Clicks); tap the arrow for details. */
   .is-list .fv-table tr.fv-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:12px}
@@ -821,65 +824,70 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
   .is-accounts .fv-table tr.fv-row td[data-label="Campaigns"],.is-accounts .fv-table tr.fv-row td[data-label="Posts"],.is-accounts .fv-table tr.fv-row td[data-label="CPC"],.is-accounts .fv-table tr.fv-row td[data-label="CPM"]{display:none}
   .is-list .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col){padding:7px 9px}
 }
-.fv-panel .fv-select,.fv-panel .fv-select select,.fv-panel .fv-search,.fv-panel .fv-search input{color:#111}
-.fv-panel .fv-select select,.fv-panel .fv-search{background:#fff}
-.fv-panel .fv-show-all{color:#111;background:#fff}
+.fv-panel .fv-select,.fv-panel .fv-select select,.fv-panel .fv-search,.fv-panel .fv-search input{color:#fff}
+.fv-panel .fv-select select,.fv-panel .fv-search{background:#141417;border-color:#2A2A30}
+.fv-panel .fv-show-all{color:#B9BEC6;background:transparent;border-color:#2A2A30;font-weight:var(--fv-w)}
 .fv-table td.is-link a,.fv-table td.is-link a .fv-icon,.fv-table td.is-link svg,.fv-group-head a,.fv-group-head .fv-icon{color:#fff}
 .fv-table td.is-name,.fv-table td.is-name *{color:#fff}
 
-/* ---------- Owner fixes (26 Nov): summary tiles like the key numbers; Discord matches; posts lists minimal white ---------- */
-/* Summary cards: bold labels and big heavy figures, same as the key-number tiles. */
-.is-summary .fv-table td,.is-summary .fv-table td *{font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+/* ---------- Owner fixes (26 Nov): summary tiles like the key numbers; Discord matches; posts lists dark, not white ---------- */
+/* Summary cards: sidebar-weight labels, big heavy figures, same as the key-number tiles. */
+.is-summary .fv-table td{font-family:var(--fv-display)}
+.is-summary .fv-table td:not(.is-name),.is-summary .fv-table td:not(.is-name) *{font-weight:var(--fv-w-black)}
 @media (max-width:767px){
   .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){font-size:var(--fv-fs-title);padding:13px 12px 12px;border-radius:10px;gap:8px;min-height:84px;justify-content:space-between}
-  .is-summary .fv-table tr.fv-row td::before{font-family:var(--fv-display);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);color:#fff}
+  .is-summary .fv-table tr.fv-row td::before{font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:#fff}
   .is-summary .fv-table tr.fv-row td .fv-dash{font-size:var(--fv-fs-title);color:#fff}
-  .is-summary .fv-table tr.fv-row td.is-name{font-size:var(--fv-fs-l)}
+  .is-summary .fv-table tr.fv-row td.is-name{font-size:var(--fv-fs-l);font-weight:var(--fv-w)}
 }
 .fv-name-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
-.fv-open-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:#fff;color:#111!important;font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);text-decoration:none;white-space:nowrap}
-.fv-open-btn .fv-icon{width:13px;height:13px;color:#111!important}
+.fv-open-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:transparent;border:1px solid #2A2A30;color:#B9BEC6!important;font-family:var(--fv-display);font-size:var(--fv-fs-s);font-weight:var(--fv-w);text-decoration:none;white-space:nowrap}
+.fv-open-btn .fv-icon{width:13px;height:13px;color:#B9BEC6!important}
 /* Discord: three key numbers side by side, same size as other pages. */
 .pg-discord .fv-panel.fv-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
 .pg-discord .fv-panel.fv-strip .fv-metric:last-child{grid-column:auto}
-/* Posts and accounts lists: minimal white boxes. */
-.fv-panel.is-list{background:#fff;border:1px solid #E6E8EC;color:#111}
-.fv-panel.is-list>.fv-panel-head{background:#fff;border-bottom:1px solid #EEF0F3}
-.fv-panel.is-list>.fv-panel-head h2{color:#111}
-.is-list .fv-table th,.is-list .fv-table th:first-child,.is-list .fv-table th:last-child{background:#F7F8FA;color:#111;border-bottom:1px solid #E6E8EC}
-.is-list .fv-table th .fv-sort{color:#111}
-.is-list .fv-table td,.is-list .fv-table td.is-name,.is-list .fv-table td.is-name *,.is-list .fv-table .fv-name,.is-list .fv-table a,.is-list .fv-table td.is-link a,.is-list .fv-table td.is-link svg,.is-list .fv-expand{color:#111}
-.is-list .fv-table td{border-bottom:1px solid #EEF0F3}
-.is-list .fv-count,.is-list .fv-empty,.is-list .fv-empty p{color:#5B6573}
-.is-list .fv-show-all{border-color:#D5DAE1}
-.is-list .fv-detail td,.is-list .fv-detail-inner,.is-list .fv-group-row td{background:#F7F8FA;color:#111}
-.is-list .fv-detail-grid>div{background:#fff;border:1px solid #EEF0F3;color:#111}
-.is-list .fv-detail-grid dt{color:#5B6573}.is-list .fv-detail-grid dd{color:#111}
-.is-list .fv-group-head a,.is-list .fv-group-head .fv-icon{color:#111}
+/* Posts and accounts lists: minimal dark rows, matching every other card. */
+.fv-panel.is-list{background:var(--fv-card);border:0;color:#fff}
+.fv-panel.is-list>.fv-panel-head{background:var(--fv-card);border-bottom:1px solid #222226}
+.fv-panel.is-list>.fv-panel-head h2{color:#fff;font-weight:var(--fv-w)}
+.is-list .fv-table th,.is-list .fv-table th:first-child,.is-list .fv-table th:last-child{background:var(--fv-card-2);color:#fff;border-bottom:1px solid #2A2A2E}
+.is-list .fv-table th .fv-sort{color:#fff}
+.is-list .fv-table td,.is-list .fv-table td.is-name,.is-list .fv-table td.is-name *,.is-list .fv-table .fv-name,.is-list .fv-table a,.is-list .fv-table td.is-link a,.is-list .fv-table td.is-link svg,.is-list .fv-expand{color:#fff}
+.is-list .fv-table td{border-bottom:1px solid #222226}
+.is-list .fv-count,.is-list .fv-empty,.is-list .fv-empty p{color:#C9CDD4}
+.is-list .fv-show-all{border-color:#2A2A30}
+.is-list .fv-detail td,.is-list .fv-detail-inner,.is-list .fv-group-row td{background:var(--fv-card-2);color:#fff}
+.is-list .fv-detail-grid>div{background:#141417;border:1px solid #2A2A30;color:#fff}
+.is-list .fv-detail-grid dt{color:#B9BEC6}.is-list .fv-detail-grid dd{color:#fff}
+.is-list .fv-group-head a,.is-list .fv-group-head .fv-icon{color:#fff}
 @media (max-width:767px){
-  .is-list .fv-table tr.fv-row{background:#fff;border:1px solid #E6E8EC}
-  .is-list .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-list .fv-table tr.fv-row td:first-child:not(.is-name),.is-list .fv-table tr.fv-row td:last-child:not(.fv-x-col){background:none;color:#111;padding:2px 0;font-family:var(--fv-display);font-weight:var(--fv-w-black)}
-  .is-list .fv-table tr.fv-row td::before{color:#6B7380;font-weight:var(--fv-w-strong)}
+  .is-list .fv-table tr.fv-row{background:var(--fv-card-2);border:0}
+  .is-list .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-list .fv-table tr.fv-row td:first-child:not(.is-name),.is-list .fv-table tr.fv-row td:last-child:not(.fv-x-col){background:none;color:#fff;padding:2px 0;font-family:var(--fv-display);font-weight:var(--fv-w-black)}
+  .is-list .fv-table tr.fv-row td::before{color:#B9BEC6;font-weight:var(--fv-w)}
 }
 .is-list .fv-table td.is-name .fv-marker,.is-list .fv-table td.is-name .fv-marker *{color:#fff}
 .fv-panel:not(.is-list) .fv-status{color:#111}
+/* Owner (26 Nov): line/bar switch legible on a dark switch instead of black-on-near-black. */
+.fv-switch button{color:#B9BEC6}
+.fv-switch button[aria-pressed="true"]{background:#2E2E34;color:#fff}
 
 
 /* ---------- Owner (26 Nov): fewer coloured tiles together; tidy sizing, spacing and corners ---------- */
 /* Colour only in small groups: key numbers (up to 4) and the Dashboard's top row. Everything else is dark tiles. */
-/* Owner (26 Nov): the Dashboard's second row looked randomly uncoloured next to the first. Tint it in the
-   same card colour, muted, so every tile reads as one coloured card instead of half-and-half. */
-/* Owner (26 Nov): the muted tint read as murky, not coloured. Row 2 now matches row 1 exactly, same gradient, full brightness. */
-.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#E11D74,#9F1239)}
-.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#4F46E5,#1E3A8A)}
-.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#6B6F76,#2E3036)}
-.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#26262A}
+/* Owner (26 Nov): no colour fill on cards anywhere. Every tile reads the same: dark, with a left accent stripe. */
+.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:#141417;border-left:3px solid #E11D74}
+.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:#141417;border-left:3px solid #4F46E5}
+.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:#141417;border-left:3px solid #9DA1A8}
+.fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#141417}
 @media (max-width:767px){
-  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#26262A}
+  .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#141417}
   .is-summary .fv-table tr.fv-row td::before{color:#B9BEC6}
 }
 /* No extra headings, counts or status pills. */
 .fv-section-title,.fv-panel .fv-status,.fv-group-row .fv-status{display:none}
+/* Owner (26 Nov): dark-ink text (meant for the old white page) is invisible on black. */
+.fv-filter-note,.fv-chart-note,.fv-chart-empty{color:#B9BEC6}
+.fv-select .fv-icon{color:#B9BEC6}
 #fvTitleChip:empty{display:none}
 .fv-title{gap:10px}
 .fv-header{margin-bottom:16px}
