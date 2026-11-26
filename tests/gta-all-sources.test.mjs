@@ -314,7 +314,7 @@ test('Accounts page: one row per platform + handle across campaigns, from the sh
   // Owner (26 Nov): Discord sits under Community and Accounts is the last menu item.
   assert.match(shell,/\{key:'discord',title:'Discord',icon:'discord',group:'community'\},\n\s*\{key:'all-accounts',title:'Accounts',icon:'users',group:'more'\}/);
   assert.match(shell,/const all=ov\?\[\.\.\.xaRecords\(\),\.\.\.gtaRecords\(\),\.\.\.ofRecords\(\),\.\.\.guruRecords\(\)\]:\[\]/);
-  for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC','Clicks/$'])assert.match(shell,new RegExp("label:'"+label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"'"));
+  for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC'])assert.match(shell,new RegExp("label:'"+label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"'"));
   // Each campaign page builds its table from the same functions, so figures always agree.
   assert.match(shell,/const records=xaRecords\(\);/);assert.match(shell,/const records=gtaRecords\(\);/);
   assert.match(shell,/records=ofRecords\(\)/);assert.match(shell,/records=guruRecords\(\)/);

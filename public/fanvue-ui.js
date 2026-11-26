@@ -148,8 +148,13 @@
      selected,type,empty:{title,reason,links}} */
   const measureRegistry=new Map();
   const getMeasure=(id,key)=>measureRegistry.get(id+'|'+key)||null;
+  // All daily charts use the same UK calendar week: Monday to Sunday.
+  function weekSlots(series,now=Date.now()){
+    const today=C.londonDay(now),start=C.weekStart(today),by=new Map((series||[]).map(p=>[p.week,p]));
+    return Array.from({length:7},(_,i)=>{const date=C.addDays(start,i),p=by.get(date);return date<=today&&p?{...p,label:C.dayShort(date)}:{week:date,label:C.dayShort(date),range:C.dayLong(date),value:null,state:date>today?'Future date':'No verified data'};});
+  }
   function chartPanel(opts,state){
-    const measures=(opts.measures||[]).filter(m=>(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=1)||(m.categories&&m.categories.length));
+    const measures=(opts.measures||[]).filter(m=>(opts.allowEmptyWeek&&m.period==='Day')||(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=1)||(m.categories&&m.categories.length));
     for(const m of measures)measureRegistry.set(opts.id+'|'+m.key,m);
     if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];
@@ -178,7 +183,7 @@
   function drawChart(host,m,type){
     const plot=host.querySelector('.fv-plot');if(!plot)return;
     const W=Math.max(260,plot.clientWidth||600),H=plot.clientHeight||190;
-    const allPoints=m.series||m.categories,pts=m.period==='Day'?allPoints.slice(W<480?-7:-14):allPoints,cat=!m.series;
+    const allPoints=m.series||m.categories,pts=m.period==='Day'?weekSlots(allPoints):allPoints,cat=!m.series;
     const vals=pts.map(p=>C.num(p.value)).filter(v=>v!==null);
     let lo=Math.min(0,...vals),hi=Math.max(0,...vals);
     const nm=niceMax(Math.max(Math.abs(lo),Math.abs(hi)));
@@ -196,14 +201,14 @@
     let s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true" focusable="false">';
     const steps=Math.round((hi-lo)/nm.step);
     for(let i=0;i<=steps;i++){const v=lo+i*nm.step,y=Y(v);if(W<480&&v!==0)continue;s+='<line class="fv-grid'+(v===0?' is-zero':'')+'" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="fv-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+esc(tickText(v,m.format))+'</text>';}
-    const every=Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
+    const every=m.period==='Day'?1:Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
     // Every few labels, always the last; a label too close to the last one is skipped so they never overlap.
     pts.forEach((p,i)=>{if(i!==n-1&&(i%every!==0||n-1-i<every))return;
       const lines=wrap?twoLines(p.label):[p.label];
       s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
       const bw=Math.max(6,Math.min(52,iw/n*.68));
-      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="8"/>';if(W>=480&&n<=10)s+='<text class="fv-bar-value" x="'+X(i)+'" y="'+(v>=0?Math.max(12,y-7):y+15)+'" text-anchor="middle">'+esc(formatValue(v,m.format==='compact'?'compact':m.format||'count'))+'</text>';});
+      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="8"/>';});
     }else{
       const seg=[];pts.forEach((p,i)=>{const v=C.num(p.value);if(v!==null)seg.push([X(i),Y(v),p]);});
       if(seg.length){
@@ -284,12 +289,12 @@
     return c.type==='text'?126:98;
   }
   function tablePanel(cfg,st){
-    if(cfg.age)cfg={...cfg,columns:[{key:'age',label:'Posted',type:'text',keep:true,sort:r=>cfg.age(r)?.at??null,html:r=>ageCell(r,cfg.age)},...cfg.columns],widths:undefined};
+    if(cfg.age)cfg={...cfg,columns:[{key:'age',label:cfg.ageLabel||'Posted',type:'text',keep:true,sort:r=>cfg.age(r)?.at??null,html:r=>ageCell(r,cfg.age)},...cfg.columns],widths:undefined};
     const q=(st.q||'').trim().toLowerCase();
     let rows=cfg.rows||[];
     const sortCol=st.sort&&cfg.columns.find(c=>c.key===st.sort.key);
     const views=cfg.views&&cfg.views.length>1?'<div class="fv-segments" role="group" aria-label="Table view">'+cfg.views.map(v=>'<button type="button" data-view="'+esc(v.key)+'" data-table="'+esc(cfg.id)+'" aria-pressed="'+(v.key===cfg.view)+'">'+esc(v.label)+'</button>').join('')+'</div>':'';
-    const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search</span><input type="search" placeholder="Search" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
+    const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search</span><input type="search" placeholder="'+esc(cfg.searchPlaceholder||'Search')+'" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
     const tools=views||search||filters?'<div class="fv-table-tools">'+search+views+filters+'</div>':'';
     // Columns with no data for any record are hidden and listed once above the table.
@@ -341,11 +346,12 @@
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
     const explicit=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
     const placement=String(cfg.cls||'').includes('is-placement-list');
-    const weights=placement&&cols.length===8&&cfg.expand?[112,206,78,100,100,102,96,60,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
+    const accounts=String(cfg.cls||'').includes('is-accounts');
+    const weights=placement&&cols.length===8&&cfg.expand?[112,206,78,100,100,102,96,60,44]:accounts&&cols.length===8&&cfg.expand?[112,210,100,100,100,94,76,100,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
     const totalWidth=weights.reduce((a,b)=>a+b,0);
     const widths=explicit?cfg.widths:weights.map(w=>(100*w/Math.max(1,totalWidth)).toFixed(3)+'%');
     const colgroup='<colgroup>'+widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>';
-    const minWidth=placement?898:Math.max(cfg.minWidth||0,Math.round(totalWidth*.9));
+    const minWidth=placement?898:accounts?840:Math.max(cfg.minWidth||0,Math.round(totalWidth*.9));
     const sortOptions=cols.filter(c=>c.type!=='link'&&!c.nosort).flatMap(c=>[1,-1].map(dir=>{
       const v=c.key+':'+dir,selected=st.sort?.key===c.key&&st.sort.dir===dir;
       const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'Descending':'Ascending');
@@ -402,6 +408,6 @@
     window.addEventListener('scroll',hideTip,{passive:true});
   }
 
-  window.FanvueUI=Object.freeze({icon,value,chipFor,reasonButton,strip,panelHead,chipIcon,chartPanel,chartBody,drawChart,getMeasure,tablePanel,detailGrid,status,extLink,marker,
+  window.FanvueUI=Object.freeze({icon,value,chipFor,reasonButton,strip,panelHead,chipIcon,chartPanel,chartBody,drawChart,getMeasure,tablePanel,weekSlots,detailGrid,status,extLink,marker,
     inlineMetrics,supportLine,supportPanel,typeTag,bindTips,hideTip,formatValue,ageText,refreshAges,ICONS:Object.keys(P)});
 })();
