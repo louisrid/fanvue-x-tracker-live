@@ -135,7 +135,7 @@
   function strip(items){
     const shown=items.filter(it=>!unavailableState(it.metric));
     if(!shown.length)return '';
-    return '<section class="fv-panel fv-strip" style="--n:'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
+    return '<section class="fv-panel fv-strip" style="--n:'+shown.length+'" data-n="'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
   }
 
   /* ---------- panel heads ---------- */
@@ -152,7 +152,9 @@
     if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];
     // Owner (26 Nov): graphs only (no table view); time series open as a line with point markers.
-    const kinds=sel.categories?['bar']:['line','bar'];
+    // A line needs two readings: a series with a single reading opens as a bar until a second day arrives.
+    const points=(sel.series||[]).filter(p=>p.value!==null&&p.value!==undefined).length;
+    const kinds=sel.categories?['bar']:points<2?['bar','line']:['line','bar'];
     const type=kinds.includes(state.type)?state.type:kinds[0];
     const select=measures.length>1?'<label class="fv-select"><span class="fv-sr">Chart metric</span><select data-chart-measure="'+esc(opts.id)+'">'+
       measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('down',14)+'</label>':'';
