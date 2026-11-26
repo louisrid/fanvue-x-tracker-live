@@ -454,7 +454,7 @@
       ]},ts);
     // Owner (26 Nov): a short line saying what this page actually tracks, and the Weekly Stats table (previously built but never shown).
     const intro='<p class="fv-filter-note">'+U.icon('discord',14)+'<span>How the Fanvue Academy community is growing: member count, net new members, and clicks on the free course button.</span></p>';
-    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:overviewTabs()+strip+chart+table};
+    return {title:'Discord',chipHtml:'<span class="fv-campaign-chip" style="background:#5865F2" aria-hidden="true">'+U.icon('discord',15)+'</span>',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:overviewTabs()+strip+chart+table};
   }
 
   /* X Articles: every article redirect leads to the Fanvue partner (affiliates) page, so all
@@ -757,7 +757,7 @@
         {key:'clicks',label:'Clicks',get:a=>a.clicks},{key:'views',label:'Views',get:a=>a.views},{key:'spend',label:'Spend',format:'money',get:a=>a.spend},{key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},{key:'posts',label:'Posts',get:a=>a.records.length?M.value(a.posts):M.na('No recorded placements.')},{key:'campaigns',label:'Campaigns',get:a=>a.records.length?M.value(a.campaigns.length):M.na('No recorded campaigns.')}
       ]},ts);
     const note=directory.error||directory.stale?'<p class="fv-filter-note">Publisher directory is temporarily unavailable. Placement history remains available.</p>':'';
-    return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:table+overviewNotice()+note};
+    return {title:'Accounts',chipHtml:'<span class="fv-campaign-chip" style="background:#475569" aria-hidden="true">'+U.icon('users',15)+'</span>',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:table+overviewNotice()+note};
   }
 
   // Linked or empty custom campaigns use the same frame as built-in campaigns.

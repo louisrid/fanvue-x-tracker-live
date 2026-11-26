@@ -61,3 +61,24 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/xtracker-main-reference/node_modules
           (cd /tmp/xtracker-main-reference && npm test > /tmp/reporting-main-suite.log 2>&1) || true
           node scripts/compare-baseline-tests.mjs /tmp/reporting-main-suite.log /tmp/reporting-branch-suite.log
+
+  browser-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test runner
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          if command -v google-chrome >/dev/null; then echo "CHROME_BIN=$(command -v google-chrome)" >> "$GITHUB_ENV"; else npx playwright install --with-deps chromium; fi
+      - name: Measure actual browser layout and interactions
+        run: node tests/browser-layout-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-dashboard-layout
+          path: artifacts/browser-layout
+          if-no-files-found: ignore

@@ -1277,3 +1277,11 @@ html{scrollbar-gutter:stable}
 #fvPage.fv-campaign-layout .fv-table-panel .fv-table-tools{scrollbar-width:thin}
 #fvPage.fv-campaign-layout .fv-chart-panel .fv-chart{min-width:0}
 #fvPage.fv-campaign-layout .fv-strip .fv-metric-value{font-variant-numeric:tabular-nums}
+
+/* Match the title origin and header track across every campaign, Discord and Accounts. */
+@media(max-width:767px){
+ .fv-shell:has(#fvPage.fv-campaign-layout) #fvHeader,.fv-shell:has(#fvPage.fv-accounts-layout) #fvHeader{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:34px 36px;gap:8px;height:78px;min-height:78px;max-height:78px;position:relative;align-items:center}
+ .fv-shell:has(#fvPage.fv-campaign-layout) .fv-head-tools,.fv-shell:has(#fvPage.fv-accounts-layout) .fv-head-tools{width:100%;min-width:0;justify-content:flex-start;flex-wrap:nowrap;margin-left:0;overflow-x:auto}
+ .fv-shell:has(#fvPage.fv-campaign-layout) #fvRefreshStatus,.fv-shell:has(#fvPage.fv-accounts-layout) #fvRefreshStatus{position:absolute;top:100%;right:0;z-index:3;max-width:100%;background:#24242D}
+ .fv-shell:has(#fvPage.fv-campaign-layout) .fv-updated,.fv-shell:has(#fvPage.fv-accounts-layout) .fv-updated{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}

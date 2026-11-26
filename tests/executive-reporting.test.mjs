@@ -143,3 +143,30 @@ test('publisher value badges use matched CPC and require a meaningful traffic sa
  assert.deepEqual([...marked].filter(r=>r.bestValue).map(r=>r.key),['1']);assert.ok(!rows.some(r=>'bestValue' in r));
  assert.ok(!a.markAccountValue(rows.slice(0,3)).some(r=>r.bestValue));
 });
+
+test('seven UK dates retain gaps and suppress future values; historical weeks stay historical',()=>{
+ const context=vm.createContext({window:{FanvueCore:C},URL,Intl,Date,Math,Number,String,Array,Object,Map,Set,JSON});
+ vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),context);
+ const U=context.window.FanvueUI,now=Date.parse('2026-11-26T12:00:00Z');
+ const points=[{week:'2026-11-26',value:0},{week:'2026-11-23',value:8},{week:'2026-11-29',value:100}];
+ const slots=U.weekSlots(points,now);
+ assert.deepEqual(Array.from(slots,p=>p.week),['2026-11-23','2026-11-24','2026-11-25','2026-11-26','2026-11-27','2026-11-28','2026-11-29']);
+ assert.deepEqual(Array.from(slots,p=>p.value),[8,null,null,0,null,null,null]);
+ assert.equal(U.weekSlots([],now,'2026-11-16')[6].week,'2026-11-22');
+ const prior=C.addDays(C.weekStart(C.londonDay(Date.now())),-7),plot={clientWidth:305,clientHeight:130,innerHTML:''};
+ U.drawChart({querySelector:()=>plot},{period:'Day',weekFrom:prior,series:[{week:prior,value:8},{week:C.addDays(prior,1),value:0}],title:'Clicks',unit:'Clicks'},'bar');
+ assert.equal((plot.innerHTML.match(/data-bar=/g)||[]).length,1);
+ assert.equal((plot.innerHTML.match(/class="fv-hit"/g)||[]).length,7);
+ assert.doesNotMatch(plot.innerHTML,/fv-bar-value/);
+ assert.match(plot.innerHTML,/dy="15"/);
+});
+test('campaign and Discord views reserve four cards, a chart and listings even without data',()=>{
+ const A=app({campaigns:[]});let columns;
+ for(const [key,view] of [['gta-vi','overview'],['gta-vi','lucia'],['gta-vi','mandy'],['viral-qrts','overview'],['x-articles','overview'],['x-articles','articles'],['x-articles','rts'],['of-terms','overview'],['guru-promotion','overview'],['discord','overview']]){
+  const html=A.pages[key]({view}).body;
+  assert.equal((html.match(/class="fv-metric"/g)||[]).length,4,key+'/'+view);
+  const k=html.indexOf('fv-strip'),g=html.indexOf('fv-chart-panel'),l=html.indexOf('fv-table-panel');assert.ok(k>=0&&k<g&&g<l,key+'/'+view);
+  if(key!=='discord'){const col=html.match(/<colgroup>.*?<\/colgroup>/)?.[0];assert.ok(col);if(!columns)columns=col;assert.equal(col,columns,key+'/'+view);}
+ }
+ assert.doesNotMatch(A.pages['all-accounts']({}).body,/fv-account-tag|fv-value-badge|is-best-value/);
+});
