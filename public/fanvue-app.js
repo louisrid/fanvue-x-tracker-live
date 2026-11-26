@@ -694,7 +694,8 @@
       for(const x of recs){if(x.live!==true)continue;const ids=(x.raw.postUrls?.length?x.raw.postUrls:[x.link]).map(u=>C.postId(u)).filter(Boolean);if(ids.length)ids.forEach(i=>posts.add(i));else liveNoLink++;}
       const paid=recs.filter(x=>x.paid&&!x.planned&&x.price!==null),links=new Map();
       for(const x of recs){if(!C.hasValue(x.clicks)||x.raw.sharedTracking||x.raw.identityAmbiguous)continue;const k=x.raw.trackingUrl||rowKeyOf(x.raw);links.set(k,Math.max(links.get(k)||0,x.clicks.value));}
-      const e=C.efficiency([{source:'ACCOUNTS',rows:own}]);
+      const e=C.efficiency([{source:'ACCOUNTS',rows:own}]),matched=C.placementEfficiency(own);
+      const matchedClicks=own.reduce((n,r)=>n+(C.hasValue(matched.get(r)?.cpc)?C.num(r.clicks):0),0);
       const totalPosts=posts.size+liveNoLink,totalClicks=links.size?[...links.values()].reduce((n,v)=>n+v,0):null;
       const clicks=totalClicks!==null?M.value(totalClicks,{reason:'All tracked clicks on this account’s links, ever.'}):M.na('No tracked clicks.');
       // Owner (26 Nov): clicks/post and clicks/$ alongside the existing (all-time) Clicks and CPC.
@@ -703,8 +704,15 @@
       return {...a,records:recs,campaigns:[...new Set(recs.map(x=>x.parent))],posts:totalPosts,
         spend:paid.length?M.value(paid.reduce((n,x)=>n+x.price,0)):M.na('No paid placements.'),
         views:C.viewsOf([{source:'ACCOUNTS',rows:own}]),
-        clicks,perPost,perDollar,cpc:e.cpc,cpm:e.cpm};
+        clicks,perPost,perDollar,matchedClicks,cpc:e.cpc,cpm:e.cpm};
     });
+  }
+  const campaignTone=name=>({'GTA VI':'violet','Viral QRTs':'amber','X Articles':'slate','OF Terms':'blue','Guru RTs':'pink'}[name]||'slate');
+  const accountTag=(label,tone)=>'<span class="fv-account-tag" data-tone="'+esc(tone)+'">'+esc(label)+'</span>';
+  function markAccountValue(rows){
+    const eligible=rows.filter(a=>a.matchedClicks>=20&&C.hasValue(a.cpc)&&a.cpc.value>0).sort((a,b)=>a.cpc.value-b.cpc.value);
+    const best=new Set(eligible.length>=4?eligible.slice(0,Math.ceil(eligible.length/4)).map(a=>a.key):[]);
+    return rows.map(a=>({...a,bestValue:best.has(a.key)}));
   }
   function accountsPage(st){
     ensure('overview');ensure('gta');ensure('directory');
@@ -713,19 +721,19 @@
     const ts=tableState('all-accounts','acc-table'),f=ts.xf||(ts.xf={camp:'',plat:'',type:''});
     if(!ts.sort)ts.sort={key:'clicks',dir:-1};  // biggest spenders first by default
     const shown=all.filter(x=>(!f.camp||x.parent===f.camp)&&(!f.plat||x.platform===f.plat)&&(!f.type||x.type===f.type));
-    const sel=(key,label,opts)=>opts.length<2&&!f[key]?'':'<label class="fv-select fv-filter"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+
+    const sel=(key,label,opts)=>opts.length<2&&!f[key]?'':'<label class="fv-select fv-filter" data-tone="'+(key==='camp'?campaignTone(f[key]):key==='plat'&&f[key]==='Instagram'?'pink':key==='type'?'blue':'slate')+'"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+
       [['',label+': All'],...opts.map(o=>[o,label+': '+o])].map(([v,l])=>'<option value="'+esc(v)+'"'+(f[key]===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'+U.icon('down',14)+'</label>';
     const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
     const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('plat','Platform',present(x=>x.platform,['X','Instagram']))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT','Story']));
-    const rows=accountRows(shown);
+    const rows=markAccountValue(accountRows(shown));
     if(!f.camp&&!f.type&&ts.q?.trim()){const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts){if(keys.has(a.key)||f.plat&&a.platform!==f.plat)continue;rows.push({key:a.key,name:a.handle,platform:a.platform,campaigns:[],posts:0,records:[],spend:M.na('No paid placement recorded.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});}}
-    const table=U.tablePanel({id:'acc-table',title:'Publisher Performance',icon:'users',search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:940,
+    const table=U.tablePanel({id:'acc-table',title:'Publisher Performance',icon:'users',search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowClass:a=>a.bestValue?'is-best-value':'',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:940,
       searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Results':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
       expand:a=>!a.records.length?'<p>No purchased placements recorded for this publisher.</p>':rtCosts(a.records)+U.detailGrid(a.records.map(x=>[x.campaign+' · '+x.type,(x.link?U.extLink(x.link,'Post'):'')+' · '+U.value(x.clicks)+' clicks'])),
       columns:[
-        {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user'),sort:a=>a.name.toLowerCase()},
-        {key:'platform',label:'Platform',type:'text',html:a=>esc(a.platform),sort:a=>a.platform},
-        {key:'campaigns',label:'Campaigns',type:'text',html:a=>esc(a.campaigns.join(', ')),sort:a=>a.campaigns.length},
+        {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user')+(a.bestValue?U.reasonButton('Best value','Top quarter by lowest matched CPC in this campaign/platform/type selection. Requires at least 20 measured clicks on paid, individually tracked placements, and four eligible publishers. This is traffic efficiency, not conversions.','fv-value-badge'):''),sort:a=>a.name.toLowerCase()},
+        {key:'platform',label:'Platform',type:'text',html:a=>accountTag(a.platform,a.platform==='Instagram'?'pink':'slate'),sort:a=>a.platform},
+        {key:'campaigns',label:'Campaigns',type:'text',html:a=>'<span class="fv-account-tags">'+a.campaigns.map(name=>accountTag(name,campaignTone(name))).join('')+'</span>',sort:a=>a.campaigns.length},
         {key:'posts',label:'Posts',get:a=>M.value(a.posts)},
         {key:'clicks',label:'Clicks',get:a=>a.clicks},
         {key:'views',label:'Views',get:a=>a.views},
@@ -907,7 +915,7 @@
   function onClick(e){
     const t=e.target;
     const sort=t.closest('[data-sort]');
-    if(sort){const st=tableState(pageKey(),sort.dataset.table),k=sort.dataset.sort;st.sort=st.sort?.key===k?{key:k,dir:-st.sort.dir}:{key:k,dir:k==='account'||k==='name'||k==='week'?1:-1};rerender();return;}
+    if(sort){const st=tableState(pageKey(),sort.dataset.table),k=sort.dataset.sort;st.sort=st.sort?.key===k?{key:k,dir:-st.sort.dir}:{key:k,dir:k==='account'||k==='name'||k==='week'||k==='cpc'?1:-1};rerender();return;}
     const exp=t.closest('[data-expand]');
     if(exp){const st=tableState(pageKey(),exp.dataset.table),k=exp.dataset.expand;if(st.expanded.has(k))st.expanded.delete(k);else st.expanded.add(k);rerender();return;}
     const view=t.closest('[data-view]');
@@ -973,6 +981,6 @@
     onHash();
   }
   window.FanvueApp=Object.freeze({hooks,rerender,go,parseHash,RECORDS,LEGACY,PAGES,data:D,state:pageState,tableState,
-    placementColumns,metric,outcomeItems,reporting:Object.freeze({xKpis,periodTotals,accountRows,discordStats,pages:RENDER})});
+    placementColumns,metric,outcomeItems,reporting:Object.freeze({xKpis,periodTotals,accountRows,markAccountValue,discordStats,pages:RENDER})});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

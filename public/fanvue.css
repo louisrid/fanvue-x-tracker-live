@@ -1080,3 +1080,21 @@ body.fv .fv-main :focus-visible{outline-color:#FF91CC}
   .fv-subnav,.fv-segments.fv-subnav{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
   .fv-subnav button,.fv-segments.fv-subnav button{flex:0 0 auto;white-space:nowrap;padding:8px 10px}
 }
+
+/* Publisher tags and measured value highlights, using the campaign identities. */
+[data-tone="slate"]{--tag:#BBC7E0;--tag-bg:#2A3447;--tag-border:#667595}
+[data-tone="violet"]{--tag:#E2CDFF;--tag-bg:#3D2264;--tag-border:#9C70D9}
+[data-tone="amber"]{--tag:#FFE1A3;--tag-bg:#503710;--tag-border:#BC852D}
+[data-tone="blue"]{--tag:#C8E2FF;--tag-bg:#163C69;--tag-border:#5999DD}
+[data-tone="pink"]{--tag:#FFD0E8;--tag-bg:#5A203D;--tag-border:#D56B9C}
+.fv-account-tags{display:flex;flex-wrap:wrap;gap:5px;max-width:220px}
+.fv-account-tag{display:inline-flex;align-items:center;border:1px solid var(--tag-border);border-radius:6px;background:var(--tag-bg);color:var(--tag);padding:3px 7px;font:750 11px/1.3 var(--fv-font);white-space:nowrap}
+#acc-table .fv-filter select{border-left:3px solid var(--tag-border)}
+#acc-table th button{padding:5px 7px;border-radius:6px}
+#acc-table th[aria-sort="ascending"] button,#acc-table th[aria-sort="descending"] button{background:#C71667;color:#fff;box-shadow:0 0 0 1px #FA599E}
+#acc-table .is-best-value>td{background:#12251F}
+#acc-table .is-best-value>td:first-child{box-shadow:inset 3px 0 #69DEA7}
+#acc-table .is-best-value td[data-label="CPC"] .fv-num,#acc-table .is-best-value td[data-label="Clicks/$"] .fv-num{color:#8DF2BA}
+body.fv button.fv-value-badge{display:table;margin:5px 0 2px 32px;padding:3px 7px;border:1px solid #4DA17A;border-radius:5px;background:#183D2D;color:#A9F5CD;font:800 10px/1.3 var(--fv-font)}
+button.fv-value-badge:hover{background:#255C43}
+@media(max-width:767px){#acc-table .fv-table tr.fv-row.is-best-value{background:#142A21;border-color:#468867}#acc-table .is-best-value>td{background:none}}

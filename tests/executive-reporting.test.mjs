@@ -136,3 +136,10 @@ test('Viral QRTs keeps Clicks first and renders short verified daily click histo
   const a=app({campaigns:[campaign('gta-mandy',[row],{postPublicationClicks:74})]},{gta:{mandy:{activity:[{code:'M1',date:'2026-11-25',clicks:10},{code:'M1',date:'2026-11-26',clicks:64}]}}});
   const html=a.pages['viral-qrts']({}).body;assert.match(html,/Daily Clicks/);assert.match(html,/data-type="bar"/);assert.ok(html.indexOf('Clicks')<html.indexOf('Views'));assert.match(html,/>74</);
 });
+
+test('publisher value badges use matched CPC and require a meaningful traffic sample',()=>{
+ const a=app({campaigns:[]}),rows=[1,2,3,4].map(n=>({key:String(n),matchedClicks:20,cpc:C.M.value(n)}));
+ const marked=a.markAccountValue([...rows,{key:'tiny',matchedClicks:1,cpc:C.M.value(.01)},{key:'missing',matchedClicks:500,cpc:C.M.na('No matched costs')}]);
+ assert.deepEqual([...marked].filter(r=>r.bestValue).map(r=>r.key),['1']);assert.ok(!rows.some(r=>'bestValue' in r));
+ assert.ok(!a.markAccountValue(rows.slice(0,3)).some(r=>r.bestValue));
+});
