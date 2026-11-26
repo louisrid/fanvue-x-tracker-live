@@ -23,8 +23,8 @@ No operational spreadsheet rows, provider keys, redirect URLs, historical data o
 
 ## Validation
 
-- Reporting CI: 140 tests passed, including twenty new financial, date, privacy and alias regression cases.
-- Standard suite: 147/175 passed; all 28 failures also existed in the untouched production baseline, with no new failing test names. These legacy layout/version assertions are not represented as passing.
+- Reporting CI: 141 tests passed, including twenty-one new financial, date, privacy and alias regression cases.
+- Standard suite: 148/176 passed; all 28 failures also existed in the untouched production baseline, with no new failing test names. These legacy layout/version assertions are not represented as passing.
 - Chromium at 1440px and 390px: 30 route/subsection cases, table expansion and account search; no JavaScript errors or document overflow. Fixtures use captured read-only reporting responses plus isolated Discord cases. Charts and missing-history cases are exercised without opening tracking links.
 
 Live preview verification also exercised missing directory storage configuration. The directory uses the modern Netlify handler and returns the safe dated snapshot if either storage or source loading fails.
@@ -35,4 +35,4 @@ The subsequent visual review replaces the repeated Dashboard periods with a sing
 
 Production review also reconciled Discord’s live count with its same-day stored snapshot. Dashboard, Discord net growth and the current weekly row now use the same latest verified dated reading, preserving historical snapshots and keeping approximate invite counts separate.
 
-The contrast refinement adds daily Short.io human-click history for viral QRTs through exact verified custom intervals on the existing provider API. No credentials are exposed to the client and no redirect URLs are fetched. Short real histories now render instead of failing an arbitrary minimum-day threshold.
+The contrast refinement adds daily Short.io human-click history for GTA and viral QRTs through exact verified custom intervals on the existing provider API. No credentials are exposed to the client and no redirect URLs are fetched. Short real histories now render instead of failing an arbitrary minimum-day threshold.

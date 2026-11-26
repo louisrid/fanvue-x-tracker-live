@@ -218,7 +218,7 @@ const mergeMetrics=(rows,metrics)=>rows.map(p=>{
 async function getMetrics(storage=metricStore()){try{return await storage.get('latest',{type:'json'})||{metrics:{},history:[],lastSuccessfulAt:null};}catch{return {metrics:{},history:[],lastSuccessfulAt:null};}}
 
 export async function groupReport(source,metric,{force=false,refreshClicks=false,cacheOnly=true,clickOptions={}}={}){
-  const shortIo=await campaignLinkClicks(source.rows.filter(p=>!p.crossCampaignTracking),{force:refreshClicks||force,cacheOnly,...clickOptions});
+  const shortIo=await campaignLinkClicks(source.rows.filter(p=>!p.crossCampaignTracking),{force:refreshClicks||force,cacheOnly,...clickOptions,dailyHistory:true});
   const byLink=new Map(shortIo.links.map(p=>[trackingLink(p.trackingUrl)?.url,p]));
   const publishers=mergeMetrics(source.rows,metric.metrics).map(p=>{
     const reading=byLink.get(trackingLink(p.trackingUrl)?.url);
