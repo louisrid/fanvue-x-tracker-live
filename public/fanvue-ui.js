@@ -281,6 +281,9 @@
     }).join('')+(cfg.expand?'<th scope="col" class="fv-x-col"><span class="fv-sr">Details</span></th>':'')+'</tr>';
     // Optional grouping: rows stay in their sorted order inside each group, groups in order of first appearance.
     if(cfg.groupBy){const order=[],by=new Map();for(const r of rows){const k=cfg.groupBy(r);if(!by.has(k)){by.set(k,[]);order.push(k);}by.get(k).push(r);}rows=order.flatMap(k=>by.get(k));}
+    // Long lists show the first few rows with a Show all button (owner, 26 Nov).
+    const total=rows.length,limited=cfg.limit&&!st.showAll&&rows.length>cfg.limit;
+    if(limited)rows=rows.slice(0,cfg.limit);
     let lastGroup=null;
     const body=rows.map(r=>{
       const g=cfg.groupBy?cfg.groupBy(r):null;
@@ -305,8 +308,9 @@
     const aligned=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
     const colgroup=aligned?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
     const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(aligned?' is-aligned':'')+'"'+(cfg.minWidth?' style="--min-w:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
-    const count=rows.length?'<div class="fv-count">'+C.full(rows.length)+' '+(cfg.countLabel?cfg.countLabel(rows.length):rows.length===1?'record':'records')+(cfg.footnote?' · '+cfg.footnote:'')+'</div>':'';
-    return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+table+count+'</section>';
+    // Only a Show all button when the list is cut short; no record counts (owner, 26 Nov).
+    const count=limited?'<div class="fv-count"><button type="button" class="fv-show-all" data-show-all="'+esc(cfg.id)+'">Show all '+C.full(total)+'</button></div>':'';
+    return '<section class="fv-panel fv-table-panel'+(cfg.cls?' '+esc(cfg.cls):'')+'" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+table+count+'</section>';
   }
 
   /* Detail grid used inside expanded rows. items: [[label, html]] */

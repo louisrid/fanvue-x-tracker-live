@@ -168,7 +168,7 @@
   function xTable(page,id,{title,icon='layers',records,f,expand,empty,groups=true}){
     const ts=tableState(page,id);
     return U.tablePanel({id,title,icon,search:true,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
-      minWidth:900,searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:X_COLUMNS,expand},ts);
+      minWidth:900,limit:10,cls:'is-list',searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:X_COLUMNS,expand},ts);
   }
   // The four core KPIs for a set of records. RT rows never contribute views: their only reading is the original post's.
   function xKpis(records){
@@ -245,8 +245,9 @@
   function periodSection(p){
     const id='fvp-'+p.cls;
     return '<section class="fv-period-card '+p.cls+'" aria-labelledby="'+id+'"><div class="fv-period-card-head"><h2 id="'+id+'">'+esc(p.title)+'</h2><span>'+esc(p.sub)+'</span></div>'+
-      '<h3 class="fv-period-group">Campaigns</h3><div class="fv-tiles">'+tile('Spend','wallet',p.c.spend,'moneyShort')+tile('Views','eye',p.c.views,'compact')+tile('Live Posts','check',p.c.posts)+'</div>'+
-      '<h3 class="fv-period-group">Discord</h3><div class="fv-tiles">'+tile('Course Clicks','graduation',p.d.clicks)+tile('Member Growth','trend',p.d.growth,'signed')+tile('Members','users',p.d.members)+'</div></section>';
+      // Owner (26 Nov, style 74): short one-line labels, no group headings; campaign row then Discord row.
+      '<div class="fv-tiles">'+tile('Spend','wallet',p.c.spend,'moneyShort')+tile('Views','eye',p.c.views,'compact')+tile('Posts','check',p.c.posts)+'</div>'+
+      '<div class="fv-tiles">'+tile('Clicks','graduation',p.d.clicks)+tile('Growth','trend',p.d.growth)+tile('Members','users',p.d.members)+'</div></section>';
   }
   /* ---------- Home: This Week (owner, 26 Nov) ---------- */
   // UK week, Monday to today.
@@ -340,7 +341,7 @@
     if(approx&&mm.state==='value')mm.state='partial';
     const net=netGrowth(members);
     const cc=clicks?M.value(clicks.total,{reason:'Clicks on the Discord course button since the counter was enabled'+(C.num(clicks.last7Days)!==null?'; '+C.full(clicks.last7Days)+' in the last 7 days':'')+'. Not signups or enrolments.'}):dd.loading||!dd.error?M.loading():M.na('Course click counter temporarily unavailable.');
-    const strip=U.strip([metric('Members','users',mm,'count'),metric('Member Growth','trend',net,'signed'),metric('Course Clicks','graduation',cc)]);
+    const strip=U.strip([metric('Members','users',mm,'count'),metric('Growth','trend',net,'signed'),metric('Clicks','graduation',cc)]);
     // The last four weeks that have snapshots. Earlier weeks are never back-filled.
     const weeks=C.recentWeeks(members?.history,4);
     const netSeries=weeks.filter(w=>w.value!==null);
@@ -360,7 +361,7 @@
         {key:'end',label:'Members',get:r=>r.end===null?M.na('No snapshot this week.'):M.value(r.end)},
         {key:'net',label:'Member Growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week’s snapshot.'):M.value(r.value)}
       ]},tableState('discord','discord-table'));
-    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:section('Community Performance')+strip+chart+table};
+    return {title:'Discord',chip:'discord',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:strip+chart};
   }
 
   /* X Articles: every article redirect leads to the Fanvue partner (affiliates) page, so all
@@ -404,7 +405,7 @@
   const summaryRow=(key,name,records,extra={})=>({key,name,view:key,records,placements:records.length,live:livePostCount(records),k:xKpis(records),...extra});
   // One row per group: the four KPIs plus placements and live posts. The name opens that group's tab.
   function summaryTable(page,id,{title,icon,nameLabel='Group',rows,empty}){
-    return U.tablePanel({id,title,icon,rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:760,empty,hideEmpty:false,
+    return U.tablePanel({id,title,icon,rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:760,empty,hideEmpty:false,cls:'is-summary',
       columns:[
         {key:'name',label:nameLabel,type:'name',html:r=>'<span class="fv-name">'+U.marker(r.icon||icon,'',{plain:true})+(r.view?'<a class="fv-sub-link" href="#'+esc(page+'/'+r.view)+'">'+esc(r.name)+'</a>':'<span>'+esc(r.name)+'</span>')+'</span>',sort:r=>r.name.toLowerCase()},
         {key:'placements',label:'Placements',type:'count',get:r=>r.placements},
@@ -602,11 +603,10 @@
       const rows=(g?.rows||[]).map(r=>{const rts=rtBy.get(String(r.id))||[];const paid=rts.filter(x=>x.paid&&x.price!==null);
         return {key:String(r.id),r,name:guruName(r,g.rows),rts:rts.length,views:C.num(r.views)!==null?M.value(r.views):M.na('No verified X reading yet.'),
           spend:paid.length?M.value(paid.reduce((n,x)=>n+x.price,0)):M.na('No paid RTs of this post.')};});
-      body=chart+U.tablePanel({id:'guru-summary',title:'Promoted Posts',icon:'megaphone',rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:720,hideEmpty:false,
+      body=chart+U.tablePanel({id:'guru-summary',cls:'is-summary',title:'Promoted Posts',icon:'megaphone',rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:720,hideEmpty:false,
         empty:g?'No Results':waiting('Loading…'),
         columns:[
-          {key:'name',label:'Original Post',type:'name',html:r=>accountName({publisher:r.name},'megaphone'),sort:r=>r.name.toLowerCase()},
-          {key:'link',label:'Link',type:'link',nosort:true,html:r=>r.r.postUrl?U.extLink(r.r.postUrl,'Open post by '+r.name,{iconOnly:true}):dash('No post link recorded.')},
+          {key:'name',label:'Original Post',type:'name',html:r=>'<span class="fv-name-row">'+accountName({publisher:r.name},'megaphone')+(r.r.postUrl&&C.safeUrl(r.r.postUrl)?'<a class="fv-open-btn" href="'+esc(r.r.postUrl)+'" target="_blank" rel="noopener noreferrer">Open post'+U.icon('external',13)+'</a>':'')+'</span>',sort:r=>r.name.toLowerCase()},
           {key:'views',label:'Original Views',get:r=>r.views},
           {key:'rts',label:'Paid RTs',type:'count',get:r=>r.rts},
           {key:'spend',label:'RT Spend',format:'money',get:r=>r.spend}
@@ -614,7 +614,7 @@
     }else{
       const ts=tableState('guru-promotion','guru-results');
       body=chart+filteredNote(f)+U.tablePanel({id:'guru-results',title:'Paid RTs',icon:'megaphone',search:true,filters:xFilters('guru-results',records,f,{groups:false}),filter:xMatch(f),
-        rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:900,searchText:x=>[x.account,originals.get(groupKey(x))?.publisher||''].join(' '),
+        rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:900,limit:10,cls:'is-list',searchText:x=>[x.account,originals.get(groupKey(x))?.publisher||''].join(' '),
         empty:g?'No Results':waiting('Loading…'),columns:X_COLUMNS,groupBy:groupKey,
         groupHeader:(key,rows)=>{const o=originals.get(key),gp=groups.get(key);const total=rows.reduce((n,x)=>n+(x.paid&&x.price!==null?x.price:0),0);
           return '<span class="fv-group-title">'+U.marker('megaphone','',{plain:true})+'<b>'+esc(o?guruName(o,g.rows):'Source post')+'</b></span>'+
@@ -675,7 +675,7 @@
     const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
     const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('plat','Platform',present(x=>x.platform,['X','Instagram']))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT','Story']));
     const rows=accountRows(shown);
-    const table=U.tablePanel({id:'acc-table',title:'Accounts',icon:'users',search:true,filters,rows,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:900,
+    const table=U.tablePanel({id:'acc-table',title:'Accounts',icon:'users',search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:900,
       searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Results':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
       columns:[
         {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user'),sort:a=>a.name.toLowerCase()},
@@ -733,6 +733,9 @@
     U.hideTip();
     const r=current;
     const shell=$('fvShell');shell.classList.remove('is-nav-open');
+    shell.classList.toggle('is-home',r.kind==='page'&&r.key==='home');
+    // Page colour for tiles, graphs and pills (owner, 26 Nov, style 74).
+    shell.className=shell.className.replace(/\bpg-[\w-]+/g,'').trim()+' pg-'+(r.kind==='page'?r.key:r.kind);
     if(r.kind==='records'){
       const rec=RECORDS[r.key];
       setNav(rec.parent);setTitle(rec.title);
@@ -771,7 +774,27 @@
     drawCharts();
     restoreFocus(focus);
   }
+  // Dashboard tiles: all figures share one size, shrunk just enough for the longest to fit on one line.
+  // Figures shrink together until the longest fits on one line; labels keep the same proportion to the figures,
+  // so every tile looks the same whatever its size. Dashboard tiles share one size; each key-number card has its own.
+  function fitGroup(vals,labels){
+    // Skip until laid out (a hidden or not-yet-sized tile would read as zero width).
+    if(!vals.length||vals.some(v=>!v.clientWidth))return;
+    const set=px=>{vals.forEach(v=>{v.style.fontSize=px?px+'px':'';v.querySelectorAll('*').forEach(c=>c.style.fontSize=px?px+'px':'');});
+      labels.forEach(l=>l.style.fontSize=px?Math.max(11,Math.round(px*0.5))+'px':'');};
+    set(0);
+    let size=parseFloat(getComputedStyle(vals[0].firstElementChild||vals[0]).fontSize)||25;
+    const over=()=>vals.some(v=>{const w=v.clientWidth;return [...v.children].some(c=>c.getBoundingClientRect().width>w+0.5)||v.scrollWidth>w+0.5;});
+    set(size);
+    for(let i=0;i<40&&over();i++){size-=0.5;set(size);}
+  }
+  function fitTiles(){
+    const page=$('fvPage');
+    fitGroup([...page.querySelectorAll('.fv-tile-value')],[...page.querySelectorAll('.fv-tile-label')]);
+    for(const strip of page.querySelectorAll('.fv-panel.fv-strip'))fitGroup([...strip.querySelectorAll('.fv-metric-value')],[...strip.querySelectorAll('.fv-metric-label')]);
+  }
   function drawCharts(){
+    fitTiles();setTimeout(fitTiles,400);
     for(const host of $('fvPage').querySelectorAll('.fv-chart')){
       if(host.dataset.type==='table')continue;
       const m=U.getMeasure(host.id,host.dataset.measure);if(m)U.drawChart(host,m,host.dataset.type);
@@ -829,6 +852,8 @@
     if(view&&current.kind==='page'){const def=defaultView(current.key);go(current.key+(view.dataset.view===def?'':'/'+view.dataset.view));return;}
     const ct=t.closest('[data-chart-type]');
     if(ct){const st=chartState(pageKey(),ct.dataset.chart);st.type=ct.dataset.chartType;rerender();return;}
+    const more=t.closest('[data-show-all]');
+    if(more){tableState(pageKey(),more.dataset.showAll).showAll=true;rerender();return;}
     const reset=t.closest('[data-reset]');
     if(reset){const st=tableState(pageKey(),reset.dataset.reset);st.q='';st.filter='';if(st.xf)st.xf={group:'',type:'',live:'',pay:''};rerender();return;}
     if(t.closest('[data-retry]')){void D.rep()?.reload?.();return;}
@@ -873,6 +898,8 @@
     window.addEventListener('xtracker:campaign-overview',queueRerender);
     window.addEventListener('xtracker:data',queueRerender);
     window.addEventListener('xtracker:discord',queueRerender);
+    // Tile figures are re-fitted once the display font has loaded (it is wider than the fallback).
+    document.fonts?.ready?.then(()=>{if(current.kind!=='records')fitTiles();});document.fonts?.load?.('900 25px Montserrat').then(()=>{if(current.kind!=='records')fitTiles();}).catch(()=>{});document.fonts?.addEventListener?.('loadingdone',()=>{if(current.kind!=='records')fitTiles();});
     let w=window.innerWidth;
     window.addEventListener('resize',()=>{if(Math.abs(window.innerWidth-w)<2)return;w=window.innerWidth;U.hideTip();if(current.kind!=='records')drawCharts();},{passive:true});
     // Reload-all reports Discord status through these hooks; they reuse the

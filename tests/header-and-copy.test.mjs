@@ -9,8 +9,8 @@ const backend=readFileSync(new URL('../netlify/functions/dashboard.mjs',import.m
 test('X Tracker wordmark remains on all pages, bigger, bold and visually centred',()=>{
   // v3.1 redesign: the official white Fanvue wordmark replaces the X Tracker text logo
   // in the sidebar and the mobile top bar, served at 2x/3x from public/brand.
-  assert.equal((html.match(/<img src="\/brand\/fanvue-wordmark-white-240w\.png" srcset="\/brand\/fanvue-wordmark-white-240w\.png 2x, \/brand\/fanvue-wordmark-white-360w\.png 3x"/g)||[]).length,2);
-  assert.match(html,/width="120" height="28" alt="Fanvue"/);
+  // Owner (26 Nov, style 74): the logo is now the word "Fanvue" as text, not the wordmark image.
+  assert.equal((html.match(/<span class="fv-logo-text">Fanvue<\/span>/g)||[]).length,2);
   assert.doesNotMatch(html,/X TRACKER/);
   const fv=readFileSync(new URL('../public/fanvue.css',import.meta.url),'utf8');
   assert.match(fv,/\.fv-wordmark img\{width:120px;height:auto;display:block\}/);
