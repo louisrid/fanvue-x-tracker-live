@@ -278,7 +278,7 @@
     const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord">'+U.icon('discord',15)+'View Discord</a>')+'<div class="fv-community-summary">'+[
       ['Members',community.members,'count'],['Growth',community.growth,'signed'],['Course Clicks',community.clicks,'count']
     ].map(([label,m,format])=>'<div><span>'+esc(label)+'</span><strong>'+(C.hasValue(m)?U.value(m,format):dash(m?.reason))+'</strong></div>').join('')+'</div></section>';
-    return {title:'Dashboard',chipHtml:'<span class="fv-campaign-chip" style="background:#475569" aria-hidden="true">'+U.icon('home',15)+'</span>',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+dashboardChart(period)+campaignComparison(S,period)+discord+overviewNotice()};
+    return {title:'Dashboard',refreshLabel:'Refresh All',chipHtml:'<span class="fv-campaign-chip" style="background:#475569" aria-hidden="true">'+U.icon('home',15)+'</span>',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+dashboardChart(period)+campaignComparison(S,period)+discord+overviewNotice()};
   }
   // The graph and period totals share the exact same scoped, dated click series.
   function datedClicks(key,records){
