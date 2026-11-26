@@ -668,3 +668,22 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
 }
 @media (max-width:767px) and (prefers-reduced-motion:reduce){.fv-sidebar,.fv-shell.is-nav-open .fv-sidebar,.fv-scrim{transition:none}}
 @media (min-width:768px){.fv-nav-more{margin-top:18px;padding-top:12px;border-top:1px solid #262626}}
+
+/* ---------- Dashboard style 7 "Fanvue gradient" (owner pick, 26 Nov) ----------
+   White period cards; tiles are gradients in the period colour (brand pink-orange for This Week). */
+.fv-period-card,.fv-period-card.is-week,.fv-period-card.is-last,.fv-period-card.is-all{background:var(--fv-surface);color:var(--fv-ink);border-radius:20px;padding:20px 20px 22px}
+.fv-period-card-head h2{color:var(--fv-ink)}
+.fv-period-card-head span{color:var(--fv-muted)}
+.fv-period-group{color:#3D4652}
+.fv-tiles{gap:12px}
+.fv-tile,.fv-period-card.is-all .fv-tile{border-radius:14px;padding:17px 17px 16px;min-height:96px;color:#fff;box-shadow:none}
+.fv-period-card.is-week .fv-tile{background:linear-gradient(135deg,#FC2D9D 0%,#FF46A2 26%,#FF645F 66%,#FF8A3D 100%)}
+.fv-period-card.is-last .fv-tile{background:linear-gradient(135deg,#3B82F6,#6366F1)}
+.fv-period-card.is-all .fv-tile{background:linear-gradient(135deg,#111111,#3A3A3A)}
+.fv-tile-label{color:rgba(255,255,255,.94)}
+@media (max-width:767px){
+  .fv-period-card,.fv-period-card.is-week,.fv-period-card.is-last,.fv-period-card.is-all{padding:15px 13px 17px;border-radius:18px}
+  .fv-tiles{gap:8px}
+  /* A touch taller than before: a little more room around the label and figure. */
+  .fv-tile,.fv-period-card.is-all .fv-tile{padding:13px 11px 12px;min-height:74px;border-radius:12px}
+}
