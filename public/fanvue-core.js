@@ -187,6 +187,16 @@
     });
   }
 
+  // The latest verified count supersedes an older reading on the same day.
+  // Approximate invite counts are a different source and never replace bot history.
+  function memberReadings(members){
+    const rows=(members?.history||[]).filter(h=>validDay(h?.date)&&Number.isSafeInteger(h.memberCount));
+    const byDay=new Map(rows.map(h=>[h.date,{...h}]));
+    const latest=members?.latest,last=[...byDay.keys()].sort().at(-1);
+    if(members?.source!=='DISCORD_INVITE_APPROXIMATE'&&validDay(latest?.date)&&Number.isSafeInteger(latest.memberCount)&&(!last||latest.date>=last))byDay.set(latest.date,{...latest});
+    return [...byDay.values()].sort((a,b)=>a.date.localeCompare(b.date));
+  }
+
   /* The most recent weeks that have at least one snapshot. Earlier weeks are never back-filled. */
   const recentWeeks=(history,n=4,now=Date.now())=>memberWeeks(history,now).filter(w=>w.snapshots).slice(-n);
 
@@ -446,6 +456,6 @@
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
   root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,rate,signed,londonDay,addDays,weekStart,dailySeries,weekLabel,dayShort,dayLong,stamp,
-    eventSeries,dailyEventSeries,snapshotSeries,memberWeeks,recentWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
+    eventSeries,dailyEventSeries,snapshotSeries,memberWeeks,recentWeeks,memberReadings,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);

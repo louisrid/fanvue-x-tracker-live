@@ -144,7 +144,7 @@ test('Discord shows member count and net growth for the last four weeks with sna
   assert.equal(weeks[0].value,10);
   assert.equal(C.recentWeeks([],4,now).length,0);
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  assert.match(shell,/const weeks=C\.recentWeeks\(members\?\.history,4\)/);
+  assert.match(shell,/const readings=C\.memberReadings\(members\),weeks=C\.recentWeeks\(readings,4\)/);
   assert.match(shell,/\{key:'end',label:'Members'/);
   // Owner (26 Nov): renamed "Member Growth" to "Weekly Member Growth" for Period+Metric naming, matching "Daily Member Growth" and OF Terms' "Weekly Clicks".
   assert.match(shell,/\{key:'daily',label:'Daily Member Growth'/);
