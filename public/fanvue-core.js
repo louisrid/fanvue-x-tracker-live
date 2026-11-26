@@ -113,9 +113,11 @@
 
   /* Daily view readings from dated per-post snapshots (Europe/London days).
      total: sum of each post's latest reading at the end of each day.
-     gained: views added that day, from each post's last reading the day before, or from its first
-     reading when it was first read that day, so a post never shows its lifetime views as one day's gain. */
-  function dailySeries(rows,{id=r=>r.id,at=r=>r.at,value=r=>r.views,now=Date.now(),days=14}={}){
+     gained: views added that day, from each post's last reading the day before. A post published
+     that day or the day before (born) starts from 0, so a new post's first views count on the day it
+     is first read. An older post first read late starts from its first reading, so its lifetime views
+     never show as one day's gain. */
+  function dailySeries(rows,{id=r=>r.id,at=r=>r.at,value=r=>r.views,born=()=>null,now=Date.now(),days=14}={}){
     const readings=[];
     for(const r of rows||[]){
       const key=id(r),d=londonDay(at(r)),v=num(value(r)),t=Date.parse(at(r));
@@ -134,8 +136,17 @@
         let sum=0;for(const v of snap.values())sum+=v;
         total.push(dayPoint(d,sum,{count:snap.size}));
         // Baseline: the post's last reading the day before, or its first reading if it was first read that day.
-        let g=0,n=0;for(const [k,v] of snap){const base=prev?.has(k)?prev.get(k):firstRead.get(k).day===d?firstRead.get(k).v:null;if(base!==null){g+=Math.max(0,v-base);n++;}}
-        gained.push(dayPoint(d,n?g:null,{count:n}));
+        let g=0,n=0,fresh=0;
+        for(const [k,v] of snap){
+          let base=null;
+          if(prev?.has(k))base=prev.get(k);
+          else if(firstRead.get(k).day===d){
+            const b=num(born(k)),bd=b!==null?londonDay(b):'';
+            if(bd&&bd>=addDays(d,-1)){base=0;fresh++;}else base=firstRead.get(k).v;
+          }
+          if(base!==null){g+=Math.max(0,v-base);n++;}
+        }
+        gained.push(dayPoint(d,n?g:null,{count:n,fresh}));
       }
       prev=snap;
     }

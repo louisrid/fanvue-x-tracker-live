@@ -151,9 +151,9 @@
     for(const m of measures)measureRegistry.set(opts.id+'|'+m.key,m);
     if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];
-    if(opts.card)return cardPanel(opts,measures,sel);
-    const kinds=sel.kinds||(sel.categories?['bar','table']:['line','bar','table']);
-    const type=kinds.includes(state.type)?state.type:(sel.defaultType||kinds[0]);
+    // Owner (26 Nov): graphs only (no table view); time series open as a line with point markers.
+    const kinds=sel.categories?['bar']:['line','bar'];
+    const type=kinds.includes(state.type)?state.type:kinds[0];
     const select=measures.length>1?'<label class="fv-select"><span class="fv-sr">Chart metric</span><select data-chart-measure="'+esc(opts.id)+'">'+
       measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('down',14)+'</label>':'';
     const sw='<div class="fv-switch" role="group" aria-label="Chart display">'+kinds.map(k=>'<button type="button" data-chart-type="'+k+'" data-chart="'+esc(opts.id)+'" aria-pressed="'+(k===type)+'" aria-label="'+(k==='line'?'Line chart':k==='bar'?'Bar chart':'Table')+'">'+icon(k==='line'?'line':k==='bar'?'bars':'table',15)+'</button>').join('')+'</div>';
@@ -161,19 +161,10 @@
       '<div class="fv-chart" id="'+esc(opts.id)+'" data-type="'+type+'" data-measure="'+esc(sel.key)+'">'+chartBody(sel,type)+'</div>'+
       '</section>';
   }
-  /* Pink bar card: one wide white card, bold black title, vertical pink bars with a label under each,
-     thin grey grid lines and hover/focus details. A secondary comparison view placed above the main chart. */
-  function cardPanel(opts,measures,sel){
-    const select=measures.length>1?'<label class="fv-select"><span class="fv-sr">Bar chart metric</span><select data-chart-measure="'+esc(opts.id)+'">'+
-      measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('down',14)+'</label>':'';
-    return '<section class="fv-panel fv-bar-card" aria-labelledby="'+esc(opts.id)+'-t"><div class="fv-bar-card-head"><h2 id="'+esc(opts.id)+'-t">'+esc(sel.title)+'</h2>'+
-      (select?'<div class="fv-tools">'+select+'</div>':'')+'</div>'+
-      '<div class="fv-chart is-pink" id="'+esc(opts.id)+'" data-type="bar" data-measure="'+esc(sel.key)+'"><div class="fv-plot" role="img" aria-label="'+esc(sel.title)+'. Hover or focus a bar for its exact value."></div></div></section>';
-  }
   function chartBody(m,type){
     if(type==='table'){
       const rows=m.series||m.categories;
-      return '<div class="fv-table-wrap fv-chart-table"><table data-no-sort><thead><tr><th scope="col" class="is-left">'+(m.series?(m.period||'Week'):(m.catLabel||'Group'))+'</th><th scope="col">'+esc(m.unit||m.label)+'</th></tr></thead><tbody>'+
+      return '<div class="fv-table-wrap fv-chart-table"><table data-no-sort><thead><tr><th scope="col" class="is-left">'+(m.series?(m.period||'Week'):'Group')+'</th><th scope="col">'+esc(m.unit||m.label)+'</th></tr></thead><tbody>'+
         rows.map(p=>'<tr><td class="is-left">'+esc(m.series?p.range+(p.incomplete?' (incomplete)':''):p.label)+'</td><td>'+(p.value===null||p.value===undefined?reasonButton(p.state||'Not available',p.reason):esc(formatValue(p.value,m.format)))+'</td></tr>').join('')+'</tbody></table></div>';
     }
     return '<div class="fv-plot" role="img" aria-label="'+esc(m.title)+'. Use the table view for exact values."></div>';
@@ -196,7 +187,7 @@
     const n=pts.length,bar=type==='bar'||cat;
     const L=W<480?40:52,R=W<480?12:18,T=12,iw=W-L-R;
     // Category names that do not fit their slot wrap onto two lines.
-    const wrap=!m.card&&cat&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
+    const wrap=cat&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
     const B=wrap?42:26,ih=H-T-B;
     const twoLines=t=>{const w=String(t).split(' ');if(w.length<2)return [String(t)];let best=1,score=1e9;
       for(let k=1;k<w.length;k++){const d=Math.max(w.slice(0,k).join(' ').length,w.slice(k).join(' ').length);if(d<score){score=d;best=k;}}
@@ -206,17 +197,13 @@
     let s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true" focusable="false">';
     const steps=Math.round((hi-lo)/nm.step);
     for(let i=0;i<=steps;i++){const v=lo+i*nm.step,y=Y(v);s+='<line class="fv-grid'+(v===0?' is-zero':'')+'" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="fv-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+esc(tickText(v,m.format))+'</text>';}
-    const every=m.card?1:Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
-    const maxCh=Math.max(3,Math.floor((iw/n-8)/7.8));
-    const fit=t=>m.card&&t.length>maxCh?t.slice(0,maxCh-1)+'…':t;
+    const every=Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
     pts.forEach((p,i)=>{if(i%every!==0&&i!==n-1)return;
-      const lines=(wrap?twoLines(p.label):[p.label]).map(t=>fit(String(t)));
+      const lines=wrap?twoLines(p.label):[p.label];
       s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
-      const bw=m.card?Math.max(8,Math.min(64,iw/n*.62)):Math.max(6,Math.min(40,iw/n*.55));
-      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="3"/>';
-        // Cards print each bar's value above it.
-        if(m.card&&n<=16)s+='<text class="fv-bar-val" x="'+X(i)+'" y="'+(v>=0?y-6:y+14)+'" text-anchor="middle">'+esc(tickText(v,m.format))+'</text>';});
+      const bw=Math.max(6,Math.min(40,iw/n*.55));
+      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="3"/>';});
     }else{
       const seg=[];pts.forEach((p,i)=>{const v=C.num(p.value);if(v!==null)seg.push([X(i),Y(v),p]);});
       if(seg.length){
