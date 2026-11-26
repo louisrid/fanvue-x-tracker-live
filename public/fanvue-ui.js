@@ -149,8 +149,8 @@
   const measureRegistry=new Map();
   const getMeasure=(id,key)=>measureRegistry.get(id+'|'+key)||null;
   // All daily charts use the same UK calendar week: Monday to Sunday.
-  function weekSlots(series,now=Date.now()){
-    const today=C.londonDay(now),start=C.weekStart(today),by=new Map((series||[]).map(p=>[p.week,p]));
+  function weekSlots(series,now=Date.now(),weekFrom){
+    const today=C.londonDay(now),start=weekFrom||C.weekStart(today),by=new Map((series||[]).map(p=>[p.week,p]));
     return Array.from({length:7},(_,i)=>{const date=C.addDays(start,i),p=by.get(date);return date<=today&&p?{...p,label:C.dayShort(date)}:{week:date,label:C.dayShort(date),range:C.dayLong(date),value:null,state:date>today?'Future date':'No verified data'};});
   }
   function chartPanel(opts,state){
@@ -182,16 +182,16 @@
   /* Draw SVG into a .fv-plot using its real width. Called after render and on resize. */
   function drawChart(host,m,type){
     const plot=host.querySelector('.fv-plot');if(!plot)return;
-    const W=Math.max(260,plot.clientWidth||600),H=plot.clientHeight||190;
-    const allPoints=m.series||m.categories,pts=m.period==='Day'?weekSlots(allPoints):allPoints,cat=!m.series;
+    const W=Math.max(180,plot.clientWidth||600),H=plot.clientHeight||190;
+    const allPoints=m.series||m.categories,pts=m.period==='Day'?weekSlots(allPoints,Date.now(),m.weekFrom):allPoints,cat=!m.series;
     const vals=pts.map(p=>C.num(p.value)).filter(v=>v!==null);
     let lo=Math.min(0,...vals),hi=Math.max(0,...vals);
     const nm=niceMax(Math.max(Math.abs(lo),Math.abs(hi)));
     hi=hi>0?nm.max:0;lo=lo<0?-nm.max:0;if(hi===lo)hi=1;
     const n=pts.length,bar=type==='bar'||cat;
-    const L=W<480?12:48,R=W<480?10:18,T=W<480?12:20,iw=W-L-R;
+    const L=W<480?24:48,R=W<480?8:18,T=W<480?12:20,iw=W-L-R;
     // Category names that do not fit their slot wrap onto two lines.
-    const wrap=cat&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
+    const wrap=(cat||m.period==='Day')&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
     const B=wrap?46:32,ih=H-T-B;
     const twoLines=t=>{const w=String(t).split(' ');if(w.length<2)return [String(t)];let best=1,score=1e9;
       for(let k=1;k<w.length;k++){const d=Math.max(w.slice(0,k).join(' ').length,w.slice(k).join(' ').length);if(d<score){score=d;best=k;}}
@@ -208,7 +208,7 @@
       s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
       const bw=Math.max(6,Math.min(52,iw/n*.68));
-      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="8"/>';});
+      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}if(v===0)return;const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="8"/>';});
     }else{
       const seg=[];pts.forEach((p,i)=>{const v=C.num(p.value);if(v!==null)seg.push([X(i),Y(v),p]);});
       if(seg.length){

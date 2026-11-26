@@ -278,15 +278,15 @@
     const discord='<section class="fv-community-summary" aria-label="Discord"><a href="#discord">Discord</a>'+[
       ['Members',community.members,'count'],['Growth',community.growth,'signed'],['Course Clicks',community.clicks,'count']
     ].map(([label,m,format])=>'<div><span>'+esc(label)+'</span><strong>'+(C.hasValue(m)?U.value(m,format):dash(m?.reason))+'</strong></div>').join('')+'</section>';
-    return {title:'Dashboard',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+header+figures+discord+dashboardChart()+campaignComparison(S,period)};
+    return {title:'Dashboard',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+discord+dashboardChart(period)+campaignComparison(S,period)+overviewNotice()};
   }
-  function dashboardChart(){
+  function dashboardChart(period){
     const sources=[['Article links',D.dashboard()?.activity,D.dashboard()?.activityReady,xaRecords()],['OF links',D.of()?.report?.activity,D.of()?.report?.ready,ofRecords()]];
     const values=new Map();
     for(const [name,activity,ready,records] of sources){if(!ready)continue;const codes=new Set(records.map(x=>String(x.raw.code)));for(const p of C.dailyEventSeries(activity,{include:r=>codes.has(String(r.code))})){const d=values.get(p.week)||{value:0,sources:[]};d.value+=p.value;d.sources.push(name+': '+C.full(p.value));values.set(p.week,d);}}
     for(const p of shortIoDaily(gtaClickReport(D.gta()?.report),gtaRecords())){const d=values.get(p.week)||{value:0,sources:[]};d.value+=p.value;d.sources.push('GTA links: '+C.full(p.value));values.set(p.week,d);}
     const series=[...values].sort(([a],[b])=>a.localeCompare(b)).map(([date,d])=>({week:date,label:C.dayShort(date),range:C.dayLong(date),value:d.value,incomplete:date===C.londonDay(Date.now()),extra:d.sources.join(' · ')+'. Dated recorded clicks only; unavailable sources are excluded. Provider filtering differs.'}));
-    return U.chartPanel({id:'home-chart',allowEmptyWeek:true,measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',unit:'Clicks'}]},chartState('home','home-chart'));
+    return U.chartPanel({id:'home-chart',allowEmptyWeek:true,measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',weekFrom:period?.from,unit:'Clicks'}]},chartState('home','home-chart'));
   }
   function clickBreakdown(from,to){
     const s=summaries();if(!s)return M.loading();
@@ -437,8 +437,8 @@
     const courseSeries=C.eventSeries(Object.entries(clicks?.days||{}).map(([date,clicks])=>({date,clicks})));
     const courseByWeek=new Map(courseSeries.map(p=>[p.week,p]));
     const dailyCourse=C.dailyEventSeries(Object.entries(clicks?.days||{}).map(([date,clicks])=>({date,clicks})));
-    const chart=campaignChart(U.chartPanel({id:'discord-chart',measures:[
-      dailyCourse.length?{key:'course',label:'Course Clicks',title:'Daily Course Clicks',series:dailyCourse,period:'Day',unit:'Course Clicks'}:null,
+    const chart=campaignChart(U.chartPanel({id:'discord-chart',allowEmptyWeek:true,measures:[
+      {key:'course',label:'Course Clicks',title:'Daily Course Clicks',series:dailyCourse,period:'Day',unit:'Course Clicks'},
       dailyNet.length>=1?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line']}:null,
       // Owner (26 Nov): "Weekly X" naming, matching OF Terms' "Weekly Clicks"; no table view (line/bar only, per every other chart).
 
@@ -518,7 +518,7 @@
   function viewsChart(id,page,history,{idOf=r=>r.id,at=r=>r.at,value=r=>r.views,extra=[],noun='Views'}={}){
     const d=C.dailySeries(history,{id:idOf,at,value,born:postBorn}),tip=p=>({...p,extra:p.count+' posts with a reading'+(p.fresh?' · '+p.fresh+' new '+(p.fresh===1?'post':'posts')+' counted from publication':'')});
     const gained=d.gained.some(p=>p.value!==null)?d.gained.map(tip):[];
-    return U.chartPanel({id,measures:[
+    return U.chartPanel({id,allowEmptyWeek:true,measures:[
       ...extra,
       gained.length?{key:'gained',label:'Daily '+noun,title:'Daily '+noun,series:gained,period:'Day',format:'compact',tipFormat:'count',unit:noun==='Views'?'Views Gained':noun+' Gained'}:null
     ].filter(Boolean)},chartState(page,id));
@@ -554,7 +554,7 @@
     const hist=dash?(dash.history||[]).filter(h=>codes.has(String(h.code||''))||ids.has(String(h.postId||''))):[];
     const clickSeries=dash&&dash.activityReady?C.dailyEventSeries(dash.activity,{include:r=>codes.has(String(r.code))}):[];
     // Owner (26 Nov): one chart name, "Daily Views", everywhere a views-over-time chart appears.
-    const chart=campaignChart(viewsChart('xa-chart','x-articles',hist,{idOf:r=>r.postId||r.code,extra:[tab!=='rts'&&clickSeries.length?{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:clickSeries,period:'Day',unit:'Clicks'}:null]}));
+    const chart=campaignChart(viewsChart('xa-chart','x-articles',hist,{idOf:r=>r.postId||r.code,extra:[tab!=='rts'?{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:clickSeries,period:'Day',unit:'Clicks'}:null]}),tab==='rts'?'Daily Original Views':'Daily Clicks');
     let body;
     if(tab==='overview'){
       const originals=arts.filter(x=>x.paid||x.live===true||C.hasValue(x.clicks)&&x.clicks.value>0),eff=C.placementEfficiency(originals.map(x=>x.raw));
@@ -617,7 +617,7 @@
     const ids=postIdsOf(shown);
     const history=gr?[...(gr.history||[]),...(gr.originals?.history||[]),...(gr.mandy?.history||[])].filter(h=>ids.has(String(h.id||''))):[];
     const clickDays=shortIoDaily(gtaClickReport(gr),shown);
-    const chart=campaignChart(viewsChart('gta-chart','gta-vi',history,{extra:clickDays.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:clickDays,period:'Day',unit:'Clicks'}]:[]}));
+    const chart=campaignChart(viewsChart('gta-chart','gta-vi',history,{extra:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:clickDays,period:'Day',unit:'Clicks'}]}));
     let body;
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
@@ -648,7 +648,7 @@
     const mapping=new Map(quoted.flatMap(o=>(o.qrts||[]).map(q=>[C.postId(q.postUrl),o])));
     const records=sources.flatMap(c=>(c.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:c.name,parent:c.id==='gta-mandy'?'GTA VI':c.name,type:'qrt',clicks:gtaClicks})));
     const f=xState('viral-qrts','viral-results'),shown=records.filter(xMatch(f));
-    const ids=postIdsOf(shown),daily=shortIoDaily(gr?.mandy,shown),chart=campaignChart(viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[],{extra:daily.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:daily,period:'Day',unit:'Clicks'}]:[]}));
+    const ids=postIdsOf(shown),daily=shortIoDaily(gr?.mandy,shown),chart=campaignChart(viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[],{extra:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:daily,period:'Day',unit:'Clicks'}]}));
     const ts=tableState('viral-qrts','viral-results');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const table=U.tablePanel({id:'viral-results',title:'Listings',icon:'zap',age:publicationAge,records,rows:records,search:true,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
@@ -667,7 +667,7 @@
     const k=s?(xActive(f)?xKpis(shown):s):null;
     const codes=new Set(shown.map(x=>String(x.raw.code)));
     const series=rep?.ready&&Array.isArray(rep.activity)?C.dailyEventSeries(rep.activity,{include:r=>codes.has(String(r.code))}):[];
-    const chart=campaignChart(U.chartPanel({id:'of-chart',measures:series.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',unit:'Clicks'}]:[]},chartState('of-terms','of-chart')));
+    const chart=campaignChart(U.chartPanel({id:'of-chart',allowEmptyWeek:true,measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',unit:'Clicks'}]},chartState('of-terms','of-chart')));
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     return {title:'OF Terms',chip:'of-terms',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!c?.sourceStale,
       body:overviewTabs()+(!k?loadingStrip(KPI_LOADING):kpiStrip(k))+chart+xTable('of-terms','of-results',{title:'Listings',icon:'users',records,f,groups:false,includeType:false,expand:x=>xDetail(x,eff)})+overviewNotice()};
@@ -745,21 +745,30 @@
     const shown=all.filter(x=>x.platform==='X'&&(!f.camp||x.parent===f.camp)&&(!f.type||x.type===f.type));
     const sel=(key,label,opts)=>'<label class="fv-select fv-filter"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+opts.map(([v,l])=>'<option value="'+esc(v)+'"'+((f[key]||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'+U.icon('down',14)+'</label>';
     const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
-    const filters=sel('camp','Campaign',[['','All campaigns'],...present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)).map(x=>[x,x])])+sel('type','Type',[['','All types'],...present(x=>x.type,['Post','Article','RT','QRT']).map(x=>[x,x])])+sel('scope','Account history',[['','Used accounts'],['all','All accounts']]);
+    const filters=sel('camp','Campaign',[['','All campaigns'],...present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)).map(x=>[x,x])])+sel('type','Type',[['','All types'],...present(x=>x.type,['Post','Article','RT','QRT']).map(x=>[x,x])])+sel('scope','Account history',[['','All accounts'],['used','Used accounts']]);
     const rows=accountRows(shown);
-    if(!f.camp&&!f.type&&(f.scope==='all'||ts.q?.trim())){
+    if(!f.camp&&!f.type&&f.scope!=='used'){
       const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts||[]){if(keys.has(a.key)||a.platform!=='X')continue;rows.push({key:a.key,name:a.handle,platform:'X',campaigns:[],posts:0,records:[],spend:M.na('No paid placement.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});keys.add(a.key);}
     }
     const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',filters,rows,limit:20,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
       expand:a=>!a.records.length?'<p class="fv-detail-note">No purchased placements recorded.</p>':U.detailGrid([['Campaigns',esc(a.campaigns.join(', '))],['Clicks per dollar',U.value(a.perDollar,'rate')]])+rtCosts(a.records)+U.detailGrid(a.records.map(x=>[x.campaign+' · '+x.type,(x.link?U.extLink(x.link,'Post'):'')+' · '+U.value(x.clicks)+' clicks'])),
       columns:[
-        {key:'name',label:'Account',type:'name',html:a=>'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span>',sort:a=>a.name.toLowerCase()},
+        {key:'name',label:'Account',type:'name',html:a=>{const handle=a.key.split('|')[1],url=/^[A-Za-z0-9_]{1,15}$/.test(handle)?'https://x.com/'+handle:'';return url?'<a class="fv-account-plain" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="'+esc(a.name)+'">'+esc(a.name)+'</a>':'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span>';},sort:a=>a.name.toLowerCase()},
         {key:'clicks',label:'Clicks',get:a=>a.clicks},{key:'views',label:'Views',get:a=>a.views},{key:'spend',label:'Spend',format:'money',get:a=>a.spend},{key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},{key:'posts',label:'Posts',get:a=>a.records.length?M.value(a.posts):M.na('No recorded placements.')},{key:'campaigns',label:'Campaigns',get:a=>a.records.length?M.value(a.campaigns.length):M.na('No recorded campaigns.')}
       ]},ts);
     const note=directory.error||directory.stale?'<p class="fv-filter-note">Publisher directory is temporarily unavailable. Placement history remains available.</p>':'';
     return {title:'Accounts',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:table+overviewNotice()+note};
   }
 
+  // Linked or empty custom campaigns use the same frame as built-in campaigns.
+  function customCampaignBody(slug,raw,linked,name){
+    const page='added:'+slug,id='added-placements',records=raw.map(r=>xRecord(r,{campaign:name,parent:name,type:r.type||'article',clicks:r=>C.num(r.clicks)===null?M.na('No verified click count.'):M.value(r.clicks)})),f=xState(page,id);
+    const nc=M.notConnected('No linked data source.'),k=linked?{clicks:C.num(linked.trackedClicks)===null?M.na('No recorded clicks.'):M.value(linked.trackedClicks),views:C.num(linked.xViews)===null?M.na('No verified X reading.'):M.value(linked.xViews),spend:C.num(linked.paidSpendKnown)===null?M.na('No recorded spend.'):M.value(linked.paidSpendKnown),cpc:xKpis(records).cpc}:{clicks:nc,views:nc,spend:nc,cpc:nc};
+    const dash=D.dashboard(),codes=new Set(records.map(x=>String(x.raw.code||''))),series=dash?.activityReady?C.dailyEventSeries(dash.activity,{include:r=>codes.has(String(r.code))}):[];
+    const chart=U.chartPanel({id:'added-chart',allowEmptyWeek:true,measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',unit:'Clicks'}]},chartState(page,'added-chart'));
+    const eff=C.placementEfficiency(records.map(x=>x.raw));
+    return overviewTabs()+kpiStrip(k)+chart+xTable(page,id,{title:'Listings',records,f,groups:false,empty:linked?'No placements recorded.':'No data source connected.',expand:x=>xDetail(x,eff)});
+  }
   const RENDER={home:homePage,'all-accounts':accountsPage,discord:discordPage,'x-articles':xArticlesPage,'gta-vi':gtaPage,'viral-qrts':viralPage,'of-terms':ofPage,'guru-promotion':guruPage};
 
   /* ---------- shell rendering ---------- */
@@ -797,7 +806,18 @@
     n.focus({preventScroll:true});if(f.attr==='data-search'&&typeof f.start==='number')try{n.setSelectionRange(f.start,f.end);}catch{}
   }
 
-  let lastHeader='';
+  let lastHeader='',renderedRoute='';
+  const renderedSections=new WeakMap();
+  // Preserve unchanged sections during feed updates, filters and sorting.
+  const sectionSignature=el=>el.outerHTML.replace(/(<time\b[^>]*data-age-at="[^"]+"[^>]*>)[^<]*(<\/time>)/g,'$1$2');
+  function mountPage(host,html,route){
+    const template=document.createElement('template');template.innerHTML=html;
+    const incoming=[...template.content.children],existing=[...host.children];
+    if(renderedRoute!==route||!existing.length){host.replaceChildren(...incoming);for(const el of incoming)renderedSections.set(el,sectionSignature(el));renderedRoute=route;return;}
+    const ordered=incoming.map((next,i)=>{const old=existing[i],sig=sectionSignature(next);if(old&&renderedSections.get(old)===sig)return old;renderedSections.set(next,sig);return next;});
+    for(let i=0;i<ordered.length;i++)if(host.children[i]!==ordered[i])host.insertBefore(ordered[i],host.children[i]||null);
+    for(const el of [...host.children])if(!ordered.includes(el))el.remove();
+  }
   function render(){
     U.hideTip();
     const r=current;
@@ -842,9 +862,9 @@
     if(lastHeader!==key){$('fvRefreshStatus').textContent='';$('fvRefreshStatus').className='fv-refresh-status';lastHeader=key;}
     const focus=captureFocus();
     const scrolls=new Map([...$('fvPage').querySelectorAll('.fv-table-wrap')].map(el=>[el.closest('.fv-table-panel')?.id,el.scrollLeft]));
-    $('fvPage').classList.toggle('fv-campaign-layout',r.kind==='page'&&(NAV_ORDER.includes(r.key)||r.key==='discord'));
+    $('fvPage').classList.toggle('fv-campaign-layout',r.kind==='added'||(r.kind==='page'&&(NAV_ORDER.includes(r.key)||r.key==='discord')));
     $('fvPage').classList.toggle('fv-accounts-layout',r.kind==='page'&&r.key==='all-accounts');
-    $('fvPage').innerHTML=page.body;
+    mountPage($('fvPage'),page.body,r.canonical);
     for(const el of $('fvPage').querySelectorAll('.fv-table-wrap')){const id=el.closest('.fv-table-panel')?.id;if(scrolls.has(id))el.scrollLeft=scrolls.get(id);}
     drawCharts();
     restoreFocus(focus);
@@ -870,7 +890,11 @@
     const cards=[...page.querySelectorAll('.fv-period-card')];
     if(cards.length)cards.forEach(card=>fitGroup([...card.querySelectorAll('.fv-tile-value')],[...card.querySelectorAll('.fv-tile-label')]));
     else fitGroup([...page.querySelectorAll('.fv-tile-value')],[...page.querySelectorAll('.fv-tile-label')]);
-    for(const strip of page.querySelectorAll('.fv-panel.fv-strip'))fitGroup([...strip.querySelectorAll('.fv-metric-value')],[...strip.querySelectorAll('.fv-metric-label')]);
+    for(const strip of page.querySelectorAll('.fv-panel.fv-strip'))for(const value of strip.querySelectorAll('.fv-metric-value')){
+      value.style.fontSize='';for(const el of value.querySelectorAll('*:not(.fv-coverage)'))el.style.fontSize='';
+      // Use the shared type scale; shrink only an unusually long individual value.
+      if(value.scrollWidth>value.clientWidth+1)fitGroup([value],[]);
+    }
   }
   // Several independent background refreshes (GTA, Discord, boosts) can all resolve within the
   // same tick after a tab regains focus, each calling fitTiles. Coalesce them into one pass so
@@ -882,11 +906,14 @@
     fitPending=true;
     requestAnimationFrame(()=>{fitPending=false;runFitTiles();});
   }
+  const drawnCharts=new WeakMap();
   function drawCharts(){
     fitTiles();setTimeout(fitTiles,400);
     for(const host of $('fvPage').querySelectorAll('.fv-chart')){
       if(host.dataset.type==='table')continue;
-      const m=U.getMeasure(host.id,host.dataset.measure);if(m)U.drawChart(host,m,host.dataset.type);
+      const m=U.getMeasure(host.id,host.dataset.measure),plot=host.querySelector('.fv-plot');if(!m||!plot)continue;
+      const sig=JSON.stringify([plot.clientWidth,plot.clientHeight,m.period==='Day'?U.weekSlots(m.series,Date.now(),m.weekFrom):m.series||m.categories,m.key,m.format,m.unit]);
+      if(drawnCharts.get(host)!==sig){U.drawChart(host,m,host.dataset.type);drawnCharts.set(host,sig);}
     }
   }
   function rerender(){if(current.kind==='records'){setNav(RECORDS[current.key].parent);return;}render();}
@@ -935,12 +962,14 @@
   // Table interactions do not destroy or redraw the chart, header, KPI cards or sidebar.
   function rerenderTable(id){
     const host=$('fvPage'),old=host.querySelector('#'+CSS.escape(id));
-    if(!old||current.kind!=='page'){rerender();return;}
+    if(!old||!['page','added'].includes(current.kind)){rerender();return;}
     const focus=captureFocus(),wrap=old.querySelector('.fv-table-wrap'),left=wrap?.scrollLeft||0;
-    const page=RENDER[current.key]({view:current.view}),tpl=document.createElement('template');
+    const page=current.kind==='added'?hooks.addedRoute?.(current.key):RENDER[current.key]({view:current.view}),tpl=document.createElement('template');
+    if(!page){rerender();return;}
     tpl.innerHTML=page.body;
     const next=tpl.content.querySelector('#'+CSS.escape(id));
     if(!next){rerender();return;}
+    const signature=sectionSignature(next);
     U.hideTip();
     // Retain the actual scroll container and controls whenever the schema is unchanged.
     const nextWrap=next.querySelector('.fv-table-wrap'),table=wrap?.querySelector('table'),fresh=nextWrap?.querySelector('table');
@@ -951,7 +980,8 @@
       const a=old.querySelector('[data-mobile-sort]'),b=next.querySelector('[data-mobile-sort]');if(a&&b)a.value=b.value;
       const before=old.querySelector('.fv-count'),after=next.querySelector('.fv-count');
       if(before&&after)before.replaceWith(after);else if(before)before.remove();else if(after)old.append(after);
-    }else old.replaceWith(next);
+      renderedSections.set(old,signature);
+    }else{renderedSections.set(next,signature);old.replaceWith(next);}
     const w=host.querySelector('#'+CSS.escape(id)+' .fv-table-wrap');if(w)w.scrollLeft=left;
     restoreFocus(focus);
   }
@@ -1027,6 +1057,6 @@
     onHash();
   }
   window.FanvueApp=Object.freeze({hooks,rerender,go,parseHash,RECORDS,LEGACY,PAGES,data:D,state:pageState,tableState,
-    placementColumns,publicationAge,metric,outcomeItems,reporting:Object.freeze({xKpis,periodTotals,accountRows,markAccountValue,discordStats,pages:RENDER})});
+    placementColumns,publicationAge,metric,outcomeItems,overviewTabs,campaignChart,customCampaignBody,reporting:Object.freeze({xKpis,periodTotals,accountRows,markAccountValue,discordStats,pages:RENDER})});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
