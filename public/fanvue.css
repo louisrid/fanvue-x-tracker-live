@@ -850,7 +850,11 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#fff}
 
 /* ---------- Owner (26 Nov): fewer coloured tiles together; tidy sizing, spacing and corners ---------- */
 /* Colour only in small groups: key numbers (up to 4) and the Dashboard's top row. Everything else is dark tiles. */
-.fv-period-card .fv-tiles+.fv-tiles .fv-tile{background:#26262A}
+/* Owner (26 Nov): the Dashboard's second row looked randomly uncoloured next to the first. Tint it in the
+   same card colour, muted, so every tile reads as one coloured card instead of half-and-half. */
+.fv-period-card.is-week .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,rgba(252,45,157,.6),rgba(255,100,95,.6) 55%,rgba(255,138,61,.6)),#2A1016}
+.fv-period-card.is-last .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,rgba(59,130,246,.6),rgba(99,102,241,.6)),#141A33}
+.fv-period-card.is-all .fv-tiles+.fv-tiles .fv-tile{background:linear-gradient(135deg,#2E2E30,#4A4A4E)}
 .fv-inline-metrics>div,.fv-inline-metrics>div:last-child,.fv-inline-metrics>div:nth-child(2n){background:#26262A}
 @media (max-width:767px){
   .is-summary .fv-table tr.fv-row td:not(.is-name):not(.fv-x-col),.is-summary .fv-table tr.fv-row td:first-child:not(.is-name){background:#26262A}
