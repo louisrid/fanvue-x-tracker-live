@@ -402,7 +402,7 @@ function renderTracker(){const list=filteredPlacements(),chosen=state.placements
 function renderBulk(){for(const code of [...state.selected])if(!state.placements.some(p=>p.code===code))state.selected.delete(code);
   const n=state.selected.size,bar=el('bulkBar');bar.hidden=n===0;el('bulkCount').textContent=n+' selected';}
 function buildAccounts(){
-  const records=state.placements;const grouped=new Map();
+  const records=state.placements.filter(p=>p.platform==='X');const grouped=new Map();
   const from=el('filterAccountFrom').value,to=el('filterAccountTo').value;
   for(const p of records){
     if((from||to)&&!isBetween(postDate(p),from,to))continue;
@@ -696,7 +696,7 @@ function editorHtml(kind,id){
     return `<h2 id="editModalTitle" class="modal-title">${headingHTML("Edit "+c.name)}</h2><form id="entityForm" class="edit-form" data-action="editCampaign" data-id="${esc(id)}"><div class="form-grid">${editField('Name','name','text',c.name,'required')}${editField('Budget ($)','budget','number',number(c.budget)??'','min="0" step="0.01"')}${editSelect('Status','status',[['active','Active'],['paused','Paused'],['complete','Complete']],c.status||'active')}${editField('Start','startDate','date',c.startDate?.slice(0,10)||'')}${editField('End','endDate','date',c.endDate?.slice(0,10)||'')}</div><label class="form-field"><span>Brief</span><textarea name="brief" rows="3">${esc(c.brief||'')}</textarea></label><button class="button button-primary submit-button" type="submit">Save campaign</button></form>`;
   }
   if(kind==='newPlacement'){
-    const names=[...new Map(state.placements.map(p=>[p.publisher.toLowerCase(),p.publisher])).values()].sort((a,b)=>a.localeCompare(b));
+    const names=[...new Map(state.placements.filter(p=>p.platform==='X').map(p=>[p.publisher.toLowerCase(),p.publisher])).values()].sort((a,b)=>a.localeCompare(b));
     const camps=state.campaigns.map(c=>[c.id,c.name]);
     return `<h2 id="editModalTitle" class="modal-title">New placement<span class="heading-accent">.</span></h2><form id="entityForm" class="edit-form" data-action="newPlacement"><div class="form-grid">${editSelect('Existing account','publisher',names.map(s=>[s,s]),names[0]||'')}${editSelect('Campaign','campaignId',camps,id||camps[0]?.[0]||'A01')}${editField('Agreed price ($)','price','number','','required min="0" step="0.01"')}${editSelect('Platform','platform',[['X','X']],'X')}${editSelect('Stage','stage',stages,'planned')}${editField('Profile URL','profileUrl','url','','placeholder="https://x.com/..."')}${editField('Post URL (optional)','postUrl','url','','placeholder="https://..."')}${editField('Live date (optional)','postedAt','datetime-local')}</div><button class="button button-primary submit-button" type="submit">Add placement</button></form>`;
   }
