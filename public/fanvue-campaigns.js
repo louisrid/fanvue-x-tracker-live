@@ -84,7 +84,7 @@
     ]);
     const chart=U.chartPanel({id:'added-chart',empty:{title:'History',reason:linked?'Weekly history for linked article campaigns is shown on X Articles.':'No data source connected yet, so there is no history.'}},{});
     const rows=linked?(xa?.rows||[]).filter(r=>r.campaignId===c.dataLink):[];
-    const table=U.tablePanel({id:'added-placements',title:'Placements',icon:'layers',rows,rowKey:r=>r.code,rowLabel:r=>r.publisher,search:rows.length>8,minWidth:820,
+    const table=U.tablePanel({id:'added-placements',title:'Listings',icon:'layers',age:window.FanvueApp.publicationAge,hideEmpty:false,rows,rowKey:r=>r.code,rowLabel:r=>r.publisher,search:rows.length>8,minWidth:820,
       empty:linked?'No placements recorded for the linked campaign.':'No data source connected yet.',
       columns:window.FanvueApp.placementColumns({clicks:r=>C.num(r.clicks)===null?M.na('Click storage unavailable.'):M.value(r.clicks)})},
       window.FanvueApp.tableState('added:'+slug,'added-placements'));

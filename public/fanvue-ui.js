@@ -244,7 +244,47 @@
     if(v&&typeof v==='object'&&'state' in v)return ['value','partial','stale'].includes(v.state)?v.value:null;
     return v;
   }
+  // Publication age is separate from payment and metric refresh dates. Date-only sources
+  // are deliberately displayed in days, not invented hours or seconds.
+  function ageText(at,dayOnly=false,now=Date.now()){
+    if(!Number.isFinite(at)||at<=0||at>now)return '–';
+    if(dayOnly){
+      const today=Date.parse(C.londonDay(now)+'T00:00:00Z');
+      const days=Math.max(0,Math.floor((today-at)/86400000));
+      return days===0?'Today':days+'d ago';
+    }
+    const s=Math.floor((now-at)/1000),m=Math.floor(s/60),h=Math.floor(m/60),d=Math.floor(h/24);
+    if(d)return d+'d ago';
+    if(h)return h+'h'+(m%60?' '+m%60+'m':'')+' ago';
+    if(m)return m+'m ago';
+    return s+'s ago';
+  }
+  function ageCell(row,get){
+    const v=get(row);
+    if(!v||!Number.isFinite(v.at)||v.at<=0||v.at>Date.now())return dashCell('No verified publication timestamp.');
+    const exact=v.dayOnly?new Date(v.at).toISOString().slice(0,10):new Date(v.at).toLocaleString('en-GB',{timeZone:'Europe/London'})+' UK time';
+    return '<time class="fv-age" datetime="'+new Date(v.at).toISOString()+'" data-age-at="'+v.at+'" data-age-day="'+(v.dayOnly?1:0)+'" title="'+esc(exact)+'">'+esc(ageText(v.at,v.dayOnly))+'</time>';
+  }
+  function refreshAges(root){
+    if(document.hidden)return;
+    const now=Date.now();
+    for(const t of root.querySelectorAll('[data-age-at]')){
+      const label=ageText(Number(t.dataset.ageAt),t.dataset.ageDay==='1',now);
+      if(t.textContent!==label)t.textContent=label;
+    }
+  }
+  // Widths are derived from the schema, never from visible row contents or sort direction.
+  function columnWidth(c){
+    if(c.key==='age')return 106;
+    if(c.key==='headline')return 240;
+    if(c.key==='campaigns')return 170;
+    if(c.type==='name')return 170;
+    if(c.type==='link')return 62;
+    if(c.key==='type'||c.key==='platform'||c.type==='status')return 84;
+    return c.type==='text'?126:98;
+  }
   function tablePanel(cfg,st){
+    if(cfg.age)cfg={...cfg,columns:[{key:'age',label:'Posted',type:'text',keep:true,sort:r=>cfg.age(r)?.at??null,html:r=>ageCell(r,cfg.age)},...cfg.columns],widths:undefined};
     const q=(st.q||'').trim().toLowerCase();
     let rows=cfg.rows||[];
     const sortCol=st.sort&&cfg.columns.find(c=>c.key===st.sort.key);
@@ -273,7 +313,7 @@
       const sorted=st.sort?.key===c.key,dir=sorted?(st.sort.dir>0?'ascending':'descending'):'none';
       const left=['name','text','status','link'].includes(c.type)||c.align==='left';
       if(c.type==='link'||c.nosort)return '<th scope="col" class="'+(left?'is-left':'')+(c.type==='link'?' is-link':'')+'">'+esc(c.label)+'</th>';
-      return '<th scope="col" class="'+(left?'is-left':'')+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'up':'down',12):'')+'</span></button></th>';
+      return '<th scope="col" class="'+(left?'is-left':'')+'" data-column="'+esc(c.key)+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'up':'down',12):'')+'</span></button></th>';
     }).join('')+(cfg.expand?'<th scope="col" class="fv-x-col"><span class="fv-sr">Details</span></th>':'')+'</tr>';
     // Optional grouping: rows stay in their sorted order inside each group, groups in order of first appearance.
     if(cfg.groupBy){const order=[],by=new Map();for(const r of rows){const k=cfg.groupBy(r);if(!by.has(k)){by.set(k,[]);order.push(k);}by.get(k).push(r);}rows=order.flatMap(k=>by.get(k));}
@@ -290,23 +330,31 @@
       const cells=cols.map(c=>{
         const left=['name','text','status','link'].includes(c.type)||c.align==='left';
         // data-label lets a row read as a labelled card on phones.
-        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
+        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+(st.sort?.key===c.key?' is-sorted':'')+'" data-column="'+esc(c.key)+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
       });
       const tr='<tr class="fv-row'+(open?' is-open':'')+(cfg.rowClass?' '+esc(cfg.rowClass(r)||''):'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
       return head+tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
     }).join('');
     const empty=rows.length?'':all.length?
-      '<div class="fv-empty"><p>No Results</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset Filters</button></div>':
+      '<div class="fv-empty"><p>No Listings</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset Filters</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
-    // Fixed widths apply only when they describe exactly the visible columns; otherwise the
-    // browser sizes columns to their content, which keeps headers on one line.
-    const aligned=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
-    const colgroup=aligned?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
-    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(aligned?' is-aligned':'')+'"'+(cfg.minWidth?' style="--min-w:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
+    const explicit=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
+    const weights=cols.map(columnWidth).concat(cfg.expand?[44]:[]);
+    const totalWidth=weights.reduce((a,b)=>a+b,0);
+    const widths=explicit?cfg.widths:weights.map(w=>(100*w/Math.max(1,totalWidth)).toFixed(3)+'%');
+    const colgroup='<colgroup>'+widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>';
+    const minWidth=Math.max(cfg.minWidth||0,Math.round(totalWidth*.9));
+    const sortOptions=cols.filter(c=>c.type!=='link'&&!c.nosort).flatMap(c=>[1,-1].map(dir=>{
+      const v=c.key+':'+dir,selected=st.sort?.key===c.key&&st.sort.dir===dir;
+      const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'Descending':'Ascending');
+      return '<option value="'+esc(v)+'"'+(selected?' selected':'')+'>'+esc(c.label+' · '+order)+'</option>';
+    })).join('');
+    const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('down',14)+'</label>':'';
+    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table is-aligned" style="--min-w:'+minWidth+'px;--cols:'+cols.length+'">'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
     // Only a Show all button when the list is cut short; no record counts (owner, 26 Nov).
     const count=limited?'<div class="fv-count"><button type="button" class="fv-show-all" data-show-all="'+esc(cfg.id)+'">Show all '+C.full(total)+'</button></div>':'';
-    return '<section class="fv-panel fv-table-panel'+(cfg.cls?' '+esc(cfg.cls):'')+'" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+table+count+'</section>';
+    return '<section class="fv-panel fv-table-panel'+(cfg.cls?' '+esc(cfg.cls):'')+'" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+mobileSort+table+count+'</section>';
   }
 
   /* Detail grid used inside expanded rows. items: [[label, html]] */
@@ -354,5 +402,5 @@
   }
 
   window.FanvueUI=Object.freeze({icon,value,chipFor,reasonButton,strip,panelHead,chipIcon,chartPanel,chartBody,drawChart,getMeasure,tablePanel,detailGrid,status,extLink,marker,
-    inlineMetrics,supportLine,supportPanel,typeTag,bindTips,hideTip,formatValue,ICONS:Object.keys(P)});
+    inlineMetrics,supportLine,supportPanel,typeTag,bindTips,hideTip,formatValue,ageText,refreshAges,ICONS:Object.keys(P)});
 })();

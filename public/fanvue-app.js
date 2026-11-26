@@ -128,6 +128,21 @@
       live:deleted?false:r.posted===true?true:r.posted===false?false:null,deleted,link,paid:r.paid===true&&r.planned!==true,planned:r.planned===true,
       views:views?views(r):viewsOfRow(r),clicks:clicks?clicks(r):M.na('No tracked link for this placement.')};
   }
+  // Only publication evidence is eligible; reposts may point to somebody else's original.
+  function publicationAge(x){
+    const r=x.raw||x;
+    const own=x.type!=='RT'&&String(r.type||'').toLowerCase()!=='rt';
+    const link=own&&x.live!==false&&r.posted!==false?C.postId(x.link||r.postUrl):null;
+    const exact=link?postBorn(link):null;
+    if(exact&&exact<=Date.now())return {at:exact,dayOnly:false};
+    const v=r.postedAt;
+    if(!v)return null;
+    const dayOnly=typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v);
+    const at=typeof v==='number'?v:Date.parse(v);
+    return Number.isFinite(at)&&at>0&&at<=Date.now()?{at,dayOnly}:null;
+  }
+  const originalAge=id=>{const at=postBorn(id);return at&&at<=Date.now()?{at,dayOnly:false}:null;};
+  const latestAge=rows=>rows.map(publicationAge).filter(Boolean).sort((a,b)=>b.at-a.at)[0]||null;
   const xState=(page,id)=>{const st=tableState(page,id);return st.xf||(st.xf={group:'',type:'',live:'',pay:''});};
   const xActive=f=>!!(f.group||f.type||f.live||f.pay);
   const xMatch=f=>x=>(!f.group||x.campaign===f.group)&&(!f.type||x.type===f.type)&&(!f.live||(f.live==='Yes'?x.live===true:f.live==='Deleted'?x.deleted:x.live!==true&&!x.deleted))&&
@@ -168,8 +183,8 @@
   }
   function xTable(page,id,{title,icon='layers',records,f,expand,empty,groups=true,includeType=true}){
     const ts=tableState(page,id);if(!ts.sort)ts.sort={key:'clicks',dir:-1};
-    return U.tablePanel({id,title,icon,search:records.length>10,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
-      minWidth:760,limit:10,cls:'is-list',searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:records.length&&records.every(x=>x.platform==='Instagram')?[{key:'account',label:'Account',type:'name',html:x=>accountName(x.raw),sort:x=>x.account},{key:'type',label:'Format',type:'text',html:x=>esc(x.type),sort:x=>x.type},{key:'spend',label:'Spend',format:'money',get:x=>x.paid?M.value(x.price):M.na('Not paid.')},{key:'posted',label:'Posted',type:'text',html:x=>esc(x.live?'Yes':'No'),sort:x=>x.live?1:0}]:resultColumns(records,{includeType}),expand},ts);
+    return U.tablePanel({id,title,icon,age:publicationAge,hideEmpty:false,search:records.length>10,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
+      minWidth:760,limit:10,cls:'is-list',searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:records.length&&records.every(x=>x.platform==='Instagram')?[{key:'account',label:'Account',type:'name',html:x=>accountName(x.raw),sort:x=>x.account},{key:'type',label:'Format',type:'text',html:x=>esc(x.type),sort:x=>x.type},{key:'spend',label:'Spend',format:'money',get:x=>x.paid?M.value(x.price):M.na('Not paid.')},{key:'posted',label:'Live?',type:'text',html:x=>esc(x.live?'Yes':'No'),sort:x=>x.live?1:0}]:resultColumns(records,{includeType}),expand},ts);
   }
   const articleHeadline=r=>r.articleTitle||r.headline||(!/^ARTICLE\s*\d/i.test(r.articleLabel||'')?r.articleLabel:'')||'';
   function resultColumns(records,{article=false,includeType=true}={}){
@@ -415,7 +430,7 @@
       // Owner (26 Nov): "Weekly X" naming, matching OF Terms' "Weekly Clicks"; no table view (line/bar only, per every other chart).
 
     ].filter(Boolean)},chartState('discord','discord-chart'));
-    const table=U.tablePanel({id:'discord-table',title:'Weekly Results',icon:'users',dropEmptyRows:true,hideEmpty:false,
+    const table=U.tablePanel({id:'discord-table',title:'Weekly History',icon:'users',dropEmptyRows:true,hideEmpty:false,
       rows:weeks.slice().reverse(),rowKey:r=>r.week,
       columns:[
         {key:'week',label:'Week',type:'name',html:r=>esc(r.range)+(r.incomplete?' '+U.status('In Progress'):''),sort:r=>r.week},
@@ -526,7 +541,7 @@
     if(tab==='overview'){
       const originals=arts.filter(x=>x.paid||x.live===true||C.hasValue(x.clicks)&&x.clicks.value>0),eff=C.placementEfficiency(originals.map(x=>x.raw));
       const ts=tableState('x-articles','xa-overview');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
-      body=chart+U.tablePanel({id:'xa-overview',title:'Article Results',icon:'doc',rows:originals,search:true,cls:'is-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:850,limit:10,hideEmpty:false,columns:resultColumns(originals,{article:true}),expand:x=>xDetail(x,eff)},ts);
+      body=chart+U.tablePanel({id:'xa-overview',title:'Listings',icon:'doc',age:publicationAge,rows:originals,search:true,cls:'is-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:850,limit:10,hideEmpty:false,columns:resultColumns(originals,{article:true}),expand:x=>xDetail(x,eff)},ts);
     }else if(tab==='rts'){
       const grouped=new Map();
       for(const x of shown){const key=C.postId(x.raw.sourcePostUrl||x.raw.postUrl)||'unlinked';if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(x);}
@@ -536,14 +551,14 @@
         return {key,list,name:original?.raw.articleLabel||g?.handle||(key==='unlinked'?'Original not recorded':'Original article'),url:list[0].raw.sourcePostUrl||'',
           views:original?.views||(C.num(g?.views)!==null?M.value(g.views):M.na('Original views unavailable.')),k:xKpis(list)};
       });
-      body=(D.campaign('article-rts')?.trackingWarning?'<p class="fv-filter-note">'+esc(D.campaign('article-rts').trackingWarning)+'</p>':'')+U.tablePanel({id:'xa-rts',title:'Article Amplification',icon:'refresh',rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:650,cls:'is-list',hideEmpty:false,
+      body=(D.campaign('article-rts')?.trackingWarning?'<p class="fv-filter-note">'+esc(D.campaign('article-rts').trackingWarning)+'</p>':'')+U.tablePanel({id:'xa-rts',title:'Listings',icon:'refresh',age:r=>originalAge(r.key),rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:650,cls:'is-list',hideEmpty:false,
         columns:[{key:'name',label:'Original Article',type:'name',html:r=>esc(r.name)+' '+U.extLink(r.url,'Original post'),sort:r=>r.name},
           {key:'count',label:'Purchased RTs',get:r=>r.list.filter(x=>x.paid).reduce((n,x)=>n+(C.num(x.raw.purchasedPosts)||1),0)},
           {key:'spend',label:'Spend',format:'money',get:r=>r.k.spend},{key:'views',label:'Original Views',get:r=>r.views}],expand:r=>rtCosts(r.list)},tableState('x-articles','xa-rts'))+
         '<p class="fv-filter-note">Original article views include organic exposure. RT purchases have no separate click or impression reading.</p>';
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
-      body=chart+U.tablePanel({id,title:'Original Articles',icon:'doc',records:scoped,rows:scoped,search:true,cls:'is-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:850,limit:10,hideEmpty:false,
+      body=chart+U.tablePanel({id,title:'Listings',icon:'doc',age:publicationAge,records:scoped,rows:scoped,search:true,cls:'is-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:850,limit:10,hideEmpty:false,
         columns:resultColumns(scoped,{article:true}),expand:x=>xDetail(x,eff,{extra:[['Headline',esc(x.raw.articleLabel||'')]]})},tableState('x-articles',id));
     }
     const label={overview:'Article Performance',articles:'Article Performance',rts:'Paid RT Performance'}[tab];
@@ -594,7 +609,7 @@
     let body;
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
-    body=chart+filteredNote(f)+xTable('gta-vi',id,{title:tab==='overview'?'Results':tabs.find(t=>t.key===tab).label+' Results',icon:tab==='instagram'?'image':'gamepad',records:scoped,f,groups:tab==='overview',empty:s?'No results':waiting('Loading…'),expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Source Post'):'',extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):'']]});}})+(tab==='overview'?budget:'');
+    body=chart+filteredNote(f)+xTable('gta-vi',id,{title:'Listings',icon:tab==='instagram'?'image':'gamepad',records:scoped,f,groups:tab==='overview',empty:s?'No listings':waiting('Loading…'),expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Source Post'):'',extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):'']]});}})+(tab==='overview'?budget:'');
     // Shown only when a spreadsheet tab could not be read, so its rows are missing from the totals.
     const tabWarning=(qr?.missingTabs||[]).map(t=>'<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+U.reasonButton('Missing Data',t+' could not be read from the spreadsheet, so its rows are not counted.','fv-notice-reason')+'</span></div>').join('');
     const label=tab==='overview'?'Campaign Performance':tabs.find(t=>t.key===tab).label+' Performance';
@@ -624,7 +639,7 @@
     const ids=postIdsOf(shown),daily=shortIoDaily(gr?.mandy,shown),chart=viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[],{extra:daily.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:daily,period:'Day',unit:'Clicks'}]:[]});
     const groupKey=x=>mapping.get(C.postId(x.raw.postUrl))?.originalPostId||'unmatched';
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
-    const table=U.tablePanel({id:'viral-results',title:'Purchased QRTs',icon:'zap',records,rows:records,search:records.length>10,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
+    const table=U.tablePanel({id:'viral-results',title:'Listings',icon:'zap',age:publicationAge,records,rows:records,search:records.length>10,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
       minWidth:760,cls:'is-list',hideEmpty:false,columns:resultColumns(records,{includeType:false}),groupBy:groupKey,
       groupHeader:(key,list)=>{const o=mapping.get(C.postId(list[0].raw.postUrl));return o?'<b>Original viral post</b> '+U.extLink(o.originalUrl,'@'+o.handle)+'<span>Original views <b>'+count(o.views)+'</b></span><small>Excluded from our QRT results</small>':'<b>Original post not yet verified</b>';},
       expand:x=>xDetail(x,eff)},tableState('viral-qrts','viral-results'));
@@ -643,7 +658,7 @@
     const chart=U.chartPanel({id:'of-chart',measures:series.length?[{key:'clicks',label:'Clicks',title:'Daily Clicks',series,period:'Day',unit:'Clicks'}]:[]},chartState('of-terms','of-chart'));
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     return {title:'OF Terms',chip:'of-terms',refreshLabel:'Refresh',updated:ov?.checkedAt,stale:!!c?.sourceStale,
-      body:overviewNotice()+(!k?loadingStrip(KPI_LOADING):kpiStrip(k))+chart+xTable('of-terms','of-results',{title:'Publisher Results',icon:'users',records,f,groups:false,includeType:false,expand:x=>xDetail(x,eff)})};
+      body:overviewNotice()+(!k?loadingStrip(KPI_LOADING):kpiStrip(k))+chart+xTable('of-terms','of-results',{title:'Listings',icon:'users',records,f,groups:false,includeType:false,expand:x=>xDetail(x,eff)})};
   }
 
   function guruPage(st){
@@ -653,7 +668,7 @@
     const rows=(g?.rows||[]).map(r=>{const list=groups.get(String(r.id))||[];groups.delete(String(r.id));return {key:String(r.id),r,list,name:guruName(r,g.rows),spend:xKpis(list).spend};});
     for(const [key,list] of groups)rows.push({key,r:{},list,name:'Unmatched original post',spend:xKpis(list).spend});
     const paidRTs=records.filter(x=>x.paid).reduce((n,x)=>n+(C.num(x.raw.purchasedPosts)||1),0);
-    const table=U.tablePanel({id:'guru-summary',title:'Promoted Posts',icon:'megaphone',rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:660,cls:'is-list',hideEmpty:false,
+    const table=U.tablePanel({id:'guru-summary',title:'Listings',icon:'megaphone',age:r=>originalAge(r.key),rows,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:660,cls:'is-list',hideEmpty:false,
       columns:[{key:'name',label:'Original Post',type:'name',html:r=>r.r.postUrl?'<a href="'+esc(C.safeUrl(r.r.postUrl))+'" target="_blank" rel="noopener noreferrer">'+esc(r.name)+'</a>':esc(r.name),sort:r=>r.name},
         {key:'views',label:'Original Views',get:r=>C.num(r.r.views)===null?M.na('No verified original view reading.'):M.value(r.r.views)},
         {key:'rts',label:'Paid RTs',get:r=>r.list.filter(x=>x.paid).reduce((n,x)=>n+(C.num(x.raw.purchasedPosts)||1),0)},
@@ -727,8 +742,8 @@
     const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('plat','Platform',present(x=>x.platform,['X','Instagram']))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT','Story']));
     const rows=markAccountValue(accountRows(shown));
     if(!f.camp&&!f.type&&ts.q?.trim()){const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts){if(keys.has(a.key)||f.plat&&a.platform!==f.plat)continue;rows.push({key:a.key,name:a.handle,platform:a.platform,campaigns:[],posts:0,records:[],spend:M.na('No paid placement recorded.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});}}
-    const table=U.tablePanel({id:'acc-table',title:'Publisher Performance',icon:'users',search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowClass:a=>a.bestValue?'is-best-value':'',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:940,
-      searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Results':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
+    const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowClass:a=>a.bestValue?'is-best-value':'',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:940,
+      searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Listings':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
       expand:a=>!a.records.length?'<p>No purchased placements recorded for this publisher.</p>':rtCosts(a.records)+U.detailGrid(a.records.map(x=>[x.campaign+' · '+x.type,(x.link?U.extLink(x.link,'Post'):'')+' · '+U.value(x.clicks)+' clicks'])),
       columns:[
         {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user')+(a.bestValue?U.reasonButton('Best value','Top quarter by lowest matched CPC in this campaign/platform/type selection. Requires at least 20 measured clicks on paid, individually tracked placements, and four eligible publishers. This is traffic efficiency, not conversions.','fv-value-badge'):''),sort:a=>a.name.toLowerCase()},
@@ -770,7 +785,7 @@
 
   function captureFocus(){
     const a=document.activeElement;if(!a||!$('fvPage').contains(a))return null;
-    const attrs=['data-search','data-sort','data-expand','data-view','data-chart-type','data-chart-measure','data-filter','data-xfilter','data-reset'];
+    const attrs=['data-search','data-sort','data-expand','data-view','data-chart-type','data-chart-measure','data-filter','data-xfilter','data-mobile-sort','data-reset'];
     const attr=attrs.find(x=>a.hasAttribute(x));if(!attr)return null;
     return {attr,value:a.getAttribute(attr),table:a.getAttribute('data-table'),start:a.selectionStart,end:a.selectionEnd};
   }
@@ -825,7 +840,9 @@
     const key=r.kind+':'+r.key;
     if(lastHeader!==key){$('fvRefreshStatus').textContent='';$('fvRefreshStatus').className='fv-refresh-status';lastHeader=key;}
     const focus=captureFocus();
+    const scrolls=new Map([...$('fvPage').querySelectorAll('.fv-table-wrap')].map(el=>[el.closest('.fv-table-panel')?.id,el.scrollLeft]));
     $('fvPage').innerHTML=page.body;
+    for(const el of $('fvPage').querySelectorAll('.fv-table-wrap')){const id=el.closest('.fv-table-panel')?.id;if(scrolls.has(id))el.scrollLeft=scrolls.get(id);}
     drawCharts();
     restoreFocus(focus);
   }
@@ -935,6 +952,8 @@
     if(s){tableState(pageKey(),s.dataset.search).q=s.value;rerender();}
   }
   function onChange(e){
+    const sort=e.target.closest('[data-mobile-sort]');
+    if(sort){const [key,dir]=sort.value.split(':');if(key&&[1,-1].includes(Number(dir))){tableState(pageKey(),sort.dataset.mobileSort).sort={key,dir:Number(dir)};rerender();}return;}
     const m=e.target.closest('[data-chart-measure]');
     if(m){const st=chartState(pageKey(),m.dataset.chartMeasure);st.measure=m.value;st.type='';rerender();return;}
     const xf=e.target.closest('[data-xfilter]');
@@ -956,6 +975,7 @@
     U.bindTips(document.body);
     const page=$('fvPage');
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);
+    window.setInterval(()=>U.refreshAges(page),1000);
     $('fvRefresh').addEventListener('click',onRefresh);
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('fvShell').classList.contains('is-nav-open')){$('fvShell').classList.remove('is-nav-open');$('fvMenu').setAttribute('aria-expanded','false');$('fvMenu').focus();}}});
     // The menu button opens the dropdown under the header and closes it again.
@@ -981,6 +1001,6 @@
     onHash();
   }
   window.FanvueApp=Object.freeze({hooks,rerender,go,parseHash,RECORDS,LEGACY,PAGES,data:D,state:pageState,tableState,
-    placementColumns,metric,outcomeItems,reporting:Object.freeze({xKpis,periodTotals,accountRows,markAccountValue,discordStats,pages:RENDER})});
+    placementColumns,publicationAge,metric,outcomeItems,reporting:Object.freeze({xKpis,periodTotals,accountRows,markAccountValue,discordStats,pages:RENDER})});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
