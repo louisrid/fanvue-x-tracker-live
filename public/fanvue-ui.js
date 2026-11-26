@@ -132,10 +132,10 @@
     '</div>';
   }
   /* Only figures that exist are shown; slots without data are left out. */
-  function strip(items){
+  function strip(items,{cls=''}={}){
     const shown=items.filter(it=>!unavailableState(it.metric));
     if(!shown.length)return '';
-    return '<section class="fv-panel fv-strip" style="--n:'+shown.length+'" data-n="'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
+    return '<section class="fv-panel fv-strip'+(cls?' '+esc(cls):'')+'" style="--n:'+shown.length+'" data-n="'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
   }
 
   /* ---------- panel heads ---------- */
@@ -187,10 +187,10 @@
     const nm=niceMax(Math.max(Math.abs(lo),Math.abs(hi)));
     hi=hi>0?nm.max:0;lo=lo<0?-nm.max:0;if(hi===lo)hi=1;
     const n=pts.length,bar=type==='bar'||cat;
-    const L=W<480?40:52,R=W<480?12:18,T=12,iw=W-L-R;
+    const L=W<480?42:56,R=W<480?14:22,T=20,iw=W-L-R;
     // Category names that do not fit their slot wrap onto two lines.
     const wrap=cat&&pts.some(p=>String(p.label||'').length*7.4>iw/n-8);
-    const B=wrap?42:26,ih=H-T-B;
+    const B=wrap?46:32,ih=H-T-B;
     const twoLines=t=>{const w=String(t).split(' ');if(w.length<2)return [String(t)];let best=1,score=1e9;
       for(let k=1;k<w.length;k++){const d=Math.max(w.slice(0,k).join(' ').length,w.slice(k).join(' ').length);if(d<score){score=d;best=k;}}
       return [w.slice(0,best).join(' '),w.slice(best).join(' ')];};
@@ -200,7 +200,8 @@
     const steps=Math.round((hi-lo)/nm.step);
     for(let i=0;i<=steps;i++){const v=lo+i*nm.step,y=Y(v);s+='<line class="fv-grid'+(v===0?' is-zero':'')+'" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="fv-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+esc(tickText(v,m.format))+'</text>';}
     const every=Math.max(1,Math.ceil(n/(W<480?4:W<800?6:10)));
-    pts.forEach((p,i)=>{if(i%every!==0&&i!==n-1)return;
+    // Every few labels, always the last; a label too close to the last one is skipped so they never overlap.
+    pts.forEach((p,i)=>{if(i!==n-1&&(i%every!==0||n-1-i<every))return;
       const lines=wrap?twoLines(p.label):[p.label];
       s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
@@ -288,7 +289,8 @@
       const detailId='fvd-'+cfg.id+'-'+key.replace(/[^A-Za-z0-9_-]/g,'_');
       const cells=cols.map(c=>{
         const left=['name','text','status','link'].includes(c.type)||c.align==='left';
-        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'">'+cellValue(c,r)+'</td>';
+        // data-label lets a row read as a labelled card on phones.
+        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
       });
       const tr='<tr class="fv-row'+(open?' is-open':'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
@@ -301,7 +303,7 @@
     // browser sizes columns to their content, which keeps headers on one line.
     const aligned=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
     const colgroup=aligned?'<colgroup>'+cfg.widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>':'';
-    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(aligned?' is-aligned':'')+'"'+(cfg.minWidth?' style="min-width:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
+    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table'+(aligned?' is-aligned':'')+'"'+(cfg.minWidth?' style="--min-w:'+cfg.minWidth+'px"':' style="--cols:'+cols.length+'"')+'>'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
     const count=rows.length?'<div class="fv-count">'+C.full(rows.length)+' '+(cfg.countLabel?cfg.countLabel(rows.length):rows.length===1?'record':'records')+(cfg.footnote?' · '+cfg.footnote:'')+'</div>':'';
     return '<section class="fv-panel fv-table-panel" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+table+count+'</section>';
   }

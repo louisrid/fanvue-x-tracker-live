@@ -233,21 +233,80 @@
         {key:'cps',label:'CPS',format:'money',get:r=>r.cps}
       ],
       expand:r=>homeDetail(r)},tableState('home','home-results'));
-    const dd=D.discord(),members=dd.members,clicks=dd.clicks;
-    const net=netGrowth(members);
-    const discord=U.supportPanel('Community Performance','discord',U.inlineMetrics([
-      ['Members',members?.latest?U.value(M.value(members.latest.memberCount))+(members.source==='DISCORD_INVITE_APPROXIMATE'?' '+U.reasonButton('Approximate','Discord bot unavailable; approximate invite count.','fv-chip is-warn'):''):U.value(dd.error&&!members?M.na('Discord member count is temporarily unavailable.'):M.loading())],
-      ['Member Growth',U.value(net,'signed')],
-      ['Course Clicks',clicks?U.value(M.value(clicks.total)):U.value(dd.error?M.na('Course click counter is temporarily unavailable.'):M.loading())]
-    ]),'<a class="fv-control" href="#discord">View Discord'+U.icon('right',14)+'</a>');
+    const discord=discordPeriods();
     return {title:'Home',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),
-      body:overviewNotice()+section('Overall Performance')+strip+homeCharts(rows)+table+discord};
+      body:overviewNotice()+weekSection(S)+section('Overall Performance')+strip+table+discord};
   }
-  // Home: Spend / Views / Clicks by campaign (pink card), then Daily Views across every campaign's X posts.
-  // Home: Daily Views across every campaign's X posts.
-  function homeCharts(rows){
-    if(!rows.length)return '';
-    return viewsChart('home-chart','home',xHistory([...gtaRecords(),...xaRecords()]));
+  /* ---------- Home: This Week (owner, 26 Nov) ---------- */
+  // UK week, Monday to today.
+  const weekRange=ws=>{const we=C.addDays(ws,6);return C.dayShort(ws).split(' ')[0]+(ws.slice(5,7)===we.slice(5,7)?'':' '+C.dayShort(ws).split(' ')[1])+'–'+C.dayShort(we);};
+  const postIdsOfRecord=x=>(x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String);
+  // Spend: paid placements whose X post went live this week. Views: views gained since Monday on tracked X posts.
+  // Live Posts: distinct paid X posts published this week. Posts without a dated X link (RTs, Instagram) are not included.
+  function weekTotals(){
+    const ws=C.weekStart(C.londonDay(Date.now()));
+    const all=[...xaRecords(),...gtaRecords(),...ofRecords()];
+    const seen=new Set(),posts=new Set();let spend=0,bookings=0;
+    for(const x of all){
+      if(x.live!==true||!x.paid)continue;
+      const fresh=postIdsOfRecord(x).filter(id=>{const t=postBorn(id);return t&&C.londonDay(t)>=ws;});
+      if(!fresh.length)continue;
+      fresh.forEach(id=>posts.add(id));
+      const k=rowKeyOf(x.raw)+'|'+x.parent;if(seen.has(k)||x.price===null)continue;seen.add(k);spend+=x.price;bookings++;
+    }
+    const gained=C.dailySeries(xHistory(all),{born:postBorn}).gained.filter(p=>p.week>=ws&&p.value!==null);
+    return {ws,
+      spend:M.value(spend,{reason:'Paid cost of '+bookings+' '+(bookings===1?'placement':'placements')+' whose X post went live since Monday '+C.dayShort(ws)+'.'}),
+      views:gained.length?M.value(gained.reduce((n,p)=>n+p.value,0),{reason:'Views gained since Monday '+C.dayShort(ws)+' on tracked X posts (GTA VI and X Articles). New posts count from publication.'}):M.na('No dated view readings this week yet.'),
+      posts:M.value(posts.size,{reason:'Distinct paid X posts published since Monday '+C.dayShort(ws)+', across X Articles, GTA VI and OnlyFans Terms.'})};
+  }
+  function weekSection(S){
+    const labels=[['Spend','wallet'],['Views','eye'],['Live Posts','check']];
+    if(!S)return section('This Week')+loadingStrip(labels);
+    const w=weekTotals();
+    return '<h2 class="fv-section-title">This Week <span class="fv-section-sub">'+esc(weekRange(w.ws))+'</span></h2>'+
+      U.strip([metric('Spend','wallet',w.spend,'moneyShort'),metric('Views','eye',w.views,'compact'),metric('Live Posts','check',w.posts)],{cls:'is-week'});
+  }
+
+  /* ---------- Home: Discord performance by period (This Week, Last Week, All Time) ---------- */
+  function discordPeriods(){
+    const dd=D.discord(),members=dd.members,clicks=dd.clicks;
+    const today=C.londonDay(Date.now()),ws=C.weekStart(today),lws=C.addDays(ws,-7);
+    const snaps=(members?.history||[]).filter(h=>/^\d{4}-\d{2}-\d{2}$/.test(String(h?.date||''))&&Number.isSafeInteger(h.memberCount)).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    const first=snaps[0],latest=members?.latest&&Number.isSafeInteger(members.latest.memberCount)?members.latest:snaps.at(-1);
+    const began=first?' Member tracking began '+C.dayLong(first.date)+'.':'';
+    const lastOnOrBefore=d=>snaps.filter(h=>h.date<=d).at(-1);
+    const waiting=dd.loading||(!members&&!dd.error);
+    const naM=r=>waiting?M.loading():M.na(r);
+    // Members at the end of a period, and the change from the previous period's last snapshot (or from the first snapshot, if tracking began inside the period).
+    const period=(from,to,isNow)=>{
+      const end=isNow?latest:lastOnOrBefore(to);
+      if(!end)return {members:naM('No member snapshot in this period.'+began),growth:naM('No member snapshot in this period.'+began)};
+      const before=lastOnOrBefore(C.addDays(from,-1)),base=before||snaps.find(h=>h.date>=from&&h.date<=to);
+      const growth=!base||base===end||(base.date===end.date&&!isNow)?M.na('Needs two member snapshots.'+began):
+        M.value(end.memberCount-base.memberCount,{reason:before?'Change since the last snapshot before '+C.dayShort(from)+'.':'Change since tracking began on '+C.dayLong(base.date)+'.'});
+      return {members:M.value(end.memberCount,{reason:isNow?'Current member count.':'Members at the last snapshot of the week ('+C.dayLong(end.date)+').'}),growth};
+    };
+    const days=clicks?.days&&typeof clicks.days==='object'?clicks.days:null;
+    const clicksIn=(from,to)=>{
+      if(!clicks)return dd.error?M.na('Course click counter is temporarily unavailable.'):M.loading();
+      if(!days)return M.na('Daily course clicks are not available yet.');
+      const n=Object.entries(days).filter(([d])=>d>=from&&d<=to).reduce((a,[,v])=>a+(Number(v)||0),0);
+      const covered=C.num(clicks.daysTotal),gap=covered!==null&&covered<clicks.total;
+      return gap?M.partial(n,'Course button clicks with a recorded time ('+C.full(covered)+' of '+C.full(clicks.total)+' clicks have one).'):M.value(n,{reason:'Course button clicks recorded in this period.'});
+    };
+    const allGrowth=first&&latest&&latest.date!==first.date?M.value(latest.memberCount-first.memberCount,{reason:'Change since tracking began on '+C.dayLong(first.date)+'.'}):naM('Needs two member snapshots.'+began);
+    const rows=[
+      {cls:'is-week',title:'This Week',sub:weekRange(ws),...period(ws,today,true),clicks:clicksIn(ws,today)},
+      {cls:'is-last',title:'Last Week',sub:weekRange(lws),...period(lws,C.addDays(ws,-1),false),clicks:clicksIn(lws,C.addDays(ws,-1))},
+      {cls:'is-all',title:'All Time',sub:first?'Since '+C.dayShort(first.date):'',members:latest?M.value(latest.memberCount,{reason:'Current member count.'}):naM('Member count unavailable.'),growth:allGrowth,
+        clicks:clicks?M.value(clicks.total,{reason:'All course button clicks since the counter was enabled. Not signups or enrolments.'}):clicksIn('','')}
+    ];
+    // Unavailable figures show one dash; the reason is on hover and focus.
+    const cell=(label,m,format)=>'<div><span>'+esc(label)+'</span><b>'+(m&&['na','notConnected','notTracked'].includes(m.state)?dash(m.reason):U.value(m,format))+'</b></div>';
+    const body='<div class="fv-dperiods">'+rows.map(r=>'<div class="fv-dperiod '+r.cls+'"><div class="fv-dperiod-head"><h3>'+esc(r.title)+'</h3>'+(r.sub?'<span>'+esc(r.sub)+'</span>':'')+'</div>'+
+      '<div class="fv-dperiod-metrics">'+cell('Members',r.members)+cell('Growth',r.growth,'signed')+cell('Course Clicks',r.clicks)+'</div></div>').join('')+'</div>';
+    return U.supportPanel('Discord Performance','discord',body,'<a class="fv-control fv-discord-btn" href="#discord">'+U.icon('discord',15)+'View Discord</a>');
   }
   function homeDetail(r){
     const b=r.budget;

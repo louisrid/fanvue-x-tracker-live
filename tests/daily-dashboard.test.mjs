@@ -33,8 +33,9 @@ test('Dashboard starts with This week and original headline KPI cards; old Perfo
  assert(!html.includes('id="statsSection"'));
  assert(!html.includes('id="homeChart"'));
  // Owner direction (25 Nov): the Needs attention panel is removed from Home.
- // Owner direction (25 Nov): Home shows its graphs (pink bar card and Daily Views) between the strip and the table.
- assert(shell.includes("body:overviewNotice()+section('Overall Performance')+strip+homeCharts(rows)+table+discord};"));
+ // Owner direction (26 Nov): Home opens with This Week (orange), then Overall Performance, the campaign table
+ // and Discord by period; the Home graph is removed.
+ assert(shell.includes("body:overviewNotice()+weekSection(S)+section('Overall Performance')+strip+table+discord};"));
  assert(!shell.includes('Needs attention'));
  assert(js.includes("valid=['summary','articles','upcoming']"));
 });

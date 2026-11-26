@@ -26,6 +26,21 @@ export function summariseCourseBeaconKeys(keys,now=Date.now()){
   return {total,last7Days};
 }
 
+// Course clicks per UK day, from the time recorded on each stored beacon (for This Week / Last Week).
+const ukDay=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'});
+export function courseClicksByDay(keys,now=Date.now()){
+  const days={};
+  for(const key of keys){
+    const match=/^click-(\d{13})-[a-f0-9-]{36}$/i.exec(String(key||''));
+    if(!match)continue;
+    const timestamp=Number(match[1]);
+    if(!Number.isFinite(timestamp)||timestamp>now+60_000)continue;
+    const day=ukDay.format(new Date(timestamp));
+    days[day]=(days[day]||0)+1;
+  }
+  return days;
+}
+
 export function makeCourseClicksHandler({
   storage=()=>getStore({name:NAME,consistency:'strong'}),
   clock=()=>Date.now(),
@@ -54,6 +69,7 @@ export function makeCourseClicksHandler({
         for(const blob of page.blobs||[])keys.push(blob.key);
       }
       const stored=summariseCourseBeaconKeys(keys,clock());
+      const days=courseClicksByDay(keys,clock());
 
       let live=null;
       try{
@@ -83,6 +99,9 @@ export function makeCourseClicksHandler({
         total,
         last7Days,
         lastCourseClickAt:live?.lastCourseClickAt||null,
+        // Clicks per UK day from the site's own beacons; daysTotal says how many of the total they cover.
+        days,
+        daysTotal:stored.total,
         checkedAt:new Date(clock()).toISOString()
       },{headers:responseHeaders});
     }catch(error){
