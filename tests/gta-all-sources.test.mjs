@@ -209,7 +209,7 @@ test('a search or filter with no matches keeps the table and its controls',()=>{
   const html=U.tablePanel(cfg,{expanded:new Set()});
   assert.match(html,/data-filter="t"/);
   assert.match(html,/data-view="b"/);
-  assert.match(html,/No Results/);
+  assert.match(html,/No Listings/);
   assert.match(html,/data-reset="t"/);
   // No data at all: a plain table is left out, a table with view tabs keeps them.
   assert.equal(U.tablePanel({...cfg,views:null,rows:[]},{expanded:new Set()}),'');
@@ -313,7 +313,7 @@ test('Accounts page: one row per platform + handle across campaigns, from the sh
   const shell=readFileSync('public/fanvue-app.js','utf8');
   // Owner (26 Nov): Discord sits under Community and Accounts is the last menu item.
   assert.match(shell,/\{key:'discord',title:'Discord',icon:'discord',group:'community'\},\n\s*\{key:'all-accounts',title:'Accounts',icon:'users',group:'more'\}/);
-  assert.match(shell,/const all=ov\?\[\.\.\.xaRecords\(\),\.\.\.gtaRecords\(\),\.\.\.igRecords\(\),\.\.\.ofRecords\(\),\.\.\.guruRecords\(\)\]:\[\]/);
+  assert.match(shell,/const all=ov\?\[\.\.\.xaRecords\(\),\.\.\.gtaRecords\(\),\.\.\.ofRecords\(\),\.\.\.guruRecords\(\)\]:\[\]/);
   for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC','Clicks/$'])assert.match(shell,new RegExp("label:'"+label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"'"));
   // Each campaign page builds its table from the same functions, so figures always agree.
   assert.match(shell,/const records=xaRecords\(\);/);assert.match(shell,/const records=gtaRecords\(\);/);

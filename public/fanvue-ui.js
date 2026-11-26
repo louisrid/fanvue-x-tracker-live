@@ -341,7 +341,7 @@
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
     const explicit=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
     const placement=String(cfg.cls||'').includes('is-placement-list');
-    const weights=placement?[112,206,78,100,100,102,96,60,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
+    const weights=placement&&cols.length===8&&cfg.expand?[112,206,78,100,100,102,96,60,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
     const totalWidth=weights.reduce((a,b)=>a+b,0);
     const widths=explicit?cfg.widths:weights.map(w=>(100*w/Math.max(1,totalWidth)).toFixed(3)+'%');
     const colgroup='<colgroup>'+widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>';

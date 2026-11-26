@@ -67,7 +67,7 @@ test('publisher directory exposes only identities and merges duplicate platform 
 test('OF Terms has one publisher results page; Accounts has history, filters and no graph',()=>{
   const a=app({campaigns:[campaign('of-terms',[])]});
   const of=a.pages['of-terms']({}).body,accounts=a.pages['all-accounts']({}).body;
-  assert.doesNotMatch(of,/fv-subnav/);assert.doesNotMatch(accounts,/acc-chart/);
+  assert.doesNotMatch(of,/fv-subnav/);assert.match(of,/fv-view-slot/);assert.doesNotMatch(accounts,/acc-chart/);
 });
 
 test('directory returns a safe dated snapshot even when storage and source are unavailable',async()=>{
