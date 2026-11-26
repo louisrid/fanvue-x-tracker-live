@@ -66,7 +66,8 @@
     let h=decodeURIComponent(String(raw||'').replace(/^#/,'')).trim();
     if(h in LEGACY)h=LEGACY[h];
     if(RECORDS[h])return {kind:'records',key:h,canonical:h};
-    const [page,view]=h.split('/');
+    const [page,requestedView]=h.split('/');
+    const view=page==='gta-vi'&&requestedView==='instagram'?'overview':requestedView;
     if(PAGES.some(p=>p.key===page))return {kind:'page',key:page,view:view||'',canonical:view?page+'/'+view:page};
     if(page==='campaign'&&view)return {kind:'added',key:view,canonical:'campaign/'+view};
     return {kind:'page',key:'home',view:'',canonical:'home'};
@@ -184,7 +185,7 @@
   function xTable(page,id,{title,icon='layers',records,f,expand,empty,groups=true,includeType=true}){
     const ts=tableState(page,id);if(!ts.sort)ts.sort={key:'clicks',dir:-1};
     return U.tablePanel({id,title,icon,age:publicationAge,hideEmpty:false,search:records.length>10,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
-      minWidth:760,limit:10,cls:'is-list',searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:records.length&&records.every(x=>x.platform==='Instagram')?[{key:'account',label:'Account',type:'name',html:x=>accountName(x.raw),sort:x=>x.account},{key:'type',label:'Format',type:'text',html:x=>esc(x.type),sort:x=>x.type},{key:'spend',label:'Spend',format:'money',get:x=>x.paid?M.value(x.price):M.na('Not paid.')},{key:'posted',label:'Live?',type:'text',html:x=>esc(x.live?'Yes':'No'),sort:x=>x.live?1:0}]:resultColumns(records,{includeType}),expand},ts);
+      minWidth:760,limit:10,cls:'is-list',searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:resultColumns(records,{includeType}),expand},ts);
   }
   const articleHeadline=r=>r.articleTitle||r.headline||(!/^ARTICLE\s*\d/i.test(r.articleLabel||'')?r.articleLabel:'')||'';
   function resultColumns(records,{article=false,includeType=true}={}){
@@ -309,7 +310,7 @@
   }
   function periodCampaign(key,period){
     const records=key==='gta-vi'?gtaRecords():key==='viral-qrts'?gtaRecords().filter(x=>x.campaign==='Mandy'):key==='x-articles'?xaRecords():key==='of-terms'?ofRecords():guruRecords();
-    const totals=periodTotals(period.from,period.to,records),codes=new Set(records.map(x=>String(x.raw.code||'')));
+    const totals=periodTotals(period.from,period.to,records,key==='gta-vi'?igSpendRecords():[]),codes=new Set(records.map(x=>String(x.raw.code||'')));
     const source=key==='x-articles'?D.dashboard():key==='of-terms'?D.of().report:null;
     const rows=source?.activity?.filter(r=>codes.has(String(r.code))&&r.date>=period.from&&r.date<=period.to&&C.num(r.clicks)!==null)||[];
     const clicks=rows.length?M.value(rows.reduce((n,r)=>n+C.num(r.clicks),0)):M.na('No dated campaign clicks available for this period.');
@@ -321,16 +322,17 @@
   const postIdsOfRecord=x=>(x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String);
   // Period spend follows payment dates; view gains follow dated readings. Live posts follow publication dates.
   // Costs without payment dates are unavailable for a period, but retained in all-time reporting.
-  function periodTotals(from,to,records){
-    const all=records||[...xaRecords(),...gtaRecords(),...igRecords(),...ofRecords(),...guruRecords()];
+  function periodTotals(from,to,records,financeOnly){
+    const all=records||[...xaRecords(),...gtaRecords(),...ofRecords(),...guruRecords()];
+    const spendOnly=financeOnly||(records?[]:igSpendRecords());
     const seen=new Set(),posts=new Set();let spend=0,dated=0,undated=0;
-    for(const x of all){
+    for(const x of [...all,...spendOnly]){
       if(!x.paid)continue;
       const k=rowKeyOf(x.raw);if(seen.has(k))continue;seen.add(k);
       const payment=C.londonDay(x.raw.paidAt);
       if(!payment||x.price===null)undated++;
       else{dated++;if(payment>=from&&payment<=to)spend+=x.price;}
-      if(x.live===true)for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
+      if(x.live===true&&x.platform==='X')for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:clickBreakdown(from,to),
@@ -463,7 +465,8 @@
       ...(mq?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'qrt',clicks:gtaClicks}))
     ];
   }
-  function igRecords(){
+  // Historical non-X costs stay in period finance totals only; never render these rows.
+  function igSpendRecords(){
     return (D.campaign('gta-instagram')?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'GTA VI',parent:'GTA VI',platform:'Instagram',type:r.format==='post'?'post':'story',ownLink:false,
       views:()=>M.na('Instagram views are not measured.'),clicks:()=>M.na('No tracked link for this placement.')}));
   }
@@ -571,14 +574,13 @@
   const gtaGroup=r=>r.campaign==='GTAM'?'Mandy':GTA_LUCIA.has(r.campaign)?'Lucia':'GTA VI';
   function gtaPage(st){
     ensure('overview');ensure('gta');
-    const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),ig=D.campaign('gta-instagram'),mq=D.campaign('gta-mandy');
+    const ov=D.overview(),gr=D.gta().report,s=ov?C.campaignSummary(ov,'gta-vi',{gtaReport:gr}):null,qr=D.campaign('gta-qrts'),og=D.campaign('gta-originals'),mq=D.campaign('gta-mandy');
     const records=gtaRecords();
-    const igs=igRecords();
     const group=g=>records.filter(x=>x.campaign===g);
     const tabs=[{key:'overview',label:'Overview'},{key:'lucia',label:'Lucia',n:group('Lucia').length},{key:'mandy',label:'Mandy',n:group('Mandy').length},
-      {key:'instagram',label:'Instagram',n:igs.length},{key:'other',label:'Other',n:group('GTA VI').length}].filter(t=>t.n!==0);
+      {key:'other',label:'Other',n:group('GTA VI').length}].filter(t=>t.n!==0);
     const tab=pickTab(st.view,tabs,{'all-formats':'overview','x-original-posts':'lucia','x-quote-posts':'lucia','mandy-qrts':'mandy'});
-    const scoped=tab==='instagram'?igs:tab==='lucia'?group('Lucia'):tab==='mandy'?group('Mandy'):tab==='other'?group('GTA VI'):records,id='gta-'+tab;
+    const scoped=tab==='lucia'?group('Lucia'):tab==='mandy'?group('Mandy'):tab==='other'?group('GTA VI'):records,id='gta-'+tab;
     const f=xState('gta-vi',id),shown=scoped.filter(xMatch(f));
     let strip;
     if(!s)strip=loadingStrip(KPI_LOADING);
@@ -587,12 +589,9 @@
         clicksChip:s.clicks&&C.hasValue(s.clicks)&&s.clicks.state!=='stale'&&s.clicks.allTime!==undefined?U.reasonButton(C.full(s.clicks.allTime)+' All-Time',s.clicks.reason,'fv-chip'):undefined};
 
       strip=kpiStrip(k);
-    }else if(tab==='instagram')strip=U.strip([metric('Spend','wallet',xKpis(shown).spend,'moneyShort'),metric('Posts','image',M.value(shown.filter(x=>x.live===true).length,{reason:'Instagram posts and stories marked up in the source sheet.'}))]);
-    else strip=kpiStrip(xKpis(shown));
+    }else strip=kpiStrip(xKpis(shown));
     // Compact, campaign-wide (All Time) budget and IG summary, on the Overview only.
-    const b=s?.budget,live=c=>c&&!c.unavailable;
-    const outstanding=s?(s.planned||0)+(C.num(s.committed)||0):0;
-    const igSpend=live(ig)?C.spendOf(ig):null,igPosts=live(ig)?(ig.rows||[]).filter(r=>r.posted===true).length:null;
+    const b=s?.budget;
     const budget=tab==='overview'&&b?U.supportPanel('Budget','wallet',U.inlineMetrics([
       ['Budget',U.value(b.budget,'money')],
       ['Paid',U.value(s.spend,'money')],
@@ -603,13 +602,13 @@
     ].filter(Boolean))):'';
     // Views chart for the posts in this tab (every post, including extra posts on a booking); Spend by group on the Overview.
     const ids=postIdsOf(shown);
-    const history=gr&&tab!=='instagram'?[...(gr.history||[]),...(gr.originals?.history||[]),...(gr.mandy?.history||[])].filter(h=>ids.has(String(h.id||''))):[];
-    const clickDays=tab==='instagram'?[]:shortIoDaily(gtaClickReport(gr),shown);
+    const history=gr?[...(gr.history||[]),...(gr.originals?.history||[]),...(gr.mandy?.history||[])].filter(h=>ids.has(String(h.id||''))):[];
+    const clickDays=shortIoDaily(gtaClickReport(gr),shown);
     const chart=viewsChart('gta-chart','gta-vi',history,{extra:clickDays.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:clickDays,period:'Day',unit:'Clicks'}]:[]});
     let body;
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
-    body=chart+filteredNote(f)+xTable('gta-vi',id,{title:'Listings',icon:tab==='instagram'?'image':'gamepad',records:scoped,f,groups:tab==='overview',empty:s?'No listings':waiting('Loading…'),expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Source Post'):'',extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):'']]});}})+(tab==='overview'?budget:'');
+    body=chart+filteredNote(f)+xTable('gta-vi',id,{title:'Listings',icon:'gamepad',records:scoped,f,groups:tab==='overview',empty:s?'No listings':waiting('Loading…'),expand:x=>{const o=quoted.get(x.raw.postUrl);return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,o.handle?'@'+o.handle:'Source Post'):'',extra:[['Original Views',o&&C.num(o.views)!==null?esc(C.full(o.views)):'']]});}})+(tab==='overview'?budget:'');
     // Shown only when a spreadsheet tab could not be read, so its rows are missing from the totals.
     const tabWarning=(qr?.missingTabs||[]).map(t=>'<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+U.reasonButton('Missing Data',t+' could not be read from the spreadsheet, so its rows are not counted.','fv-notice-reason')+'</span></div>').join('');
     const label=tab==='overview'?'Campaign Performance':tabs.find(t=>t.key===tab).label+' Performance';
@@ -732,22 +731,21 @@
   function accountsPage(st){
     ensure('overview');ensure('gta');ensure('directory');
     const ov=D.overview();
-    const all=ov?[...xaRecords(),...gtaRecords(),...igRecords(),...ofRecords(),...guruRecords()]:[];
+    const all=ov?[...xaRecords(),...gtaRecords(),...ofRecords(),...guruRecords()]:[];
     const ts=tableState('all-accounts','acc-table'),f=ts.xf||(ts.xf={camp:'',plat:'',type:''});
     if(!ts.sort)ts.sort={key:'clicks',dir:-1};  // biggest spenders first by default
-    const shown=all.filter(x=>(!f.camp||x.parent===f.camp)&&(!f.plat||x.platform===f.plat)&&(!f.type||x.type===f.type));
-    const sel=(key,label,opts)=>opts.length<2&&!f[key]?'':'<label class="fv-select fv-filter" data-tone="'+(key==='camp'?campaignTone(f[key]):key==='plat'&&f[key]==='Instagram'?'pink':key==='type'?'blue':'slate')+'"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+
+    const shown=all.filter(x=>x.platform==='X'&&(!f.camp||x.parent===f.camp)&&(!f.type||x.type===f.type));
+    const sel=(key,label,opts)=>opts.length<2&&!f[key]?'':'<label class="fv-select fv-filter" data-tone="'+(key==='camp'?campaignTone(f[key]):key==='type'?'blue':'slate')+'"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+
       [['',label+': All'],...opts.map(o=>[o,label+': '+o])].map(([v,l])=>'<option value="'+esc(v)+'"'+(f[key]===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'+U.icon('down',14)+'</label>';
     const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
-    const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('plat','Platform',present(x=>x.platform,['X','Instagram']))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT','Story']));
+    const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT']));
     const rows=markAccountValue(accountRows(shown));
-    if(!f.camp&&!f.type&&ts.q?.trim()){const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts){if(keys.has(a.key)||f.plat&&a.platform!==f.plat)continue;rows.push({key:a.key,name:a.handle,platform:a.platform,campaigns:[],posts:0,records:[],spend:M.na('No paid placement recorded.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});}}
+    if(!f.camp&&!f.type&&ts.q?.trim()){const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts){if(keys.has(a.key)||a.platform!=='X')continue;rows.push({key:a.key,name:a.handle,platform:a.platform,campaigns:[],posts:0,records:[],spend:M.na('No paid placement recorded.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});}}
     const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowClass:a=>a.bestValue?'is-best-value':'',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:940,
       searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Listings':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
       expand:a=>!a.records.length?'<p>No purchased placements recorded for this publisher.</p>':rtCosts(a.records)+U.detailGrid(a.records.map(x=>[x.campaign+' · '+x.type,(x.link?U.extLink(x.link,'Post'):'')+' · '+U.value(x.clicks)+' clicks'])),
       columns:[
-        {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user')+(a.bestValue?U.reasonButton('Best value','Top quarter by lowest matched CPC in this campaign/platform/type selection. Requires at least 20 measured clicks on paid, individually tracked placements, and four eligible publishers. This is traffic efficiency, not conversions.','fv-value-badge'):''),sort:a=>a.name.toLowerCase()},
-        {key:'platform',label:'Platform',type:'text',html:a=>accountTag(a.platform,a.platform==='Instagram'?'pink':'slate'),sort:a=>a.platform},
+        {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},'user')+(a.bestValue?U.reasonButton('Best value','Top quarter by lowest matched CPC in this campaign/platform/type selection. Requires at least 20 measured clicks on paid, individually tracked placements, and four eligible publishers. This is traffic efficiency, not conversions.','fv-value-badge'):''),sort:a=>a.name.toLowerCase()},
         {key:'campaigns',label:'Campaigns',type:'text',html:a=>'<span class="fv-account-tags">'+a.campaigns.map(name=>accountTag(name,campaignTone(name))).join('')+'</span>',sort:a=>a.campaigns.length},
         {key:'posts',label:'Posts',get:a=>M.value(a.posts)},
         {key:'clicks',label:'Clicks',get:a=>a.clicks},

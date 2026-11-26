@@ -354,10 +354,10 @@
       // Paid reposts carry the original post's views and no clicks, so they are not matched.
       Object.assign(out,efficiency([c]));
     }else if(key==='gta-vi'){
-      // Instagram is left out only when the feed predates it (no object at all).
-      // Instagram and Mandy QRTs are left out only when the feed predates them (no object at all).
-      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-instagram'],o['gta-mandy']].filter((c,i)=>c||i<2);
-      out.spend=addSpend(parts.map(c=>spendOf(c)),'X quote posts, X original posts and Instagram');
+      // The legacy non-X source contributes to financial totals, not traffic or publication metrics.
+      const parts=[o['gta-qrts'],o['gta-originals'],o['gta-mandy']].filter((c,i)=>c||i<2);
+      const financeParts=[...parts,...(o['gta-instagram']?[o['gta-instagram']]:[])];
+      out.spend=addSpend(financeParts.map(c=>spendOf(c)),'All recorded paid campaign costs');
       out.views=viewsOf([o['gta-qrts'],o['gta-originals'],o['gta-mandy']]);
       const pp=parts.map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
       const all=parts.map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
@@ -373,9 +373,9 @@
       }
       out.published=parts.every(unavailable)?null:parts.reduce((n,c)=>n+(num(c?.published)||0),0);
       out.paidCount=parts.reduce((n,c)=>n+(num(c?.paidCount)||0),0);
-      out.committed=parts.every(unavailable)?null:Math.round(parts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
+      out.committed=financeParts.every(unavailable)?null:Math.round(financeParts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
       // Source planned costs are reservations, never paid spend.
-      out.planned=Math.round(parts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
+      out.planned=Math.round(financeParts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
 
       out.budget=budgetOf(out.spend,out.committed+out.planned,o['gta-qrts']?.budget);
       Object.assign(out,efficiency(parts));
@@ -433,7 +433,7 @@
       const gaps=summaries.filter(s=>!hasValue(s.spend)||s.spend.state==='partial').map(s=>CAMPAIGNS.find(c=>c.key===s.key)?.name);
       spend=gaps.length?M.partial(known,'Known subtotal of recorded paid costs. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{chip:'Paid campaigns'});
     }
-    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-instagram','gta-mandy','of-terms','guru-rts'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
+    const placementObjects=['x-articles','gta-qrts','gta-originals','gta-mandy','of-terms','guru-rts'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
     const views=viewsOf(placementObjects);
     if(hasValue(views)){
       views.chip='Promoted post exposure';
