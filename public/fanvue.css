@@ -1144,3 +1144,55 @@ html{scrollbar-gutter:stable}
   .fv-main .fv-table tr.fv-row td[data-column="age"]::before{content:none}
   .fv-main .fv-table tr.fv-row td.is-sorted:not(.is-name){color:#FFE500}
 }
+
+/* Campaign layout contract: same top row, KPI grid, chart and listings geometry. */
+.fv-campaign-layout{display:flex;flex-direction:column;gap:18px;min-width:0}
+.fv-campaign-layout>.fv-panel,.fv-campaign-layout>.fv-subnav,.fv-campaign-layout>.fv-filter-note,.fv-campaign-layout>.fv-notice{margin:0!important}
+.fv-campaign-layout>.fv-subnav{height:42px;min-height:42px;align-items:center;justify-content:flex-start;flex-wrap:nowrap}
+.fv-campaign-layout>.fv-subnav button{height:40px;min-height:40px;padding:0 16px;flex:0 0 auto}
+.fv-campaign-layout>.fv-panel.fv-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:0}
+.fv-campaign-layout>.fv-panel.fv-strip .fv-metric:nth-child(n){height:124px;min-height:124px;max-height:124px;padding:18px;gap:12px;justify-content:space-between}
+.fv-campaign-layout>.fv-panel.fv-strip .fv-metric-label{min-height:22px;white-space:nowrap}
+.fv-campaign-layout>.fv-panel.fv-strip .fv-metric-value{min-height:48px}
+.fv-campaign-layout>.fv-chart-panel,.fv-campaign-layout>.fv-table-panel,.fv-campaign-layout>.fv-support{width:100%;padding:0;overflow:hidden;border:1px solid #41414D;border-radius:12px;background:#141419}
+.fv-campaign-layout>.fv-panel>.fv-panel-head{height:56px;min-height:56px;max-height:56px;padding:0 16px;flex-wrap:nowrap}
+.fv-campaign-layout>.fv-chart-panel .fv-chart{margin:12px 16px 16px;padding:8px 12px 4px;border-radius:8px}
+.fv-campaign-layout>.fv-chart-panel .fv-plot{height:210px}
+.fv-campaign-layout>.fv-table-panel .fv-table-tools{height:60px;min-height:60px;margin:0;padding:10px 16px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start}
+.fv-campaign-layout>.fv-table-panel .fv-table-tools .fv-search{width:220px;min-width:180px;max-width:220px;flex:0 0 auto}
+.fv-campaign-layout>.fv-table-panel .fv-table-tools .fv-select{flex:0 0 auto;min-width:130px}
+.fv-campaign-layout>.fv-table-panel .fv-table-tools .fv-select select{width:160px;max-width:160px}
+.fv-campaign-layout>.fv-table-panel .fv-table-wrap{width:100%;margin:0;border-radius:0;overflow-x:auto}
+.fv-campaign-layout .fv-table th{height:46px;min-height:46px}
+.fv-campaign-layout .fv-table .fv-row td{height:60px;max-height:60px;vertical-align:middle}
+.fv-campaign-layout .fv-table .fv-row td.is-name .fv-name{min-width:0;max-width:100%;overflow:hidden}
+.fv-campaign-layout .fv-table .fv-row td.is-name .fv-name>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fv-list-headline{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11px/1.4 var(--fv-font);color:#C6C3D2;margin-top:3px}
+.fv-main .fv-table th[aria-sort="ascending"],.fv-main .fv-table th[aria-sort="descending"]{background:#FFE500!important;color:#101010!important}
+.fv-main .fv-table th[aria-sort="ascending"] button,.fv-main .fv-table th[aria-sort="descending"] button{background:transparent;color:inherit}
+.fv-main .fv-table td.is-sorted{box-shadow:inset 0 -1px #6D6218;background-color:#292610;color:#FFE500}
+.fv-main .fv-table .fv-row td.is-sorted .fv-num{color:#FFE500}
+.fv-main .fv-table .fv-empty-row td{padding:24px 16px;text-align:center;white-space:normal}
+.fv-main .fv-table th button,.fv-main .fv-table .fv-row,.fv-main .fv-table td,.fv-main .fv-table-wrap{transition:none!important;animation:none!important}
+.fv-main .fv-table .fv-row td[data-column="age"]{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fv-main .fv-table .fv-row td.is-name .fv-name{max-width:100%;min-width:0}
+.fv-main .fv-table .fv-row td.is-name .fv-name>span:last-child{overflow:hidden;text-overflow:ellipsis}
+.fv-main .fv-table-panel .fv-count{margin:0;padding:12px 16px}
+@media(max-width:767px){
+  .fv-campaign-layout{gap:14px}
+  .fv-campaign-layout>.fv-panel.fv-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .fv-campaign-layout>.fv-panel.fv-strip .fv-metric:nth-child(n){height:106px;min-height:106px;max-height:106px;padding:12px}
+  .fv-campaign-layout>.fv-panel.fv-strip .fv-metric-value{min-height:36px}
+  .fv-campaign-layout>.fv-panel>.fv-panel-head{height:44px;min-height:44px;max-height:44px;padding:0 12px}
+  .fv-campaign-layout>.fv-chart-panel .fv-chart{margin:8px 10px 10px;padding:4px}
+  .fv-campaign-layout>.fv-chart-panel .fv-plot{height:118px}
+  .fv-campaign-layout>.fv-table-panel .fv-table-tools{height:auto;min-height:0;padding:8px 12px;flex-direction:row;align-items:center;overflow-x:auto}
+  .fv-campaign-layout>.fv-table-panel .fv-table-tools .fv-search{width:100%;max-width:100%;min-width:150px;flex:1}
+  .fv-campaign-layout>.fv-table-panel .fv-mobile-sort{margin:0 12px 8px}
+  .fv-campaign-layout>.fv-table-panel .fv-table-wrap{padding:0 10px;overflow:visible}
+  .fv-campaign-layout .fv-table .fv-row td{height:auto;max-height:none}
+  .fv-campaign-layout .fv-table .fv-row td[data-column="age"]{order:-2}
+  .fv-main .fv-table .fv-row td.is-sorted{box-shadow:none}
+  .fv-campaign-layout .fv-table .fv-empty-row{display:block}
+  .fv-campaign-layout .fv-table .fv-empty-row td{display:block}
+}

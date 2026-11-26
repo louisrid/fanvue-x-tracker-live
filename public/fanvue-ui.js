@@ -291,7 +291,7 @@
     const views=cfg.views&&cfg.views.length>1?'<div class="fv-segments" role="group" aria-label="Table view">'+cfg.views.map(v=>'<button type="button" data-view="'+esc(v.key)+'" data-table="'+esc(cfg.id)+'" aria-pressed="'+(v.key===cfg.view)+'">'+esc(v.label)+'</button>').join('')+'</div>':'';
     const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search</span><input type="search" placeholder="Search" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
-    const tools=views||search||filters?'<div class="fv-table-tools">'+views+filters+search+'</div>':'';
+    const tools=views||search||filters?'<div class="fv-table-tools">'+search+views+filters+'</div>':'';
     // Columns with no data for any record are hidden and listed once above the table.
     const hidden=[];
     const cols=(cfg.rows||[]).length&&cfg.hideEmpty!==false?cfg.columns.filter(c=>{
@@ -304,7 +304,7 @@
     if(cfg.dropEmptyRows)rows=rows.filter(r=>cols.filter(c=>c.get).some(c=>{const v=c.get(r);return !(v&&typeof v==='object'&&'state' in v&&unavailableState(v));}));
     // A table with no data at all is left out, unless its view tabs are needed to switch back.
     const all=rows;
-    if(!all.length&&!views)return '';
+    if(!all.length&&!views&&cfg.title!=='Listings')return '';
     // Search and filter only narrow what is shown; the panel and its controls always stay.
     if(q)rows=rows.filter(r=>(cfg.searchText?cfg.searchText(r):JSON.stringify(r)).toLowerCase().includes(q));
     if(cfg.filter)rows=rows.filter(cfg.filter);
@@ -340,18 +340,19 @@
       '<div class="fv-empty"><p>No Listings</p><button type="button" class="fv-link-button" data-reset="'+esc(cfg.id)+'">Reset Filters</button></div>':
       '<div class="fv-empty fv-nosource">'+icon('info',16)+'<p>'+(cfg.empty||'No records.')+'</p></div>';
     const explicit=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
-    const weights=cols.map(columnWidth).concat(cfg.expand?[44]:[]);
+    const placement=String(cfg.cls||'').includes('is-placement-list');
+    const weights=placement?[112,206,78,100,100,102,96,60,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
     const totalWidth=weights.reduce((a,b)=>a+b,0);
     const widths=explicit?cfg.widths:weights.map(w=>(100*w/Math.max(1,totalWidth)).toFixed(3)+'%');
     const colgroup='<colgroup>'+widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>';
-    const minWidth=Math.max(cfg.minWidth||0,Math.round(totalWidth*.9));
+    const minWidth=placement?898:Math.max(cfg.minWidth||0,Math.round(totalWidth*.9));
     const sortOptions=cols.filter(c=>c.type!=='link'&&!c.nosort).flatMap(c=>[1,-1].map(dir=>{
       const v=c.key+':'+dir,selected=st.sort?.key===c.key&&st.sort.dir===dir;
       const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'Descending':'Ascending');
       return '<option value="'+esc(v)+'"'+(selected?' selected':'')+'>'+esc(c.label+' · '+order)+'</option>';
     })).join('');
     const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('down',14)+'</label>':'';
-    const table=rows.length?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table is-aligned" style="--min-w:'+minWidth+'px;--cols:'+cols.length+'">'+colgroup+'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>':empty;
+    const table=(rows.length||cfg.title==='Listings')?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table is-aligned" style="--min-w:'+minWidth+'px;--cols:'+cols.length+'">'+colgroup+'<thead>'+head+'</thead><tbody>'+ (rows.length?body:'<tr class="fv-empty-row"><td colspan="'+(cols.length+(cfg.expand?1:0))+'">'+empty+'</td></tr>')+'</tbody></table></div>':empty;
     // Only a Show all button when the list is cut short; no record counts (owner, 26 Nov).
     const count=limited?'<div class="fv-count"><button type="button" class="fv-show-all" data-show-all="'+esc(cfg.id)+'">Show all '+C.full(total)+'</button></div>':'';
     return '<section class="fv-panel fv-table-panel'+(cfg.cls?' '+esc(cfg.cls):'')+'" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+mobileSort+table+count+'</section>';
