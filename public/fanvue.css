@@ -794,7 +794,9 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#0A0A0C}
 .fv-switch{background:#141417;border:1px solid #2A2A30;border-radius:10px}
 
 /* Tables inside black cards. */
-.fv-table th,.fv-table th:first-child,.fv-table th:last-child{background:var(--fv-card-2);color:#fff;border-bottom:1px solid #2A2A2E}
+/* Owner (26 Nov): the dense placement tables were stuck at the old 12px; too small next to everything else. */
+.fv-table,.fv-chart-table table{font-size:var(--fv-fs-m);font-family:var(--fv-display)}
+.fv-table th,.fv-table th:first-child,.fv-table th:last-child{background:var(--fv-card-2);color:#fff;border-bottom:1px solid #2A2A2E;font-size:var(--fv-fs-m)}
 .fv-table th .fv-sort{color:#fff}
 .fv-table td{color:#fff;border-bottom:1px solid #222226}
 /* Owner (26 Nov): the old light hover made white row text unreadable. Hover lightens the dark row instead. */
