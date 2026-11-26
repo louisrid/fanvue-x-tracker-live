@@ -92,7 +92,10 @@
   const section=title=>'<h2 class="fv-section-title">'+esc(title)+'</h2>';
   const payState=r=>r.planned===true?'Planned':r.paid===true?'Paid':C.num(r.cost)!==null?'Unpaid':'';
   const payStatus=r=>{const s=payState(r);return s==='Paid'?U.status('Paid','good'):s?U.status(s):'';};
-  const viewsOfRow=r=>{const v=C.num(r.views??r.xViews);if(v!==null)return M.value(v);
+  // A post X reports as not found (HTTP 404) was deleted or hidden by its publisher after going live.
+  const isDeleted=r=>r?.posted===true&&(/not_found/i.test(String(r.metricErrorCategory||''))||/HTTP 404/.test(String(r.metricError||'')));
+  const viewsOfRow=r=>{const v=C.num(r.views??r.xViews);if(v!==null)return M.value(v,isDeleted(r)?{reason:'Last verified views before the post was deleted on X.'}:{});
+    if(isDeleted(r))return M.na('Deleted on X before a reading was taken.');
     if(r.posted!==true)return M.na('Not live yet.');
     if(!C.postId(r.postUrl))return M.na('No X post link recorded.');
     return M.na(r.metricError||'No verified X reading yet.');};
@@ -112,14 +115,15 @@
   // A placement is a booking: it has a price, a payment, a live post, a planned stage or clicks. Contact-list rows are left out.
   const isBooking=r=>C.num(r.cost)!==null||r.paid===true||r.posted===true||!!r.stage||C.num(r.clicks)>0;
   function xRecord(r,{campaign,parent,platform='X',type,clicks,views,ownLink=true}){
-    const link=ownLink&&r.posted===true&&C.safeUrl(r.postUrl)&&C.postId(r.postUrl)?r.postUrl:'';
+    const deleted=isDeleted(r);
+    const link=ownLink&&!deleted&&r.posted===true&&C.safeUrl(r.postUrl)&&C.postId(r.postUrl)?r.postUrl:'';
     return {raw:r,campaign,parent:parent||campaign,platform,type:typeName(type),account:r.publisher||r.handle||'',price:C.num(r.cost),
-      live:r.posted===true?true:r.posted===false?false:null,link,paid:r.paid===true,planned:r.planned===true,
+      live:deleted?false:r.posted===true?true:r.posted===false?false:null,deleted,link,paid:r.paid===true,planned:r.planned===true,
       views:views?views(r):viewsOfRow(r),clicks:clicks?clicks(r):M.na('No tracked link for this placement.')};
   }
   const xState=(page,id)=>{const st=tableState(page,id);return st.xf||(st.xf={group:'',type:'',live:'',pay:''});};
   const xActive=f=>!!(f.group||f.type||f.live||f.pay);
-  const xMatch=f=>x=>(!f.group||x.campaign===f.group)&&(!f.type||x.type===f.type)&&(!f.live||(f.live==='Yes'?x.live===true:x.live!==true))&&
+  const xMatch=f=>x=>(!f.group||x.campaign===f.group)&&(!f.type||x.type===f.type)&&(!f.live||(f.live==='Yes'?x.live===true:f.live==='Deleted'?x.deleted:x.live!==true&&!x.deleted))&&
     (!f.pay||(f.pay==='Planned'?x.planned:f.pay==='Paid'?x.paid&&!x.planned:!x.paid));
   function xFilters(id,records,f,{groups=true}={}){
     const present=(key,order)=>order.filter(v=>records.some(x=>key(x)===v));
@@ -128,7 +132,7 @@
     const groupOpts=groups?[...new Set(records.map(x=>x.campaign))].filter(g=>GROUPS_VERIFIED.has(g)):[];
     return (groupOpts.length>=1&&new Set(records.map(x=>x.campaign)).size>1?sel('group','Group',groupOpts,1):'')+
       sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT']))+
-      sel('live','Live?',present(x=>x.live===true?'Yes':'No',['Yes','No']))+
+      sel('live','Live?',present(x=>x.live===true?'Yes':x.deleted?'Deleted':'No',['Yes','No','Deleted']))+
       sel('pay','Payment',present(x=>x.planned?'Planned':x.paid?'Paid':'Unpaid',['Paid','Unpaid','Planned']));
   }
   // Verified content groups only; unverified records stay under their parent campaign.
@@ -139,8 +143,8 @@
     {key:'type',label:'Type',type:'text',keep:true,html:x=>esc(x.type),sort:x=>x.type},
     {key:'account',label:'Account',type:'name',keep:true,html:x=>accountName(x.raw),sort:x=>x.account.toLowerCase()},
     {key:'price',label:'Price',format:'money',keep:true,get:x=>x.price===null?M.na('No price recorded.'):M.value(x.price)},
-    {key:'live',label:'Live?',type:'status',keep:true,html:x=>x.live===true?U.status('Yes','good'):x.live===false?U.status('No'):dash('Publication not recorded.'),sort:x=>x.live===true?1:0},
-    {key:'link',label:'Link',type:'link',keep:true,nosort:true,html:x=>x.link?U.extLink(x.link,'Open post by '+x.account,{iconOnly:true}):dash(x.type==='RT'?'No repost link is recorded.':x.live?'No post link recorded.':'Not live yet.')},
+    {key:'live',label:'Live?',type:'status',keep:true,html:x=>x.deleted?U.reasonButton('Deleted','Marked posted in the sheet, but X reports this post as not found: the publisher deleted or hid it.','fv-status is-bad'):x.live===true?U.status('Yes','good'):x.live===false?U.status('No'):dash('Publication not recorded.'),sort:x=>x.live===true?1:x.deleted?-1:0},
+    {key:'link',label:'Link',type:'link',keep:true,nosort:true,html:x=>x.link?U.extLink(x.link,'Open post by '+x.account,{iconOnly:true}):dash(x.deleted?'Deleted on X.':x.type==='RT'?'No repost link is recorded.':x.live?'No post link recorded.':'Not live yet.')},
     {key:'views',label:'Views',keep:true,get:x=>x.views},
     {key:'clicks',label:'Clicks',keep:true,get:x=>x.clicks}
   ];
@@ -200,7 +204,7 @@
   function livePosts(ov,ids){
     const seen=new Set();
     for(const id of ids)for(const r of ov?.campaigns?.find(c=>c.id===id)?.rows||[]){
-      if(r.paid!==true||r.posted!==true)continue;
+      if(r.paid!==true||r.posted!==true||isDeleted(r))continue;
       for(const u of r.postUrls?.length?r.postUrls:[r.postUrl]){const p=C.postId(u);if(p)seen.add(p);}
     }
     return seen.size;
