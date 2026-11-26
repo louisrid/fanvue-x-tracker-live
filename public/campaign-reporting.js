@@ -313,12 +313,12 @@
         if(!valid(data))throw Error('Incomplete Discord source');
         if(field==='discordMembers'&&state.discordMembers?.latest?.date&&
            data.latest.date<state.discordMembers.latest.date)throw Error('Older member snapshot');
-        if(field==='discordClicks'&&state.discordClicks?.source===data.source&&
+        if(field==='discordClicks'&&state.discordClicks&&state.discordClicks.source===data.source&&
            data.total<state.discordClicks.total)throw Error('Older click total');
         state[field]=data;
         window.XTrackerLastGood?.write(key,data,valid);
       }));
-      state.discordLastLoadAt=Date.now();state.discordError=results.every(x=>x.status!=='fulfilled');
+      state.discordLastLoadAt=Date.now();state.discordError=results.some(x=>x.status!=='fulfilled');
       if(state.tab==='discord')render();
       window.dispatchEvent(new Event('xtracker:discord'));
       return results.some(x=>x.status==='fulfilled');

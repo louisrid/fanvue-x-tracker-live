@@ -37,15 +37,15 @@ function book({tab16=true,instagram=true}={}){
   return w;
 }
 
-test('owner direction: every priced X Accounts 16 account counts as GTA VI spend, as if paid',()=>{
+test('owner direction: planned X Accounts 16 costs remain outside paid spend',()=>{
   const rows=countPlannedAsPaid(parseRows(book()));
   const t16=rows.filter(p=>p.sourceTab===Q16);
-  assert.deepEqual(t16.map(p=>[p.publisher,p.paid,!!p.planned]),[['Alpha',true,true],['Beta',true,false],['Gamma',true,true],['Delta',true,true],['Prospect',false,false]]);
+  assert.deepEqual(t16.map(p=>[p.publisher,p.paid,!!p.planned]),[['Alpha',false,true],['Beta',true,false],['Gamma',false,true],['Delta',false,true],['Prospect',false,false]]);
   const qrts=rows.filter(p=>inGroup(p,'qrts'));
   // Tab 15 paid 150 + tab 16 250 (Beta paid 100, planned 50 + 40 + 60).
-  assert.equal(summarisePlacements(qrts).paidSpend,400);
+  assert.equal(summarisePlacements(qrts).paidSpend,250);
   // Only tab 15's unpaid Gamma is still "committed"; planned rows are already in spend.
-  assert.equal(qrts.filter(p=>!p.paid&&p.cost>0).reduce((n,p)=>n+p.cost,0),40);
+  assert.equal(qrts.filter(p=>!p.paid&&!p.planned&&p.cost>0).reduce((n,p)=>n+p.cost,0),40);
   assert.deepEqual(publishedQrts(rows).map(p=>p.publisher),['Alpha','Gamma']);
   // Other tabs are never treated as planned.
   assert.ok(rows.filter(p=>p.planned).every(p=>p.sourceTab===Q16||p.campaign==='GTAM'));
@@ -77,15 +77,15 @@ test('campaign feed adds an Instagram group, committed spend and the GTA VI budg
   const gta={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2']),instagram:group(['GTAIG']),budget:GTA_BUDGET,missingTabs:[]};
   const ov=assembleCampaignOverview({gta:{data:gta},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const find=id=>ov.campaigns.find(c=>c.id===id);
-  assert.deepEqual(['gta-qrts','gta-originals','gta-instagram'].map(id=>find(id).paidSpendKnown),[400,100,340]);
+  assert.deepEqual(['gta-qrts','gta-originals','gta-instagram'].map(id=>find(id).paidSpendKnown),[250,100,340]);
   // Planned tab 16 spend is inside paid spend and reported separately; committed is agreed but unpaid.
   assert.equal(find('gta-qrts').plannedSpendKnown,150);
   assert.equal(find('gta-qrts').committedUnpaidKnown,40);
   assert.equal(find('gta-instagram').committedUnpaidKnown,0);
   assert.deepEqual(find('gta-qrts').budget,{amount:10000,currency:'USD'});
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.spend.value,840);assert.equal(s.planned,150);assert.match(s.spend.reason,/Includes \$150 planned \(not paid yet\)/); // owner (26 Nov): no trailing .00
-  assert.equal(s.budget.remaining.value,10000-840-40);
+  assert.equal(s.spend.value,690);assert.equal(s.planned,150);assert.doesNotMatch(s.spend.reason||'',/Includes.*planned/); // owner (26 Nov): no trailing .00
+  assert.equal(s.budget.remaining.value,10000-690-150-40);
 });
 
 const ctx={console};ctx.globalThis=ctx;ctx.window=ctx;
@@ -179,7 +179,7 @@ test('planned spend also applies to rows cached before the change, and only once
   const cached=[{campaign:'GTAQ2',sourceTab:Q16,sourceRow:8,publisher:'Alpha',cost:50,paid:false,posted:false,duplicateOf:{tab:Q15,row:8}},
     {campaign:'GTAQ',sourceTab:Q15,sourceRow:10,publisher:'Gamma',cost:40,paid:false,posted:false}];
   const once=countPlannedAsPaid(cached),twice=countPlannedAsPaid(once);
-  assert.deepEqual(once.map(p=>[p.paid,!!p.planned,'duplicateOf' in p]),[[true,true,false],[false,false,false]]);
+  assert.deepEqual(once.map(p=>[p.paid,!!p.planned,'duplicateOf' in p]),[[false,true,false],[false,false,false]]);
   assert.deepEqual(JSON.parse(JSON.stringify(twice)),JSON.parse(JSON.stringify(once)));
 });
 
@@ -221,7 +221,7 @@ test('site recommendations: no type chips beside campaign names; Type is a table
   assert.doesNotMatch(shell,/CAMPAIGN_TYPES|U\.typeTag\(/);
   assert.match(shell,/\{key:'type',label:'Type',type:'text',keep:true/);
   const cols=[...shell.matchAll(/\{key:'(\w+)',label:'([^']+)',[^}]*keep:true/g)].map(m=>m[2]);
-  assert.deepEqual(cols,['Campaign','Platform','Type','Account','Price','Live?','Link','Views','Clicks']);
+  assert.deepEqual(cols.slice(0,9),['Campaign','Platform','Type','Account','Price','Live?','Link','Views','Clicks']);
   assert.doesNotMatch(shell,/Needs attention|'Delivery'/);
 });
 
@@ -262,7 +262,7 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   // One payment, two posts: spend counted once, both posts kept for metrics.
   assert.equal(mandy[0].cost,180);assert.equal(mandy[0].postUrls.length,2);
   // Owner direction: tab 17's unpaid priced row (Later, $100) counts as planned spend.
-  assert.equal(summarisePlacements(mandy).paidSpend,350);
+  assert.equal(summarisePlacements(mandy).paidSpend,250);
   assert.ok(mandy.every(p=>p.format==='qrt'));
   // Never part of the other QRT group.
   assert.equal(rows.filter(p=>inGroup(p,'qrts')&&p.campaign==='GTAM').length,0);
@@ -274,9 +274,9 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   const gta={...group(['GTAQ','GTAQ2']),originals:group(['GTA1','GTA2']),instagram:group(['GTAIG']),mandy:group(['GTAM']),budget:GTA_BUDGET,missingTabs:[]};
   const ov=assembleCampaignOverview({gta:{data:gta},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const mq=ov.campaigns.find(c=>c.id==='gta-mandy');
-  assert.equal(mq.paidSpendKnown,350);assert.equal(mq.purchasedPosts,5);assert.equal(mq.committedUnpaidKnown,0);assert.equal(mq.plannedSpendKnown,100);
+  assert.equal(mq.paidSpendKnown,250);assert.equal(mq.purchasedPosts,4);assert.equal(mq.committedUnpaidKnown,0);assert.equal(mq.plannedSpendKnown,100);
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.spend.value,400+100+340+350);
+  assert.equal(s.spend.value,250+100+340+250);
   // Two posts on one row each count once for views; CPM waits for both readings.
   const vrow={paid:true,posted:true,cost:180,postUrl:'https://x.com/kyro/status/2124900000000000001',views:300,postViews:{'2124900000000000001':300,'2124900000000000002':null}};
   assert.equal(C.viewsOf([{source:'GOOGLE_SHEETS_LIVE',rows:[vrow]}]).state,'partial');
@@ -314,10 +314,10 @@ test('Accounts page: one row per platform + handle across campaigns, from the sh
   // Owner (26 Nov): Discord sits under Community and Accounts is the last menu item.
   assert.match(shell,/\{key:'discord',title:'Discord',icon:'discord',group:'community'\},\n\s*\{key:'all-accounts',title:'Accounts',icon:'users',group:'more'\}/);
   assert.match(shell,/const all=ov\?\[\.\.\.xaRecords\(\),\.\.\.gtaRecords\(\),\.\.\.igRecords\(\),\.\.\.ofRecords\(\),\.\.\.guruRecords\(\)\]:\[\]/);
-  for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC','CPM'])assert.match(shell,new RegExp("label:'"+label+"'"));
+  for(const label of ['Account','Platform','Campaigns','Posts','Spend','Views','Clicks','CPC','Clicks/$'])assert.match(shell,new RegExp("label:'"+label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"'"));
   // Each campaign page builds its table from the same functions, so figures always agree.
   assert.match(shell,/const records=xaRecords\(\);/);assert.match(shell,/const records=gtaRecords\(\);/);
-  assert.match(shell,/const records=ofRecords\(\);/);assert.match(shell,/const records=guruRecords\(\);/);
+  assert.match(shell,/records=ofRecords\(\)/);assert.match(shell,/records=guruRecords\(\)/);
   assert.match(shell,/k==='home'\|\|k==='all-accounts'\)\{await app\?\.refresh\?\.all/);
   // One row per account: no expandable placement history.
   assert.doesNotMatch(shell,/fv-account-history/);

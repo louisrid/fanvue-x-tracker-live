@@ -101,7 +101,7 @@
     if(m.value===null||!['value','partial','stale'].includes(m.state))
       return reasonButton(STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
     const text=esc(formatValue(m.value,format));
-    if(m.reason&&m.state!=='value')return '<span class="fv-num">'+text+'</span>';
+    if(m.reason&&m.state!=='value')return '<span class="fv-num" tabindex="0" data-reason="'+esc(m.reason)+'">'+text+'<small class="fv-coverage">'+(m.state==='partial'?'partial':'cached')+'</small></span>';
     return '<span class="fv-num">'+text+'</span>';
   }
   function chipFor(m,note){
@@ -128,14 +128,14 @@
     const precise=tip?' data-reason="'+esc(tip)+'"':'';
     return '<div class="fv-metric">'+
       '<div class="fv-metric-label">'+chipIcon(it.icon)+'<span>'+esc(it.label)+'</span></div>'+
-      '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+value(m,it.format||'count')+
+      '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+(unavailable&&m?.state!=='loading'?dashCell(m?.reason):value(m,it.format||'count'))+
         (precise?'<span class="fv-sr"> (exact '+esc(exact)+')</span>':'')+'</div>'+
 
     '</div>';
   }
   /* Only figures that exist are shown; slots without data are left out. */
   function strip(items,{cls=''}={}){
-    const shown=items.filter(it=>!unavailableState(it.metric));
+    const shown=items;
     if(!shown.length)return '';
     return '<section class="fv-panel fv-strip'+(cls?' '+esc(cls):'')+'" style="--n:'+shown.length+'" data-n="'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
   }
@@ -149,7 +149,7 @@
   const measureRegistry=new Map();
   const getMeasure=(id,key)=>measureRegistry.get(id+'|'+key)||null;
   function chartPanel(opts,state){
-    const measures=(opts.measures||[]).filter(m=>(m.series&&m.series.length)||(m.categories&&m.categories.length));
+    const measures=(opts.measures||[]).filter(m=>(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=2)||(m.categories&&m.categories.length));
     for(const m of measures)measureRegistry.set(opts.id+'|'+m.key,m);
     if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];

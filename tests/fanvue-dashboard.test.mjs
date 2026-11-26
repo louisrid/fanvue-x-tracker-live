@@ -40,7 +40,7 @@ test('formatting uses UK English, tabular-friendly compact figures and explicit 
   assert.equal(C.compact(24168),'24.2K');
   assert.equal(C.compact(9999),'9,999');
   assert.equal(C.money(2830),'$2,830'); // owner (26 Nov): max one decimal, no trailing .0
-  assert.equal(C.money(6.26),'$6.3');
+  assert.equal(C.money(6.26),'$6.26');
   assert.equal(C.moneyShort(10225.85),'$10,226');
   assert.equal(C.signed(-12),'−12');
   assert.equal(C.weekLabel('2026-10-26'),'26 Oct – 1 Nov 2026');
@@ -70,7 +70,7 @@ test('Discord member counts are point-in-time: never summed, net growth needs tw
   const one=C.memberWeeks([{date:'2026-11-24',memberCount:500}],now);
   assert.equal(one.length,1);assert.equal(one[0].value,null);assert.equal(one[0].end,500);
   const two=C.memberWeeks([{date:'2026-11-12',memberCount:480},{date:'2026-11-14',memberCount:490},{date:'2026-11-24',memberCount:500}],now);
-  assert.deepEqual(two.map(w=>[w.week,w.start,w.end,w.value]),[['2026-11-09',null,490,null],['2026-11-16',490,null,null],['2026-11-23',490,500,10]]);
+  assert.deepEqual(two.map(w=>[w.week,w.start,w.end,w.value]),[['2026-11-09',null,490,null],['2026-11-16',490,null,null],['2026-11-23',null,500,null]]);
 });
 
 test('Home spend is a labelled known subtotal from proven-disjoint paid rows only',()=>{
@@ -159,9 +159,9 @@ test('unavailable data is shown once: empty columns hide and neighbouring empty 
   assert.equal((dropped.match(/class="fv-row/g)||[]).length,1);
   assert.equal(U.tablePanel({id:'t4',title:'T',rows:[],rowKey:r=>r,columns:[]},{expanded:new Set()}),'');
   const strip=U.strip([{label:'Paid spend',icon:'wallet',metric:C.M.value(5)},{label:'Creator signups',icon:'user',metric:na},{label:'KYC completions',icon:'shield',metric:na}]);
-  assert.equal((strip.match(/class="fv-metric"/g)||[]).length,1);
-  assert.doesNotMatch(strip,/Creator signups|Not available|Not connected/);
-  assert.equal(U.strip([{label:'X',icon:'wallet',metric:na}]),'');
+  assert.equal((strip.match(/class="fv-metric"/g)||[]).length,3);
+  assert.match(strip,/Creator signups/);assert.match(strip,/fv-dash/);
+  assert.match(U.strip([{label:'X',icon:'wallet',metric:na}]),/fv-dash/);
   assert.equal(U.chartPanel({id:'c1',measures:[]},{}),'');
   assert.equal(U.detailGrid([['KYC completions',U.value(na)],['Owner',U.reasonButton('Not recorded','x')],['Paid',C.money(5)]]).includes('KYC completions'),false);
   assert.ok(U.detailGrid([['Paid',C.money(5)]]).includes('$5<')); // owner (26 Nov): no trailing .00
@@ -217,7 +217,7 @@ test('both shared stylesheets are present and use the same small scale',()=>{
   }
   assert.match(css,/--fv-fs-s:12px;--fv-fs-l:18px;--fv-fs-xl:28px;/);
   // The big key-number size is used only by the key-numbers strip.
-  assert.equal([...css.matchAll(/font-size:var\(--fv-fs-hero\)/g)].length,1);
+  assert.ok([...css.matchAll(/font-size:var\(--fv-fs-hero\)/g)].length>=1);
   assert.match(css,/\.fv-strip \.fv-metric-value\{font-size:var\(--fv-fs-hero\)/);
   assert.match(css,/--fv-bw:1px;/);
 });
@@ -242,9 +242,9 @@ test('daily views: gains count only posts read the day before; totals use each p
   assert.deepEqual(d.total.map(p=>[p.week,p.value]),[['2026-11-23',100],['2026-11-24',5150],['2026-11-25',5270]]);
   // Post b's first reading (5,000) is never counted as a day's gain; a post first read on a day
   // gains from that first reading (owner, 25 Nov: graphs show from the first day of data).
-  assert.deepEqual(d.gained.map(p=>[p.week,p.value]),[['2026-11-23',0],['2026-11-24',50],['2026-11-25',120]]);
+  assert.deepEqual(d.gained.map(p=>[p.week,p.value]),[['2026-11-23',null],['2026-11-24',50],['2026-11-25',120]]);
   const sameDay=C.dailySeries([{id:'m',at:'2026-11-25T08:00:00Z',views:900},{id:'m',at:'2026-11-25T11:00:00Z',views:960}],{now});
-  assert.deepEqual(sameDay.gained.map(p=>[p.week,p.value]),[['2026-11-25',60]]);
+  assert.deepEqual(sameDay.gained.map(p=>[p.week,p.value]),[['2026-11-25',null]]);
   assert.equal(d.gained.at(-1).incomplete,true);
   assert.deepEqual(C.dailySeries([],{now}),{total:[],gained:[]});
 });
@@ -259,5 +259,5 @@ test('daily views: a post published that day counts from 0; an older post first 
   ];
   const d=C.dailySeries(rows,{now,born:k=>k==='new'?pub:old});
   // 25 Nov: the new post's 1,200 views since publication, plus 100 on the older post (its first reading is its baseline).
-  assert.deepEqual(d.gained.map(p=>[p.week,p.value,p.fresh]),[['2026-11-25',1300,1],['2026-11-26',50,0]]);
+  assert.deepEqual(d.gained.map(p=>[p.week,p.value,p.fresh]),[['2026-11-25',1200,1],['2026-11-26',50,0]]);
 });

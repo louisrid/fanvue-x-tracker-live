@@ -179,12 +179,13 @@ async function readSourceRows(force=false){
   }
 }
 
-// Owner direction (25 Nov 2026): for now, every priced account in X Accounts 16 and 17 is GTA VI
-// planned spend, counted as if paid even before payment. Applied to live and cached rows alike.
-const PLANNED_AS_PAID=new Set(['GTAQ2','GTAM']);
+// Preserve source payment flags. Legacy caches may carry the old synthetic paid flag.
+// Keep the export name for existing consumers; planned rows are never paid spend.
+const PLANNED_CAMPAIGNS=new Set(['GTAQ2','GTAM']);
 export const countPlannedAsPaid=rows=>(rows||[]).map(p=>{
   const {duplicateOf,...r}=p;
-  return PLANNED_AS_PAID.has(r.campaign)&&r.paid!==true&&typeof r.cost==='number'&&r.cost>0?{...r,paid:true,planned:true}:r;
+  if(r.planned===true)return {...r,paid:false};
+  return PLANNED_CAMPAIGNS.has(r.campaign)&&r.paid!==true&&typeof r.cost==='number'&&r.cost>0?{...r,planned:true}:r;
 });
 async function sourceRows(force=false){
   const source=await readSourceRows(force);

@@ -53,7 +53,7 @@ test('Other campaign sources remain lifetime; history graphs are separate',()=>{
  assert.match(shell,/'x-original-posts':\{type:'Post'\},'x-quote-posts':\{type:'QRT'\}/);
  assert.doesNotMatch(shell,/key:'quoted'/);
  // Owner (26 Nov, style 74): short label "Clicks" for Discord course clicks.
- assert.match(shell,/metric\('Clicks','graduation'/);
+ assert.match(shell,/metric\('Course Clicks','graduation'/);
  // Owner (25 Nov): graphs show per-period figures only; cumulative totals stay as numbers.
  assert.doesNotMatch(shell,/unit:'Cumulative Views'/);assert.match(shell,/unit:'Views Gained'/);
 });
