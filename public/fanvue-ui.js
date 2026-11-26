@@ -149,7 +149,7 @@
   const measureRegistry=new Map();
   const getMeasure=(id,key)=>measureRegistry.get(id+'|'+key)||null;
   function chartPanel(opts,state){
-    const measures=(opts.measures||[]).filter(m=>(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=(m.period==='Day'?5:3))||(m.categories&&m.categories.length));
+    const measures=(opts.measures||[]).filter(m=>(m.series&&new Set(m.series.filter(p=>C.num(p.value)!==null).map(p=>p.week)).size>=1)||(m.categories&&m.categories.length));
     for(const m of measures)measureRegistry.set(opts.id+'|'+m.key,m);
     if(!measures.length)return '';
     const sel=measures.find(m=>m.key===state.measure)||measures[0];

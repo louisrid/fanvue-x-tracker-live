@@ -252,7 +252,15 @@
     const discord='<section class="fv-community-summary" aria-label="Discord"><a href="#discord">Discord</a>'+[
       ['Members',community.members,'count'],['Growth',community.growth,'signed'],['Course Clicks',community.clicks,'count']
     ].map(([label,m,format])=>'<div><span>'+esc(label)+'</span><strong>'+(C.hasValue(m)?U.value(m,format):dash(m?.reason))+'</strong></div>').join('')+'</section>';
-    return {title:'Dashboard',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+header+figures+discord+campaignComparison(S,period)};
+    return {title:'Dashboard',refreshLabel:'Refresh All',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:overviewNotice()+header+figures+discord+dashboardChart()+campaignComparison(S,period)};
+  }
+  function dashboardChart(){
+    const sources=[['Article links',D.dashboard()?.activity,D.dashboard()?.activityReady,xaRecords()],['OF links',D.of()?.report?.activity,D.of()?.report?.ready,ofRecords()]];
+    const values=new Map();
+    for(const [name,activity,ready,records] of sources){if(!ready)continue;const codes=new Set(records.map(x=>String(x.raw.code)));for(const p of C.dailyEventSeries(activity,{include:r=>codes.has(String(r.code))})){const d=values.get(p.week)||{value:0,sources:[]};d.value+=p.value;d.sources.push(name+': '+C.full(p.value));values.set(p.week,d);}}
+    for(const p of shortIoDaily(D.gta()?.report?.mandy,gtaRecords().filter(x=>x.campaign==='Mandy'))){const d=values.get(p.week)||{value:0,sources:[]};d.value+=p.value;d.sources.push('Viral QRT links: '+C.full(p.value));values.set(p.week,d);}
+    const series=[...values].sort(([a],[b])=>a.localeCompare(b)).map(([date,d])=>({week:date,label:C.dayShort(date),range:C.dayLong(date),value:d.value,incomplete:date===C.londonDay(Date.now()),extra:d.sources.join(' · ')+'. Dated recorded clicks only; other Short.io history is unavailable. Provider filtering differs.'}));
+    return U.chartPanel({id:'home-chart',measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',unit:'Clicks'}]},chartState('home','home-chart'));
   }
   function clickBreakdown(from,to){
     const s=summaries();if(!s)return M.loading();
@@ -581,7 +589,8 @@
     // Views chart for the posts in this tab (every post, including extra posts on a booking); Spend by group on the Overview.
     const ids=postIdsOf(shown);
     const history=gr&&tab!=='instagram'?[...(gr.history||[]),...(gr.originals?.history||[]),...(gr.mandy?.history||[])].filter(h=>ids.has(String(h.id||''))):[];
-    const chart=viewsChart('gta-chart','gta-vi',history);
+    const clickDays=tab==='mandy'?shortIoDaily(gr?.mandy,shown):[];
+    const chart=viewsChart('gta-chart','gta-vi',history,{extra:clickDays.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:clickDays,period:'Day',unit:'Clicks'}]:[]});
     let body;
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const quoted=new Map([...(qr?.quotedOriginals?.rows||[]),...(mq?.quotedOriginals?.rows||[])].flatMap(o=>(o.qrts||[]).map(q=>[q.postUrl,o])));
@@ -594,6 +603,15 @@
   }
 
   // Viral campaigns reuse their canonical placement objects; never add a second finance record.
+  function shortIoDaily(report,records){
+    const links=new Map(records.filter(x=>x.live).map(x=>[String(x.raw.code),x]));
+    const sums=new Map();
+    for(const r of report?.activity||[]){if(!links.has(String(r.code))||C.num(r.clicks)===null)continue;const d=sums.get(r.date)||{value:0,codes:new Set(),stale:false};if(d.codes.has(String(r.code)))continue;d.codes.add(String(r.code));d.value+=r.clicks;d.stale||=r.stale===true;sums.set(r.date,d);}
+    return [...sums].sort(([a],[b])=>a.localeCompare(b)).map(([date,d])=>{
+      const expected=[...links.values()].filter(x=>{const born=C.londonDay(postBorn(x.raw.postUrl));return born&&born<=date;}).length;
+      return {week:date,label:C.dayShort(date),range:C.dayLong(date),value:d.value,incomplete:date===C.londonDay(Date.now())||d.codes.size<expected||d.stale,extra:d.codes.size+' tracked links with a verified daily reading'+(d.codes.size<expected?' of '+expected:'')+'. Human clicks since each QRT was published.'};
+    }).slice(-14);
+  }
   function viralPage(st){
     ensure('overview');ensure('gta');
     const ov=D.overview(),gr=D.gta().report;
@@ -602,7 +620,7 @@
     const mapping=new Map(quoted.flatMap(o=>(o.qrts||[]).map(q=>[C.postId(q.postUrl),o])));
     const records=sources.flatMap(c=>(c.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:c.name,parent:c.id==='gta-mandy'?'GTA VI':c.name,type:'qrt',clicks:gtaClicks})));
     const f=xState('viral-qrts','viral-results'),shown=records.filter(xMatch(f));
-    const ids=postIdsOf(shown),chart=viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[]);
+    const ids=postIdsOf(shown),daily=shortIoDaily(gr?.mandy,shown),chart=viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[],{extra:daily.length?[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:daily,period:'Day',unit:'Clicks'}]:[]});
     const groupKey=x=>mapping.get(C.postId(x.raw.postUrl))?.originalPostId||'unmatched';
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const table=U.tablePanel({id:'viral-results',title:'Purchased QRTs',icon:'zap',records,rows:records,search:records.length>10,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,

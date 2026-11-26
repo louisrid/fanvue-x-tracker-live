@@ -23,8 +23,8 @@ No operational spreadsheet rows, provider keys, redirect URLs, historical data o
 
 ## Validation
 
-- Reporting CI: 136 tests passed, including sixteen new financial, date, privacy and alias regression cases.
-- Standard suite: 143/171 passed; all 28 failures also existed in the untouched production baseline, with no new failing test names. These legacy layout/version assertions are not represented as passing.
+- Reporting CI: 140 tests passed, including twenty new financial, date, privacy and alias regression cases.
+- Standard suite: 147/175 passed; all 28 failures also existed in the untouched production baseline, with no new failing test names. These legacy layout/version assertions are not represented as passing.
 - Chromium at 1440px and 390px: 30 route/subsection cases, table expansion and account search; no JavaScript errors or document overflow. Fixtures use captured read-only reporting responses plus isolated Discord cases. Charts and missing-history cases are exercised without opening tracking links.
 
 Live preview verification also exercised missing directory storage configuration. The directory uses the modern Netlify handler and returns the safe dated snapshot if either storage or source loading fails.
@@ -34,3 +34,5 @@ Final live sidebar checks caught overflowing chart hover targets on short series
 The subsequent visual review replaces the repeated Dashboard periods with a single selector, removes visible source/coverage labels, omits sparse graphs, and uses compact non-cumulative period bars. Published article headlines are verified against post IDs, then retained through the existing metrics refresh. See VISUAL_REVIEW_20261126.md.
 
 Production review also reconciled Discord’s live count with its same-day stored snapshot. Dashboard, Discord net growth and the current weekly row now use the same latest verified dated reading, preserving historical snapshots and keeping approximate invite counts separate.
+
+The contrast refinement adds daily Short.io human-click history for viral QRTs through exact verified custom intervals on the existing provider API. No credentials are exposed to the client and no redirect URLs are fetched. Short real histories now render instead of failing an arbitrary minimum-day threshold.

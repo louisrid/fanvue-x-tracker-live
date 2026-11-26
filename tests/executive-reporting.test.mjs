@@ -11,7 +11,7 @@ const C=globalThis.FanvueCore;
 const url=n=>'https://x.com/publisher/status/'+n;
 const campaign=(id,rows,extra={})=>({id,source:'CONNECTED',rows,paidCount:rows.filter(r=>r.paid&&!r.planned).length,paidSpendKnown:rows.filter(r=>r.paid&&!r.planned).reduce((n,r)=>n+(r.cost||0),0),unknownPaidCosts:0,...extra});
 function app(overview,extras={}){
-  const window={FanvueCore:C,FanvueDirectory:{state:{accounts:[]},load(){}},XTrackerCampaignReporting:{getData:()=>overview,status:()=>({}),ensure(){},discord:()=>extras.discord||{},refreshDiscord(){}},XTrackerApp:{dashboard:()=>extras.dashboard||null,gta:()=>({report:null}),of:()=>({report:extras.of}),loadGta(){},loadOf(){}}};
+  const window={FanvueCore:C,FanvueDirectory:{state:{accounts:[]},load(){}},XTrackerCampaignReporting:{getData:()=>overview,status:()=>({}),ensure(){},discord:()=>extras.discord||{},refreshDiscord(){}},XTrackerApp:{dashboard:()=>extras.dashboard||null,gta:()=>({report:extras.gta||null}),of:()=>({report:extras.of}),loadGta(){},loadOf(){}}};
   const context=vm.createContext({window,location:{hash:'#home'},document:{readyState:'loading',addEventListener(){}},URL,Intl,Date,Math,Map,Set,Number,String,Array,Object,JSON,console,setTimeout,clearTimeout});
   vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),context);
   vm.runInContext(readFileSync('public/fanvue-app.js','utf8'),context);
@@ -87,14 +87,15 @@ test('chart hover targets remain inside the plot and cannot cover sidebar naviga
   }
 });
 
-test('history is a period bar chart, never a running total, and sparse histories are omitted',()=>{
+test('history is a period bar chart, never a running total, and short real histories are retained',()=>{
   const context=vm.createContext({window:{FanvueCore:C},URL,Intl,Date,Math,Number,String,Array,Object,Map,Set,JSON});
   vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),context);const U=context.window.FanvueUI;
   const series=[5,3,9].map((value,i)=>({week:'2026-11-'+String(i*7+2).padStart(2,'0'),value,label:String(i)}));
   const html=U.chartPanel({id:'weekly',measures:[{key:'clicks',title:'Weekly Clicks',series}]},{});
   assert.match(html,/data-type="bar"/);assert.doesNotMatch(html,/fv-switch/);
   assert.deepEqual([...U.getMeasure('weekly','clicks').series].map(r=>r.value),[5,3,9]);
-  assert.equal(U.chartPanel({id:'short',measures:[{key:'gain',title:'Daily Views',period:'Day',series:series.slice(0,2)}]},{}),'');
+  assert.match(U.chartPanel({id:'short',measures:[{key:'gain',title:'Daily Views',period:'Day',series:series.slice(0,2)}]},{}),/data-type="bar"/);
+  assert.equal(U.chartPanel({id:'empty',measures:[{key:'gain',title:'Daily Views',period:'Day',series:[]}]},{}),'');
   const daily=Array.from({length:5},(_,i)=>({week:'2026-11-'+(20+i),value:i,label:String(i)}));
   assert.match(U.chartPanel({id:'daily',measures:[{key:'gain',title:'Daily Views',period:'Day',series:daily}]},{}),/data-type="bar"/);
 });
@@ -128,4 +129,10 @@ test('Discord uses the latest dated count consistently without rewriting snapsho
   const html=a.pages.discord({}).body;assert.match(html,/\+120/);assert.match(html,/>24,288</);assert.doesNotMatch(html,/>24,266</);
   assert.equal(C.memberReadings({...members,source:'DISCORD_INVITE_APPROXIMATE'}).at(-1).memberCount,24266);
   assert.equal(C.memberReadings({...members,latest:{date:'2026-11-22',memberCount:99999}}).at(-1).memberCount,24266);
+});
+
+test('Viral QRTs keeps Clicks first and renders short verified daily click history as pink-compatible bars',()=>{
+  const row={code:'M1',publisher:'Publisher',paid:true,posted:true,cost:50,clicks:74,postUrl:'https://x.com/publisher/status/2125636187897610404'};
+  const a=app({campaigns:[campaign('gta-mandy',[row],{postPublicationClicks:74})]},{gta:{mandy:{activity:[{code:'M1',date:'2026-11-25',clicks:10},{code:'M1',date:'2026-11-26',clicks:64}]}}});
+  const html=a.pages['viral-qrts']({}).body;assert.match(html,/Daily Clicks/);assert.match(html,/data-type="bar"/);assert.ok(html.indexOf('Clicks')<html.indexOf('Views'));assert.match(html,/>74</);
 });
