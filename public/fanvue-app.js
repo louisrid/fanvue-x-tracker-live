@@ -710,7 +710,7 @@
     return '<div class="fv-nav" role="group" aria-label="General">'+PAGES.filter(p=>p.group==='general').map(item).join('')+'</div>'+
       '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvPaidLabel">Campaigns</span>'+(hooks.navAddButton?hooks.navAddButton():'')+'</div>'+
       '<div class="fv-nav" role="group" aria-labelledby="fvPaidLabel">'+PAGES.filter(p=>p.group==='paid').map(item).join('')+(hooks.navExtra?hooks.navExtra(active):'')+'</div>'+
-      '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvCommunityLabel">Community</span></div>'+
+      '<div class="fv-nav-group"><span class="fv-nav-group-label" id="fvCommunityLabel">Extras</span></div>'+
       '<div class="fv-nav" role="group" aria-labelledby="fvCommunityLabel">'+PAGES.filter(p=>p.group==='community').map(item).join('')+'</div>'+
       '<div class="fv-nav fv-nav-more" role="group" aria-label="More">'+PAGES.filter(p=>p.group==='more').map(item).join('')+'</div>';
   }
@@ -795,7 +795,11 @@
   }
   function fitTiles(){
     const page=$('fvPage');
-    fitGroup([...page.querySelectorAll('.fv-tile-value')],[...page.querySelectorAll('.fv-tile-label')]);
+    // Each period card sizes its own tiles (owner, 26 Nov): a short "Last Week" figure shouldn't be
+    // shrunk to match a longer "All Time" one three cards away.
+    const cards=[...page.querySelectorAll('.fv-period-card')];
+    if(cards.length)cards.forEach(card=>fitGroup([...card.querySelectorAll('.fv-tile-value')],[...card.querySelectorAll('.fv-tile-label')]));
+    else fitGroup([...page.querySelectorAll('.fv-tile-value')],[...page.querySelectorAll('.fv-tile-label')]);
     for(const strip of page.querySelectorAll('.fv-panel.fv-strip'))fitGroup([...strip.querySelectorAll('.fv-metric-value')],[...strip.querySelectorAll('.fv-metric-label')]);
   }
   function drawCharts(){
