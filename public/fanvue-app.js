@@ -291,6 +291,9 @@
     const clicksIn=(from,to)=>{
       if(!clicks)return dd.error?M.na('Course click counter is temporarily unavailable.'):M.loading();
       if(!days)return M.na('Daily course clicks are not available yet.');
+      // Before the first day with a recorded click time the count is unknown, never zero.
+      const firstDay=Object.keys(days).sort()[0];
+      if(!firstDay||to<firstDay)return M.na('Course clicks per day are recorded from '+(firstDay?C.dayLong(firstDay):'the next click')+'.');
       const n=Object.entries(days).filter(([d])=>d>=from&&d<=to).reduce((a,[,v])=>a+(Number(v)||0),0);
       const covered=C.num(clicks.daysTotal),gap=covered!==null&&covered<clicks.total;
       return gap?M.partial(n,'Course button clicks with a recorded time ('+C.full(covered)+' of '+C.full(clicks.total)+' clicks have one).'):M.value(n,{reason:'Course button clicks recorded in this period.'});
