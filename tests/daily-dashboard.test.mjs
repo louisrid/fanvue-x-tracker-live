@@ -34,7 +34,7 @@ test('Dashboard starts with This week and original headline KPI cards; old Perfo
  assert(!html.includes('id="homeChart"'));
  // Owner direction (25 Nov): the Needs attention panel is removed from Home.
  // Owner direction (26 Nov): the Dashboard is just three sections — This Week, Last Week and All Time.
- assert(shell.includes("header+figures+discord+campaignComparison(S,period)"));
+ assert(shell.includes("header+figures+discord+dashboardChart()+campaignComparison(S,period)"));
  assert(!shell.includes('sections.map(periodSection)'));
  assert(!shell.includes('Needs attention'));
  assert(js.includes("valid=['summary','articles','upcoming']"));

@@ -218,7 +218,7 @@ const mergeMetrics=(rows,metrics)=>rows.map(p=>{
 async function getMetrics(storage=metricStore()){try{return await storage.get('latest',{type:'json'})||{metrics:{},history:[],lastSuccessfulAt:null};}catch{return {metrics:{},history:[],lastSuccessfulAt:null};}}
 
 export async function groupReport(source,metric,{force=false,refreshClicks=false,cacheOnly=true,clickOptions={}}={}){
-  const shortIo=await campaignLinkClicks(source.rows.filter(p=>!p.crossCampaignTracking),{force:refreshClicks||force,cacheOnly,...clickOptions});
+  const shortIo=await campaignLinkClicks(source.rows.filter(p=>!p.crossCampaignTracking),{force:refreshClicks||force,cacheOnly,...clickOptions,dailyHistory:true});
   const byLink=new Map(shortIo.links.map(p=>[trackingLink(p.trackingUrl)?.url,p]));
   const publishers=mergeMetrics(source.rows,metric.metrics).map(p=>{
     const reading=byLink.get(trackingLink(p.trackingUrl)?.url);
@@ -234,7 +234,7 @@ export async function groupReport(source,metric,{force=false,refreshClicks=false
     .filter(h=>ids.has(String(h.id||''))&&Date.parse(h.at||'')>=cutoff&&Number.isFinite(Number(h.views)));
   return {ok:true,id:'GTA',name:'GTA VI',scope:'published-qrts-v1',ready:true,checkedAt:new Date().toISOString(),
     source:source.source,sourceVerifiedAt:source.at,sourceStale:!!source.warning,cached:source.cached,warning:source.warning||'',
-    publishers,summary:summarisePlacements(source.rows),activity:[],history,clickTracking:true,shortIo,clickTrackingReason:'All-time human clicks are separate from verified post-publication clicks; each link is counted once.',
+    publishers,summary:summarisePlacements(source.rows),activity:shortIo.links.filter(p=>p.attributed&&!p.sharedTracking).flatMap(p=>(p.dailyClicks||[]).map(d=>({...d,code:p.code,postId:xPost(p.postUrl)?.id}))),history,clickTracking:true,shortIo,clickTrackingReason:'All-time human clicks are separate from verified post-publication clicks; each link is counted once.',
     metricLastSuccessfulAt:xStatus.lastSuccessfulAt,intervalHours:2,
     xStatus,metricErrors:xStatus.errors};
 }
