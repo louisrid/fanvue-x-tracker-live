@@ -90,7 +90,8 @@ try{
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('');await page.locator('#acc-table [data-search]').fill('');
   if(viewport.width===1440)await page.screenshot({path:dir+'/accounts.png'});
   await open('home','Dashboard');assert.equal(await page.locator('#home-chart .fv-hit').count(),7);
-  await page.locator('[data-view="last-week"]').click();await page.waitForFunction(()=>location.hash==='#home/last-week');
+  await page.locator('[data-view="last-week"]').click();
+  await page.waitForFunction(()=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks');return location.hash==='#home/last-week'&&m?.weekFrom===C.addDays(C.weekStart(C.londonDay(Date.now())),-7)&&document.querySelector('[data-view="last-week"]')?.getAttribute('aria-current')==='page';});
   const past=await page.evaluate(()=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks');return m.weekFrom===C.addDays(C.weekStart(C.londonDay(Date.now())),-7);});assert.ok(past,'last week chart must use last week');
   assert.deepEqual(errors,[],'browser errors at '+viewport.width);
   console.log('PASS '+viewport.width+'px: '+routes.length+' campaign/community views, Accounts, Dashboard, sorting, filters, seven-day charts');

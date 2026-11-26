@@ -753,7 +753,7 @@
     const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',filters,rows,limit:20,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
       expand:a=>!a.records.length?'<p class="fv-detail-note">No purchased placements recorded.</p>':U.detailGrid([['Campaigns',esc(a.campaigns.join(', '))],['Clicks per dollar',U.value(a.perDollar,'rate')]])+rtCosts(a.records)+U.detailGrid(a.records.map(x=>[x.campaign+' · '+x.type,(x.link?U.extLink(x.link,'Post'):'')+' · '+U.value(x.clicks)+' clicks'])),
       columns:[
-        {key:'name',label:'Account',type:'name',html:a=>{const handle=a.key.split('|')[1],url=/^[A-Za-z0-9_]{1,15}$/.test(handle)?'https://x.com/'+handle:'';return url?'<a class="fv-account-plain" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="'+esc(a.name)+'">'+esc(a.name)+'</a>':'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span>';},sort:a=>a.name.toLowerCase()},
+        {key:'name',label:'Account',type:'name',html:a=>{const raw=a.records.find(r=>r.raw?.profileUrl||r.link||r.raw?.handle||String(r.account||'').startsWith('@')),candidate=String(raw?.raw?.profileUrl||raw?.link||''),match=candidate.match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})(?:[/?#]|$)/i),explicit=String(raw?.raw?.handle||a.name||'').match(/^@([A-Za-z0-9_]{1,15})$/),handle=match?.[1]||explicit?.[1],url=handle?'https://x.com/'+handle:'';return url?'<a class="fv-account-plain" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="'+esc(a.name)+'">'+esc(a.name)+'</a>':'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span>';},sort:a=>a.name.toLowerCase()},
         {key:'clicks',label:'Clicks',get:a=>a.clicks},{key:'views',label:'Views',get:a=>a.views},{key:'spend',label:'Spend',format:'money',get:a=>a.spend},{key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},{key:'posts',label:'Posts',get:a=>a.records.length?M.value(a.posts):M.na('No recorded placements.')},{key:'campaigns',label:'Campaigns',get:a=>a.records.length?M.value(a.campaigns.length):M.na('No recorded campaigns.')}
       ]},ts);
     const note=directory.error||directory.stale?'<p class="fv-filter-note">Publisher directory is temporarily unavailable. Placement history remains available.</p>':'';
@@ -787,7 +787,7 @@
       '<div class="fv-nav" role="group" aria-labelledby="fvCommunityLabel">'+PAGES.filter(p=>p.group==='community').map(item).join('')+'</div>'+
       '<div class="fv-nav fv-nav-more" role="group" aria-label="More">'+PAGES.filter(p=>p.group==='more').map(item).join('')+'</div>';
   }
-  function setNav(active){$('fvNav').innerHTML=navHtml(active);}
+  function setNav(active){const el=$('fvNav'),markup=navHtml(active);if(el.dataset.renderedNav!==markup){el.innerHTML=markup;el.dataset.renderedNav=markup;}}
   // Built-in campaign icon and colour, with any saved override from the campaign manager.
   function look(key){const d=C.CAMPAIGNS.find(c=>c.key===key)||(key===VIRAL.key?VIRAL:null);const o=hooks.override?.(key);return {icon:o?.icon?glyphName(o.icon):(d.icon==='x'?'xmark':d.icon),color:o?.color||d.color};}
   const glyphName=n=>({'trending-up':'trend','user-plus':'userplus','graduation-cap':'graduation'}[n]||n);
