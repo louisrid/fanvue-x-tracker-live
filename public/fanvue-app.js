@@ -474,7 +474,10 @@
       body=chart+summaryTable('x-articles','xa-summary',{title:'Articles',icon:'doc',nameLabel:'Article',rows,empty:xa?'No Results':waiting('Loading…')});
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
-      body=chart+filteredNote(f)+xTable('x-articles',id,{title:tab==='rts'?'Paid RTs':'Original Articles',icon:tab==='rts'?'refresh':'doc',records:scoped,f,
+      // Owner (26 Nov): a repost never carries its own link/views/clicks (the chart above charts the original
+      // article it promotes) — say so once, so a whole column of dashes reads as expected, not broken.
+      const rtsNote=tab==='rts'?'<p class="fv-filter-note">'+U.icon('info',14)+'<span>Reposts don’t carry their own tracking link; views and clicks are measured on the original article they promote, charted above.</span></p>':'';
+      body=chart+rtsNote+filteredNote(f)+xTable('x-articles',id,{title:tab==='rts'?'Paid RTs':'Original Articles',icon:tab==='rts'?'refresh':'doc',records:scoped,f,
         empty:xa?'No Results':waiting('Loading…'),
         expand:x=>xDetail(x,eff,{source:x.type==='RT'?(U.extLink(x.raw.sourcePostUrl||'','Source Post')||''):(U.extLink(x.raw.articleUrl,'Article')||''),
           extra:[['Article',x.type==='RT'?'':esc(names.get(x.raw.campaignId)||x.raw.articleLabel||'')],
