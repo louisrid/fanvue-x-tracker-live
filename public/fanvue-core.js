@@ -39,6 +39,8 @@
   }
   // Strip money: whole dollars below $100K, compact above.
   const moneyShort=v=>{const n=num(v);if(n===null)return '';return Math.abs(n)>=1e5?'$'+compact(n):money(n,0);};
+  // A plain ratio (clicks per post, clicks per dollar): at most one decimal, no trailing .0, no currency sign.
+  const rate=v=>{const n=num(v);if(n===null)return '';return new Intl.NumberFormat('en-GB',{minimumFractionDigits:0,maximumFractionDigits:1}).format(n);};
   const signed=v=>{const n=num(v);if(n===null)return '';return (n>0?'+':n<0?'−':'')+full(Math.abs(n));};
 
   /* ---------- dates (Europe/London) ---------- */
@@ -429,7 +431,7 @@
   const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
-  root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,signed,londonDay,addDays,weekStart,dailySeries,weekLabel,dayShort,dayLong,stamp,
+  root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,rate,signed,londonDay,addDays,weekStart,dailySeries,weekLabel,dayShort,dayLong,stamp,
     eventSeries,snapshotSeries,memberWeeks,recentWeeks,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);

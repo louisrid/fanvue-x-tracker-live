@@ -668,10 +668,15 @@
       const paid=recs.filter(x=>x.paid&&x.price!==null),links=new Map();
       for(const x of recs){if(!C.hasValue(x.clicks))continue;const k=x.raw.trackingUrl||rowKeyOf(x.raw);links.set(k,Math.max(links.get(k)||0,x.clicks.value));}
       const e=C.efficiency([{source:'ACCOUNTS',rows:own}]);
-      return {...a,records:recs,campaigns:[...new Set(recs.map(x=>x.parent))],posts:posts.size+liveNoLink,
+      const totalPosts=posts.size+liveNoLink,totalClicks=links.size?[...links.values()].reduce((n,v)=>n+v,0):null;
+      const clicks=totalClicks!==null?M.value(totalClicks,{reason:'All tracked clicks on this account’s links, ever.'}):M.na('No tracked clicks.');
+      // Owner (26 Nov): clicks/post and clicks/$ alongside the existing (all-time) Clicks and CPC.
+      const perPost=totalClicks!==null&&totalPosts>0?M.value(totalClicks/totalPosts,{reason:'Total clicks ÷ live posts.'}):M.na('Needs at least one tracked click and one live post.');
+      const perDollar=C.hasValue(e.cpc)&&e.cpc.value>0?M.value(1/e.cpc.value,{reason:'The reciprocal of CPC: tracked clicks per dollar spent, from the same matched placements.'}):M.na('Needs a recorded cost and tracked clicks on a placement.');
+      return {...a,records:recs,campaigns:[...new Set(recs.map(x=>x.parent))],posts:totalPosts,
         spend:paid.length?M.value(paid.reduce((n,x)=>n+x.price,0)):M.na('No paid placements.'),
         views:C.viewsOf([{source:'ACCOUNTS',rows:own}]),
-        clicks:links.size?M.value([...links.values()].reduce((n,v)=>n+v,0)):M.na('No tracked clicks.'),cpc:e.cpc,cpm:e.cpm};
+        clicks,perPost,perDollar,cpc:e.cpc,cpm:e.cpm};
     });
   }
   function accountsPage(st){
@@ -686,7 +691,7 @@
     const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
     const filters=sel('camp','Campaign',present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)))+sel('plat','Platform',present(x=>x.platform,['X','Instagram']))+sel('type','Type',present(x=>x.type,['Post','Article','RT','QRT','Story']));
     const rows=accountRows(shown);
-    const table=U.tablePanel({id:'acc-table',title:'Accounts',icon:'users',search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:900,
+    const table=U.tablePanel({id:'acc-table',title:'Accounts',icon:'users',search:true,filters,rows,limit:10,cls:'is-list is-accounts',rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:1140,
       searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No Results':waiting('Loading…'),countLabel:n=>n===1?'account':'accounts',
       columns:[
         {key:'name',label:'Account',type:'name',html:a=>accountName({publisher:a.name},a.platform==='Instagram'?'image':'user'),sort:a=>a.name.toLowerCase()},
@@ -696,6 +701,9 @@
         {key:'spend',label:'Spend',format:'money',get:a=>a.spend},
         {key:'views',label:'Views',get:a=>a.views},
         {key:'clicks',label:'Clicks',get:a=>a.clicks},
+        // Owner (26 Nov): clicks/post and clicks/$ alongside the existing all-time Clicks and CPC.
+        {key:'perPost',label:'Clicks/Post',format:'rate',get:a=>a.perPost},
+        {key:'perDollar',label:'Clicks/$',format:'rate',get:a=>a.perDollar},
         {key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},
         {key:'cpm',label:'CPM',format:'money',get:a=>a.cpm}
       ]},ts);
