@@ -319,8 +319,8 @@
   /* ---------- Home: Discord performance by period (This Week, Last Week, All Time) ---------- */
   function discordStats(ws,today,lws,lwe){
     const dd=D.discord(),members=dd.members,clicks=dd.clicks;
-    const snaps=(members?.history||[]).filter(h=>/^\d{4}-\d{2}-\d{2}$/.test(String(h?.date||''))&&Number.isSafeInteger(h.memberCount)).slice().sort((a,b)=>a.date.localeCompare(b.date));
-    const first=snaps[0],latest=members?.latest&&Number.isSafeInteger(members.latest.memberCount)?members.latest:snaps.at(-1);
+    const snaps=C.memberReadings(members);
+    const first=snaps[0],latest=snaps.at(-1);
     const began=first?' Member tracking began '+C.dayLong(first.date)+'.':'';
     const lastOnOrBefore=d=>snaps.filter(h=>h.date<=d).at(-1);
     const waiting=dd.loading||(!members&&!dd.error);
@@ -375,7 +375,7 @@
     ].filter(Boolean))+(r.warnings.length?'<p class="fv-detail-note">'+r.warnings.map(esc).join(' ')+'</p>':'');
   }
   function netGrowth(members){
-    const h=(members?.history||[]).filter(x=>Number.isSafeInteger(x?.memberCount)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    const h=C.memberReadings(members);
     if(!members)return M.loading();
     if(h.length<2||h[0].date===h.at(-1).date)return M.na('Member Growth needs two dated daily snapshots. '+(h.length?'Snapshots began '+C.dayLong(h[0].date)+'.':'No snapshot recorded yet.'));
     return M.value(h.at(-1).memberCount-h[0].memberCount,{reason:'Change in members between the snapshots of '+C.dayLong(h[0].date)+' and '+C.dayLong(h.at(-1).date)+'. Not gross joins.'});
@@ -392,11 +392,10 @@
     const cc=clicks?M.value(clicks.total,{reason:'Clicks on the Discord course button since the counter was enabled'+(C.num(clicks.last7Days)!==null?'; '+C.full(clicks.last7Days)+' in the last 7 days':'')+'. Not signups or enrolments.'}):dd.loading||!dd.error?M.loading():M.na('Course click counter temporarily unavailable.');
     const strip=U.strip([metric('Members','users',mm,'count'),metric('Growth','trend',net,'signed'),metric('Course Clicks','graduation',cc)]);
     // The last four weeks that have snapshots. Earlier weeks are never back-filled.
-    const weeks=C.recentWeeks(members?.history,4);
+    const readings=C.memberReadings(members),weeks=C.recentWeeks(readings,4);
     const netSeries=weeks.filter(w=>w.value!==null);
     // Daily member growth: change between snapshots on consecutive UK days (last 14 days). Negative days are real.
-    const byDay=new Map((members?.history||[]).filter(h=>/^\d{4}-\d{2}-\d{2}$/.test(String(h?.date||''))&&Number.isSafeInteger(h.memberCount))
-      .sort((x,y)=>x.date.localeCompare(y.date)).map(h=>[h.date,h.memberCount]));
+    const byDay=new Map(readings.map(h=>[h.date,h.memberCount]));
     const today=C.londonDay(Date.now());
     const dailyNet=[...byDay].filter(([d])=>byDay.has(C.addDays(d,-1))).map(([d,v])=>({week:d,label:C.dayShort(d),range:C.dayLong(d),value:v-byDay.get(C.addDays(d,-1)),incomplete:d===today})).slice(-14);
     const courseSeries=C.eventSeries(Object.entries(clicks?.days||{}).map(([date,clicks])=>({date,clicks})));

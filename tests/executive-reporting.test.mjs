@@ -119,3 +119,13 @@ test('daily click bars report each day independently, including verified zero-ev
   const series=C.dailyEventSeries([{date:'2026-11-22',clicks:1},{date:'2026-11-23',clicks:10},{date:'2026-11-24',clicks:64},{date:'2026-11-26',clicks:3}],{now:Date.parse('2026-11-26T15:00:00Z')});
   assert.deepEqual(series.map(r=>r.value),[1,10,64,0,3]);assert.equal(series[0].week,'2026-11-22');assert.equal(series.at(-1).incomplete,true);
 });
+
+test('Discord uses the latest dated count consistently without rewriting snapshots or mixing approximate sources',()=>{
+  const members={history:[{date:'2026-11-23',memberCount:24168},{date:'2026-11-26',memberCount:24266}],latest:{date:'2026-11-26',memberCount:24288}};
+  const readings=C.memberReadings(members);assert.equal(readings.at(-1).memberCount,24288);assert.equal(members.history.at(-1).memberCount,24266);
+  const a=app({campaigns:[]},{discord:{members,clicks:{total:171,days:{'2026-11-26':10}}}});
+  assert.equal(a.discordStats('2026-11-23','2026-11-26','2026-11-16','2026-11-22').all.growth.value,120);
+  const html=a.pages.discord({}).body;assert.match(html,/\+120/);assert.match(html,/>24,288</);assert.doesNotMatch(html,/>24,266</);
+  assert.equal(C.memberReadings({...members,source:'DISCORD_INVITE_APPROXIMATE'}).at(-1).memberCount,24266);
+  assert.equal(C.memberReadings({...members,latest:{date:'2026-11-22',memberCount:99999}}).at(-1).memberCount,24266);
+});
