@@ -912,3 +912,34 @@ body.fv,.fv-shell,.fv-shell .fv-main{background:#0A0A0C}
   .fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){min-height:80px;padding:12px 11px}
   .pg-discord .fv-panel.fv-strip .fv-metric{padding:12px 10px}
 }
+
+/* Executive reporting: shared rhythm, clear traffic and community scopes. */
+.fv-summary-label{margin:16px 0 8px;font:600 11px/1.4 var(--fv-font);letter-spacing:.09em;text-transform:uppercase;color:#AEB2BC}
+.fv-period-card .fv-paid-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+.fv-click-breakdown{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+.fv-click-breakdown>span{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.fv-click-breakdown b{font-size:var(--fv-fs-l);color:#fff;line-height:1.25}
+.fv-click-breakdown small{font:500 10px/1.3 var(--fv-font);color:#B9BEC6}
+.fv-alias{display:block;color:#AEB2BC;font:500 11px/1.4 var(--fv-font);margin-top:4px}
+.fv-publisher-costs{display:grid;gap:0;max-width:700px}
+.fv-publisher-costs>div{display:grid;grid-template-columns:minmax(100px,1fr) 80px 90px;gap:14px;padding:12px 0;border-bottom:1px solid #303036}
+.fv-publisher-costs span{color:#B9BEC6}.fv-publisher-costs strong{text-align:right}
+.fv-panel.is-list .fv-table th,.fv-panel.is-list .fv-table td{font-family:var(--fv-font);font-size:var(--fv-fs-s);font-weight:var(--fv-w)}
+.fv-panel.is-list .fv-table .is-name{font-weight:var(--fv-w-strong)}
+.fv-period-card .fv-tile-value{font-size:var(--fv-fs-num)}
+.fv-strip .fv-metric-value{font-size:var(--fv-fs-hero)}
+.fv-group-head small{color:#B9BEC6}
+@media(max-width:850px){.fv-period-card .fv-paid-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.fv-period-card .fv-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.fv-period-card .fv-tiles:not(.fv-paid-tiles) .fv-tile:last-child{grid-column:1/-1}.fv-click-breakdown b{font-size:var(--fv-fs-l)}.fv-publisher-costs>div{grid-template-columns:minmax(90px,1fr) 55px 65px;gap:8px}.fv-panel.is-list .fv-table td{font-size:var(--fv-fs-s)}}
+
+.fv-period-card-head span{display:block;font:500 12px/1.4 var(--fv-font);color:#B9BEC6}
+.fv-summary-label{margin-top:12px}
+.fv-coverage{display:inline-block;margin-left:5px;font:500 10px/1.4 var(--fv-font);color:#B9BEC6;vertical-align:middle}
+.fv-updated{display:block;color:#AEB2BC;font:500 11px/1.4 var(--fv-font)}
+.fv-click-breakdown .fv-dash{font-size:var(--fv-fs-l);color:#B9BEC6;background:none}
+@media(max-width:767px){
+  .fv-panel.is-list .fv-table tr.fv-row td[data-label="Campaign"],.fv-panel.is-list .fv-table tr.fv-row td[data-label="Platform"],.fv-panel.is-list .fv-table tr.fv-row td[data-label="Type"],.fv-panel.is-accounts .fv-table tr.fv-row td[data-label="Campaigns"],.fv-panel.is-accounts .fv-table tr.fv-row td[data-label="Posts"],.fv-panel.is-accounts .fv-table tr.fv-row td[data-label="CPC"]{display:flex}
+  .fv-panel.is-list .fv-table tr.fv-row td.is-name{font-size:var(--fv-fs-m);margin-bottom:6px}
+  .fv-click-breakdown>span{gap:5px}.fv-click-breakdown small{white-space:nowrap}.fv-click-breakdown b{flex-shrink:0}
+}
+.fv-num .fv-coverage{display:block;margin:3px 0 0;font:500 10px/1.2 var(--fv-font);letter-spacing:0}

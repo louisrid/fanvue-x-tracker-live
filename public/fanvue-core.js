@@ -33,7 +33,7 @@
     return nf.format(Math.round(n));
   }
   // Owner (26 Nov): money shows at most one decimal place and drops a trailing .0 ($6.26 -> $6.3, $10,000.00 -> $10,000).
-  function money(v,dp=1){
+  function money(v,dp=2){
     const n=num(v);if(n===null)return '';
     return (n<0?'-':'')+'$'+new Intl.NumberFormat('en-GB',{minimumFractionDigits:0,maximumFractionDigits:dp}).format(Math.abs(n));
   }
@@ -132,10 +132,10 @@
     if(!readings.length)return {total:[],gained:[]};
     readings.sort((a,b)=>a.t-b.t);
     const today=londonDay(now),first=readings[0].day,start=addDays(today,-(days-1))>first?addDays(today,-(days-1)):first;
-    const latest=new Map(),firstRead=new Map();let i=0,prev=null;const total=[],gained=[];
+    const latest=new Map(),firstRead=new Map(),readDay=new Map();let i=0,prev=null;const total=[],gained=[];
     const dayPoint=(d,value,extra)=>({week:d,label:dayShort(d),range:dayLong(d),value,incomplete:d===today,...extra});
     for(let d=first;d<=today;d=addDays(d,1)){
-      while(i<readings.length&&readings[i].day<=d){const r=readings[i];if(!firstRead.has(r.key))firstRead.set(r.key,r);latest.set(r.key,r.v);i++;}
+      while(i<readings.length&&readings[i].day<=d){const r=readings[i];if(!firstRead.has(r.key))firstRead.set(r.key,r);latest.set(r.key,r.v);readDay.set(r.key,r.day);i++;}
       const snap=new Map(latest);
       if(d>=start){
         let sum=0;for(const v of snap.values())sum+=v;
@@ -143,11 +143,12 @@
         // Baseline: the post's last reading the day before, or its first reading if it was first read that day.
         let g=0,n=0,fresh=0;
         for(const [k,v] of snap){
+          if(readDay.get(k)!==d)continue;
           let base=null;
-          if(prev?.has(k))base=prev.get(k);
+          if(prev?.has(k)&&readings.some(r=>r.key===k&&r.day===addDays(d,-1)))base=prev.get(k);
           else if(firstRead.get(k).day===d){
             const b=num(born(k)),bd=b!==null?londonDay(b):'';
-            if(bd&&bd>=addDays(d,-1)){base=0;fresh++;}else base=firstRead.get(k).v;
+            if(bd===d){base=0;fresh++;}
           }
           if(base!==null){g+=Math.max(0,v-base);n++;}
         }
@@ -168,7 +169,7 @@
     let prev=null;
     return weeksFrom(rows[0].date,now).map(w=>{
       const e=byWeek.get(w);
-      const start=prev?prev.memberCount:null,end=e?e.last.memberCount:null;
+      const start=prev&&weekStart(prev.date)===addDays(w,-7)?prev.memberCount:null,end=e?e.last.memberCount:null;
       const out=point(w,start!==null&&end!==null?end-start:null,current,{start,end,snapshots:e?.count||0,lastDate:e?.last.date||''});
       if(e)prev=e.last;
       return out;
@@ -205,7 +206,9 @@
   // Spend for one overview object. Unknown costs make the figure partial.
   function spendOf(c,{noSpendReason='No paid costs are recorded in this source.'}={}){
     if(notConnected(c)||unavailable(c))return M.na(sourceReason(c,'Spend'));
-    const known=num(c.paidSpendKnown),unknown=num(c.unknownPaidCosts)||0,paid=num(c.paidCount)||0;
+    const synthetic=(c.rows||[]).filter(r=>r.planned===true&&r.paid===true);
+    const adjustment=synthetic.reduce((n,r)=>n+(num(r.cost)||0),0);
+    const raw=num(c.paidSpendKnown),known=raw===null?null:raw-adjustment,unknown=num(c.unknownPaidCosts)||0,paid=(num(c.paidCount)||0)-synthetic.length;
     // A connected source with no paid placements contributes nothing; it is not a gap.
     if(known===null&&paid===0)return {...M.na(noSpendReason),noSpend:true};
     if(known===null)return M.na(paid+' paid placements have no recorded cost.');
@@ -272,7 +275,7 @@
     for(const r of rows){if(r.posted!==true)continue;
       if(r.trackingUrl)links.set(r.trackingUrl,(links.get(r.trackingUrl)||0)+1);
       const id=postId(r.postUrl);if(id)posts.set(id,(posts.get(id)||0)+1);}
-    const paid=r=>r.paid===true&&num(r.cost)!==null&&r.posted===true;
+    const paid=r=>r.paid===true&&r.planned!==true&&num(r.cost)!==null&&r.posted===true;
     const clickRow=r=>paid(r)&&!!r.trackingUrl&&links.get(r.trackingUrl)===1&&!r.sharedTracking&&r.clickTracked!==false&&num(r.clicks)!==null;
     // CPM only when every post on the payment has a reading, so views are never understated.
     const viewRow=r=>paid(r)&&!!postId(r.postUrl)&&num(r.views??r.xViews)!==null&&!(r.postViews&&Object.values(r.postViews).some(v=>num(v)===null));
@@ -306,7 +309,7 @@
   function budgetOf(spend,committed,budget){
     const amount=num(budget?.amount);
     if(amount===null)return null;
-    const left=hasValue(spend)?amount-spend.value-(num(committed)||0):null;
+    const left=hasValue(spend)&&spend.state!=='partial'?amount-spend.value-(num(committed)||0):null;
     return {budget:M.value(amount),spend,planned:null,committed:num(committed)===null?M.na('No committed placements recorded.'):M.value(num(committed)),
       remaining:left===null?M.na('Needs the full spend figure.'):spend.state==='partial'?M.partial(left,'Spend is a known subtotal.'):M.value(left)};
   }
@@ -339,7 +342,7 @@
       const all=parts.map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
       const gr=extras.gtaReport;
       const stale=!!(gr&&(gr.shortIo?.stale||gr.originals?.shortIo?.stale));
-      if(!pp.length&&!all.length)out.clicks=M.na(unavailable(o['gta-qrts'])?sourceReason(o['gta-qrts'],'Clicks'):'No Short.io reading yet.');
+      if(!pp.length)out.clicks=M.na(unavailable(o['gta-qrts'])?sourceReason(o['gta-qrts'],'Clicks'):'No Short.io reading yet.');
       else{
         const post=pp.reduce((a,b)=>a+b,0),allTime=all.reduce((a,b)=>a+b,0);
         const reason='Short.io human clicks. '+full(post)+' since each post was published; '+full(allTime)+' all-time on the same links. Shared links are not individually attributed.';
@@ -350,10 +353,10 @@
       out.published=parts.every(unavailable)?null:parts.reduce((n,c)=>n+(num(c?.published)||0),0);
       out.paidCount=parts.reduce((n,c)=>n+(num(c?.paidCount)||0),0);
       out.committed=parts.every(unavailable)?null:Math.round(parts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
-      // Planned placements (tab 16) are counted inside spend as if paid; shown separately for clarity.
+      // Source planned costs are reservations, never paid spend.
       out.planned=Math.round(parts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
-      if(out.planned>0&&hasValue(out.spend))out.spend.reason='Includes '+money(out.planned)+' planned (not paid yet), counted as if paid.';
-      out.budget=budgetOf(out.spend,out.committed,o['gta-qrts']?.budget);
+
+      out.budget=budgetOf(out.spend,out.committed+out.planned,o['gta-qrts']?.budget);
       Object.assign(out,efficiency(parts));
     }else if(key==='of-terms'){
       const c=o['of-terms'];

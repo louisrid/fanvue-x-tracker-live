@@ -15,9 +15,9 @@ const xPost=url=>String(url||'').match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.
 const goodUrl=url=>{try{const u=new URL(String(url||''));return u.protocol==='https:'?u.href:'';}catch{return ''}};
 const sum=(rows,key)=>{const found=rows.map(key).map(num).filter(v=>v!==null);return found.length?found.reduce((a,b)=>a+b,0):null};
 const uniqueSum=(rows,key)=>{const seen=new Set();return sum(rows.filter(p=>{const id=xPost(p.postUrl);if(!id||seen.has(id))return false;seen.add(id);return true;}),key)};
-const moneyRows=rows=>{const paid=rows.filter(r=>r.paid),known=paid.map(p=>num(p.cost)).filter(v=>v!==null);return {known:known.length?known.reduce((n,v)=>n+v,0):null,unknown:paid.length-known.length,paidCount:paid.length};};
+const moneyRows=rows=>{const paid=rows.filter(r=>r.paid===true&&r.planned!==true),known=paid.map(p=>num(p.cost)).filter(v=>v!==null);return {known:known.length?known.reduce((n,v)=>n+v,0):null,unknown:paid.length-known.length,paidCount:paid.length};};
 // Committed: agreed placements with a recorded price that are not marked paid yet.
-const committedRows=rows=>{const open=rows.filter(r=>!r.paid&&num(r.cost)>0);return {known:Math.round(open.reduce((n,r)=>n+num(r.cost),0)*100)/100,count:open.length};};
+const committedRows=rows=>{const open=rows.filter(r=>!r.paid&&r.planned!==true&&num(r.cost)>0);return {known:Math.round(open.reduce((n,r)=>n+num(r.cost),0)*100)/100,count:open.length};};
 const stamped=(o,...paths)=>paths.map(k=>o?.[k]).filter(Boolean)[0]||null;
 const diagnostic=(x)=>x instanceof Error?x.message:String(x||'Unknown source failure');
 const cellValue=c=>{let v=c?.value;if(v==null)return '';if(typeof v!=='object')return v;if(v instanceof Date)return v.toISOString();if('result' in v)return v.result??'';return v.text??v.richText?.map(x=>x.text).join('')??'';};
@@ -209,7 +209,7 @@ function normalCampaign(id,name,kind,rows,sourceStatus={},extra={}){
     dataWarning:sourceStatus.warning||null,unavailable:sourceStatus.error||null,
     placements:rows.length,published:posted.length,paidCount:paid.paidCount,
     paidSpendKnown:paid.known,unknownPaidCosts:paid.unknown,committedUnpaidKnown:committed.known,committedUnpaidCount:committed.count,
-    // Planned placements counted as if paid (GTA VI tab 16); already inside paidSpendKnown.
+    // Planned bookings stay outside both paid and committed spend.
     plannedSpendKnown:Math.round(rows.filter(r=>r.planned===true&&num(r.cost)!==null).reduce((n,r)=>n+num(r.cost),0)*100)/100,
     views,likes,reposts,replies,coverage,rows,
     allTimeHumanClicks:null,postPublicationClicks:null,...converted(),...extra
