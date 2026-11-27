@@ -7,9 +7,9 @@
   const C=window.FanvueCore,U=window.FanvueUI,esc=C.escapeHtml,M=C.M;
   const $=id=>document.getElementById(id);
   const APP_NAME='Fanvue Marketing Dashboard';
-  const requestedLayout=new URLSearchParams(location.search).get('layout');
+  const requestedLayout=typeof URLSearchParams==='function'&&typeof location!=='undefined'?new URLSearchParams(location.search||'').get('layout'):null;
   const dashboardLayout=/^[1-8]$/.test(requestedLayout||'')?requestedLayout:'1';
-  document.documentElement.dataset.dashboardLayout=dashboardLayout;
+  if(document.documentElement?.dataset)document.documentElement.dataset.dashboardLayout=dashboardLayout;
 
   /* ---------- data bridge (read-only) ---------- */
   const D={
@@ -1058,7 +1058,7 @@
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);
     window.setInterval(()=>U.refreshAges(page),1000);
     $('fvRefresh').addEventListener('click',onRefresh);
-    // Only a deliberate close action dismisses the mobile menu. Feed updates and navigation do not.
+    // Feed updates keep the menu open; selecting a destination closes it.
     const setMenuOpen=(open,focus=false)=>{
       $('fvShell').classList.toggle('is-nav-open',open);
       $('fvMenu').setAttribute('aria-expanded',String(open));
@@ -1068,6 +1068,7 @@
     const close=()=>setMenuOpen(false,true);
     $('fvMenu').addEventListener('click',()=>setMenuOpen(!$('fvShell').classList.contains('is-nav-open')));
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('fvShell').classList.contains('is-nav-open'))close();});
+    $('fvNav').addEventListener('click',e=>{const link=e.target.closest?.('a[href^="#"]');if(link&&$('fvShell').classList.contains('is-nav-open'))close();});
     $('fvDrawerClose').addEventListener('click',close);
     $('fvScrim').addEventListener('click',close);
     window.addEventListener('hashchange',onHash);
