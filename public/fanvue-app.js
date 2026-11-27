@@ -875,7 +875,8 @@
     n.focus({preventScroll:true});if(f.attr==='data-search'&&typeof f.start==='number')try{n.setSelectionRange(f.start,f.end);}catch{}
   }
 
-  let lastHeader='',renderedRoute='';
+  let lastHeader='',renderedRoute='',activeRefresh=null;
+  const refreshRouteKey=()=>current.kind+':'+current.key;
   const renderedSections=new WeakMap();
   // Preserve unchanged sections during feed updates, filters and sorting.
   const sectionSignature=el=>el.outerHTML.replace(/(<time\b[^>]*data-age-at="[^"]+"[^>]*>)[^<]*(<\/time>)/g,'$1$2');
@@ -902,7 +903,7 @@
       setNav(rec.parent);setTitle(rec.title);
       $('fvHeader').hidden=true;$('fvPage').hidden=true;$('fvPage').innerHTML='';$('fvRecords').hidden=false;
       D.app()?.showRecords?.(r.key);recordsShown=true;
-      return;
+      syncRefreshUI();return;
     }
     // Leave the record views only on navigation; re-renders must not close an open editor.
     if(recordsShown||!$('fvRecords').hidden){D.app()?.showRecords?.('');recordsShown=false;}
@@ -941,6 +942,7 @@
     for(const el of $('fvPage').querySelectorAll('.fv-table-wrap')){const id=el.closest('.fv-table-panel')?.id;if(scrolls.has(id))el.scrollLeft=scrolls.get(id);}
     drawCharts();
     restoreFocus(focus);
+    syncRefreshUI();
   }
   // Dashboard tiles: all figures share one size, shrunk just enough for the longest to fit on one line.
   // Figures shrink together until the longest fits on one line; labels keep the same proportion to the figures,
@@ -1002,35 +1004,81 @@
     render();
     if(changedPage)window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
   }
+  // Progress follows completed source operations. Never invent percentages from elapsed time.
+  function syncRefreshUI(){
+    const run=activeRefresh,here=!!run&&run.route===refreshRouteKey()&&current.kind!=='records',busy=!!run?.busy;
+    const page=$('fvPage'),btn=$('fvRefresh'),progress=$('fvRefreshProgress'),track=$('fvRefreshTrack');
+    btn.disabled=busy;btn.classList.toggle('is-busy',busy&&here);
+    if(busy&&here)btn.setAttribute('aria-busy','true');else btn.removeAttribute('aria-busy');
+    page.classList.toggle('is-kpi-refreshing',busy&&here);
+    for(const strip of page.querySelectorAll(':scope>.fv-panel.fv-strip')){
+      if(busy&&here)strip.setAttribute('aria-busy','true');else strip.removeAttribute('aria-busy');
+    }
+    progress.hidden=!here;
+    if(!here){$('fvRefreshFill').style.width='0%';$('fvRefreshCount').textContent='';$('fvRefreshStage').textContent='';track.setAttribute('aria-valuemax','1');track.setAttribute('aria-valuenow','0');track.removeAttribute('aria-valuetext');return;}
+    const completed=Math.min(run.total,Math.max(0,run.completed));
+    $('fvRefreshStage').textContent=run.label;
+    $('fvRefreshCount').textContent=completed+' / '+run.total;
+    track.setAttribute('aria-valuemax',String(run.total));track.setAttribute('aria-valuenow',String(completed));
+    track.setAttribute('aria-valuetext',completed+' of '+run.total+' refresh tasks completed');
+    $('fvRefreshFill').style.width=(100*completed/run.total)+'%';
+    $('fvRefreshStatus').textContent='';
+  }
   async function onRefresh(){
-    const btn=$('fvRefresh'),status=$('fvRefreshStatus');
-    if(btn.disabled)return;
-    btn.disabled=true;btn.classList.add('is-busy');btn.setAttribute('aria-busy','true');
-    status.className='fv-refresh-status';status.textContent='Refreshing…';
-    const app=D.app(),rep=D.rep(),refreshRoute=current.kind+':'+current.key;
-    let message='',error=false,summary='';
+    if(activeRefresh?.busy)return;
+    const route=current,k=route.kind==='page'?route.key:'',status=$('fvRefreshStatus'),app=D.app(),rep=D.rep();
+    const all=k==='home'||k==='all-accounts',offset=k==='all-accounts'?1:0;
+    const run={route:refreshRouteKey(),busy:true,completed:0,total:all?8+offset:2,label:'Starting refresh…'};
+    activeRefresh=run;
+    function progress(completed,label,total=run.total){
+      if(activeRefresh!==run)return;
+      run.total=Math.max(1,total);run.completed=Math.min(run.total,Math.max(run.completed,completed));run.label=label;
+      syncRefreshUI();
+    }
+    syncRefreshUI();
+    let message='',error=false;
     try{
-      const k=current.kind==='page'?current.key:'';
-      if(current.kind==='added'){const ok=await hooks.refresh?.(current);message=ok?'':'Campaign registry unavailable; last saved details kept.';error=!ok;}
-      else if(k==='all-accounts')await loadDirectory();
-      if(k==='home'||k==='all-accounts'){await app?.refresh?.all?.();const s=app?.status?.('reloadAllStatus');message=s?.text||'';error=!!s?.error;summary=s?.summary||'';}
-      else if(k==='discord'){const ok=await rep?.refreshDiscord?.(true);message=ok?'':'Discord sources unavailable; last verified figures kept.';error=!ok;}
-      else{
-        const fn={'x-articles':'x','gta-vi':'gta','viral-qrts':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
-        const ids={'x-articles':'xRefreshStatus','gta-vi':'gtaRefreshStatus','viral-qrts':'gtaRefreshStatus','of-terms':'ofRefreshStatus','guru-promotion':'boostRefreshStatus'};
-        if(fn){await app?.refresh?.[fn]?.();const s=app?.status?.(ids[k]);message=s?.text||'';error=!!s?.error;}
+      if(all){
+        if(offset){progress(0,'Refreshing publisher directory…');await loadDirectory();progress(1,'Refreshing X articles…');}
+        if(!app?.refresh?.all)throw Error('Refresh service unavailable');
+        const result=await app.refresh.all(p=>progress(offset+p.completed,p.label,offset+p.total));
+        const s=app.status?.('reloadAllStatus');message=s?.text||'';error=result===false||!!s?.error;
+      }else if(k==='discord'){
+        progress(0,'Refreshing Discord members and clicks…');
+        const ok=await rep?.refreshDiscord?.(true,p=>progress(p.completed,p.label,p.total));
+        progress(2,'Discord checks complete');error=ok!==true;message=error?'Discord sources unavailable; last verified figures kept.':'';
+      }else{
+        if(route.kind==='added'){
+          progress(0,'Refreshing campaign details…');
+          const ok=await hooks.refresh?.(route);error=!ok;message=ok?'':'Campaign registry unavailable; last saved details kept.';
+        }else{
+          const fn={'x-articles':'x','gta-vi':'gta','viral-qrts':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
+          const ids={'x-articles':'xRefreshStatus','gta-vi':'gtaRefreshStatus','viral-qrts':'gtaRefreshStatus','of-terms':'ofRefreshStatus','guru-promotion':'boostRefreshStatus'};
+          progress(0,'Refreshing campaign metrics…');
+          if(fn){if(!app?.refresh?.[fn])throw Error('Refresh service unavailable');const result=await app.refresh[fn](label=>progress(0,label));const s=app.status?.(ids[k]);message=s?.text||'';error=result===false||!!s?.error;}
+        }
+        progress(1,'Updating campaign summary…');
         const ok=await rep?.reload?.();
         if(ok===false){error=true;message=(message?message+' ':'')+'Campaign summary kept from last verified data.';}
+        progress(2,'Campaign checks complete');
       }
-    }catch(e){error=true;message='Refresh failed; last verified figures kept.';}
-    finally{btn.disabled=false;btn.classList.remove('is-busy');btn.removeAttribute('aria-busy');}
-    // Avoid carrying status from another page when navigation occurs during a refresh.
-    if(refreshRoute!==current.kind+':'+current.key)return;
-    // Keep diagnostics available without a conspicuous red failure banner.
-    const label=error?(D.overview()||D.gta().report?'Latest available data':'Refresh unavailable'):'Updated';
-    status.className='fv-refresh-status '+(error?'is-error':'is-ok');status.title=message||label;status.textContent=label;
-    status.setAttribute('aria-label',label+(message?': '+message:''));
-    rerender();
+    }catch(e){error=true;message=String(e?.message||'Refresh failed; last verified figures kept.');}
+    finally{
+      run.busy=false;
+      const label=error?(D.overview()||D.gta().report?'Latest available data':'Refresh unavailable'):'Updated';
+      if(!error)run.completed=run.total;
+      run.label=label;
+      // Re-render before releasing the spinner. Even failed refreshes restore the verified numbers.
+      try{rerender();}finally{
+        syncRefreshUI();
+        setTimeout(()=>{
+          if(activeRefresh!==run)return;activeRefresh=null;syncRefreshUI();
+          if(refreshRouteKey()!==run.route)return;
+          status.className='fv-refresh-status '+(error?'is-error':'is-ok');
+          status.title=message||label;status.textContent=label;status.setAttribute('aria-label',label+(message?': '+message:''));
+        },450);
+      }
+    }
   }
   // Table interactions do not destroy or redraw the chart, header, KPI cards or sidebar.
   function rerenderTable(id){

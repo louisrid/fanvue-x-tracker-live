@@ -2726,3 +2726,30 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 #fvShell .fv-field.has-error :is(input,select,textarea){border-color:#AAA}
 #fvShell .fv-refresh-status{overflow-wrap:anywhere}
 #fvShell .fv-notice>.fv-icon{display:none}
+
+/* Manual refresh is a presentation state, never a change to metric values or tracking.
+   Reserve the existing header gap for the progress strip; no layout shifts. */
+#fvShell #fvHeader{position:relative}
+#fvShell #fvRefreshStatus:not(:empty){position:absolute;right:0;top:calc(100% + 6px);max-width:100%;line-height:16px;font-size:var(--fv-fs-s);color:#FFF;font-weight:var(--fv-w-strong);text-align:right;margin:0}
+#fvShell #fvRefreshProgress{position:absolute;right:0;top:calc(100% + 3px);width:min(330px,100%);display:flex;flex-direction:column;gap:4px;min-width:0;color:#FFF}
+#fvShell #fvRefreshProgress[hidden]{display:none!important}
+#fvShell .fv-refresh-progress-copy{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);line-height:14px;min-width:0}
+#fvShell #fvRefreshStage{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fvShell #fvRefreshCount{flex:none;font-variant-numeric:tabular-nums}
+#fvShell .fv-refresh-track{height:4px;overflow:hidden;border-radius:3px;background:#252525}
+#fvShell #fvRefreshFill{height:100%;display:block;width:0%;background:var(--fv-accent,#F0357C);border-radius:3px;transition:width .22s ease}
+#fvShell #fvPage.is-kpi-refreshing>.fv-panel.fv-strip>.fv-metric>.fv-metric-value{position:relative;color:transparent!important}
+#fvShell #fvPage.is-kpi-refreshing>.fv-panel.fv-strip>.fv-metric>.fv-metric-value>*{visibility:hidden!important}
+#fvShell #fvPage.is-kpi-refreshing>.fv-panel.fv-strip>.fv-metric>.fv-metric-value::after{
+ content:"";position:absolute;box-sizing:border-box;width:26px;height:26px;left:50%;top:50%;margin:-13px 0 0 -13px;
+ border:3px solid #292929;border-top-color:var(--fv-accent,#F0357C);border-right-color:var(--fv-accent,#F0357C);border-radius:50%;animation:fv-spin .8s linear infinite;pointer-events:none;
+}
+@media(max-width:767px){
+ #fvShell #fvRefreshProgress{width:100%;top:calc(100% + 3px)}
+ #fvShell #fvPage.is-kpi-refreshing>.fv-panel.fv-strip>.fv-metric>.fv-metric-value::after{width:22px;height:22px;margin:-11px 0 0 -11px}
+}
+@media(prefers-reduced-motion:reduce){
+ #fvShell #fvRefreshFill{transition:none}
+ #fvShell #fvPage.is-kpi-refreshing>.fv-panel.fv-strip>.fv-metric>.fv-metric-value::after{animation:none}
+ #fvShell #fvRefresh.is-busy .fv-icon{animation:none}
+}

@@ -61,6 +61,45 @@ try{
    assert.equal(await page.locator('#fvTitleChip svg').count(),0,route+' no page-title icon');
    assert.ok(await page.locator('#fvTitle').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=(innerWidth<768?30:44)),route+' larger title');
   };
+  // Manual refresh: test the real UI against a deliberately controlled asynchronous source.
+  await open('home','Dashboard');
+  const geometryBefore=await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]}));
+  await page.evaluate(()=>{
+   window.qaRefreshCalls=0;window.qaRefreshError=false;
+   window.XTrackerApp.refresh={all:cb=>{window.qaRefreshCalls++;cb({completed:0,total:8,label:'Refreshing sources…'});window.qaRefreshProgress=cb;return new Promise(resolve=>window.qaRefreshFinish=()=>resolve(!window.qaRefreshError));}};
+   window.XTrackerApp.status=()=>({error:window.qaRefreshError,text:window.qaRefreshError?'Saved readings retained':'All sources updated'});
+  });
+  await page.locator('#fvRefresh').click();
+  await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing')&&!document.querySelector('#fvRefreshProgress').hidden);
+  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
+  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuemax'),'8');
+  assert.ok(await page.locator('#fvPage>.fv-strip .fv-metric-value').evaluateAll(es=>es.length>0&&es.every(e=>getComputedStyle(e,'::after').animationName==='fv-spin'&&[...e.children].every(c=>getComputedStyle(c).visibility==='hidden'))),'only KPI values show loading wheels');
+  assert.ok(await page.locator('#fvPage>.fv-strip .fv-metric-label').first().isVisible());
+  assert.ok(await page.locator('#home-comparison tbody .fv-row').first().isVisible());
+  assert.deepEqual(await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]})),geometryBefore,'refresh preserves KPI geometry');
+  await page.evaluate(()=>window.qaRefreshProgress({completed:3,total:8,label:'Updating sources…'}));
+  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'3');
+  assert.equal(await page.locator('#fvRefreshFill').evaluate(e=>e.style.width),'37.5%');
+  await page.screenshot({path:dir+'/refresh-'+viewport.width+'.png',fullPage:true});
+  if(viewport.width===430||viewport.width===1440){
+   await open('gta-vi','GTA VI');assert.equal(await page.locator('#fvRefreshProgress').isVisible(),false);assert.equal(await page.locator('#fvRefresh').isDisabled(),true);
+   await open('home','Dashboard');assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'3');
+  }
+  await page.evaluate(()=>window.qaRefreshFinish());
+  await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
+  assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false);
+  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
+  assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Updated');
+  await page.evaluate(()=>{window.qaRefreshError=true;});
+  await page.locator('#fvRefresh').click();
+  await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing'));
+  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0','second refresh starts from zero');
+  await page.evaluate(()=>window.qaRefreshFinish());
+  await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
+  assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Latest available data');
+  assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false,'failure restores numbers');
+  assert.equal(await page.evaluate(()=>window.qaRefreshCalls),2);
+  await open('gta-vi','GTA VI');
   // Capture every page at every tested width before detailed assertions, even if later QA fails.
   {
    await page.evaluate(()=>Promise.race([document.fonts?.ready||Promise.resolve(),new Promise(r=>setTimeout(r,2000))]));

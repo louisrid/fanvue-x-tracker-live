@@ -74,9 +74,24 @@ test('GTA refresh polls status only, retries a transient GET, and fetches final 
   if(url.endsWith('?status=1')){polls++;if(polls===1)throw Error('temporary network failure');return Response.json({refresh:{id:'job',state:'complete',updated:1,total:1}});}
   reads++;return Response.json(fresh);
  }});
- vm.runInContext(app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaQuotedSources('))+app.slice(app.indexOf('async function refreshGtaReport(){'),app.indexOf('function initGtaUi(){')),context);
+ vm.runInContext(app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaQuotedSources('))+app.slice(app.indexOf('async function refreshGtaReport('),app.indexOf('function initGtaUi(){')),context);
  assert.equal(await context.refreshGtaReport(),true);
  assert.deepEqual([posts,polls,reads],[1,2,1]);
  assert.equal(context.gtaState.report.publishers[0].views,42);
  assert.equal(el('gtaRefreshButton').disabled,false);
+});
+
+test('dashboard refresh progress counts actual settled source operations and preserves failure state',async()=>{
+ const {readFileSync}=await import('node:fs'),{default:vm}=await import('node:vm');
+ const app=readFileSync('public/app.js','utf8'),nodes=new Map(),events=[];
+ const el=id=>{if(!nodes.has(id))nodes.set(id,{dataset:{},classList:{add(){},remove(){}},setAttribute(){},removeAttribute(){}});return nodes.get(id);};
+ const context=vm.createContext({el,gtaState:{report:{},refreshing:false},gtaSourceStatus:()=>null,refreshXStats:async()=>({ok:true}),refreshGtaReport:async()=>true,load:async()=>true,loadOfReport:async()=>true,loadBoosts:async()=>true,state:{},boostsState:{},window:{XTrackerCampaignReporting:{reload:async()=>true},XTrackerDiscordMembers:{refresh:async()=>true},XTrackerDiscordCourse:{refresh:async()=>true}}});
+ vm.runInContext(app.slice(app.indexOf('async function reloadAllData('),app.indexOf('function applyDashboard(')),context);
+ assert.equal(await context.reloadAllData(p=>events.push(p.completed)),true);
+ assert.deepEqual(events,[0,1,2,3,4,5,6,7,8]);
+ assert.equal(el('reloadAllButton').disabled,false);
+ events.length=0;context.load=async()=>false;
+ assert.equal(await context.reloadAllData(p=>events.push(p.completed)),false);
+ assert.deepEqual(events,[0,1,2,3,4,5,6,7,8]);
+ assert.equal(el('reloadAllStatus').dataset.summary,'Latest available data');
 });

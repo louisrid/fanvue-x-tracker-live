@@ -297,7 +297,7 @@
       counters+'<p class="rpt-note">Member growth needs two daily snapshots.</p>'+
       connection;
   }
-  async function refreshDiscordMetrics(force=false){
+  async function refreshDiscordMetrics(force=false,onProgress){
     if(state.discordLoading)return state.discordLoading;
     if(!force&&state.discordLastLoadAt&&Date.now()-state.discordLastLoadAt<60000)return true;
     state.discordVisited=true;
@@ -306,7 +306,8 @@
         ['discord-course-clicks','discordClicks','discord-course-clicks',validClicks],
         ['discord-members','discordMembers','discord-members',validMembers]
       ];
-      const results=await Promise.allSettled(endpoints.map(async ([endpoint,field,key,valid])=>{
+      let completed=0;
+      const results=await Promise.allSettled(endpoints.map(([endpoint,field,key,valid])=>(async()=>{
         const res=await fetch('/.netlify/functions/'+endpoint,{cache:'no-store',signal:AbortSignal.timeout(12000)});
         if(!res.ok)throw Error('Discord source unavailable');
         const data=await res.json();
@@ -317,7 +318,7 @@
            data.total<state.discordClicks.total)throw Error('Older click total');
         state[field]=data;
         window.XTrackerLastGood?.write(key,data,valid);
-      }));
+      })().finally(()=>{completed++;if(typeof onProgress==='function')onProgress({completed,total:endpoints.length,label:'Refreshing Discord sources…'});})));
       state.discordLastLoadAt=Date.now();state.discordError=results.some(x=>x.status!=='fulfilled');
       if(state.tab==='discord')render();
       window.dispatchEvent(new Event('xtracker:discord'));
@@ -455,7 +456,7 @@
     getData:()=>state.data,
     status:()=>({loading:Boolean(state.loading),error:state.error,lastLoadAt:state.lastLoadAt}),
     discord:()=>({members:state.discordMembers,clicks:state.discordClicks,loading:Boolean(state.discordLoading),error:Boolean(state.discordError)}),
-    refreshDiscord:(force=false)=>refreshDiscordMetrics(force)
+    refreshDiscord:(force=false,onProgress)=>refreshDiscordMetrics(force,onProgress)
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();

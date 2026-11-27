@@ -822,36 +822,42 @@ async function refreshXStats(){
   }catch(error){status.className='x-refresh-status is-error';status.textContent=error.name==='TimeoutError'?'X stats refresh timed out. Please try again.':String(error.message||error);return {ok:false,error:String(error.message||error)};}
   finally{button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');syncXRefreshControls();}
 }
-async function reloadAllData(){
+async function reloadAllData(onProgress){
   const button=el('reloadAllButton'),status=el('reloadAllStatus');
-  if(!button||button.disabled||el('refreshXStats').disabled||gtaState.refreshing)return;
+  if(!button||button.disabled||el('refreshXStats').disabled||gtaState.refreshing)return false;
   button.disabled=true;button.classList.add('is-refreshing');button.setAttribute('aria-busy','true');
   const issues=new Set();let gone=0;status.dataset.summary='';
-  const progress=message=>{status.className='x-refresh-status';status.textContent=message;};
+  let completed=0;const total=8;
+  const progress=(message,label)=>{status.className='x-refresh-status';status.textContent=message;if(typeof onProgress==='function')onProgress({completed,total,label:label||message});};
   try{
     // The existing dashboard refresh coordinates X Articles, OF Terms and X RTs
     // as one server job. Reuse it instead of issuing duplicate provider POSTs.
-    progress('1/3 · Reloading X articles, OF Terms and X RTs…');
+    progress('1/3 · Reloading X articles, OF Terms and X RTs…','Refreshing X articles and RTs…');
     const x=await refreshXStats();
     if(!x?.ok)issues.add('X article metrics');
     if(!x||x.of?.error)issues.add('OF Terms X metrics');
     if(!x||x.boosts?.error)issues.add('X RT metrics');
-    progress('2/3 · Reloading GTA VI QRTs, standalone posts and quoted X sources…');
-    const gtaRefreshed=await refreshGtaReport();
+    completed++;
+    progress('2/3 · Reloading GTA VI QRTs, standalone posts and quoted X sources…','Refreshing GTA VI and Viral QRTs…');
+    const gtaRefreshed=await refreshGtaReport(label=>progress('2/3 · '+label,label));
     const gtaGroups=[gtaState.report,gtaState.report?.originals,gtaState.report?.mandy,gtaState.report?.instagram].filter(Boolean);
     const gtaStatus=gtaGroups.map(gtaSourceStatus).filter(Boolean);
     if(gtaRefreshed===false||gtaState.error||!gtaState.report||gtaStatus.some(g=>g.failed))issues.add('GTA VI metrics');
     gone+=gtaStatus.reduce((n,g)=>n+(g.gone||0),0)+(x?.gonePosts||0);
-    progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…');
-    // These are GETs only. The X data providers were already refreshed above.
-    const results=await Promise.allSettled([
-      load(true),
-      loadOfReport(true,false),
-      loadBoosts(true),
-      window.XTrackerCampaignReporting?.reload?.(),
-      window.XTrackerDiscordMembers?.refresh?.(),
-      window.XTrackerDiscordCourse?.refresh?.()
-    ]);
+    completed++;
+    progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…','Updating reporting sources…');
+    // These are GETs only. Count each settled source, not simulated time.
+    const tasks=[
+      ()=>load(true),
+      ()=>loadOfReport(true,false),
+      ()=>loadBoosts(true),
+      ()=>window.XTrackerCampaignReporting?.reload?.(),
+      ()=>window.XTrackerDiscordMembers?.refresh?.(),
+      ()=>window.XTrackerDiscordCourse?.refresh?.()
+    ];
+    const results=await Promise.allSettled(tasks.map(task=>Promise.resolve().then(task).finally(()=>{
+      completed++;progress('3/3 · Reloading reporting sources…','Updating reporting sources…');
+    })));
     if(results[0].status!=='fulfilled'||results[0].value!==true)issues.add('Dashboard');
     if(results[1].status!=='fulfilled'||results[1].value!==true||state.ofError)issues.add('OF Terms');
     if(results[2].status!=='fulfilled'||boostsState.error)issues.add('X RTs');
@@ -864,9 +870,11 @@ async function reloadAllData(){
       ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'+goneNote
       : 'All connected sources checked and refreshed.'+goneNote;
     status.dataset.summary=issues.size?'Latest available data':'Updated';
+    return issues.size===0;
   }catch(error){
     status.className='x-refresh-status is-error';
     status.textContent='Reload could not finish: '+String(error?.message||error)+'. Previously verified figures are preserved.';
+    return false;
   }finally{
     button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');
   }
@@ -1265,11 +1273,12 @@ async function loadGtaReport(force=false){
     finally{gtaState.loading=null;preserveReadingPosition(renderGtaReport);}
   })();return gtaState.loading;
 }
-async function refreshGtaReport(){
+async function refreshGtaReport(onProgress){
   const button=el('gtaRefreshButton'),status=el('gtaRefreshStatus');if(gtaState.refreshing)return;
   gtaState.refreshing=true;button.disabled=true;button.setAttribute('aria-busy','true');button.classList.add('is-refreshing');
   status.className='x-refresh-status';status.textContent='Refreshing X and Short.io stats…';
   const endpoint='/.netlify/functions/gta-report';
+  const notify=label=>{if(typeof onProgress==='function')onProgress(label);};
   const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   // Retrying reads is safe. Never blindly repeat a POST that may already have started a job.
   async function read(url){
@@ -1290,6 +1299,7 @@ async function refreshGtaReport(){
     if(job){
       const id=job.id,deadline=Date.now()+16*60_000;
       // Poll only the job record, not the workbook, metrics and every Short.io link.
+      notify('Refreshing GTA VI and Viral QRTs…');
       while(['queued','running'].includes(job.state)){
         if(Date.now()>=deadline)throw Error('Refresh is still pending; last verified figures retained');
         await pause(3000);
@@ -1299,6 +1309,7 @@ async function refreshGtaReport(){
         if(job.id!==id)throw Error('Refresh job changed; reload to view the latest verified readings');
       }
       if(job.state==='failed')jobFailure=job.error||'Refresh incomplete';
+      notify('Loading verified GTA VI metrics…');
       data=await read(endpoint);
       data.updated=job.updated??0;data.total=job.total??0;
     }
