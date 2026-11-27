@@ -80,7 +80,7 @@ try{
    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).visibility==='hidden');
    await page.emulateMedia({reducedMotion:'reduce'});
    await menu.click();
-   assert.equal(await sidebar.evaluate(e=>getComputedStyle(e).transitionDuration),'0s','respect reduced motion');
+   assert.ok((await sidebar.evaluate(e=>getComputedStyle(e).transitionDuration)).split(',').every(v=>parseFloat(v)<=.001),'respect reduced motion');
    await menu.click();await page.emulateMedia({reducedMotion:'no-preference'});
    await open('gta-vi','GTA VI');
   }
@@ -109,11 +109,11 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>home?parseFloat(style(e).borderTopWidth)>=1&&parseFloat(style(e).borderTopLeftRadius)>=10:parseFloat(style(e).borderTopWidth)>=2&&style(e).borderTopColor==='rgb(96, 96, 96)'),
+     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===1&&parseFloat(style(e).borderTopLeftRadius)>=10),
      labelWhite:labels.every(white),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
-     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=17),
-     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)>=(home?1:2)&&inside(e,e.closest('.fv-table-panel'))),
+     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=16),
+     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===1&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
      labelsWhite:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color==='rgb(255, 255, 255)'),
@@ -125,8 +125,13 @@ try{
    assert.ok(result.belowTitle>=10&&result.afterHeader>=20,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelWhite&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
-   assert.ok(result.numericSizes.every(n=>n>=(route.startsWith('Dashboard')?(viewport.width>=360?34:28):(viewport.width>=390?38:32))),route+' large short KPI figures '+result.numericSizes);
+   assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?34:28)),route+' large short KPI figures '+result.numericSizes);
    assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsWhite&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
+   const hierarchy=await page.evaluate(()=>{
+    const nodes=[...document.querySelectorAll('#fvPage .fv-table tbody>tr.fv-row td[data-column]:not(.is-name):not([data-column="age"])')];
+    return nodes.every(e=>{const s=getComputedStyle(e),l=getComputedStyle(e,'::before'),v=e.querySelector('.fv-num');return s.boxShadow==='none'&&parseFloat(s.borderBottomWidth)===0&&(!v||(Number(l.fontWeight)<Number(getComputedStyle(v).fontWeight)&&parseFloat(l.fontSize)<parseFloat(getComputedStyle(v).fontSize)));});
+   });
+   assert.ok(hierarchy,route+' quiet labels and single-layer cards');
   };
   let reference,cols;
   for(const [route,title] of routes){
@@ -136,13 +141,16 @@ try{
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
    const finish=await page.evaluate(()=>{const card=document.querySelector('#fvPage>.fv-strip>.fv-metric'),label=card.querySelector('.fv-metric-label'),value=card.querySelector('.fv-metric-value'),s=getComputedStyle(card),v=getComputedStyle(value),rect=card.getBoundingClientRect(),a=label.getBoundingClientRect(),z=value.getBoundingClientRect();return {background:s.backgroundColor,gradient:s.backgroundImage,radius:parseFloat(s.borderTopLeftRadius),weight:Number(v.fontWeight),center:Math.abs((a.top+z.bottom)/2-(rect.top+rect.bottom)/2),aligned:s.alignItems,justify:s.justifyContent};});
-   assert.equal(finish.background,'rgb(0, 0, 0)',route+' pure black card');assert.equal(finish.gradient,'none');assert.equal(finish.radius,6);assert.ok(finish.weight>=850);const surfaces=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel,#fvPage>.fv-chart-panel>.fv-chart,#fvPage>.fv-table-panel,#fvPage>.fv-table-panel>.fv-table-tools,#fvPage .fv-table th,#fvPage .fv-table tbody tr.fv-row td')].every(e=>['rgb(0, 0, 0)','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)));assert.equal(surfaces,true,route+' black surfaces');assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');
+   if(viewport.width<768){
+    assert.ok(['rgb(53, 23, 37)','rgb(33, 26, 61)'].includes(finish.background),route+' rose or Discord KPI card '+JSON.stringify(finish));
+    assert.equal(finish.radius,12);assert.equal(finish.aligned,'flex-start');assert.equal(finish.justify,'space-between');assert.ok(finish.weight>=850);
+   }else{assert.equal(finish.background,'rgb(0, 0, 0)',route+' pure black card');assert.equal(finish.gradient,'none');assert.equal(finish.radius,6);assert.ok(finish.weight>=850);const surfaces=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel,#fvPage>.fv-chart-panel>.fv-chart,#fvPage>.fv-table-panel,#fvPage>.fv-table-panel>.fv-table-tools,#fvPage .fv-table th,#fvPage .fv-table tbody tr.fv-row td')].every(e=>['rgb(0, 0, 0)','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)));assert.equal(surfaces,true,route+' black surfaces');assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');}
    assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
    if(!reference)reference=g;
    for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(k==='toolbar'&&viewport.width<768?g[k].slice(0,3):g[k],k==='toolbar'&&viewport.width<768?reference[k].slice(0,3):reference[k],viewport.width+' '+route+' '+k);
    if(route!=='discord'&&viewport.width>=768){if(!cols)cols=g.cols;close(g.cols,cols,route+' column widths');}
    await auditPhone(route);
-   if(viewport.width<768||['of-terms','x-articles','discord'].includes(route))await page.screenshot({path:dir+'/'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:viewport.width<768});
+   await page.screenshot({path:dir+'/'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:true});
   }
   await open('gta-vi','GTA VI');
   const before=await geometry();
@@ -209,7 +217,7 @@ try{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:css(main).backgroundColor==='rgb(55, 24, 40)'&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&parseFloat(css(main).borderLeftWidth)===4,compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&[3,4].includes(parseFloat(css(main).borderLeftWidth)),compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
@@ -218,6 +226,17 @@ try{
    if(viewport.width<768)assert.ok(homeVisual.compactRows,'Dashboard campaign rows are compact '+JSON.stringify(homeVisual.rowHeights));
    if(viewport.width<768)assert.ok(homeVisual.metricPairs,'Home campaign values occupy a balanced 2x2 grid');
    await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});
+   if(viewport.width<768){
+    const realistic=await page.evaluate(()=>{
+     const row=document.querySelector('#home-comparison tbody>tr.fv-row'),saved=[];
+     for(const [key,value] of [['clicks','787'],['views','1,612,090'],['spend','$6,110.85'],['cpc','$3.19']]){
+      const td=row.querySelector('[data-column="'+key+'"]');const old=td.innerHTML;saved.push([td,old]);td.innerHTML='<span class="fv-num">'+value+'</span>';
+     }
+     const fit=saved.every(([td])=>{const span=td.firstElementChild;return span.getBoundingClientRect().width<=td.getBoundingClientRect().width+1&&span.getBoundingClientRect().height<=parseFloat(getComputedStyle(span).lineHeight)+1;});
+     for(const [td,old] of saved)td.innerHTML=old;return fit;
+    });
+    assert.ok(realistic,'live-sized campaign values fit on a single line');
+   }
   }
   await page.evaluate(()=>{window.__qaChart=document.querySelector('#home-chart');window.__qaCard=document.querySelector('#fvPage .fv-metric');});
   if(viewport.width>=768)await page.locator('#home-comparison [data-sort="spend"]').click();

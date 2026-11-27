@@ -22,7 +22,7 @@
     user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v2"/>',
     shield:'<path d="M12 3 5 6v5.5c0 4.3 2.9 7.7 7 9.5 4.1-1.8 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
     check:'<circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/>',
-    calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/>',
+    calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="5"/><path d="M8 3v4M16 3v4M3.5 10h17"/>',
     refresh:'<path d="M20 11a8 8 0 0 0-14.3-4.6L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.6l1.7-2.1"/><path d="M20 20v-4.5h-4.5"/>',
     select:'<path d="M6 8h12M8 12h8M10 16h4"/>',
     sortAsc:'<path d="M10 6h4M8 12h8M5 18h14"/>',
@@ -362,7 +362,7 @@
     const minWidth=placement?898:accounts?840:Math.max(cfg.minWidth||0,Math.round(totalWidth*.9));
     const sortOptions=cols.filter(c=>c.type!=='link'&&!c.nosort).flatMap(c=>[1,-1].map(dir=>{
       const v=c.key+':'+dir,selected=st.sort?.key===c.key&&st.sort.dir===dir;
-      const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'Descending':'Ascending');
+      const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'High to low':'Low to high');
       return '<option value="'+esc(v)+'"'+(selected?' selected':'')+'>'+esc(c.label+' · '+order)+'</option>';
     })).join('');
     const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"'+(st.sort?.user?' data-user-sort="true"':'')+'><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('select',14)+'</label>':'';
