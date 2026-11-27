@@ -2291,3 +2291,5 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
 @media(hover:hover) and (pointer:fine) and (min-width:768px){
  body.fv :is(.fv-table,.xt-data-table,.account-table) > :is(thead,tbody,tfoot) > tr > :is(th,td):not([colspan]):hover{box-shadow:inset 0 -2px #A95A83}
 }
+
+#fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{border-width:2px;border-color:#666;border-radius:10px}
