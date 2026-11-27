@@ -580,7 +580,7 @@
       });
       body=chart+U.tablePanel({id:'xa-rts',title:'Listings',icon:'refresh',age:r=>originalAge(r.key),rows,search:true,searchText:r=>r.name,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:898,cls:'is-list is-placement-list',hideEmpty:false,limit:10,
         columns:rtSummaryColumns({name:r=>r.name,views:r=>r.views,spend:r=>r.k.spend,rtCount:r=>r.list.filter(x=>x.paid).reduce((n,x)=>n+(C.num(x.raw.purchasedPosts)||1),0),url:r=>r.url}),expand:r=>U.detailGrid([['Headline',esc(r.headline||'')]])+rtCosts(r.list)},tableState('x-articles','xa-rts'))+
-        '<p class="fv-filter-note">Original article views include organic exposure. RT purchases have no separate click or impression reading.</p>'+(D.campaign('article-rts')?.trackingWarning?'<p class="fv-filter-note">'+esc(D.campaign('article-rts').trackingWarning)+'</p>':'');
+        '<p class="fv-filter-note">Views include organic reach. Separate RT clicks and views are not tracked.</p>'+(D.campaign('article-rts')?.trackingWarning?'<p class="fv-filter-note">'+esc(D.campaign('article-rts').trackingWarning)+'</p>':'');
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
       body=chart+U.tablePanel({id,title:'Listings',icon:'doc',age:publicationAge,records:scoped,rows:scoped,search:true,cls:'is-list is-placement-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:820,limit:10,hideEmpty:false,
@@ -662,7 +662,7 @@
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const table=U.tablePanel({id:'viral-results',title:'Listings',icon:'zap',age:publicationAge,records,rows:records,search:true,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
       minWidth:820,limit:10,cls:'is-list is-placement-list',hideEmpty:false,columns:resultColumns(records),
-      expand:x=>{const o=mapping.get(C.postId(x.raw.postUrl));return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,'@'+o.handle):'',extra:[['Quoted post views',o&&C.num(o.views)!==null?count(o.views):''],['Original post scope',o?'External original views are excluded from purchased QRT performance.':'']]});}},ts);
+      expand:x=>{const o=mapping.get(C.postId(x.raw.postUrl));return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,'@'+o.handle):'',extra:[['Quoted post views',o&&C.num(o.views)!==null?count(o.views):''],['View count',o?'Views of the quoted post are excluded from QRT totals.':'']]});}},ts);
     const originals=quoted.length?U.supportPanel('Viral Posts','zap','<div class="fv-original-context">'+quoted.map(o=>'<div><span>'+ (U.extLink(o.originalUrl,'@'+(o.handle||'Original post'))||'Original post')+'</span><b>'+ (C.num(o.views)===null?dash('No verified original view count.'):count(o.views))+'</b><small>Post views · Not included in QRT totals</small></div>').join('')+'</div>'):'';
     const l=look(VIRAL.key);
     return {title:'Viral QRTs',chipHtml:'<span class="fv-campaign-chip" style="background:'+C.PALETTE[l.color].fill+'">'+U.icon(l.icon,15)+'</span>',refreshLabel:'Refresh',updated:ov?.checkedAt,

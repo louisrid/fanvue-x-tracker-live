@@ -29,9 +29,9 @@ test('Quoted original X sources appear as an expandable section within paid QRTs
   assert.match(app,/qrt\.profileUrl/);
   // v3.1 redesign: quoted originals are listed inside the expandable X quote posts row.
   const shell=readFileSync('public/fanvue-app.js','utf8');
-  // Site recommendations: each QRT's details show its source post and Original Views, never as its own views.
+  // Site recommendations: each QRT's details show its source post and Quoted post views, never as its own views.
   assert.match(shell,/const quoted=new Map\(\[\.\.\.\(qr\?\.quotedOriginals\?\.rows\|\|\[\]\),\.\.\.\(mq\?\.quotedOriginals\?\.rows\|\|\[\]\)\]/);
-  assert.match(shell,/\['Original Views',o&&C\.num\(o\.views\)!==null/);
+  assert.match(shell,/\['Quoted post views',o&&C\.num\(o\.views\)!==null/);
 });
 
 test('The real X Article Boosts campaign remains separate from GTA VI',()=>{

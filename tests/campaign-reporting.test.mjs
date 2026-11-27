@@ -123,8 +123,8 @@ test('Reporting routes remain while GTA VI has only QRT and standalone tabs',()=
   // Site recommendations: one GTA VI results table; old format URLs open the matching filter.
   assert.match(shell,/'x-original-posts':\{type:'Post'\},'x-quote-posts':\{type:'QRT'\},'mandy-qrts':\{group:'Mandy'\}/);
   assert.doesNotMatch(shell,/key:'quoted'/);
-  // Quoted original posts now appear in each QRT's details as Source Post and Original Views.
-  assert.match(shell,/\['Original Views',o&&C\.num\(o\.views\)!==null/);
+  // Quoted original posts now appear in each QRT's details as Source Post and Quoted post views.
+  assert.match(shell,/\['Quoted post views',o&&C\.num\(o\.views\)!==null/);
   assert.match(app,/function renderGtaQuotedSources\(\)/);
   assert.match(app,/el\('gtaWeekLabel'\)\.textContent='All-time stats'/);
   assert.match(app,/data-page/);

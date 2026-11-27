@@ -56,7 +56,7 @@ test('Viral QRTs is a view of the same placement, not another global cost or ori
   const row={code:'M1',campaign:'GTAM',sourceTab:'Mandy',sourceRow:8,publisher:'P',paid:true,posted:true,cost:50,clicks:10,views:100,trackingUrl:'https://example.com/a',postUrl:url(1)};
   const ov={campaigns:[campaign('gta-mandy',[row],{postPublicationClicks:10,quotedOriginals:{rows:[{originalPostId:'99',originalUrl:url(99),handle:'original',views:1000000,qrts:[{postUrl:url(1)}]}]}})]};
   const a=app(ov);const html=a.pages['viral-qrts']({}).body;
-  assert.match(html,/1,000,000/);assert.match(html,/Excluded from our QRT results/);
+  assert.match(html,/1,000,000/);assert.match(html,/Not included in QRT totals/);
   assert.equal(a.xKpis([{raw:row,paid:true,type:'QRT',clicks:C.M.value(10)}]).views.value,100);
   assert.ok(!C.CAMPAIGNS.some(c=>c.key==='viral-qrts'));
 });
