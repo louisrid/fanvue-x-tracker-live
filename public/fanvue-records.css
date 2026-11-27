@@ -160,7 +160,7 @@ body.modal-open{overflow:hidden}
 .fv-records .daily-overview-metrics .daily-metric-label,.fv-records .daily-overview-metrics strong,.fv-records .daily-overview-metrics small{color:var(--fv-dark-text)}
 .fv-records .button-primary,.article-modal .button-primary,.article-modal .modal-link.main-link{background:var(--fv-dark);border-color:var(--fv-dark);color:var(--fv-dark-text)}
 .fv-records .section-count{background:var(--fv-dark);color:var(--fv-dark-text)}
-.fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#1C1C1C;border-color:#1C1C1C}
+.fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#000000;border-color:#1C1C1C}
 
 /* ---------- polish: match the main pages ---------- */
 /* Section headings become black title bars joined to the table card below. */
@@ -175,11 +175,16 @@ body.modal-open{overflow:hidden}
 .fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#fff;border-color:var(--fv-line);outline:none;box-shadow:0 0 0 2px rgba(22,139,243,.15)}
 
 /* Match the main site's monochrome finish in record views and dialogs. */
-.fv-records,.article-modal{--fv-ink:#FFF;--fv-label:#DDD;--fv-muted:#B5B5B5;--fv-surface:#080808;--fv-border:#303030;--fv-rule:#292929;--fv-field:#0C0C0C;--fv-thead:#111;--fv-hover:#161616;--fv-tint:#101010;--fv-neutral-bg:#171717;--fv-neutral:#DDD;--fv-w-light:400;--fv-w:500;--fv-w-strong:650;--fv-w-black:700;color:#FFF}
+.fv-records,.article-modal{--fv-ink:#FFF;--fv-label:#DDD;--fv-muted:#B5B5B5;--fv-surface:#000000;--fv-border:#303030;--fv-rule:#292929;--fv-field:#000000;--fv-thead:#000000;--fv-hover:#000000;--fv-tint:#000000;--fv-neutral-bg:#000000;--fv-neutral:#DDD;--fv-w-light:650;--fv-w:700;--fv-w-strong:850;--fv-w-black:900;color:#FFF}
 .fv-records .page-intro h1,.fv-records .page-intro p{color:#FFF}
-.fv-records .tracker-controls,.fv-records .accounts-tools,.fv-records .xt-table-wrap,.fv-records .account-table-wrap,.fv-records .loading-card,.fv-records .empty-state,.fv-records .xt-data-table td,.fv-records .account-table td,.article-modal .modal-content,.article-modal .history-row,.article-modal .modal-link{background:#080808;border-color:#303030;color:#FFF}
-.fv-records .xt-data-table th,.fv-records .account-table th{background:#111;color:#CCC;font-weight:var(--fv-w-strong)}
-.fv-records .page-back-button,.fv-records .button,.fv-records .x-refresh-button,.fv-records details.filter-details>summary,.article-modal .button,.article-modal .modal-close{background:#0C0C0C;border-color:#404040;color:#FFF}
+.fv-records .tracker-controls,.fv-records .accounts-tools,.fv-records .xt-table-wrap,.fv-records .account-table-wrap,.fv-records .loading-card,.fv-records .empty-state,.fv-records .xt-data-table td,.fv-records .account-table td,.article-modal .modal-content,.article-modal .history-row,.article-modal .modal-link{background:#000000;border-color:#303030;color:#FFF}
+.fv-records .xt-data-table th,.fv-records .account-table th{background:#000000;color:#CCC;font-weight:var(--fv-w-strong)}
+.fv-records .page-back-button,.fv-records .button,.fv-records .x-refresh-button,.fv-records details.filter-details>summary,.article-modal .button,.article-modal .modal-close{background:#000000;border-color:#404040;color:#FFF}
 .fv-records .button-primary,.article-modal .button-primary,.article-modal .modal-link.main-link{background:#F2F2F2;border-color:#F2F2F2;color:#080808}
 .fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#D5D5D5;color:#080808}
-.fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#101010;border-color:#888;box-shadow:none}
+.fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#000000;border-color:#888;box-shadow:none}
+
+.fv-records,.article-modal{--fv-r-s:3px;--fv-r-m:4px;--fv-r-l:6px;--fv-radius:6px;--fv-ctl-radius:4px;--fv-w-light:650;--fv-w:700;--fv-w-strong:850;--fv-w-black:900;color:#FFFFFF}
+.article-modal,.fv-records .filter-grid,.fv-records .tracker-advanced-fields,.fv-records .xt-detail-row td,.fv-records .boost-paid-rt-strip,.fv-records #boostStatus,.article-modal [class*="modal-metric"],.article-modal .history-row,.article-modal .modal-link:not(.main-link){background:#000000;border-color:#404040;color:#FFFFFF}
+.fv-records input,.fv-records select,.article-modal input:not([type="checkbox"]),.article-modal select,.article-modal textarea{background:#000000;color:#FFFFFF;border-color:#404040;border-radius:4px}
+.fv-records .button-primary,.article-modal .button-primary,.article-modal .modal-link.main-link,.fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#FFFFFF;color:#000000;border-color:#FFFFFF}
