@@ -236,6 +236,21 @@
     if(unknown>0)return M.partial(known,'Known subtotal: '+unknown+' of '+paid+' paid placements have no recorded cost.');
     return M.value(known,{paidCount:paid});
   }
+  const isGtaSource=c=>['gta-qrts','gta-originals','gta-mandy','gta-instagram'].includes(c?.id);
+  const isGtaRow=r=>['GTA1','GTA2','GTAQ','GTAQ2','GTAM','GTAIG'].includes(r?.campaign);
+  // Only GTA VI includes recorded reservations and agreed unpaid bookings.
+  // The underlying paid ledger and matched-cost efficiency metrics stay unchanged.
+  function allocatedGtaSpend(c){
+    const paid=spendOf(c);
+    if(notConnected(c)||unavailable(c))return paid;
+    const rows=c.rows||[];
+    const planned=num(c.plannedSpendKnown)??rows.filter(r=>r.planned===true).reduce((n,r)=>n+(num(r.cost)||0),0);
+    const committed=num(c.committedUnpaidKnown)??rows.filter(r=>r.paid!==true&&r.planned!==true).reduce((n,r)=>n+(num(r.cost)||0),0);
+    if(!planned&&!committed)return paid;
+    const total=Math.round(((hasValue(paid)?paid.value:0)+planned+committed)*100)/100;
+    const reason='Includes '+money(planned)+' planned and '+money(committed)+' committed unpaid GTA VI allocations, plus recorded payments. Not all allocated costs have been paid.';
+    return (!hasValue(paid)&&!paid.noSpend)||paid.state==='partial'?M.partial(total,reason+' '+(paid.reason||'')):M.value(total,{reason});
+  }
   function addSpend(parts,label){
     const all=parts.filter(Boolean),valid=all.filter(p=>!p.noSpend);
     if(!valid.length||valid.every(p=>!hasValue(p)))return (valid.length?valid:all).find(p=>p.reason)||M.na('No spend recorded.');
@@ -357,7 +372,8 @@
       // The legacy non-X source contributes to financial totals, not traffic or publication metrics.
       const parts=[o['gta-qrts'],o['gta-originals'],o['gta-mandy']].filter((c,i)=>c||i<2);
       const financeParts=[...parts,...(o['gta-instagram']?[o['gta-instagram']]:[])];
-      out.spend=addSpend(financeParts.map(c=>spendOf(c)),'All recorded paid campaign costs');
+      out.paidSpend=addSpend(financeParts.map(c=>spendOf(c)),'Recorded payments');
+      out.spend=addSpend(financeParts.map(allocatedGtaSpend),'GTA VI paid, planned and committed costs');
       out.views=viewsOf([o['gta-qrts'],o['gta-originals'],o['gta-mandy']]);
       const pp=parts.map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
       const all=parts.map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
@@ -374,10 +390,11 @@
       out.published=parts.every(unavailable)?null:parts.reduce((n,c)=>n+(num(c?.published)||0),0);
       out.paidCount=parts.reduce((n,c)=>n+(num(c?.paidCount)||0),0);
       out.committed=financeParts.every(unavailable)?null:Math.round(financeParts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
-      // Source planned costs are reservations, never paid spend.
+      // Planned and committed costs are included in headline spend, but never become paid.
       out.planned=Math.round(financeParts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
 
-      out.budget=budgetOf(out.spend,out.committed+out.planned,o['gta-qrts']?.budget);
+      out.budget=budgetOf(out.spend,0,o['gta-qrts']?.budget);
+      if(out.budget)out.budget.committed=M.value(out.committed||0);
       Object.assign(out,efficiency(parts));
     }else if(key==='of-terms'){
       const c=o['of-terms'];
@@ -420,18 +437,18 @@
     for(const s of summaries)for(const c of Object.values(s.objects)){
       if(!c)continue;
       for(const r of [...(c.rows||[]),...(c.paidReposts||[])]){
-        if(r.paid!==true)continue;
+        if(r.paid!==true&&!(isGtaSource(c)&&num(r.cost)>0))continue;
         const k=rowKey(r);if(!k){keyless++;continue;}
         if(keys.has(k)&&keys.get(k)!==c.id)duplicates++;keys.set(k,c.id);
       }
     }
     let spend;
     const parts=summaries.map(s=>s.spend);
-    if(duplicates||keyless)spend=M.na('Paid rows could not be proven unique across campaigns ('+(duplicates+keyless)+' ambiguous), so no total is shown.');
+    if(duplicates||keyless)spend=M.na('Spend rows could not be proven unique across campaigns ('+(duplicates+keyless)+' ambiguous), so no total is shown.');
     else{
       const known=parts.filter(hasValue).reduce((a,p)=>a+p.value,0);
       const gaps=summaries.filter(s=>!hasValue(s.spend)||s.spend.state==='partial').map(s=>CAMPAIGNS.find(c=>c.key===s.key)?.name);
-      spend=gaps.length?M.partial(known,'Known subtotal of recorded paid costs. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{chip:'Paid campaigns'});
+      spend=gaps.length?M.partial(known,'Known subtotal of payments and GTA VI allocations. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{reason:'Recorded payments plus GTA VI planned and committed costs.',chip:'Campaign costs'});
     }
     const placementObjects=['x-articles','gta-qrts','gta-originals','gta-mandy','of-terms','guru-rts'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
     const views=viewsOf(placementObjects);
@@ -456,6 +473,6 @@
   function safeUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:'';}catch{return '';}}
 
   root.FanvueCore=Object.freeze({TZ,num,full,compact,money,moneyShort,rate,signed,londonDay,addDays,weekStart,dailySeries,weekLabel,dayShort,dayLong,stamp,
-    eventSeries,dailyEventSeries,snapshotSeries,memberWeeks,recentWeeks,memberReadings,M,hasValue,postId,spendOf,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
+    eventSeries,dailyEventSeries,snapshotSeries,memberWeeks,recentWeeks,memberReadings,M,hasValue,postId,spendOf,allocatedGtaSpend,isGtaRow,addSpend,viewsOf,campaignSummary,homeTotals,efficiency,placementEfficiency,budgetOf,
     CAMPAIGNS,PALETTE,OUTCOME_REASON,sortRows,escapeHtml,safeUrl,notConnected,unavailable});
 })(typeof globalThis!=='undefined'?globalThis:window);

@@ -5,7 +5,7 @@ const base='https://elegant-swan-98c20a.netlify.app';
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let ready=false;
 for(let i=0;i<25;i++){
- try{const r=await fetch(base+'/?qa='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(12000)});ready=r.ok&&(await r.text()).includes('20261127-spend-verified-v50');if(ready)break;}catch{}
+ try{const r=await fetch(base+'/?qa='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(12000)});ready=r.ok&&(await r.text()).includes('20261127-gta-allocated-spend-v51');if(ready)break;}catch{}
  await sleep(3000);
 }
 assert.ok(ready,'Latest production HTML must be published before checking spend');
@@ -23,12 +23,15 @@ try{
  };
  const check=async(label)=>{
   const data=await page.evaluate(()=>{const a=window.FanvueApp.reporting;return {week:a.periodTotals('2026-11-23','2026-11-29').spend.value,last:a.periodTotals('2026-11-16','2026-11-22').spend.value};});
-  assert.ok(data.week>=480,label+' this week confirmed paid subtotal');assert.ok(data.last>=805,label+' last week confirmed paid subtotal');
+  assert.ok(data.week>=2180,label+' this week confirmed payments plus separate $1,700 planned allocation');assert.ok(data.last>=805,label+' last week confirmed paid subtotal');
   const week=await read('this-week'),last=await read('last-week'),all=await read('all-time');
   assert.equal(week,await page.evaluate(v=>window.FanvueCore.moneyShort(v),data.week));
   assert.equal(last,await page.evaluate(v=>window.FanvueCore.moneyShort(v),data.last));
   assert.match(all,/^\$[\d,.]+[KM]?$/);
-  console.log('LIVE '+label+' | This Week '+week+' | Last Week '+last+' | All Time '+all);
+  const gta=await page.evaluate(()=>{const ov=window.FanvuePaymentDates.applyPaymentDates(window.XTrackerCampaignReporting.getData());const s=window.FanvueCore.campaignSummary(ov,'gta-vi');return {allocated:s.spend.value,paid:s.paidSpend.value,planned:s.planned,committed:s.committed};});
+  assert.ok(gta.planned>=1700,label+' tab 16 reserved allocation included');
+  assert.ok(Math.abs(gta.allocated-gta.paid-gta.planned-gta.committed)<.011,label+' GTA VI allocation reconciliation');
+  console.log('LIVE '+label+' | This Week '+week+' | Last Week '+last+' | All Time '+all+' | GTA VI '+JSON.stringify(gta));
   return {week,last,all};
  };
  await check('before refresh');

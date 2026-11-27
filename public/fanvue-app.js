@@ -101,7 +101,7 @@
   // One restrained dash for an unavailable cell; the reason is available on hover, focus and to screen readers.
   const dash=reason=>U.reasonButton('–',reason||'Not available.','fv-dash');
   const section=title=>'<h2 class="fv-section-title">'+esc(title)+'</h2>';
-  const payState=r=>r.planned===true?'Planned':r.paid===true?'Paid':C.num(r.cost)!==null?'Unpaid':'';
+  const payState=r=>r.planned===true?'Planned':r.paid===true?'Paid':C.isGtaRow(r)&&C.num(r.cost)>0?'Committed':C.num(r.cost)!==null?'Unpaid':'';
   const payStatus=r=>{const s=payState(r);return s==='Paid'?U.status('Paid','good'):s?U.status(s):'';};
   // A post X reports as not found (HTTP 404) was deleted or hidden by its publisher after going live.
   const isDeleted=r=>r?.posted===true&&(/not_found/i.test(String(r.metricErrorCategory||''))||/HTTP 404/.test(String(r.metricError||'')));
@@ -176,7 +176,7 @@
   function xDetail(x,eff,{source,extra=[]}={}){
     const r=x.raw,e=eff?.get(r)||{};
     return U.detailGrid([
-      ['Payment',payStatus(r)],['Price',C.num(r.cost)!==null?U.value(M.value(C.num(r.cost)),'money'):''],['Paid Date',r.paidAt?when(r.paidAt):''],['Quantity',C.num(r.purchasedPosts)!==null?U.value(M.value(C.num(r.purchasedPosts))):''],
+      ['Payment',payStatus(r)],['Price',C.num(r.cost)!==null?U.value(M.value(C.num(r.cost)),'money'):''],['Paid Date',r.paidAt?when(r.paidAt):''],['Planned Date',r.plannedAt?when(r.plannedAt):''],['Quantity',C.num(r.purchasedPosts)!==null?U.value(M.value(C.num(r.purchasedPosts))):''],
       ['Published',r.postedAt?when(r.postedAt):''],['Source Post',source||''],['Profile',U.extLink(r.profileUrl,'Profile')||''],
       ...(r.postUrls?.length>1?[['Posts',r.postUrls.map((u,i)=>U.extLink(u,'Post '+(i+1))).join(' ')]]:[]),
       ['Tracking Link',trackingText(r.trackingUrl)],
@@ -198,7 +198,7 @@
       {key:'type',label:'Type',type:'text',html:x=>esc(x.type),sort:x=>x.type},
       {key:'clicks',label:'Clicks',keep:true,get:x=>x.clicks},
       {key:'views',label:'Views',keep:true,get:x=>x.views},
-      {key:'spend',label:'Spend',format:'money',get:x=>x.paid?(x.price===null?M.na('Paid cost missing.'):M.value(x.price)):M.na(x.planned?'Planned, not paid.':'Not paid.')},
+      {key:'spend',label:'Spend',format:'money',get:recordSpend},
       {key:'cpc',label:'CPC',format:'money',keep:true,get:x=>eff.get(x.raw)?.cpc||M.na('No matched traffic cost.')},
       {key:'post',label:'Post',type:'link',html:x=>x.link?U.extLink(x.link,'Open post',{iconOnly:true}):dash('No live post link.')}
     ];
@@ -218,11 +218,21 @@
     return '<div class="fv-publisher-costs">'+records.map(x=>'<div><b>'+esc(x.account)+'</b><span>'+esc(x.paid?'Paid':x.planned?'Planned':'Unpaid')+'</span><strong>'+(x.price===null?dash('No cost recorded.'):money(x.price))+'</strong></div>').join('')+'</div>';
   }
   // The four core KPIs for a set of records. RT rows never contribute views: their only reading is the original post's.
+  const gtaFinance=x=>x.parent==='GTA VI'||C.isGtaRow(x.raw);
+  const actualPaid=x=>x.raw?.paid===true&&x.raw?.planned!==true;
+  const bookedCost=x=>actualPaid(x)||(gtaFinance(x)&&((C.num(x.raw?.cost)>0)||x.raw?.planned===true));
+  function recordSpend(x){
+    if(!bookedCost(x))return M.na('Not paid.');
+    const cost=C.num(x.raw.cost);
+    return cost===null?M.na('Cost missing.'):M.value(cost,{reason:actualPaid(x)?'Recorded payment.':'Included in GTA VI allocated spend; not yet paid.'});
+  }
   function xKpis(records){
     const raws=records.map(x=>x.raw),own=records.filter(x=>x.type!=='RT').map(x=>x.raw);
-    const paid=raws.filter(r=>r.paid===true&&r.planned!==true),known=paid.filter(r=>C.num(r.cost)!==null);
-    const total=known.reduce((n,r)=>n+C.num(r.cost),0);
-    const spend=!paid.length?M.value(0,{reason:'No paid placements in this selection.'}):known.length<paid.length?M.partial(total,(paid.length-known.length)+' paid placements have no price.'):M.value(total);
+    const costs=records.filter(bookedCost),known=costs.filter(x=>C.num(x.raw.cost)!==null);
+    const total=Math.round(known.reduce((n,x)=>n+C.num(x.raw.cost),0)*100)/100;
+    const pending=known.filter(x=>!actualPaid(x)).reduce((n,x)=>n+C.num(x.raw.cost),0);
+    const reason=pending?'Includes '+C.money(pending)+' planned or committed unpaid GTA VI allocations.':'Recorded payments.';
+    const spend=!costs.length?M.value(0,{reason:'No recorded costs in this selection.'}):known.length<costs.length?M.partial(total,(costs.length-known.length)+' placements have no price. '+reason):M.value(total,{reason});
     const views=C.viewsOf([{source:'FILTER',rows:own}]);
     const links=new Map();
     for(const x of records){if(!C.hasValue(x.clicks)||x.raw.sharedTracking||x.raw.identityAmbiguous)continue;const key=x.raw.trackingUrl||rowKeyOf(x.raw);links.set(key,Math.max(links.get(key)||0,x.clicks.value));}
@@ -344,27 +354,28 @@
   // UK week, Monday to today.
   const weekRange=ws=>{const we=C.addDays(ws,6);return C.dayShort(ws).split(' ')[0]+(ws.slice(5,7)===we.slice(5,7)?'':' '+C.dayShort(ws).split(' ')[1])+'–'+C.dayShort(we);};
   const postIdsOfRecord=x=>(x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String);
-  // Period spend follows payment dates; view gains follow dated readings. Live posts follow publication dates.
-  // Costs without payment dates are unavailable for a period, but retained in all-time reporting.
+  // Paid costs follow payment dates. Unpaid GTA VI bookings follow confirmed planning/booking dates.
+  // Undated costs remain in all-time totals, not invented weekly figures.
   function periodTotals(from,to,records,financeOnly){
     const all=records||[...xaRecords(),...gtaRecords(),...ofRecords(),...guruRecords()];
     const spendOnly=financeOnly||(records?[]:igSpendRecords());
     const seen=new Set(),posts=new Set();let spend=0,dated=0,undated=0;
     for(const x of [...all,...spendOnly]){
-      if(!x.paid)continue;
+      if(!bookedCost(x))continue;
       const k=rowKeyOf(x.raw);if(seen.has(k))continue;seen.add(k);
-      const payment=x.raw.paidAt?(window.FanvuePaymentDates?.paymentDay(x.raw.paidAt)||C.londonDay(x.raw.paidAt)):'';
-      if(!payment||x.price===null)undated++;
+      const paid=actualPaid(x),date=paid?x.raw.paidAt:x.raw.plannedAt||x.raw.bookedAt;
+      const day=date?(window.FanvuePaymentDates?.paymentDay(date)||C.londonDay(date)):'';
+      if(!day||x.price===null)undated++;
       else{
-        const recorded=C.num(x.raw.datedPaidAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
-        dated++;if(payment>=from&&payment<=to)spend+=amount;
+        const recorded=C.num(paid?x.raw.datedPaidAmount:x.raw.datedPlannedAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
+        dated++;if(day>=from&&day<=to)spend+=amount;
         if(amount<x.price)undated++;
       }
-      if(x.live===true&&x.platform==='X')for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
+      if(paid&&x.live===true&&x.platform==='X')for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:clickBreakdown(from,to),
-      spend:!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.',{label:undated?'Undated':undefined}):undated?M.partial(spend,undated+' paid placements have some undated or unknown cost. Only verified dated payments are included.'):M.value(spend),
+      spend:!dated?M.na('Payment or GTA VI booking dates are not recorded. Weekly spend cannot be inferred from publication dates.',{label:undated?'Undated':undefined}):undated?M.partial(spend,undated+' placements have some undated or unknown cost. Includes dated payments and GTA VI allocations only.'):M.value(spend),
       views:gained.length?M.partial(gained.reduce((n,p)=>n+p.value,0),'Measured increases on dated X post readings. Coverage is incomplete; lifetime views are not assigned to weeks.'):M.na('No dated view readings for this period.'),
       posts:M.value(posts.size,{reason:'Distinct paid X posts published in this period, based on verified post IDs.'})};
   }
@@ -625,7 +636,7 @@
     const b=s?.budget;
     const budget=tab==='overview'&&b?U.supportPanel('Budget','wallet',U.inlineMetrics([
       ['Budget',U.value(b.budget,'money')],
-      ['Paid',U.value(s.spend,'money')],
+      ['Paid',U.value(s.paidSpend,'money')],
       ['Committed',U.value(M.value(s.committed||0),'money')],
       ['Planned',U.value(M.value(s.planned||0),'money')],
       ['Remaining',U.value(b.remaining,'money')],
@@ -733,7 +744,7 @@
       const own=recs.filter(x=>x.type!=='RT'&&x.platform==='X').map(x=>x.raw);
       const posts=new Set();let liveNoLink=0;
       for(const x of recs){if(x.live!==true)continue;const ids=(x.raw.postUrls?.length?x.raw.postUrls:[x.link]).map(u=>C.postId(u)).filter(Boolean);if(ids.length)ids.forEach(i=>posts.add(i));else liveNoLink++;}
-      const paid=recs.filter(x=>x.paid&&!x.planned&&x.price!==null),links=new Map();
+      const costs=recs.filter(x=>bookedCost(x)&&x.price!==null),links=new Map();
       for(const x of recs){if(!C.hasValue(x.clicks)||x.raw.sharedTracking||x.raw.identityAmbiguous)continue;const k=x.raw.trackingUrl||rowKeyOf(x.raw);links.set(k,Math.max(links.get(k)||0,x.clicks.value));}
       const e=C.efficiency([{source:'ACCOUNTS',rows:own}]),matched=C.placementEfficiency(own);
       const matchedClicks=own.reduce((n,r)=>n+(C.hasValue(matched.get(r)?.cpc)?C.num(r.clicks):0),0);
@@ -743,7 +754,7 @@
       const perPost=totalClicks!==null&&totalPosts>0?M.value(totalClicks/totalPosts,{reason:'Total clicks ÷ live posts.'}):M.na('Needs at least one tracked click and one live post.');
       const perDollar=C.hasValue(e.cpc)&&e.cpc.value>0?M.value(1/e.cpc.value,{reason:'The reciprocal of CPC: tracked clicks per dollar spent, from the same matched placements.'}):M.na('Needs a recorded cost and tracked clicks on a placement.');
       return {...a,records:recs,campaigns:[...new Set(recs.map(x=>x.parent))],posts:totalPosts,
-        spend:paid.length?M.value(paid.reduce((n,x)=>n+x.price,0)):M.na('No paid placements.'),
+        spend:costs.length?xKpis(recs).spend:M.na('No recorded costs.'),
         views:C.viewsOf([{source:'ACCOUNTS',rows:own}]),
         clicks,perPost,perDollar,matchedClicks,cpc:e.cpc,cpm:e.cpm};
     });

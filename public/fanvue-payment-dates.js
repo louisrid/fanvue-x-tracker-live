@@ -25,6 +25,7 @@ const confirmed={
  'GTAM|nekt_0':['2026-11-25',70],
  'GTAM|_yashalali':['2026-11-25',50],
  'GTAQ|alinadavy20':['2026-11-16',50],
+ 'GTAQ|iluv_papi':['2026-11-16',50],
  'GTAQ|aaliyah | ai':['2026-11-16',80],
  'GTAQ|insomnia_vip':['2026-11-16',70],
  'GTAQ|quam':['2026-11-20',75],
@@ -43,9 +44,20 @@ function confirmedPayment(row){
  return {...row,paidAt:p[0],datedPaidAmount:p[1],paymentDateSource:'Owner-confirmed payment'};
 }
 
+// Owner confirmed the separate $1,700 tab-16 allocation on 24 November 2026.
+ // The rows are a reservation, not an additional completed payment. Match the
+ // exact recorded batch, not arbitrary future rows or their publication dates.
+const approvedQrtPlan=Object.freeze({"yashal ai":50,"elise perry":100,"iluv_papi":50,"inshrah_ali_":40,"ai doctor":50,"alexa_cooper3":40,"seharshinwari":40,"obsrvate":100,"alzina3691":40,"zahra4sure":40,"alinadavy20":50,"heytoha":150,"zoraiz ai":100,"quam":100,"netklips":120,"theepicstreamer":50,"nusratsid1":40,"wealthempirehq":100,"lexibamo":40,"arkavx":150,"insomnia_vip":70,"riley11_ai":40,"itx_hazel_":40,"aaliyah | ai":100});
+function confirmedPlan(row){
+ if(row.campaign!=='GTAQ2'||(row.paid===true&&row.planned!==true)||paymentDay(row.plannedAt)||paymentDay(row.bookedAt)||row.identityAmbiguous)return row;
+ const key=String(row.publisher||'').trim().replace(/^@/,'').toLowerCase(),amount=approvedQrtPlan[key];
+ if(!Object.prototype.hasOwnProperty.call(approvedQrtPlan,key)||typeof row.cost!=='number'||row.cost<amount)return row;
+ return {...row,plannedAt:'2026-11-24',datedPlannedAmount:amount,planDateSource:'Owner-confirmed separate QRT allocation'};
+}
+const reconcileRow=row=>confirmedPlan(confirmedPayment(row));
 function applyPaymentDates(overview){
  if(!overview||!Array.isArray(overview.campaigns))return overview;
- return {...overview,campaigns:overview.campaigns.map(c=>({...c,...(Array.isArray(c.rows)?{rows:c.rows.map(confirmedPayment)}:{}),...(Array.isArray(c.paidReposts)?{paidReposts:c.paidReposts.map(confirmedPayment)}:{})}))};
+ return {...overview,campaigns:overview.campaigns.map(c=>({...c,...(Array.isArray(c.rows)?{rows:c.rows.map(reconcileRow)}:{}),...(Array.isArray(c.paidReposts)?{paidReposts:c.paidReposts.map(reconcileRow)}:{})}))};
 }
-root.FanvuePaymentDates=Object.freeze({paymentDay,confirmedPayment,applyPaymentDates});
+root.FanvuePaymentDates=Object.freeze({paymentDay,confirmedPayment,confirmedPlan,applyPaymentDates});
 })(globalThis);

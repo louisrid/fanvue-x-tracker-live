@@ -5,7 +5,7 @@
  * Historical metrics never reset on provider errors. No synthetic UTM clicks.
  */
 import ExcelJS from 'exceljs';
-import {paymentDay,confirmedPayment} from '../lib/payment-dates.mjs';
+import {paymentDay,confirmedPayment,confirmedPlan} from '../lib/payment-dates.mjs';
 import {createHash} from 'node:crypto';
 import {summarisePlacements} from '../lib/placement-reporting.mjs';
 import {getStore} from '@netlify/blobs';
@@ -108,6 +108,7 @@ export function parseRows(workbook,report={read:[],skipped:[]},resolved={}){
         publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
         cost,paid,posted,trackingUrl,clicks:null,
         paidAt:paymentDay(val(col['PAID DATE']?cell('PAID DATE'):col['PAYMENT DATE']?cell('PAYMENT DATE'):col['PAID AT']?cell('PAID AT'):null)),
+        plannedAt:paymentDay(val(col['PLANNED DATE']?cell('PLANNED DATE'):col['BOOKING DATE']?cell('BOOKING DATE'):col['BOOKED DATE']?cell('BOOKED DATE'):col['PLANNED AT']?cell('PLANNED AT'):col['BOOKED AT']?cell('BOOKED AT'):null)),
         ...(postUrls.length>1?{postUrls}:{}),...(campaign==='GTAM'?{purchasedPosts:Number.isSafeInteger(noted)&&noted>0?noted:paid?1:null}:{})});
     }
   }
@@ -191,7 +192,7 @@ export const countPlannedAsPaid=rows=>(rows||[]).map(p=>{
 });
 async function sourceRows(force=false){
   const source=await readSourceRows(force);
-  const rows=countPlannedAsPaid(source.rows).map(confirmedPayment);
+  const rows=countPlannedAsPaid(source.rows).map(confirmedPayment).map(confirmedPlan);
   const usage=new Map();
   for(const p of rows){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
   // A link used both by a separately reported campaign and by another group cannot be credited to either.
