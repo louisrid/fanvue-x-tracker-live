@@ -319,8 +319,10 @@ test('Accounts page: one row per platform + handle across campaigns, from the sh
   assert.match(shell,/const records=xaRecords\(\);/);assert.match(shell,/const records=gtaRecords\(\);/);
   assert.match(shell,/records=ofRecords\(\)/);assert.match(shell,/records=guruRecords\(\)/);
   assert.match(shell,/k==='home'\|\|k==='all-accounts'\)\{await app\?\.refresh\?\.all/);
-  // One row per account: no expandable placement history.
-  assert.doesNotMatch(shell,/fv-account-history/);
+  // One summary row per account; the optional history is a single list, not repeated cards.
+  assert.match(shell,/expand:accountHistory,/);
+  assert.match(shell,/function accountHistory\(account\)/);
+  assert.doesNotMatch(shell,/fv-account-tag|fv-value-badge/);
 });
 
 test('"Spend" replaces "Paid spend" in every visible label',()=>{
