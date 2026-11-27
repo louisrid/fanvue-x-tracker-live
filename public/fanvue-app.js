@@ -534,7 +534,7 @@
   }
   function periodControls(page,st={},only=true){
     const active=selectedPeriod(page,st);
-    return '<nav class="fv-segments fv-kpi-periods'+(only?' fv-view-slot':'')+'" aria-label="KPI reporting period">'+KPI_PERIODS.map(([key,label])=>'<button type="button" data-period="'+key+'" aria-pressed="'+(active===key)+'">'+label+'</button>').join('')+'</nav>';
+    return (only?overviewTabs():'')+'<nav class="fv-segments fv-kpi-periods" aria-label="KPI reporting period">'+KPI_PERIODS.map(([key,label])=>'<button type="button" data-period="'+key+'" aria-pressed="'+(active===key)+'">'+label+'</button>').join('')+'</nav>';
   }
   function scopedViews(history,period){
     const gains=C.dailySeries(history,{born:postBorn,days:21}).gained.filter(p=>p.week>=period.from&&p.week<=period.to&&p.value!==null);
