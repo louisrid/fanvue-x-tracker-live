@@ -271,7 +271,7 @@ try{
      for(const [key,value] of [['clicks','787'],['views','1,612,090'],['spend','$6,110.85'],['cpc','$3.19']]){
       const td=row.querySelector('[data-column="'+key+'"]');const old=td.innerHTML;saved.push([td,old]);td.innerHTML='<span class="fv-num">'+value+'</span>';
      }
-     const fit=saved.every(([td])=>{const span=td.firstElementChild;return span.getBoundingClientRect().width<=td.getBoundingClientRect().width+1&&span.getBoundingClientRect().height<=parseFloat(getComputedStyle(span).lineHeight)+1;});
+     const fit=saved.every(([td])=>{const span=td.firstElementChild,s=getComputedStyle(span),box=span.getBoundingClientRect(),pad=parseFloat(s.paddingTop)+parseFloat(s.paddingBottom)+parseFloat(s.borderTopWidth)+parseFloat(s.borderBottomWidth);return box.width<=td.getBoundingClientRect().width+1&&box.height-pad<=parseFloat(s.lineHeight)+1&&span.scrollWidth<=span.clientWidth+1;});
      for(const [td,old] of saved)td.innerHTML=old;return fit;
     });
     assert.ok(realistic,'live-sized campaign values fit on a single line');
