@@ -1702,7 +1702,7 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
 }
 #fvPage.fv-dashboard-layout>.fv-strip .fv-metric-value .fv-dash{font-size:var(--fv-fs-num);color:#FFF;line-height:1}
 #fvPage.fv-dashboard-layout>.fv-strip .fv-metric-value.is-state{font-size:var(--fv-fs-num);line-height:1}
-#fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip){border-radius:12px;border-color:#555;background:#000}
+#fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip){border-radius:12px;border-color:var(--fv-outline,#9B5279);background:#000}
 #fvPage.fv-dashboard-layout>.fv-panel>.fv-panel-head{border-radius:11px 11px 0 0}
 #fvPage.fv-dashboard-layout>.fv-chart-panel>.fv-chart{border-radius:8px;background:#000;border-color:#383838}
 #fvPage.fv-dashboard-layout>.fv-chart-panel .fv-chart-scope{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:#FFF;white-space:nowrap}
