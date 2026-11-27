@@ -2055,3 +2055,196 @@ html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv
  html[data-dashboard-layout="4"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{border-left:3px solid #C71667}
  html[data-dashboard-layout="5"] #fvPage.fv-dashboard-layout>.fv-home-discord{background:#15102A}
 }
+
+
+/* Owner visual refinement: heavier single-layer outlines and readable hover feedback.
+   No reporting, route, chart data, or numeric value styling changes. */
+#fvShell{
+ --fv-outline:#B56791;--fv-kpi-outline:#DC6DA3;--fv-hover-outline:#E995C2;
+ --fv-hover-surface:#1C1C1C;--fv-hover-column:#303030;--fv-hover-control:#282828;
+}
+#fvShell.pg-discord,#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord{
+ --fv-outline:#AA97E7;--fv-kpi-outline:#AA97E7;--fv-hover-outline:#C7B7FF;
+}
+#fvShell #fvPage>.fv-panel:not(.fv-strip){
+ border-width:2px;border-radius:8px;
+}
+#fvShell #fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip),
+#fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+ border-radius:14px;
+}
+#fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head{
+ border-bottom-width:2px;border-radius:6px 6px 0 0;
+}
+#fvShell #fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip)>.fv-panel-head{
+ border-radius:12px 12px 0 0;
+}
+#fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+ border-width:2px;border-radius:8px;
+}
+#fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+ border-left-width:4px;border-radius:14px;
+}
+#fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){border-right-width:2px}
+#fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:last-child{border-right-width:0}
+#fvShell #fvPage :is(.fv-search,.fv-show-all,.fv-open-btn,.fv-control,.fv-select select,.fv-mobile-sort select,.fv-table .fv-expand,.fv-table .fv-ext.is-icon),
+#fvShell #fvPage>.fv-subnav button,#fvShell #fvPage>.fv-view-slot>span,
+#fvShell #fvRefresh,#fvShell #fvBack{
+ border-width:2px;border-radius:10px;
+}
+#fvShell .fv-sidebar .fv-nav-item{border-radius:8px}
+#fvShell .fv-sidebar .fv-nav-item[aria-current="page"]{box-shadow:inset 0 0 0 2px #FFFFFF}
+#fvShell .fv-sidebar{border-right-width:2px}
+#fvShell .fv-plot .fv-grid{stroke-width:1.5;stroke-opacity:.25}
+#fvShell .fv-plot .fv-grid.is-zero{stroke-width:2;stroke-opacity:.4}
+#fvShell #fvPage .fv-support-line+.fv-support-line,
+#fvShell #fvPage #acc-table :is(.fv-account-history-head,.fv-account-history-row){
+ border-color:#414141;
+}
+#fvShell #fvPage .fv-support-line+.fv-support-line{border-top-width:2px}
+#fvShell #fvPage #acc-table :is(.fv-account-history-head,.fv-account-history-row){border-bottom-width:2px}
+#fvShell #fvPage :is(.fv-detail-grid>div,.fv-original-context>div,.fv-community-summary>div,.fv-tile,.fv-inline-metrics>div){
+ border-radius:6px;
+}
+#fvShell :is(.fv-editor,.fv-popover,.fv-range-menu){
+ border-width:2px;border-radius:10px;border-color:var(--fv-outline,#B56791);
+}
+#fvShell .fv-editor-head{border-bottom-width:2px;border-radius:8px 8px 0 0}
+#fvShell .fv-editor :is(input:not([type="checkbox"]),select,textarea){border-width:2px;border-radius:8px}
+body.fv .fv-tooltip,body.fv .fv-tooltip.is-chart{
+ border:2px solid #646464;border-radius:8px;background:#252525;color:#FFF;
+}
+#fvShell .fv-notice{border-width:2px;border-radius:10px}
+body.fv .fv-records :is(.tracker-controls,.accounts-tools,.xt-table-wrap,.account-table-wrap,.loading-card,.empty-state),
+body.fv .article-modal .modal-content{
+ border-width:2px;border-radius:10px;
+}
+body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="modal-metric"]){
+ border-width:2px;border-radius:8px;
+}
+@media(min-width:768px){
+ #fvShell #fvPage .fv-table>thead>tr>th,
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td{
+  border-bottom-width:2px;border-bottom-color:#383838;
+ }
+ #fvShell #fvPage .fv-table>thead>tr>th:not(:last-child),
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td:not(:last-child){
+  border-right-width:2px;border-right-color:#383838;
+ }
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row:last-child>td{border-bottom-width:0}
+ #fvShell #fvPage :is(.fv-detail-grid>div,.fv-original-context>div,.fv-community-summary>div){border-width:2px}
+ body.fv .fv-records :is(.xt-data-table,.account-table) :is(th,td):not([colspan]){border-bottom-width:2px;border-bottom-color:#383838}
+}
+@media(max-width:767px){
+ #fvShell .fv-sidebar{border-right-width:0}
+ #fvShell .fv-mobile-top{border-bottom-width:2px}
+ #fvShell #fvPage>.fv-panel:not(.fv-strip){border-radius:14px}
+ #fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head{border-radius:12px 12px 0 0}
+ #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-width:4px;border-radius:14px}
+ /* Mobile listings retain one outlined card per record, without an outer frame. */
+ #fvShell #fvPage>.fv-table-panel{border:0;border-radius:0}
+ #fvShell #fvPage>.fv-table-panel>.fv-panel-head{border:0;border-radius:0}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row{border-width:2px;border-radius:14px}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row.is-open{border-radius:14px 14px 0 0}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-detail{border-width:2px;border-top-width:0;border-radius:0 0 14px 14px}
+ #fvShell #fvPage .fv-chart-panel>.fv-chart{border:0;border-radius:0}
+ #fvShell .fv-editor{border:0;border-radius:0}
+ #fvShell .fv-editor-head{border-radius:0}
+}
+@media(hover:hover) and (pointer:fine){
+ /* Keep feedback restrained, and never recolour the numbers themselves. */
+ #fvShell #fvPage>.fv-panel:not(.fv-strip):hover{
+  border-color:var(--fv-hover-outline,#E995C2);
+ }
+ #fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head:hover{
+  background-color:#191919;
+ }
+ #fvShell #fvPage>.fv-panel.fv-strip>.fv-metric:nth-child(n):hover{
+  background-color:#202020;border-color:var(--fv-hover-outline,#E995C2);
+ }
+ #fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n):hover{
+  background-color:#482438;border-left-color:#F0357C;
+ }
+ #fvShell #fvPage>.fv-home-discord>.fv-panel-head:hover{background-color:#30264A}
+ #fvShell #fvPage>.fv-home-discord .fv-metric:nth-child(n):hover{background-color:#232034}
+ #fvShell #fvPage .fv-chart-panel>.fv-chart:hover{background-color:#101010}
+ #fvShell #fvPage :is(.fv-tile,.fv-period-card,.fv-notice,.fv-inline-metrics>div,.fv-detail-grid>div,.fv-original-context>div,.fv-community-summary>div,.fv-support-line,.fv-account-history-row):hover{
+  background-color:var(--fv-hover-surface,#1C1C1C);
+ }
+ #fvShell #fvPage .fv-table>tbody>tr.fv-detail>td:hover{background-color:#181818}
+ #fvShell #fvPage :is(.fv-search,.fv-show-all,.fv-open-btn,.fv-select select,.fv-mobile-sort select,.fv-table .fv-expand,.fv-table .fv-ext.is-icon):hover{
+  background-color:var(--fv-hover-control,#282828);
+ }
+ #fvShell #fvPage .fv-search:hover input{background:transparent}
+ #fvShell #fvPage :is(.fv-subnav,.fv-segments) button:not([aria-current="page"]):not([aria-pressed="true"]):hover,
+ #fvShell #fvBack:hover,#fvShell .fv-sidebar .fv-nav-item:not([aria-current="page"]):hover{
+  background-color:var(--fv-hover-control,#282828);color:#FFF;
+ }
+ #fvShell .fv-sidebar .fv-nav-item[aria-current="page"]:hover{background-color:#252525}
+ #fvShell #fvPage .fv-control:hover,#fvShell #fvRefresh:hover:not(:disabled),
+ #fvShell #fvPage :is(.fv-subnav,.fv-segments) button:is([aria-current="page"],[aria-pressed="true"]):hover{
+  filter:brightness(1.12);
+ }
+ #fvShell :is(.fv-editor,.fv-popover,.fv-range-menu):hover{
+  border-color:var(--fv-hover-outline,#E995C2);
+ }
+ #fvShell :is(.fv-editor-preview,.fv-editor-note,.fv-editor-head):hover,
+ #fvShell .fv-editor :is(input:not([type="checkbox"]),select,textarea):hover{
+  background-color:#202020;
+ }
+ body.fv .fv-records :is(.tracker-controls,.accounts-tools,.xt-table-wrap,.account-table-wrap,.loading-card,.empty-state):hover,
+ body.fv .article-modal :is(.modal-content,.history-row,.modal-link:not(.main-link),[class*="modal-metric"]):hover{
+  border-color:#B56791;background-color:#1C1C1C;
+ }
+ body.fv .fv-records :is(.button:not(.button-primary),.x-refresh-button,.page-back-button,details.filter-details>summary):hover,
+ body.fv .article-modal :is(.button:not(.button-primary),.modal-close,input:not([type="checkbox"]),select,textarea):hover{
+  background-color:#282828;color:#FFF;
+ }
+ @media(max-width:767px){
+  #fvShell #fvPage .fv-table>tbody>tr.fv-row:hover{background-color:#1C1C1C;border-color:var(--fv-hover-outline,#E995C2)}
+ }
+ /* Column hover is scoped to the table under the pointer. Group/detail/empty
+    rows span multiple columns and are intentionally excluded. */
+
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(17):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(17):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(18):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(18):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(19):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(19):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(20):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(20):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(21):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(21):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(22):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(22):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(23):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(23):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(24):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(24):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(25):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(25):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(26):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(26):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(27):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(27):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(28):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(28):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(29):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(29):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]),
+ body.fv :is(.fv-table,.xt-data-table,.account-table):has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]):hover) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]){
+  background-color:#303030!important;
+ }
+ body.fv :is(.fv-table,.xt-data-table,.account-table) > :is(thead,tbody,tfoot) > tr > :is(th,td):not([colspan]):hover{
+  background-color:#3B3B3B!important;
+ }
+}
+/* Keyboard focus keeps its existing outline; avoid sticky hover on touch. */
+@media(prefers-reduced-motion:reduce){
+ #fvShell #fvPage :is(.fv-panel,.fv-metric,.fv-control,.fv-tile),body.fv .article-modal .modal-content{transition:none}
+}
