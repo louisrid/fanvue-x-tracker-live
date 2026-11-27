@@ -377,7 +377,7 @@
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:records?M.na('Scoped clicks are calculated separately.'):clickBreakdown(from,to),
-      spend:!dated&&!undated&&records?M.value(0,{reason:'No recorded costs in this selection.'}):!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.',{label:undated?'Undated':undefined}):undated?M.partial(spend,undated+' placements have some undated or unknown cost. Includes dated payments only.'):M.value(spend),
+      spend:!dated&&!undated&&records?M.value(0,{reason:'No recorded costs in this selection.'}):!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.',{displayDash:true}):undated?M.partial(spend,undated+' placements have some undated or unknown cost. Includes dated payments only.'):M.value(spend),
       views:gained.length?M.partial(gained.reduce((n,p)=>n+p.value,0),'Measured increases on dated X post readings. Coverage is incomplete; lifetime views are not assigned to weeks.'):M.na('No dated view readings for this period.'),
       posts:M.value(posts.size,{reason:'Distinct paid X posts published in this period, based on verified post IDs.'})};
   }

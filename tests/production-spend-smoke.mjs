@@ -6,7 +6,7 @@ const base='https://elegant-swan-98c20a.netlify.app';
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let ready=false;
 for(let i=0;i<25;i++){
- try{const r=await fetch(base+'/?qa='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(12000)});ready=r.ok&&(await r.text()).includes('20261127-discord-clean-v56');if(ready)break;}catch{}
+ try{const r=await fetch(base+'/?qa='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(12000)});ready=r.ok&&(await r.text()).includes('20261127-discord-flat-v57');if(ready)break;}catch{}
  await sleep(3000);
 }
 assert.ok(ready,'Latest production HTML must be published before checking spend');
@@ -90,6 +90,7 @@ try{
   await page.waitForFunction(()=>document.querySelectorAll('#fvPage>.fv-kpi-periods [data-period]').length===3);
   for(const period of ['this-week','last-week','all-time']){
    await page.locator('#fvPage>.fv-kpi-periods [data-period="'+period+'"]').click();
+   await page.waitForFunction(period=>document.querySelector('#fvPage>.fv-kpi-periods [aria-pressed="true"]')?.dataset.period===period,period);
    assert.equal(await page.locator('#fvPage>.fv-kpi-periods [aria-pressed="true"]').getAttribute('data-period'),period);
   }
   console.log('LIVE KPI period controls '+route+' checked');

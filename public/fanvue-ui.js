@@ -104,7 +104,7 @@
   function value(m,format='count',{chipText}={}){
     if(!m||m.state==='loading')return '<span class="fv-skel" aria-label="Loading"></span>';
     if(m.value===null||!['value','partial','stale'].includes(m.state))
-      return reasonButton(m.label||STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
+      return m.displayDash?dashCell(m.reason):reasonButton(m.label||STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
     return numberSpan(formatValue(m.value,format),m.reason&&m.state!=='value'?m.reason:'');
   }
   function chipFor(m,note){

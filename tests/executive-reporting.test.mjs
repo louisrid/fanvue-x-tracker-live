@@ -213,7 +213,8 @@ test('old saved campaign data receives confirmed payment dates without losing al
  assert.equal(app(raw).periodTotals('2026-11-23','2026-11-29').spend.value,280);
  assert.equal(app(raw).periodTotals('2026-11-16','2026-11-22').spend.value,75);
  assert.equal(app(raw).periodTotals('2026-11-16','2026-11-22').spend.state,'partial');
- assert.equal(app({campaigns:[campaign('x-articles',[{code:'null-date',paid:true,cost:100,paidAt:null}])]}).periodTotals('2026-11-23','2026-11-29').spend.label,'Undated');
+ const missing=app({campaigns:[campaign('x-articles',[{code:'null-date',paid:true,cost:100,paidAt:null}])]}).periodTotals('2026-11-23','2026-11-29').spend;
+ assert.equal(missing.value,null);assert.equal(missing.label,undefined);assert.equal(missing.displayDash,true);assert.match(missing.reason,/Payment dates are not recorded/);
  assert.match(app(raw).pages.home({view:'this-week'}).body,/\$280/);
 });
 

@@ -364,6 +364,8 @@ try{
    const expectedDiscordLabel=period==='last-week'?'Last Week':period==='all-time'?'All Time':'This Week';
    assert.equal(await page.locator('.fv-home-discord .fv-panel-head .fv-discord-scope').innerText(),expectedDiscordLabel);
    assert.equal(await page.locator('.fv-home-discord > .fv-discord-scope').count(),0,'no extra Discord scope row');
+   assert.ok(await page.locator('.fv-home-discord-link').evaluate(e=>{const s=getComputedStyle(e);return s.boxShadow==='none'&&s.filter==='none'&&s.textShadow==='none'&&s.borderTopColor===s.backgroundColor;}),'flat Discord button');
+   assert.equal(await page.locator('#fvPage').getByText('Undated',{exact:true}).count(),0,'no visible undated tag');
    assert.ok(await page.locator('.fv-home-discord .fv-panel-head').evaluate(e=>{const h=e.querySelector('.fv-discord-heading'),b=e.querySelector('.fv-home-discord-link'),x=h.getBoundingClientRect(),y=b.getBoundingClientRect();return h.scrollWidth<=h.clientWidth+1&&x.right<=y.left+1;}),'compact Discord heading fits beside button');
    assert.equal(await page.locator('.fv-home-discord-link').getAttribute('href'),'#discord/'+period);
    assert.ok((await page.locator('.fv-home-community-strip').innerText()).includes('Net Growth'));

@@ -2820,3 +2820,21 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 #fvShell #fvPage .fv-home-discord .fv-discord-heading{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap;min-width:0}
 #fvShell #fvPage .fv-home-discord .fv-discord-scope{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:#FFF;line-height:1;white-space:nowrap;letter-spacing:0}
 @media(max-width:767px){#fvShell #fvPage .fv-home-discord .fv-discord-heading{gap:5px}#fvShell #fvPage .fv-home-discord .fv-home-discord-link{padding-inline:8px;gap:4px}}
+
+/* Flat Discord surfaces: no glow, halo, or brightness effects. Preserve keyboard focus. */
+#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord,
+#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord :is(.fv-panel-head,.fv-strip,.fv-metric),
+#fvShell[data-campaign-theme="discord"] #fvPage :is(.fv-panel,.fv-metric,.fv-panel-head,.fv-control,.fv-segments button),
+#fvShell .fv-nav-item[href="#discord"]{box-shadow:none;filter:none;text-shadow:none}
+#fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord :is(.fv-home-discord-link,.fv-discord-btn),
+#fvShell[data-campaign-theme="discord"] :is(.fv-home-discord-link,.fv-discord-btn){background:#4752C4;border:1px solid #4752C4;color:#FFF;box-shadow:none;filter:none;text-shadow:none}
+#fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord :is(.fv-home-discord-link,.fv-discord-btn):hover,
+#fvShell[data-campaign-theme="discord"] :is(.fv-home-discord-link,.fv-discord-btn):hover{background:#3944A8;border-color:#3944A8;box-shadow:none;filter:none}
+#fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord:hover{border-color:var(--fv-structure-line);box-shadow:none;filter:none}
+#fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head:hover{background:#171328}
+#fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n):hover{background:transparent;box-shadow:none;filter:none}
+#fvShell[data-campaign-theme="discord"] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n):hover{background:var(--fv-theme-tint);border-color:var(--fv-outline);border-left-color:var(--fv-accent);box-shadow:none;filter:none}
+#fvShell[data-campaign-theme="discord"] #fvPage :is(.fv-segments button,.fv-control):hover,#fvShell[data-campaign-theme="discord"] #fvRefresh:hover{box-shadow:none;filter:none}
+#fvShell .fv-sidebar .fv-nav-item[href="#discord"]:is(:hover,[aria-current="page"]){box-shadow:none;filter:none}
+#fvShell .fv-sidebar .fv-nav-item[href="#discord"][aria-current="page"]{outline:1px solid var(--fv-outline);outline-offset:-1px}
+#fvShell :is(.fv-home-discord-link,.fv-discord-btn,.fv-nav-item[href="#discord"]):focus-visible{outline:2px solid #FFF;outline-offset:2px}
