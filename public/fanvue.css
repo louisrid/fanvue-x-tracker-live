@@ -685,7 +685,7 @@ td.is-name>.fv-name,td.is-name>.fv-types{vertical-align:middle}
   .fv-menu-button .fv-icon{width:34px;height:34px}
 }
 /* Dashboard page: black page, no page title or timestamp, plain outline Refresh button on the right. */
-.fv-shell.is-home,.fv-shell.is-home .fv-main{background:#0A0A0C}
+.fv-shell.is-home,.fv-shell.is-home .fv-main{background:#070709}
 .is-home .fv-title,.is-home .fv-updated,.is-home #fvRange{display:none}
 .is-home .fv-header{justify-content:flex-end}
 .is-home #fvRefresh{background:transparent;border:1px solid #2A2A30;color:#B9BEC6;font-family:var(--fv-display);font-weight:var(--fv-w)}
@@ -1017,7 +1017,7 @@ body.fv .fv-hit:focus-visible{outline-color:#FF88C4}
 
 /* Stronger type, campaign colour and clearly separated controls. */
 body.fv,body.fv *{text-decoration:none!important}
-body.fv,.fv-shell,.fv-shell .fv-main{background:#08080B}
+body.fv,.fv-shell,.fv-shell .fv-main{background:#050507}
 .fv-main{padding-top:48px;color:#fff}
 .fv-title h1{font-size:var(--fv-fs-xl)}
 .fv-panel.fv-strip .fv-metric,.fv-panel.fv-strip .fv-metric:nth-child(n){
