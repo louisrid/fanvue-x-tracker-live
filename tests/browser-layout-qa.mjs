@@ -245,7 +245,7 @@ try{
    for(const k of ['title','header'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
    // Dashboard retains the common page alignment, but restores its compact card and chart sizes.
    for(const k of ['strip','chart','list','toolbar'])close([g[k][0],g[k][2]],[reference[k][0],reference[k][2]],viewport.width+' Dashboard '+k+' width');
-   if(viewport.width<768){assert.equal(g.card[3],108);assert.equal(g.chart[3],216);}else{assert.equal(g.card[3],124);assert.equal(g.chart[3],310);}
+   if(viewport.width<768){assert.equal(g.card[3],78);assert.equal(g.chart[3],216);}else{assert.equal(g.card[3],90);assert.equal(g.chart[3],310);}
    await auditPhone('Dashboard '+period);
    if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
