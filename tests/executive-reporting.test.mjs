@@ -175,7 +175,9 @@ test('dashboard always reserves campaign rows and follows the shared frame, even
  const html=app(null).pages.home({view:'all-time'}).body;
  const k=html.indexOf('fv-strip'),g=html.indexOf('fv-chart-panel'),l=html.indexOf('home-comparison'),d=html.indexOf('fv-home-discord');
  assert.ok(k>=0&&k<g&&g<l&&l<d);
- assert.equal((html.match(/class="fv-metric"/g)||[]).length,4);
+ assert.equal((html.slice(k,g).match(/class="fv-metric"/g)||[]).length,4);
+ assert.equal((html.slice(d).match(/class="fv-metric"/g)||[]).length,3);
+ assert.match(html.slice(d),/aria-label="Discord metrics"/);
  assert.equal((html.match(/class="fv-row"/g)||[]).length,5);
 });
 test('dashboard weekly clicks include scoped Short.io readings exactly once, not lifetime totals',()=>{

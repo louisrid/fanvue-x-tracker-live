@@ -275,7 +275,7 @@
     const header=subTabs(tabs,active).replace('aria-label="Campaign sections"','aria-label="Dashboard periods"');
     const figures=U.strip([metric('Clicks','cursor',paid.clicks),metric('Views','eye',paid.views,'compact'),metric('Spend','wallet',paid.spend,'moneyShort'),metric('Live Posts','check',paid.posts)]);
     const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord">'+U.icon('discord',15)+'View Discord</a>')+
-      U.strip([metric('Members','users',community.members,'count'),metric('Growth','trend',community.growth,'signed'),metric('Course Clicks','graduation',community.clicks)],{cls:'fv-home-community-strip'})+'</section>';
+      U.strip([metric('Members','users',community.members,'count'),metric('Growth','trend',community.growth,'signed'),metric('Course Clicks','graduation',community.clicks)],{cls:'fv-home-community-strip',ariaLabel:'Discord metrics'})+'</section>';
     return {title:'Dashboard',refreshLabel:'Refresh All',chipHtml:'<span class="fv-campaign-chip" aria-hidden="true">'+U.icon('home',15)+'</span>',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+dashboardChart(period)+campaignComparison(S,period)+discord+overviewNotice()};
   }
   // The graph and period totals share the exact same scoped, dated click series.

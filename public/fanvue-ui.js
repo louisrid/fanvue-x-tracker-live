@@ -137,10 +137,10 @@
     '</div>';
   }
   /* Only figures that exist are shown; slots without data are left out. */
-  function strip(items,{cls=''}={}){
+  function strip(items,{cls='',ariaLabel='Key metrics'}={}){
     const shown=items;
     if(!shown.length)return '';
-    return '<section class="fv-panel fv-strip'+(cls?' '+esc(cls):'')+'" style="--n:'+shown.length+'" data-n="'+shown.length+'" aria-label="Key metrics">'+shown.map(stripCell).join('')+'</section>';
+    return '<section class="fv-panel fv-strip'+(cls?' '+esc(cls):'')+'" style="--n:'+shown.length+'" data-n="'+shown.length+'" aria-label="'+esc(ariaLabel)+'">'+shown.map(stripCell).join('')+'</section>';
   }
 
   /* ---------- panel heads ---------- */
