@@ -1930,3 +1930,14 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-dash{font-weight:var(--fv-w-black);}
  #fvShell .fv-menu-button:focus:not(:focus-visible){outline:none}
 }
+
+@media(max-width:767px){
+ #fvPage.fv-dashboard-layout>.fv-chart-panel{background:#090609;border:1px solid var(--fv-mobile-line);border-radius:12px}
+ #fvPage.fv-campaign-layout>.fv-support{border:1px solid var(--fv-mobile-line);border-radius:12px;background:#090609}
+ #fvPage.fv-campaign-layout>.fv-support>.fv-panel-head{border:0;background:transparent;padding:0 13px}
+ #fvPage.fv-campaign-layout>.fv-support .fv-original-context{padding:0 12px 12px;gap:8px}
+ #fvPage.fv-campaign-layout>.fv-support .fv-original-context>div{background:var(--fv-mobile-card);border:0;border-radius:8px}
+ #fvPage.fv-campaign-layout>.fv-support .fv-original-context a{color:#FFF}
+ #fvPage.fv-campaign-layout>.fv-support .fv-detail-grid>div{background:var(--fv-mobile-card);border:0;border-radius:8px}
+ #fvPage.fv-campaign-layout>.fv-support .fv-notice{padding:0 12px 12px;line-height:1.4}
+}
