@@ -85,7 +85,7 @@ test('campaign feed adds an Instagram group, committed spend and the GTA VI budg
   assert.equal(find('gta-instagram').committedUnpaidKnown,0);
   assert.deepEqual(find('gta-qrts').budget,{amount:10000,currency:'USD'});
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.paidSpend.value,690);assert.equal(s.spend.value,690);assert.equal(s.allocatedSpend.value,880);assert.equal(s.planned,150); // owner (26 Nov): no trailing .00
+  assert.equal(s.paidSpend.value,690);assert.equal(s.spend.value,880);assert.equal(s.allocatedSpend.value,880);assert.equal(s.planned,150); // owner (26 Nov): no trailing .00
   assert.equal(s.budget.remaining.value,10000-690-150-40);
 });
 
@@ -130,7 +130,7 @@ test('GTA VI totals include Instagram; budget shows spend, committed and remaini
   const ov={campaigns:[obj('gta-qrts',1840,100,{budget:{amount:10000,currency:'USD'}}),obj('gta-originals',2600.85,0),obj('gta-instagram',1140,0)]};
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(Math.round(s.paidSpend.value*100)/100,5580.85);
-  assert.equal(Math.round(s.spend.value*100)/100,5580.85);assert.equal(Math.round(s.allocatedSpend.value*100)/100,5680.85);
+  assert.equal(Math.round(s.spend.value*100)/100,5680.85);assert.equal(Math.round(s.allocatedSpend.value*100)/100,5680.85);
   assert.equal(s.committed,100);
   assert.equal(s.budget.budget.value,10000);
   assert.equal(Math.round(s.budget.remaining.value*100)/100,4319.15);
@@ -193,12 +193,12 @@ test('a GTA report from before Instagram, or a group with no paid rows, never ma
   assert.equal(ov.campaigns.some(c=>c.id==='gta-instagram'),false);
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(s.spend.state,'value');
-  assert.equal(s.paidSpend.value,350);assert.equal(s.spend.value,350);assert.equal(s.allocatedSpend.value,540);
+  assert.equal(s.paidSpend.value,350);assert.equal(s.spend.value,540);assert.equal(s.allocatedSpend.value,540);
   // A connected Instagram group with nothing paid adds $0 rather than a gap.
   const withEmpty=assembleCampaignOverview({gta:{data:{...old,instagram:group(['GTAIG'])}},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const s2=C.campaignSummary(withEmpty,'gta-vi');
   assert.equal(s2.spend.state,'value');
-  assert.equal(s2.paidSpend.value,350);assert.equal(s2.spend.value,350);assert.equal(s2.allocatedSpend.value,540);
+  assert.equal(s2.paidSpend.value,350);assert.equal(s2.spend.value,540);assert.equal(s2.allocatedSpend.value,540);
 });
 
 const uctx=vm.createContext({window:{FanvueCore:C},Intl,Date,Math,Number,String,Object,Array,Map,Set,JSON,RegExp,URL});
@@ -279,7 +279,7 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   assert.equal(mq.paidSpendKnown,250);assert.equal(mq.purchasedPosts,4);assert.equal(mq.committedUnpaidKnown,0);assert.equal(mq.plannedSpendKnown,100);
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(s.paidSpend.value,250+100+340+250);
-  assert.equal(s.spend.value,250+100+340+250);assert.equal(s.allocatedSpend.value,250+100+340+250+150+40+100);
+  assert.equal(s.spend.value,250+100+340+250+150+40+100);assert.equal(s.allocatedSpend.value,250+100+340+250+150+40+100);
   // Two posts on one row each count once for views; CPM waits for both readings.
   const vrow={paid:true,posted:true,cost:180,postUrl:'https://x.com/kyro/status/2124900000000000001',views:300,postViews:{'2124900000000000001':300,'2124900000000000002':null}};
   assert.equal(C.viewsOf([{source:'GOOGLE_SHEETS_LIVE',rows:[vrow]}]).state,'partial');

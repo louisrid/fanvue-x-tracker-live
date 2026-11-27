@@ -143,7 +143,7 @@
       ];
     }else{
       values=[
-        metric('Spend · all time',usd(c.paidSpendKnown)),
+        metric('Spend · all time',usd(c.spendKnown??c.paidSpendKnown)),
         metric('Published posts · all time',hasFeed(c)?format(c.published):'Not connected'),
         metric('X views · all time',num(c.views)===null?'No verified X reading':format(c.views)),
         metric('Tracked clicks · all time',num(clicks(c))===null?'No connected click source':format(clicks(c)))

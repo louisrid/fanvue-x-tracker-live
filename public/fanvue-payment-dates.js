@@ -16,7 +16,7 @@ function paymentDay(value){
 function paymentDetailsDate(value,cost){
  const text=String(value??'');
  const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
- const dates=[...text.matchAll(/\bpaid\s+(?:on\s+)?(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})\b/gi)].map(m=>{const month=months[m[2].slice(0,3).toLowerCase()];return month?paymentDay(m[3]+'-'+String(month).padStart(2,'0')+'-'+m[1].padStart(2,'0')):'';}).filter(Boolean);
+ const dates=[...text.matchAll(/\bpaid\s*(?:\(\s*user confirmed\s+|confirmed by user\s+|on\s+)?(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})\b/gi)].map(m=>{const month=months[m[2].slice(0,3).toLowerCase()];return month?paymentDay(m[3]+'-'+String(month).padStart(2,'0')+'-'+m[1].padStart(2,'0')):'';}).filter(Boolean);
  dates.push(...[...text.matchAll(/\bpaid\s+(?:on\s+)?(\d{4}-\d{2}-\d{2}|\d{1,2}[/.\-]\d{1,2}[/.\-]\d{4})\b/gi)].map(m=>paymentDay(m[1])).filter(Boolean));
  if(new Set(dates).size!==1)return {};
  const paidAt=dates[0],out={paidAt,paymentDateSource:'Spreadsheet Payment Details'};
@@ -59,12 +59,12 @@ function confirmedPayment(row){
 // Owner confirmed the separate $1,700 tab-16 allocation on 24 November 2026.
  // The rows are a reservation, not an additional completed payment. Match the
  // exact recorded batch, not arbitrary future rows or their publication dates.
-const approvedQrtPlan=Object.freeze({"yashal ai":50,"elise perry":100,"iluv_papi":50,"inshrah_ali_":40,"ai doctor":50,"alexa_cooper3":40,"seharshinwari":40,"obsrvate":100,"alzina3691":40,"zahra4sure":40,"alinadavy20":50,"heytoha":150,"zoraiz ai":100,"quam":100,"netklips":120,"theepicstreamer":50,"nusratsid1":40,"wealthempirehq":100,"lexibamo":40,"arkavx":150,"insomnia_vip":70,"riley11_ai":40,"itx_hazel_":40,"aaliyah | ai":100});
+const approvedQrtPlan=new Set(["yashal ai","elise perry","iluv_papi","inshrah_ali_","ai doctor","alexa_cooper3","seharshinwari","obsrvate","alzina3691","zahra4sure","alinadavy20","heytoha","zoraiz ai","quam","netklips","theepicstreamer","nusratsid1","wealthempirehq","lexibamo","arkavx","insomnia_vip","riley11_ai","itx_hazel_","aaliyah | ai"]);
 function confirmedPlan(row){
- if(row.campaign!=='GTAQ2'||(row.paid===true&&row.planned!==true)||paymentDay(row.plannedAt)||paymentDay(row.bookedAt)||row.identityAmbiguous)return row;
- const key=String(row.publisher||'').trim().replace(/^@/,'').toLowerCase(),amount=approvedQrtPlan[key];
- if(!Object.prototype.hasOwnProperty.call(approvedQrtPlan,key)||typeof row.cost!=='number'||row.cost<amount)return row;
- return {...row,plannedAt:'2026-11-24',datedPlannedAmount:amount,planDateSource:'Owner-confirmed separate QRT allocation'};
+ if(row.campaign!=='GTAQ2'||paymentDay(row.plannedAt)||paymentDay(row.bookedAt)||row.identityAmbiguous)return row;
+ const key=String(row.publisher||'').trim().replace(/^@/,'').toLowerCase();
+ if(!approvedQrtPlan.has(key)||typeof row.cost!=='number'||row.cost<0)return row;
+ return {...row,plannedAt:'2026-11-24',datedPlannedAmount:row.cost,planDateSource:'Owner-confirmed separate QRT allocation'};
 }
 const reconcileRow=row=>confirmedPlan(confirmedPayment(row));
 function applyPaymentDates(overview){

@@ -117,7 +117,7 @@
     if([l,rp,re].some(x=>x===null))return '';
     return esc(C.full(l)+' likes · '+C.full(rp)+' reposts · '+C.full(re)+' replies'+(v>0?' · '+((l+rp+re)/v*100).toFixed(2)+'%':''));};
   const ALIGNED=['24%','12.5%','12.5%','12.5%','12.5%','11.5%','11.5%','3%'];
-  const rowKeyOf=r=>(r.code||r.id||'')+'@'+(r.sourceTab||'')+'#'+(r.sourceRow||'');
+  const rowKeyOf=r=>r.campaign==='GTAM'&&r.trackingUrl?'GTAM|'+r.trackingUrl:(r.code||r.id||'')+'@'+(r.sourceTab||'')+'#'+(r.sourceRow||'');
   const sourceRow=r=>r.sourceTab?esc(r.sourceTab+(r.sourceRow?' · row '+r.sourceRow:'')):'';
 
   /* ---------- universal X records: one schema and nine columns for every X placement ---------- */
@@ -187,7 +187,7 @@
     ]);
   }
   function xTable(page,id,{title,icon='layers',records,f,expand,empty,groups=true,includeType=true}){
-    const ts=tableState(page,id);if(!ts.sort)ts.sort={key:'clicks',dir:-1};
+    const ts=tableState(page,id);if(!ts.sort)ts.sort={key:'age',dir:-1};
     return U.tablePanel({id,title,icon,age:publicationAge,hideEmpty:false,search:true,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
       minWidth:820,cls:'is-list is-placement-list',searchText:x=>[x.account,x.campaign,x.raw.trackingUrl||'',x.raw.articleLabel||''].join(' '),empty,columns:resultColumns(records,{includeType}),expand},ts);
   }
@@ -221,7 +221,8 @@
   // The four core KPIs for a set of records. RT rows never contribute views: their only reading is the original post's.
   const gtaFinance=x=>x.parent==='GTA VI'||C.isGtaRow(x.raw);
   const actualPaid=x=>x.raw?.paid===true&&x.raw?.planned!==true;
-  const bookedCost=x=>actualPaid(x);
+  const financeEntry=x=>C.financeEntry(x.raw,gtaFinance(x));
+  const bookedCost=x=>!!financeEntry(x);
   function recordSpend(x){
     if(!bookedCost(x))return M.na('Not paid.');
     const cost=C.num(x.raw.cost);
@@ -229,10 +230,7 @@
   }
   function xKpis(records){
     const raws=records.map(x=>x.raw),own=records.filter(x=>x.type!=='RT').map(x=>x.raw);
-    const costs=records.filter(bookedCost),known=costs.filter(x=>C.num(x.raw.cost)!==null);
-    const total=Math.round(known.reduce((n,x)=>n+C.num(x.raw.cost),0)*100)/100;
-    const reason='Recorded payments only; planned and unpaid placements are excluded.';
-    const spend=!costs.length?M.value(0,{reason:'No recorded costs in this selection.'}):known.length<costs.length?M.partial(total,(costs.length-known.length)+' placements have no price. '+reason):M.value(total,{reason});
+    const spend=C.financeSpend(records.map(financeEntry));
     const views=C.viewsOf([{source:'FILTER',rows:own}]);
     const links=new Map();
     for(const x of records){if(!C.hasValue(x.clicks)||x.raw.sharedTracking||x.raw.identityAmbiguous)continue;const key=x.raw.trackingUrl||rowKeyOf(x.raw);links.set(key,Math.max(links.get(key)||0,x.clicks.value));}
@@ -356,28 +354,18 @@
   // UK week, Monday to today.
   const weekRange=ws=>{const we=C.addDays(ws,6);return C.dayShort(ws).split(' ')[0]+(ws.slice(5,7)===we.slice(5,7)?'':' '+C.dayShort(ws).split(' ')[1])+'–'+C.dayShort(we);};
   const postIdsOfRecord=x=>(x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String);
-  // Confirmed spend follows payment dates only; unpaid allocations remain in the separate budget.
+  // GTA VI includes confirmed allocations, on the allocation date.
   // Undated costs remain in all-time totals, not invented weekly figures.
   function periodTotals(from,to,records,financeOnly){
     const all=records||[...xaRecords(),...gtaRecords(),...ofRecords(),...guruRecords()];
     const spendOnly=financeOnly||(records?[]:igSpendRecords());
-    const seen=new Set(),posts=new Set();let spend=0,dated=0,undated=0;
-    for(const x of [...all,...spendOnly]){
-      if(!bookedCost(x))continue;
-      const k=rowKeyOf(x.raw);if(seen.has(k))continue;seen.add(k);
-      const paid=actualPaid(x),date=x.raw.paidAt;
-      const day=date?(window.FanvuePaymentDates?.paymentDay(date)||C.londonDay(date)):'';
-      if(!day||x.price===null)undated++;
-      else{
-        const recorded=C.num(x.raw.datedPaidAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
-        dated++;if(day>=from&&day<=to)spend+=amount;
-        if(amount<x.price)undated++;
-      }
-      if(paid&&x.live===true&&x.platform==='X')for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
+    const spend=C.financeSpend([...all,...spendOnly].map(financeEntry),{from,to}),posts=new Set();
+    for(const x of all){
+      if(actualPaid(x)&&x.live===true&&x.platform==='X')for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:records?M.na('Scoped clicks are calculated separately.'):clickBreakdown(from,to),
-      spend:!dated&&!undated&&records?M.value(0,{reason:'No recorded costs in this selection.'}):!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.',{displayDash:true}):undated?M.partial(spend,undated+' placements have some undated or unknown cost. Includes dated payments only.'):M.value(spend),
+      spend,
       views:gained.length?M.partial(gained.reduce((n,p)=>n+p.value,0),'Measured increases on dated X post readings. Coverage is incomplete; lifetime views are not assigned to weeks.'):M.na('No dated view readings for this period.'),
       posts:M.value(posts.size,{reason:'Distinct paid X posts published in this period, based on verified post IDs.'})};
   }
@@ -657,7 +645,7 @@
     let body;
     if(tab==='overview'){
       const originals=arts.filter(x=>x.paid||x.live===true||C.hasValue(x.clicks)&&x.clicks.value>0),eff=C.placementEfficiency(originals.map(x=>x.raw));
-      const ts=tableState('x-articles','xa-overview');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
+      const ts=tableState('x-articles','xa-overview');if(!ts.sort)ts.sort={key:'age',dir:-1};
       body=chart+U.tablePanel({id:'xa-overview',title:'Listings',icon:'doc',age:publicationAge,rows:originals,search:true,cls:'is-list is-placement-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:820,hideEmpty:false,columns:resultColumns(originals,{article:true}),expand:x=>xDetail(x,eff,{extra:[['Headline',esc(articleHeadline(x.raw))]]})},ts);
     }else if(tab==='rts'){
       const grouped=new Map();
@@ -743,13 +731,13 @@
   function viralPage(st){
     ensure('overview');ensure('gta');
     const ov=D.overview(),gr=D.gta().report;
-    const sources=(ov?.campaigns||[]).filter(c=>c.id==='gta-mandy'||c.viral===true);
+    const sources=(ov?.campaigns||[]).filter(c=>c.id==='gta-mandy');
     const quoted=sources.flatMap(c=>c.quotedOriginals?.rows||[]);
     const mapping=new Map(quoted.flatMap(o=>(o.qrts||[]).map(q=>[C.postId(q.postUrl),o])));
-    const records=sources.flatMap(c=>(c.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:c.name,parent:c.id==='gta-mandy'?'GTA VI':c.name,type:'qrt',clicks:gtaClicks})));
+    const records=gtaRecords().filter(x=>x.campaign==='Mandy');
     const f=xState('viral-qrts','viral-results'),shown=records.filter(xMatch(f));
     const ids=postIdsOf(shown),daily=shortIoDaily(gr?.mandy,shown),chart=campaignChart(viewsChart('viral-chart','viral-qrts',gr?(gr.mandy?.history||[]).filter(h=>ids.has(String(h.id||''))):[],{extra:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series:daily,period:'Day',unit:'Clicks'}]}));
-    const ts=tableState('viral-qrts','viral-results');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
+    const ts=tableState('viral-qrts','viral-results');if(!ts.sort)ts.sort={key:'age',dir:-1};
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const table=U.tablePanel({id:'viral-results',title:'Listings',icon:'zap',age:publicationAge,records,rows:records,search:true,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
       minWidth:820,cls:'is-list is-placement-list',hideEmpty:false,columns:resultColumns(records),

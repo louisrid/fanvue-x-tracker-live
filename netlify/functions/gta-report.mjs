@@ -254,7 +254,8 @@ export async function groupReport(source,metric,{force=false,refreshClicks=false
   const xStatus=gtaMetricStatus(source.rows,metric);
   // History covers every post, including extra posts on a multi-post booking.
   const ids=new Set(source.rows.flatMap(p=>p.postUrls?.length?p.postUrls:[p.postUrl]).map(u=>xPost(u)?.id).filter(Boolean).map(String));
-  const cutoff=Date.now()-6*24*60*60*1000;
+  // Keep enough history for the preceding UK week and its baseline.
+  const cutoff=Date.now()-21*24*60*60*1000;
   const history=(Array.isArray(metric.history)?metric.history:[])
     .filter(h=>ids.has(String(h.id||''))&&Date.parse(h.at||'')>=cutoff&&Number.isFinite(Number(h.views)));
   return {ok:true,id:'GTA',name:'GTA VI',scope:'published-qrts-v1',ready:true,checkedAt:new Date().toISOString(),
@@ -278,6 +279,7 @@ export async function getReport(options={}){
   const mandyRead=readIds.includes('GTAM')&&!skipped.some(n=>tabMatches(defOf('GTAM'),n));
   return {...qrts,originals:{...originals,scope:'published-originals-v1'},instagram:{...instagram,scope:'instagram-v1'},quotedOriginals:quoteGroups,
     ...(mandyRead||mandy.publishers.length?{mandy:{...mandy,scope:'mandy-qrts-v1',quotedOriginals:summariseQuotedOriginals(mandy.publishers,metric.metrics,['GTAM'])}}:{}),
+    campaignSummary:summarisePlacements(source.rows),
     budget:GTA_BUDGET,
     // Optional tabs that could not be read (or Instagram missing) are flagged, never silently dropped.
     missingTabs:source.source==='GOOGLE_SHEETS_LIVE'?SOURCE_TABS.filter(def=>OPTIONAL_TABS.has(def.id)&&(skipped.some(n=>tabMatches(def,n))||(['GTAIG','GTAM'].includes(def.id)&&!readIds.includes(def.id)))).map(def=>def.name):[]};

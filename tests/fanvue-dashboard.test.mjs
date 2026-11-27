@@ -270,3 +270,6 @@ test('all 27 listings appear immediately, even with a legacy row limit; search a
  const filtered=U.tablePanel(cfg,{q:'Publisher 2'});assert.equal((filtered.match(/class="fv-row"/g)||[]).length,8);
  const sorted=U.tablePanel(cfg,{sort:{key:'spend',dir:-1,user:true}});assert.ok(sorted.indexOf('Publisher 27')<sorted.indexOf('Publisher 01'));assert.equal((sorted.match(/class="fv-row"/g)||[]).length,27);
 });
+
+
+test('all date-bearing listings default to newest first without overriding manual sorting',()=>{const rows=[{id:'old',at:1,name:'Old'},{id:'unknown',at:null,name:'Unknown'},{id:'new',at:3,name:'New'}];const cfg={id:'newest',title:'Listings',rows,rowKey:r=>r.id,age:r=>r.at==null?null:{at:r.at},columns:[{key:'name',label:'Account',type:'name',get:r=>r.name}]};const st={};const out=U.tablePanel(cfg,st);assert.equal(st.sort.key,'age');assert.equal(st.sort.dir,-1);assert.ok(out.indexOf('>New<')<out.indexOf('>Old<')&&out.indexOf('>Old<')<out.indexOf('>Unknown<'));const manual=U.tablePanel(cfg,{sort:{key:'name',dir:1,user:true}});assert.ok(manual.indexOf('>New<')<manual.indexOf('>Old<'));});

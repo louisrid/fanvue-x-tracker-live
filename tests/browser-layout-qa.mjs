@@ -324,7 +324,8 @@ try{
   await page.locator('#acc-table [data-search]').fill('unused');assert.equal(await page.locator('#acc-table .fv-account-plain').innerText(),'@unused');
   assert.equal(await page.locator('#acc-table .fv-filter,#acc-table [data-xfilter],#acc-table [data-filter]').count(),0,'no separate Accounts filters');
   await page.locator('#acc-table [data-search]').fill('');
-  assert.equal(await page.locator('#acc-table th.is-user-sorted,#acc-table td.is-highlighted-number,#acc-table th[aria-sort="ascending"],#acc-table th[aria-sort="descending"]').count(),0,'neutral default Accounts order');
+  assert.equal(await page.locator('#acc-table th.is-user-sorted,#acc-table td.is-highlighted-number').count(),0,'neutral default Accounts order');
+  assert.equal(await page.locator('#acc-table th[data-column="age"]').getAttribute('aria-sort'),'descending','Accounts default newest first');
   if(viewport.width>=768)await page.locator('#acc-table [data-sort="clicks"]').click();
   else await page.locator('#acc-table [data-mobile-sort]').selectOption('clicks:-1');
   const accountSort=await page.evaluate(()=>{

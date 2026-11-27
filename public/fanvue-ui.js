@@ -294,6 +294,8 @@
   }
   function tablePanel(cfg,st){
     if(cfg.age)cfg={...cfg,columns:[{key:'age',label:cfg.ageLabel||'Posted',type:'text',keep:true,sort:r=>cfg.age(r)?.at??null,html:r=>ageCell(r,cfg.age)},...cfg.columns],widths:undefined};
+    // Every date-bearing listings table starts newest first, preserving user sorting.
+    if(cfg.age&&!st.sort?.user)st.sort={key:'age',dir:-1};
     const q=(st.q||'').trim().toLowerCase();
     let rows=cfg.rows||[];
     const sortCol=st.sort&&cfg.columns.find(c=>c.key===st.sort.key);
