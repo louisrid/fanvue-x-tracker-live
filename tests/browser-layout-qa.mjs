@@ -55,6 +55,35 @@ try{
    await page.waitForFunction(({route,title})=>location.hash.slice(1)===route&&document.getElementById('fvTitle')?.textContent===title&&document.querySelector('#fvPage .fv-chart .fv-hit'),{route,title});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   };
+  if(viewport.width<768){
+   const menu=page.locator('#fvMenu'),sidebar=page.locator('#fvSidebar');
+   assert.equal(await menu.locator('svg path').getAttribute('d'),'M4 7h16M4 12h16M4 17h16','standard hamburger');
+   await menu.click();
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).opacity==='1');
+   assert.equal(await menu.getAttribute('aria-expanded'),'true');
+   const animation=await sidebar.evaluate(e=>({duration:getComputedStyle(e).transitionDuration,timing:getComputedStyle(e).transitionTimingFunction}));
+   assert.ok(animation.duration.split(',').every(v=>parseFloat(v)<=.2),'short dropdown animation');
+   await page.evaluate(()=>window.dispatchEvent(new Event('xtracker:data')));
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   assert.equal(await menu.getAttribute('aria-expanded'),'true','menu stays open during feed refresh');
+   assert.equal(await sidebar.evaluate(e=>getComputedStyle(e).visibility),'visible');
+   await page.locator('#fvNav a[href="#home"]').click();
+   await page.waitForFunction(()=>document.querySelector('#fvTitle').textContent==='Dashboard');
+   assert.equal(await menu.getAttribute('aria-expanded'),'true','menu stays open during navigation');
+   assert.ok(await sidebar.evaluate(e=>e.closest('#fvShell').classList.contains('is-nav-open')));
+   await page.screenshot({path:dir+'/'+viewport.width+'-menu-open.png'});
+   await menu.click();
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).visibility==='hidden');
+   assert.equal(await menu.getAttribute('aria-expanded'),'false');
+   await menu.click();await page.keyboard.press('Escape');
+   assert.equal(await menu.getAttribute('aria-label'),'Open menu');
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).visibility==='hidden');
+   await page.emulateMedia({reducedMotion:'reduce'});
+   await menu.click();
+   assert.equal(await sidebar.evaluate(e=>getComputedStyle(e).transitionDuration),'0s','respect reduced motion');
+   await menu.click();await page.emulateMedia({reducedMotion:'no-preference'});
+   await open('gta-vi','GTA VI');
+  }
   const geometry=()=>page.evaluate(()=>{
    const box=el=>{const r=el.getBoundingClientRect();return [r.x,r.y+scrollY,r.width,r.height].map(n=>Math.round(n*10)/10);};
    const q=s=>document.querySelector(s);
@@ -80,7 +109,7 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>home?parseFloat(style(e).borderTopWidth)>=1&&parseFloat(style(e).borderTopLeftRadius)>=10:parseFloat(style(e).borderTopWidth)>=2&&style(e).borderTopColor==='rgb(102, 102, 102)'),
+     borders:panels.every(e=>home?parseFloat(style(e).borderTopWidth)>=1&&parseFloat(style(e).borderTopLeftRadius)>=10:parseFloat(style(e).borderTopWidth)>=2&&style(e).borderTopColor==='rgb(96, 96, 96)'),
      labelWhite:labels.every(white),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
      tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=17),
@@ -126,7 +155,7 @@ try{
     const yellow=el=>getComputedStyle(el).color==='rgb(255, 229, 0)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
-      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(41, 41, 41)')};
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(37, 37, 37)')};
   });
   assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values are yellow');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
@@ -180,13 +209,13 @@ try{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:css(main).backgroundColor==='rgb(55, 24, 40)'&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&parseFloat(css(main).borderLeftWidth)===4,compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=150),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:css(main).backgroundColor==='rgb(55, 24, 40)'&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&parseFloat(css(main).borderLeftWidth)===4,compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
    assert.equal(homeVisual.scope,period==='last-week'?'Last Week':'This Week','visible chart scope');
    assert.ok(homeVisual.restored&&homeVisual.compactCommunity&&homeVisual.summaryFits,'Restored rounded rose KPI cards and compact Discord strip '+JSON.stringify(homeVisual));
-   if(viewport.width<768)assert.ok(homeVisual.compactRows,'Dashboard campaign rows are compact');
+   if(viewport.width<768)assert.ok(homeVisual.compactRows,'Dashboard campaign rows are compact '+JSON.stringify(homeVisual.rowHeights));
    if(viewport.width<768)assert.ok(homeVisual.metricPairs,'Home campaign values occupy a balanced 2x2 grid');
    await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});
   }

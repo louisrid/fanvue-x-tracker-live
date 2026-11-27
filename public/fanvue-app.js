@@ -840,7 +840,7 @@
   function render(){
     U.hideTip();
     const r=current;
-    const shell=$('fvShell');shell.classList.remove('is-nav-open');
+    const shell=$('fvShell'); // Keep the navigation state across feed updates and route changes.
     shell.classList.toggle('is-home',r.kind==='page'&&r.key==='home');
     // Owner (26 Nov): a small back control, top-left, above every page but the Dashboard itself.
     $('fvBack').hidden=r.kind==='page'&&r.key==='home';
@@ -1045,7 +1045,7 @@
   function init(){
     // Header icons are injected so static HTML stays text-only.
     $('fvRefresh').insertAdjacentHTML('afterbegin',U.icon('refresh',15));
-    $('fvMenu').innerHTML=U.icon('grid',26);$('fvDrawerClose').innerHTML=U.icon('close',20);
+    $('fvMenu').innerHTML=U.icon('menu',26);$('fvDrawerClose').innerHTML=U.icon('close',20);
     $('fvBack').innerHTML='<span>Back</span>';
     $('fvBack').addEventListener('click',()=>history.back());
     U.bindTips(document.body);
@@ -1053,15 +1053,18 @@
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);
     window.setInterval(()=>U.refreshAges(page),1000);
     $('fvRefresh').addEventListener('click',onRefresh);
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('fvShell').classList.contains('is-nav-open')){$('fvShell').classList.remove('is-nav-open');$('fvMenu').setAttribute('aria-expanded','false');$('fvMenu').focus();}}});
-    // The menu button opens the dropdown under the header and closes it again.
-    const close=()=>{$('fvShell').classList.remove('is-nav-open');$('fvMenu').setAttribute('aria-expanded','false');$('fvMenu').setAttribute('aria-label','Open menu');};
-    $('fvMenu').addEventListener('click',()=>{
-      if($('fvShell').classList.contains('is-nav-open')){close();return;}
-      $('fvShell').classList.add('is-nav-open');$('fvMenu').setAttribute('aria-expanded','true');$('fvMenu').setAttribute('aria-label','Close menu');
-      setTimeout(()=>$('fvNav').querySelector('[aria-current="page"],a')?.focus({preventScroll:true}),60);});
-    $('fvDrawerClose').addEventListener('click',close);$('fvScrim').addEventListener('click',close);
-    $('fvNav').addEventListener('click',e=>{if(e.target.closest('a'))close();});
+    // Only a deliberate close action dismisses the mobile menu. Feed updates and navigation do not.
+    const setMenuOpen=(open,focus=false)=>{
+      $('fvShell').classList.toggle('is-nav-open',open);
+      $('fvMenu').setAttribute('aria-expanded',String(open));
+      $('fvMenu').setAttribute('aria-label',open?'Close menu':'Open menu');
+      if(focus&&!open)$('fvMenu').focus({preventScroll:true});
+    };
+    const close=()=>setMenuOpen(false,true);
+    $('fvMenu').addEventListener('click',()=>setMenuOpen(!$('fvShell').classList.contains('is-nav-open')));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('fvShell').classList.contains('is-nav-open'))close();});
+    $('fvDrawerClose').addEventListener('click',close);
+    $('fvScrim').addEventListener('click',close);
     window.addEventListener('hashchange',onHash);
     window.addEventListener('xtracker:campaign-overview',queueRerender);
     window.addEventListener('xtracker:data',queueRerender);
