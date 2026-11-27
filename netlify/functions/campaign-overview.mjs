@@ -246,7 +246,7 @@ function gtaCampaign(data,group='qrts'){
     purchasedPosts:rows.some(r=>r.purchasedPosts!==undefined)?rows.filter(r=>r.paid===true).reduce((n,r)=>n+(Number(r.purchasedPosts)||1),0):null,
     ...(group==='qrts'?{budget:data.budget||null,missingTabs:data.missingTabs||[]}:{})
   });
-  return report;
+  return {...report,spendKnown:Finance.allocatedGtaSpend(report).value};
 }
 function ofCampaign(data){
   if(!data?.ready)return {...normalCampaign('of-terms','OF Terms','article',[],{source:'UNAVAILABLE',error:'OF Terms report unavailable'}),unavailable:true};

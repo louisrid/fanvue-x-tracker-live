@@ -508,7 +508,7 @@
     return [
       ...(og?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'post',clicks:gtaClicks})),
       ...(qr?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'qrt',clicks:gtaClicks})),
-      ...(mq?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:gtaGroup(r),parent:'GTA VI',type:'qrt',clicks:gtaClicks}))
+      ...(mq?.rows||[]).filter(isBooking).map(r=>xRecord(r,{campaign:'Mandy',parent:'GTA VI',type:'qrt',clicks:gtaClicks}))
     ];
   }
   // Historical non-X costs stay in period finance totals only; never render these rows.

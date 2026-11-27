@@ -22,7 +22,7 @@ const overview=(over={})=>({ok:true,checkedAt:'2026-11-24T12:00:00Z',campaigns:[
   {id:'gta-qrts',source:'GOOGLE_SHEETS_LIVE',paidCount:2,paidSpendKnown:200,unknownPaidCosts:0,published:2,postPublicationClicks:40,allTimeHumanClicks:55,
     rows:[row({sourceTab:'GTA Q',sourceRow:8,postUrl:'https://x.com/a/status/1'}),row({sourceTab:'GTA Q',sourceRow:9,postUrl:'https://x.com/b/status/2',views:null})],signups:null,conversionSource:'NOT_CONNECTED'},
   {id:'gta-originals',source:'GOOGLE_SHEETS_LIVE',paidCount:1,paidSpendKnown:50,unknownPaidCosts:0,published:1,postPublicationClicks:null,allTimeHumanClicks:null,
-    rows:[row({sourceTab:'GTA O',sourceRow:8,postUrl:'https://x.com/c/status/3',views:500})],conversionSource:'NOT_CONNECTED'},
+    rows:[row({cost:50,sourceTab:'GTA O',sourceRow:8,postUrl:'https://x.com/c/status/3',views:500})],conversionSource:'NOT_CONNECTED'},
   {id:'of-terms',source:'OF_REPORT',paidCount:1,paidSpendKnown:80,unknownPaidCosts:0,published:1,trackedClicks:12,
     rows:[row({sourceTab:'OF',sourceRow:8,postUrl:'https://x.com/d/status/4',views:300,clicks:12})],conversionSource:'NOT_CONNECTED'},
   {id:'guru-rts',source:'X_RTS',paidCount:0,paidSpendKnown:null,unknownPaidCosts:0,published:1,rows:[{id:'9',posted:true,paid:false,cost:null,views:700,postUrl:'https://x.com/e/status/9'}]},
@@ -73,7 +73,7 @@ test('Discord member counts are point-in-time: never summed, net growth needs tw
   assert.deepEqual(two.map(w=>[w.week,w.start,w.end,w.value]),[['2026-11-09',null,490,null],['2026-11-16',490,null,null],['2026-11-23',null,500,null]]);
 });
 
-test('Home spend is a labelled known subtotal from proven-disjoint paid rows only',()=>{
+test('Home spend is a known subtotal from proven-disjoint payments and GTA allocations',()=>{
   const ov=overview();
   const S=C.CAMPAIGNS.map(c=>C.campaignSummary(ov,c.key));
   const T=C.homeTotals(ov,S);
