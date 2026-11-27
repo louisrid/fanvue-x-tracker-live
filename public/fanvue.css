@@ -1679,46 +1679,92 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row{padding:10px;gap:10px 6px}
 }
 
-/* Dashboard uses the campaign-page scaffold, including its single-height tab row.
-   Only the four-column campaign overview and the small community section need local layout. */
-#fvShell.is-home #fvTitleChip .fv-campaign-chip{background:transparent;color:#FFF}
-#fvPage.fv-dashboard-layout>.fv-subnav button[aria-current="page"]{background:#000;border-color:#FFF;color:#FFF;box-shadow:inset 0 0 0 1px #FFF}
+/* Dashboard visual restoration: the rounded, rose-accented cards from 26 Nov,
+   with the current black canvas, correct mobile header and reporting data.
+   All selectors are Home-only; campaign pages keep their existing styles. */
+#fvShell.is-home #fvTitleChip .fv-campaign-chip{background:#C71667;color:#FFF;border-radius:6px}
+#fvShell.is-home #fvRefresh{border-radius:8px}
+#fvPage.fv-dashboard-layout{--fv-list-radius:12px;--fv-fs-num:44px;--fv-fs-hero:44px}
+#fvPage.fv-dashboard-layout>.fv-subnav{gap:8px}
+#fvPage.fv-dashboard-layout>.fv-subnav button{border-radius:8px;font-weight:var(--fv-w-strong);color:#FFF;background:#000;border-color:#555}
+#fvPage.fv-dashboard-layout>.fv-subnav button[aria-current="page"]{background:#C71667;border-color:#F0357C;color:#FFF;box-shadow:none}
+#fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+ background:#371828;border:1px solid #A92C65;border-left:4px solid #F0357C;border-radius:12px;
+ align-items:flex-start;justify-content:space-between;text-align:left;padding:18px 20px;gap:8px
+}
+#fvPage.fv-dashboard-layout>.fv-strip .fv-metric-label{
+ justify-content:flex-start;align-items:center;text-align:left;width:100%;color:#FFF;min-height:20px;
+ font-family:var(--fv-font);font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);
+}
+#fvPage.fv-dashboard-layout>.fv-strip .fv-metric-value,#fvPage.fv-dashboard-layout>.fv-strip .fv-metric-value .fv-num{
+ justify-content:flex-start;text-align:left;color:#FFF;font-family:var(--fv-font);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);
+ line-height:1.08;letter-spacing:-.035em;min-height:0
+}
+#fvPage.fv-dashboard-layout>.fv-strip .fv-metric-value .fv-dash{font-size:var(--fv-fs-num);color:#FFF;line-height:1}
+#fvPage.fv-dashboard-layout>.fv-strip .fv-metric-value.is-state{font-size:var(--fv-fs-num);line-height:1}
+#fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip){border-radius:12px;border-color:#555;background:#000}
+#fvPage.fv-dashboard-layout>.fv-panel>.fv-panel-head{border-radius:11px 11px 0 0}
+#fvPage.fv-dashboard-layout>.fv-chart-panel>.fv-chart{border-radius:8px;background:#000;border-color:#383838}
 #fvPage.fv-dashboard-layout>.fv-chart-panel .fv-chart-scope{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:#FFF;white-space:nowrap}
 #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:56px;max-height:56px}
 #fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name{display:block;color:#FFF;font-weight:var(--fv-w-strong);text-decoration:none}
 #fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name:hover{text-decoration:underline}
-#fvPage.fv-dashboard-layout>.fv-home-discord{width:100%;padding:0;margin:0;overflow:hidden}
-#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{padding:0 16px}
+#fvPage.fv-dashboard-layout #home-comparison .fv-search,#fvPage.fv-dashboard-layout #home-comparison .fv-mobile-sort select{border-radius:8px}
+#fvPage.fv-dashboard-layout>.fv-home-discord{width:100%;padding:0;margin:0;overflow:hidden;background:#15102A;border:1px solid #62528E;border-radius:12px}
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{padding:0 16px;background:#211A3D;border-bottom:1px solid #62528E}
+#fvPage.fv-dashboard-layout .fv-home-discord-link{border-radius:8px;background:#5865F2;color:#FFF}
 #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{
- display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:124px;gap:12px;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;gap:0;
  margin:0!important;padding:16px;border:0;background:transparent;min-height:0;height:auto
 }
 #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){
- min-width:0;height:124px;min-height:124px;max-height:124px;
- border:1px solid #404040;border-radius:6px;padding:12px;gap:8px;justify-content:center;align-items:center;overflow:hidden
+ min-width:0;height:auto;min-height:76px;max-height:none;background:transparent;border:0;border-radius:0;
+ border-right:1px solid #62528E;padding:8px 12px;gap:8px;justify-content:center;align-items:center;overflow:hidden
 }
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:last-child{border-right:0}
 #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-label{
- color:#FFF;font-weight:var(--fv-w-strong);white-space:normal
+ color:#FFF;font-weight:var(--fv-w-strong);font-size:var(--fv-fs-s);white-space:normal;text-align:center
 }
 #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-label>span:last-child{white-space:normal}
+#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value,#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-num{
+ font-size:var(--fv-fs-xl);font-family:var(--fv-font);font-weight:var(--fv-w-black);color:#FFF;line-height:1.1
+}
 #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value{display:flex;width:100%;justify-content:center;align-items:center}
 #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-dash{color:#FFF;font-size:var(--fv-fs-xl)}
+@media(min-width:768px) and (max-width:1100px){#fvPage.fv-dashboard-layout{--fv-fs-num:32px;--fv-fs-hero:32px}}
+@media(min-width:1101px) and (max-width:1320px){#fvPage.fv-dashboard-layout{--fv-fs-num:38px;--fv-fs-hero:38px}}
 @media(max-width:767px){
- #fvPage.fv-dashboard-layout>.fv-subnav{gap:8px}
- #fvPage.fv-dashboard-layout>.fv-subnav button{height:42px;min-height:42px;flex:0 0 auto;padding:0 12px}
- #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+ #fvPage.fv-dashboard-layout{--fv-fs-num:36px;--fv-fs-hero:36px;gap:16px}
+ #fvPage.fv-dashboard-layout>.fv-subnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ #fvPage.fv-dashboard-layout>.fv-subnav button{height:42px;min-height:42px;width:100%;min-width:0;padding:0 6px;justify-content:center}
+ #fvPage.fv-dashboard-layout>.fv-strip{height:226px;min-height:226px;max-height:226px;grid-template-rows:108px 108px;gap:10px}
+ #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){height:108px;min-height:108px;max-height:108px;padding:13px 12px;gap:8px}
+ #fvPage.fv-dashboard-layout>.fv-strip .fv-metric-label{font-size:var(--fv-fs-m)}
+ #fvPage.fv-dashboard-layout>.fv-chart-panel{height:216px;min-height:216px;max-height:216px;grid-template-rows:48px minmax(0,1fr)}
+ #fvPage.fv-dashboard-layout>.fv-chart-panel>.fv-chart{margin:8px 10px 10px;padding:6px 4px 4px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:10px 12px;margin:0 0 8px;
+  border:1px solid #555;border-radius:10px
+ }
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td{height:auto;max-height:none}
- #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:56px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td.is-name{
+  margin:0;padding:0 0 6px;min-height:25px;border-bottom:1px solid #333;font-size:var(--fv-fs-l);
+ }
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){
+  min-height:42px;padding:2px 0 3px;gap:3px;box-shadow:none
+ }
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name)::before{font-size:var(--fv-fs-s);font-weight:var(--fv-w)}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num{font-size:var(--fv-fs-l);font-weight:var(--fv-w-black)}
+ #fvPage.fv-dashboard-layout>.fv-home-discord{border:2px solid #62528E}
  #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{padding:0 12px}
- #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:125px;gap:10px;padding:10px}
- #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){height:125px;min-height:125px;max-height:125px;border:2px solid #666;padding:12px 8px;grid-column:auto;gap:10px}
- #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:first-child{grid-column:1/-1}
- #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value,
- #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);color:#FFF;line-height:1.06}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:10px 4px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){grid-column:auto;min-height:76px;padding:8px 4px;gap:6px}
+ #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value,#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-num{font-size:var(--fv-fs-l)}
+ #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-dash{font-size:var(--fv-fs-l)}
 }
 @media(max-width:359px){
+ #fvPage.fv-dashboard-layout{--fv-fs-num:30px;--fv-fs-hero:30px}
  #fvPage.fv-dashboard-layout>.fv-subnav{gap:5px}
- #fvPage.fv-dashboard-layout>.fv-subnav button{padding:0 9px}
- #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{grid-auto-rows:120px}
- #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){height:120px;min-height:120px;max-height:120px;padding:10px 5px}
+ #fvPage.fv-dashboard-layout>.fv-subnav button{padding:0 4px}
+ #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding:12px 9px}
 }

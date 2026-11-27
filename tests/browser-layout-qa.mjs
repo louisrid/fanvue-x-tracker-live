@@ -67,6 +67,7 @@ try{
   const auditPhone=async(route)=>{
    if(viewport.width>=768)return;
    const result=await page.evaluate(()=>{
+    const home=document.querySelector('#fvPage').classList.contains('fv-dashboard-layout');
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),style=e=>getComputedStyle(e);
     const white=e=>style(e).color==='rgb(255, 255, 255)',visible=e=>style(e).display!=='none'&&rect(e).width>0&&rect(e).height>0;
     const title=q('#fvTitle'),head=q('#fvHeader'),top=q('.fv-mobile-top'),body=q('#fvPage');
@@ -79,11 +80,11 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>parseFloat(style(e).borderTopWidth)>=2&&style(e).borderTopColor==='rgb(102, 102, 102)'),
+     borders:panels.every(e=>home?parseFloat(style(e).borderTopWidth)>=1&&parseFloat(style(e).borderTopLeftRadius)>=10:parseFloat(style(e).borderTopWidth)>=2&&style(e).borderTopColor==='rgb(102, 102, 102)'),
      labelWhite:labels.every(white),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
      tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=17),
-     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)>=2&&inside(e,e.closest('.fv-table-panel'))),
+     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)>=(home?1:2)&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
      labelsWhite:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color==='rgb(255, 255, 255)'),
@@ -95,7 +96,7 @@ try{
    assert.ok(result.belowTitle>=10&&result.afterHeader>=20,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelWhite&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
-   assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=390?38:32)),route+' large short KPI figures '+result.numericSizes);
+   assert.ok(result.numericSizes.every(n=>n>=(route.startsWith('Dashboard')?(viewport.width>=360?34:28):(viewport.width>=390?38:32))),route+' large short KPI figures '+result.numericSizes);
    assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsWhite&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
   };
   let reference,cols;
@@ -167,11 +168,10 @@ try{
    await page.waitForFunction(period=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks'),week=C.weekStart(C.londonDay(Date.now()));return document.querySelector('[data-view="'+period+'"]')?.getAttribute('aria-current')==='page'&&m&&m.weekFrom===(period==='all-time'?undefined:period==='this-week'?week:C.addDays(week,-7));},period);
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);
-   for(const k of ['title','header','strip','card','chart','plot','list','toolbar']){
-    const expected=[...reference[k]];
-    // Home now uses exactly the same single-height top row as campaigns, at every width.
-    close(k==='toolbar'&&viewport.width<768?g[k].slice(0,3):g[k],k==='toolbar'&&viewport.width<768?expected.slice(0,3):expected,viewport.width+' dashboard '+period+' '+k);
-   }
+   for(const k of ['title','header'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
+   // Dashboard retains the common page alignment, but restores its compact card and chart sizes.
+   for(const k of ['strip','chart','list','toolbar'])close([g[k][0],g[k][2]],[reference[k][0],reference[k][2]],viewport.width+' Dashboard '+k+' width');
+   if(viewport.width<768){assert.equal(g.card[3],108);assert.equal(g.chart[3],216);}else{assert.equal(g.card[3],124);assert.equal(g.chart[3],310);}
    await auditPhone('Dashboard '+period);
    if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
@@ -180,12 +180,13 @@ try{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).borderTopColor==='rgb(255, 255, 255)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,cardHeights:cards.every(e=>Math.abs(rect(e).height-rect(main).height)<=1),cardBorders:cards.every(e=>css(e).borderTopWidth===css(main).borderTopWidth),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:css(main).backgroundColor==='rgb(55, 24, 40)'&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&parseFloat(css(main).borderLeftWidth)===4,compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=150),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
    assert.equal(homeVisual.scope,period==='last-week'?'Last Week':'This Week','visible chart scope');
-   assert.ok(homeVisual.cardHeights&&homeVisual.cardBorders&&homeVisual.summaryFits,'Discord uses the same KPI card dimensions and border weight');
+   assert.ok(homeVisual.restored&&homeVisual.compactCommunity&&homeVisual.summaryFits,'Restored rounded rose KPI cards and compact Discord strip '+JSON.stringify(homeVisual));
+   if(viewport.width<768)assert.ok(homeVisual.compactRows,'Dashboard campaign rows are compact');
    if(viewport.width<768)assert.ok(homeVisual.metricPairs,'Home campaign values occupy a balanced 2x2 grid');
    await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});
   }
