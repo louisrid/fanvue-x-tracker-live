@@ -360,6 +360,10 @@ try{
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
    if(viewport.width>=768)assert.equal(await page.locator('#home-comparison th[data-column="name"] button').evaluate(e=>getComputedStyle(e).color),'rgb(255, 255, 255)','Campaign header stays white');
    assert.equal(await page.locator('.fv-home-discord .fv-home-community-strip>.fv-metric').count(),3);
+   const expectedDiscordLabel=period==='last-week'?'Last Week':period==='all-time'?'All Time':'This Week';
+   assert.ok((await page.locator('.fv-discord-scope').innerText()).startsWith(expectedDiscordLabel));
+   assert.equal(await page.locator('.fv-home-discord-link').getAttribute('href'),'#discord/'+period);
+   assert.ok((await page.locator('.fv-home-community-strip').innerText()).includes('Net Growth'));
    const flat=await page.evaluate(()=>{
     const p=document.querySelector('.fv-home-discord'),strip=p.querySelector('.fv-home-community-strip'),cards=[...strip.children],s=e=>getComputedStyle(e);
     const markers=[...document.querySelectorAll('#home-comparison .fv-campaign-row-name')].map(e=>getComputedStyle(e,'::before').backgroundColor);

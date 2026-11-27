@@ -242,3 +242,12 @@ test('every campaign KPI group has the same period controls; GTA VI period spend
  for(const key of pages){const html=a.pages[key]({}).body;assert.deepEqual([...html.matchAll(/data-period="([^"]+)"/g)].map(m=>m[1]),['this-week','last-week','all-time'],key);assert.match(html,/data-period="this-week" aria-pressed="true"/);}
  for(const key of ['gta-vi','viral-qrts']){for(const [period,amount] of [['this-week',50],['last-week',120],['all-time',170]]){const html=a.pages[key]({period}).body;assert.match(html,new RegExp('data-period="'+period+'" aria-pressed="true"'));const strip=html.split('aria-label="Key metrics"')[1]?.split('</section>')[0]||html;assert.ok(strip.includes('$'+amount),key+' '+period+' '+amount);}}
 });
+
+test('Discord period scope is visible and both pages use identical verified member snapshots',()=>{
+ const today=C.londonDay(Date.now()),ws=C.weekStart(today),last=C.addDays(ws,-1),prior=C.addDays(ws,-7);
+ const members={history:[{date:prior,memberCount:100},{date:last,memberCount:110},{date:today,memberCount:125}],latest:{date:today,memberCount:125}};
+ const x=app({campaigns:[]},{discord:{members,clicks:{total:40,last7Days:25,daysTotal:40,days:{[last]:15,[today]:25}}}});
+ const d=x.discordStats(ws,today,prior,last);assert.equal(d.week.growth.value,15);assert.equal(d.week.startingMembers.value,110);assert.equal(d.last.members.value,110);assert.equal(d.all.growth.value,25);
+ for(const [view,label,growth] of [['this-week','This Week',15],['last-week','Last Week',10],['all-time','All Time',25]]){const html=x.pages.home({view}).body;assert.match(html,new RegExp('fv-discord-scope">'+label));assert.ok(html.includes('href="#discord/'+view+'"'));assert.ok(html.includes('Net Growth'));const page=x.pages.discord({period:view}).body;assert.ok(page.includes('Net Growth'));assert.ok(page.includes('Start Members'));assert.ok(page.includes('fv-period-date'));assert.doesNotMatch(page,/7d Course Clicks/);assert.ok(page.includes('+'+growth));}
+ const noWeek=app({campaigns:[]},{discord:{members:{history:[{date:C.addDays(prior,-1),memberCount:80}],latest:{date:C.addDays(prior,-1),memberCount:80}}}}).discordStats(ws,today,prior,last);assert.equal(noWeek.last.members.value,null);assert.equal(noWeek.week.growth.value,null);
+});

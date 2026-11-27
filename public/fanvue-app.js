@@ -287,8 +287,9 @@
     }
     const header=subTabs(tabs,active).replace('aria-label="Campaign sections"','aria-label="Dashboard periods"');
     const figures=U.strip([metric('Clicks','cursor',paid.clicks),metric('Views','eye',paid.views,'compact'),metric('Spend','wallet',paid.spend,'moneyShort'),metric('Live Posts','check',paid.posts)]);
-    const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord">'+U.icon('discord',15)+'View Discord</a>')+
-      U.strip([metric('Members','users',community.members,'count'),metric('Growth','trend',community.growth,'signed'),metric('Course Clicks','graduation',community.clicks)],{cls:'fv-home-community-strip',ariaLabel:'Discord metrics'})+'</section>';
+    const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord/'+active+'">'+U.icon('discord',15)+'View Discord</a>')+
+      '<div class="fv-discord-scope">'+esc(discordScope(active,community))+'</div>'+
+      U.strip([metric('Members','users',community.members,'count'),metric('Net Growth','trend',community.growth,'signed'),metric('Course Clicks','graduation',community.clicks)],{cls:'fv-home-community-strip',ariaLabel:'Discord metrics'})+'</section>';
     const chart=dashboardChart(period),comparison=campaignComparison(S,period);
     const lower=dashboardLayout==='2'||dashboardLayout==='5'?chart+discord+comparison:dashboardLayout==='3'?comparison+chart+discord:dashboardLayout==='8'?discord+chart+comparison:chart+comparison+discord;
     return {title:'Dashboard',refreshLabel:'Refresh All',chipHtml:'<span class="fv-campaign-chip" aria-hidden="true">'+U.icon('home',15)+'</span>',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+lower+overviewNotice()};
@@ -384,7 +385,7 @@
   /* ---------- Home: Discord performance by period (This Week, Last Week, All Time) ---------- */
   function discordStats(ws,today,lws,lwe){
     const dd=D.discord(),members=dd.members,clicks=dd.clicks;
-    const snaps=C.memberReadings(members);
+    const snaps=C.memberReadings(members).filter(h=>h.date<=today);
     const first=snaps[0],latest=snaps.at(-1);
     const began=first?' Member tracking began '+C.dayLong(first.date)+'.':'';
     const lastOnOrBefore=d=>snaps.filter(h=>h.date<=d).at(-1);
@@ -394,17 +395,19 @@
     // A missing observation is unknown, including periods before tracking began.
     const growthFallback=reason=>waiting?M.loading():M.na(reason);
     const period=(from,to,isNow)=>{
-      const end=isNow?latest:lastOnOrBefore(to);
-      if(!end){
-        if(!first)return {members:naM('No member snapshot in this period.'+began),growth:naM('No member snapshot in this period.'+began)};
-        return {members:M.na('No member snapshot in this period.'),growth:growthFallback('No member snapshot in this period to measure change.'+began)};
+      const end=lastOnOrBefore(to);
+      if(!end||end.date<from){
+        const unknown=naM('No member snapshot in this period.'+began);
+        return {members:unknown,growth:unknown,startingMembers:unknown,growthFrom:'',growthTo:''};
       }
       const before=lastOnOrBefore(C.addDays(from,-1)),base=before||snaps.find(h=>h.date>=from&&h.date<=to);
-      const growth=!base||base===end||(base.date===end.date&&!isNow)?growthFallback('Needs two member snapshots.'+began):
-        M.value(end.memberCount-base.memberCount,{reason:before?'Change since the last snapshot before '+C.dayShort(from)+'.':'Change since tracking began on '+C.dayLong(base.date)+'.'});
-      const gap=before&&before.date!==C.addDays(from,-1);
-      const net=gap&&C.hasValue(growth)?M.partial(growth.value,'Change from '+C.dayLong(base.date)+' to '+C.dayLong(end.date)+'. The week boundary has no snapshot.'):growth;
-      return {members:M.value(end.memberCount,{reason:isNow?'Current member count.':'Members at the last snapshot of the week ('+C.dayLong(end.date)+').'}),growth:net};
+      const reason=base?'Net change between '+C.dayLong(base.date)+' and '+C.dayLong(end.date)+'. Not gross joins.':'Needs two member snapshots.';
+      const partial=base&&(base.date!==C.addDays(from,-1)||end.date!==to);
+      const growth=!base||base.date===end.date?growthFallback('Needs two member snapshots.'+began):
+        partial?M.partial(end.memberCount-base.memberCount,reason+' Complete period boundaries are not recorded.'):M.value(end.memberCount-base.memberCount,{reason});
+      return {members:M.value(end.memberCount,{reason:'Members at the latest verified snapshot in this period ('+C.dayLong(end.date)+').'}),
+        growth,startingMembers:base?M.value(base.memberCount,{reason:'Starting snapshot: '+C.dayLong(base.date)+'.'}):growthFallback('No starting snapshot.'),
+        growthFrom:C.hasValue(growth)?base.date:'',growthTo:C.hasValue(growth)?end.date:'',memberDate:end.date};
     };
     const days=clicks?.days&&typeof clicks.days==='object'?clicks.days:null;
     const clicksIn=(from,to)=>{
@@ -417,13 +420,28 @@
       const covered=C.num(clicks.daysTotal),gap=covered!==null&&covered<clicks.total;
       return gap?M.partial(n,'Course button clicks with a recorded time ('+C.full(covered)+' of '+C.full(clicks.total)+' clicks have one).'):M.value(n,{reason:'Course button clicks recorded in this period.'});
     };
-    const allGrowth=first&&latest&&latest.date!==first.date?M.value(latest.memberCount-first.memberCount,{reason:'Change since tracking began on '+C.dayLong(first.date)+'.'}):growthFallback('Needs two member snapshots.'+began);
+    const allGrowth=first&&latest&&latest.date!==first.date?M.value(latest.memberCount-first.memberCount,{reason:'Net change from '+C.dayLong(first.date)+' to '+C.dayLong(latest.date)+'. Not gross joins.'}):growthFallback('Needs two member snapshots.'+began);
+    const recent=C.num(clicks?.last7Days);
     return {
       week:{...period(ws,today,true),clicks:clicksIn(ws,today)},
       last:{...period(lws,lwe,false),clicks:clicksIn(lws,lwe)},
-      all:{members:latest?M.value(latest.memberCount,{reason:'Current member count.'}):naM('Member count unavailable.'),growth:allGrowth,
-        clicks:clicks?M.value(clicks.total,{reason:'All course button clicks since the counter was enabled. Not signups or enrolments.'}):clicksIn('','')}
+      all:{members:latest?M.value(latest.memberCount,{reason:'Latest verified member count ('+C.dayLong(latest.date)+').'}):naM('Member count unavailable.'),growth:allGrowth,
+        startingMembers:first?M.value(first.memberCount,{reason:'First verified snapshot: '+C.dayLong(first.date)+'.'}):naM('No starting snapshot.'),
+        growthFrom:C.hasValue(allGrowth)?first.date:'',growthTo:C.hasValue(allGrowth)?latest.date:'',memberDate:latest?.date||'',
+        clicks:clicks?M.value(clicks.total,{reason:'All course button clicks since the counter was enabled. Not signups or enrolments.'+(recent!==null?' Last 7 days: '+C.full(recent)+'.':'')}):clicksIn('','')}
     };
+  }
+  function discordDateRange(from,to){
+    if(!from||!to)return '';
+    if(from===to)return C.dayShort(from);
+    return from.slice(0,7)===to.slice(0,7)?C.dayShort(from).split(' ')[0]+'–'+C.dayShort(to):C.dayShort(from)+'–'+C.dayShort(to);
+  }
+  function discordScope(active,stats){
+    const label=KPI_PERIODS.find(([key])=>key===active)?.[1]||'This Week',period=periodRange(active);
+    if(!period)return label+(stats.growthFrom?' · Growth '+discordDateRange(stats.growthFrom,stats.growthTo):' · Since tracking began');
+    const span=discordDateRange(period.from,period.to);
+    const partial=stats.growthFrom&&(stats.growthFrom!==C.addDays(period.from,-1)||stats.growthTo!==period.to);
+    return label+' · '+span+(partial?' · Growth '+discordDateRange(stats.growthFrom,stats.growthTo):'');
   }
   function homeDetail(r){
     const b=r.budget;
@@ -449,17 +467,12 @@
   function discordPage(st){
     ensure('discord');
     const dd=D.discord(),members=dd.members,clicks=dd.clicks;
-    const approx=members?.source==='DISCORD_INVITE_APPROXIMATE';
-    const mm=members?.latest?M.value(members.latest.memberCount,{chip:approx?'Approximate':undefined,
-      reason:approx?'The Discord bot was unavailable, so this is the approximate invite count.':'Live member count from the Academy bot.'}):dd.loading||(!members&&!dd.error)?M.loading():M.na('Discord member count is temporarily unavailable.');
-    if(approx&&mm.state==='value')mm.state='partial';
-    const net=netGrowth(members);
-    const cc=clicks?M.value(clicks.total,{reason:'Clicks on the Discord course button since the counter was enabled'+(C.num(clicks.last7Days)!==null?'; '+C.full(clicks.last7Days)+' in the last 7 days':'')+'. Not signups or enrolments.'}):dd.loading||!dd.error?M.loading():M.na('Course click counter temporarily unavailable.');
-    const recent=C.num(clicks?.last7Days),recentClicks=recent!==null?M.value(recent):clicks?M.na('No verified seven-day count.'):cc;
     const active=selectedPeriod('discord',st),todayUK=C.londonDay(Date.now()),startUK=C.weekStart(todayUK);
     const periodStats=discordStats(startUK,todayUK,C.addDays(startUK,-7),C.addDays(startUK,-1));
-    const scoped=active==='all-time'?{members:mm,growth:net,clicks:cc}:active==='last-week'?periodStats.last:periodStats.week;
-    const strip=U.strip([metric('Members','users',scoped.members,'count'),metric('Growth','trend',scoped.growth,'signed'),metric('Course Clicks','graduation',scoped.clicks),metric('7d Course Clicks','cursor',active==='all-time'?recentClicks:scoped.clicks)]);
+    const scoped=active==='all-time'?periodStats.all:active==='last-week'?periodStats.last:periodStats.week;
+    const strip=U.strip([metric('Members','users',scoped.members,'count'),metric('Net Growth','trend',scoped.growth,'signed'),metric('Course Clicks','graduation',scoped.clicks),metric('Start Members','users',scoped.startingMembers)]);
+    const chartPeriod=periodRange(active)||{from:startUK,to:todayUK};
+    const chartScope={text:active==='last-week'?'Last Week':'This Week',detail:discordDateRange(chartPeriod.from,chartPeriod.to)+(active==='all-time'?' · Daily chart; headline metrics are all time.':'')};
     // The last four weeks that have snapshots. Earlier weeks are never back-filled.
     const readings=C.memberReadings(members),weeks=C.recentWeeks(readings,4);
     const netSeries=weeks.filter(w=>w.value!==null);
@@ -470,9 +483,9 @@
     const courseSeries=C.eventSeries(Object.entries(clicks?.days||{}).map(([date,clicks])=>({date,clicks})));
     const courseByWeek=new Map(courseSeries.map(p=>[p.week,p]));
     const dailyCourse=C.dailyEventSeries(Object.entries(clicks?.days||{}).map(([date,clicks])=>({date,clicks})));
-    const chart=campaignChart(U.chartPanel({id:'discord-chart',allowEmptyWeek:true,measures:[
-      {key:'course',label:'Course Clicks',title:'Daily Course Clicks',series:dailyCourse,period:'Day',unit:'Course Clicks'},
-      dailyNet.length>=1?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',format:'signed',unit:'Member Growth',kinds:['bar','line']}:null,
+    const chart=campaignChart(U.chartPanel({id:'discord-chart',allowEmptyWeek:true,headerNote:chartScope,measures:[
+      {key:'course',label:'Course Clicks',title:'Daily Course Clicks',series:dailyCourse,period:'Day',weekFrom:chartPeriod.from,unit:'Course Clicks'},
+      dailyNet.length>=1?{key:'daily',label:'Daily Member Growth',title:'Daily Member Growth',series:dailyNet,period:'Day',weekFrom:chartPeriod.from,format:'signed',unit:'Member Growth',kinds:['bar','line']}:null,
       // Owner (26 Nov): "Weekly X" naming, matching OF Terms' "Weekly Clicks"; no table view (line/bar only, per every other chart).
 
     ].filter(Boolean)},chartState('discord','discord-chart')),'Daily Course Clicks');
@@ -482,12 +495,12 @@
       columns:[
         {key:'week',label:'Week',type:'name',html:r=>esc(r.range)+(r.incomplete?' (in progress)':''),sort:r=>r.week},
         {key:'end',label:'Members',get:r=>r.end===null?M.na('No snapshot this week.'):M.value(r.end)},
-        {key:'net',label:'Growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week’s snapshot.'):M.value(r.value)},
+        {key:'net',label:'Net Growth',format:'signed',get:r=>r.value===null?M.na('Needs the previous week’s snapshot.'):M.value(r.value)},
         {key:'course',label:'Course Clicks',get:r=>courseByWeek.has(r.week)?M.value(courseByWeek.get(r.week).value):M.na('No dated course history in this week.')}
       ]},ts);
     // Owner (26 Nov): a short line saying what this page actually tracks, and the Weekly Stats table (previously built but never shown).
     const intro='<p class="fv-filter-note">'+U.icon('discord',14)+'<span>How the Fanvue Academy community is growing: member count, net new members, and clicks on the free course button.</span></p>';
-    return {title:'Discord',chipHtml:'<span class="fv-campaign-chip" style="background:#5865F2" aria-hidden="true">'+U.icon('discord',15)+'</span>',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:periodControls('discord',st)+strip+chart+table};
+    return {title:'Discord',chipHtml:'<span class="fv-campaign-chip" style="background:#5865F2" aria-hidden="true">'+U.icon('discord',15)+'</span>',refreshLabel:'Refresh',updated:members?.checkedAt||clicks?.checkedAt,stale:!!dd.error,body:periodControls('discord',st,true,periodStats)+strip+chart+table};
   }
 
   /* X Articles: every article redirect leads to the Fanvue partner (affiliates) page, so all
@@ -532,9 +545,13 @@
     const today=C.londonDay(Date.now()),ws=C.weekStart(today);
     return active==='last-week'?{from:C.addDays(ws,-7),to:C.addDays(ws,-1)}:{from:ws,to:today};
   }
-  function periodControls(page,st={},only=true){
+  function periodControls(page,st={},only=true,discordPeriods=null){
     const active=selectedPeriod(page,st);
-    return (only?overviewTabs():'')+'<nav class="fv-segments fv-kpi-periods" aria-label="KPI reporting period">'+KPI_PERIODS.map(([key,label])=>'<button type="button" data-period="'+key+'" aria-pressed="'+(active===key)+'">'+label+'</button>').join('')+'</nav>';
+    return (only?overviewTabs():'')+'<nav class="fv-segments fv-kpi-periods'+(discordPeriods?' fv-discord-periods':'')+'" aria-label="KPI reporting period">'+KPI_PERIODS.map(([key,label])=>{
+      const p=discordPeriods&&periodRange(key),s=discordPeriods&&(key==='all-time'?discordPeriods.all:key==='last-week'?discordPeriods.last:discordPeriods.week);
+      const date=discordPeriods?(p?discordDateRange(p.from,p.to):s.growthFrom?'Since '+C.dayShort(s.growthFrom):'Since tracking'):'';
+      return '<button type="button" data-period="'+key+'" aria-pressed="'+(active===key)+'"'+(discordPeriods?' title="'+esc(discordScope(key,s))+'"':'')+'>'+label+(date?'<span class="fv-period-date">'+esc(date)+'</span>':'')+'</button>';
+    }).join('')+'</nav>';
   }
   function scopedViews(history,period){
     const gains=C.dailySeries(history,{born:postBorn,days:21}).gained.filter(p=>p.week>=period.from&&p.week<=period.to&&p.value!==null);
@@ -1073,7 +1090,10 @@
     if(next.canonical!==decodeURIComponent(location.hash.replace(/^#/,'')))history.replaceState(history.state,'','#'+next.canonical);
     const changedPage=next.kind!==current.kind||next.key!==current.key;
     current=next;
-    if(next.kind==='page')pageState(next.key).view=next.view;
+    if(next.kind==='page'){
+      const state=pageState(next.key);state.view=next.view;
+      if(next.key==='discord'&&KPI_PERIODS.some(([key])=>key===next.view))state.period=next.view;
+    }
     render();
     if(changedPage)window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
   }
@@ -1186,7 +1206,7 @@
     const exp=t.closest('[data-expand]');
     if(exp){const st=tableState(pageKey(),exp.dataset.table),k=exp.dataset.expand;if(st.expanded.has(k))st.expanded.delete(k);else st.expanded.add(k);rerenderTable(exp.dataset.table);return;}
     const period=t.closest('[data-period]');
-    if(period&&KPI_PERIODS.some(([key])=>key===period.dataset.period)){pageState(pageKey()).period=period.dataset.period;rerender();return;}
+    if(period&&KPI_PERIODS.some(([key])=>key===period.dataset.period)){pageState(pageKey()).period=period.dataset.period;if(pageKey()==='discord')go('discord/'+period.dataset.period);else rerender();return;}
     const view=t.closest('[data-view]');
     if(view&&current.kind==='page'){const def=defaultView(current.key);go(current.key+(view.dataset.view===def?'':'/'+view.dataset.view));return;}
     const ct=t.closest('[data-chart-type]');
