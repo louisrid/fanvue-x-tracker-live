@@ -2437,3 +2437,6 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
  #fvShell #fvPage.fv-campaign-layout>#discord-table .fv-table>tbody>tr.fv-row>td.is-name{min-height:18px;padding-bottom:0}
  #fvShell #fvPage.fv-campaign-layout>#discord-table .fv-table>tbody>tr.fv-row{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* The hidden Dashboard Back placeholder has the same desktop spacing as visible Back. */
+@media(min-width:768px){#fvShell.is-home #mainContent #fvBack[hidden]{margin-bottom:32px}}

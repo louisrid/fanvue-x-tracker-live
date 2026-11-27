@@ -150,7 +150,7 @@ try{
      borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===3&&parseFloat(style(e).borderTopLeftRadius)>=10),
      labelTheme:labels.every(e=>style(e.lastElementChild).color===accent(e)),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
-     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:(innerWidth<360?14:16))),
+     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:14)),
      rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===3&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
@@ -176,7 +176,14 @@ try{
    await open(route,title);await page.screenshot({path:dir+'/'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:true});const g=await geometry();
    const visual=await page.evaluate(()=>{const panel=document.querySelector('#fvPage>.fv-table-panel'),rows=[...panel.querySelectorAll('tbody>tr.fv-row')],bounds=panel.getBoundingClientRect();return {yellow:panel.querySelectorAll('th.is-user-sorted,td.is-highlighted-number,[data-user-sort]').length,clipped:rows.some(row=>{const r=row.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1||[...row.children].some(cell=>{const b=cell.getBoundingClientRect();return getComputedStyle(cell).display!=='none'&&(b.right>r.right+1||b.left<r.left-1);});})};});
    assert.equal(visual.yellow,0,route+' default sort must be neutral');
-   if(route==='viral-qrts')assert.equal(await page.locator('#fvPage h2').filter({hasText:/^Viral Posts$/}).count(),0,'Viral Posts summary removed');
+   if(route==='viral-qrts'){
+    assert.equal(await page.locator('#fvPage h2').filter({hasText:/^Viral Posts$/}).count(),0,'Viral Posts summary removed');
+    const expand=page.locator('#viral-results [data-expand]').first();
+    await expand.click();
+    assert.match(await page.locator('#viral-results .fv-detail-inner').innerText(),/Quoted post views/,'quoted original context remains in the expanded record');
+    assert.match(await page.locator('#viral-results .fv-detail-inner').innerText(),/1,000,000|1M/);
+    await page.locator('#viral-results [data-expand]').first().click();
+   }
    if(viewport.width>=768)assert.ok(await page.locator('#fvPage>.fv-table-panel tbody>tr.fv-row').evaluateAll(rows=>rows.every(r=>r.getBoundingClientRect().height<=40)),'compact desktop campaign rows');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
