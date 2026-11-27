@@ -168,7 +168,7 @@ test('unavailable data is shown once: empty columns hide and neighbouring empty 
 });
 
 test('six-slot strip keeps fixed metric order on every paid campaign page',()=>{
-  for(const label of ['Spend','Views','Clicks','CPC','Signups','KYC','Earning Creators','Live Posts','Members','Growth','Clicks'])  // owner (26 Nov, style 74): short labels
+  for(const label of ['Spend','Views','Clicks','CPC','Signups','KYC','Earning Creators','Live Posts','Members','Net Growth','Start Members','Clicks'])  // owner (26 Nov, style 74): short labels
     assert.ok(appJs.includes("'"+label+"'"),label);
   assert.match(css,/\.fv-strip\{display:grid;grid-template-columns:repeat\(var\(--n,6\)/);
 });
