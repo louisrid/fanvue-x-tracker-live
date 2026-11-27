@@ -261,3 +261,12 @@ test('daily views: a post published that day counts from 0; an older post first 
   // 25 Nov: the new post's 1,200 views since publication, plus 100 on the older post (its first reading is its baseline).
   assert.deepEqual(d.gained.map(p=>[p.week,p.value,p.fresh]),[['2026-11-25',1200,1],['2026-11-26',50,0]]);
 });
+
+
+test('all 27 listings appear immediately, even with a legacy row limit; search and sorting still apply',()=>{
+ const rows=Array.from({length:27},(_,i)=>({id:i+1,name:'Publisher '+String(i+1).padStart(2,'0'),spend:i+1}));
+ const cfg={id:'all-listings-test',title:'Listings',rows,rowKey:r=>r.id,search:true,searchText:r=>r.name,columns:[{key:'name',label:'Account',type:'name',get:r=>r.name},{key:'spend',label:'Spend',get:r=>C.M.value(r.spend)}],limit:10};
+ const full=U.tablePanel(cfg,{});assert.equal((full.match(/class="fv-row"/g)||[]).length,27);assert.doesNotMatch(full,/data-show-all|Show all/);assert.match(full,/Publisher 27/);
+ const filtered=U.tablePanel(cfg,{q:'Publisher 2'});assert.equal((filtered.match(/class="fv-row"/g)||[]).length,8);
+ const sorted=U.tablePanel(cfg,{sort:{key:'spend',dir:-1,user:true}});assert.ok(sorted.indexOf('Publisher 27')<sorted.indexOf('Publisher 01'));assert.equal((sorted.match(/class="fv-row"/g)||[]).length,27);
+});

@@ -326,9 +326,7 @@
     }).join('')+(cfg.expand?'<th scope="col" class="fv-x-col"><span class="fv-sr">Details</span></th>':'')+'</tr>';
     // Optional grouping: rows stay in their sorted order inside each group, groups in order of first appearance.
     if(cfg.groupBy){const order=[],by=new Map();for(const r of rows){const k=cfg.groupBy(r);if(!by.has(k)){by.set(k,[]);order.push(k);}by.get(k).push(r);}rows=order.flatMap(k=>by.get(k));}
-    // Long lists show the first few rows with a Show all button (owner, 26 Nov).
-    const total=rows.length,limited=cfg.limit&&!st.showAll&&rows.length>cfg.limit;
-    if(limited)rows=rows.slice(0,cfg.limit);
+    // Render every listing in the selected tab after applying search, filters and sorting.
     let lastGroup=null;
     const body=rows.map(r=>{
       const g=cfg.groupBy?cfg.groupBy(r):null;
@@ -367,9 +365,7 @@
     })).join('');
     const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"'+(st.sort?.user?' data-user-sort="true"':'')+'><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('select',14)+'</label>':'';
     const table=(rows.length||cfg.title==='Listings')?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table is-aligned" style="--min-w:'+minWidth+'px;--cols:'+cols.length+'">'+colgroup+'<thead>'+head+'</thead><tbody>'+ (rows.length?body:'<tr class="fv-empty-row"><td colspan="'+(cols.length+(cfg.expand?1:0))+'">'+empty+'</td></tr>')+'</tbody></table></div>':empty;
-    // Only a Show all button when the list is cut short; no record counts (owner, 26 Nov).
-    const count=limited?'<div class="fv-count"><button type="button" class="fv-show-all" data-show-all="'+esc(cfg.id)+'">Show all '+C.full(total)+'</button></div>':'';
-    return '<section class="fv-panel fv-table-panel'+(cfg.cls?' '+esc(cfg.cls):'')+'" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+mobileSort+table+count+'</section>';
+    return '<section class="fv-panel fv-table-panel'+(cfg.cls?' '+esc(cfg.cls):'')+'" id="'+esc(cfg.id)+'" aria-labelledby="'+esc(cfg.id)+'-t">'+panelHead(cfg.title,cfg.icon||'layers','',cfg.id+'-t')+tools+mobileSort+table+'</section>';
   }
 
   /* Detail grid used inside expanded rows. items: [[label, html]] */

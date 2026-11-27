@@ -189,7 +189,7 @@
   function xTable(page,id,{title,icon='layers',records,f,expand,empty,groups=true,includeType=true}){
     const ts=tableState(page,id);if(!ts.sort)ts.sort={key:'clicks',dir:-1};
     return U.tablePanel({id,title,icon,age:publicationAge,hideEmpty:false,search:true,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
-      minWidth:820,limit:10,cls:'is-list is-placement-list',searchText:x=>[x.account,x.campaign,x.raw.trackingUrl||'',x.raw.articleLabel||''].join(' '),empty,columns:resultColumns(records,{includeType}),expand},ts);
+      minWidth:820,cls:'is-list is-placement-list',searchText:x=>[x.account,x.campaign,x.raw.trackingUrl||'',x.raw.articleLabel||''].join(' '),empty,columns:resultColumns(records,{includeType}),expand},ts);
   }
   const articleHeadline=r=>r.articleTitle||r.headline||(!/^ARTICLE\s*\d/i.test(r.articleLabel||'')?r.articleLabel:'')||'';
   function resultColumns(records,{article=false}={}){
@@ -658,7 +658,7 @@
     if(tab==='overview'){
       const originals=arts.filter(x=>x.paid||x.live===true||C.hasValue(x.clicks)&&x.clicks.value>0),eff=C.placementEfficiency(originals.map(x=>x.raw));
       const ts=tableState('x-articles','xa-overview');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
-      body=chart+U.tablePanel({id:'xa-overview',title:'Listings',icon:'doc',age:publicationAge,rows:originals,search:true,cls:'is-list is-placement-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:820,limit:10,hideEmpty:false,columns:resultColumns(originals,{article:true}),expand:x=>xDetail(x,eff,{extra:[['Headline',esc(articleHeadline(x.raw))]]})},ts);
+      body=chart+U.tablePanel({id:'xa-overview',title:'Listings',icon:'doc',age:publicationAge,rows:originals,search:true,cls:'is-list is-placement-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:820,hideEmpty:false,columns:resultColumns(originals,{article:true}),expand:x=>xDetail(x,eff,{extra:[['Headline',esc(articleHeadline(x.raw))]]})},ts);
     }else if(tab==='rts'){
       const grouped=new Map();
       for(const x of shown){const key=C.postId(x.raw.sourcePostUrl||x.raw.postUrl)||'unlinked';if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(x);}
@@ -668,12 +668,12 @@
         return {key,list,name:original?.account||g?.handle||(key==='unlinked'?'Unlinked article':'Article'),headline:original?articleHeadline(original.raw):'',url:list[0].raw.sourcePostUrl||original?.link||'',
           views:original?.views||(C.num(g?.views)!==null?M.value(g.views):M.na('Original views unavailable.')),k:xKpis(list)};
       });
-      body=chart+U.tablePanel({id:'xa-rts',title:'Listings',icon:'refresh',age:r=>originalAge(r.key),rows,search:true,searchText:r=>r.name,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:898,cls:'is-list is-placement-list',hideEmpty:false,limit:10,
+      body=chart+U.tablePanel({id:'xa-rts',title:'Listings',icon:'refresh',age:r=>originalAge(r.key),rows,search:true,searchText:r=>r.name,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:898,cls:'is-list is-placement-list',hideEmpty:false,
         columns:rtSummaryColumns({name:r=>r.name,views:r=>r.views,spend:r=>r.k.spend,rtCount:r=>r.list.filter(x=>x.paid).reduce((n,x)=>n+(C.num(x.raw.purchasedPosts)||1),0),url:r=>r.url}),expand:r=>U.detailGrid([['Headline',esc(r.headline||'')]])+rtCosts(r.list)},tableState('x-articles','xa-rts'))+
         '<p class="fv-filter-note">Views include organic reach. Separate RT clicks and views are not tracked.</p>'+(D.campaign('article-rts')?.trackingWarning?'<p class="fv-filter-note">'+esc(D.campaign('article-rts').trackingWarning)+'</p>':'');
     }else{
       const eff=C.placementEfficiency(shown.map(x=>x.raw));
-      body=chart+U.tablePanel({id,title:'Listings',icon:'doc',age:publicationAge,records:scoped,rows:scoped,search:true,cls:'is-list is-placement-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:820,limit:10,hideEmpty:false,
+      body=chart+U.tablePanel({id,title:'Listings',icon:'doc',age:publicationAge,records:scoped,rows:scoped,search:true,cls:'is-list is-placement-list',rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,minWidth:820,hideEmpty:false,
         columns:resultColumns(scoped,{article:true}),expand:x=>xDetail(x,eff,{extra:[['Headline',esc(articleHeadline(x.raw))]]})},tableState('x-articles',id));
     }
     const label={overview:'Article Performance',articles:'Article Performance',rts:'Paid RT Performance'}[tab];
@@ -752,7 +752,7 @@
     const ts=tableState('viral-qrts','viral-results');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
     const eff=C.placementEfficiency(shown.map(x=>x.raw));
     const table=U.tablePanel({id:'viral-results',title:'Listings',icon:'zap',age:publicationAge,records,rows:records,search:true,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
-      minWidth:820,limit:10,cls:'is-list is-placement-list',hideEmpty:false,columns:resultColumns(records),
+      minWidth:820,cls:'is-list is-placement-list',hideEmpty:false,columns:resultColumns(records),
       expand:x=>{const o=mapping.get(C.postId(x.raw.postUrl));return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,'@'+o.handle):'',extra:[['Quoted post views',o&&C.num(o.views)!==null?U.value(M.value(C.num(o.views))):''],['View count',o?'Views of the quoted post are excluded from QRT totals.':'']]});}},ts);
     const l=look(VIRAL.key);
     return {title:'Viral QRTs',chipHtml:'<span class="fv-campaign-chip" style="background:'+C.PALETTE[l.color].fill+'">'+U.icon(l.icon,15)+'</span>',refreshLabel:'Refresh',updated:ov?.checkedAt,
@@ -780,7 +780,7 @@
     for(const [key,list] of groups)rows.push({key,r:{},list,name:'Unmatched original post',spend:xKpis(list).spend});
     const guruHistory=(g?.rows||[]).flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id})));
     const rtK=s?scopedRtKpis('guru-promotion',st,records,guruHistory,{...s.views,reason:'Views of the original promoted posts, including organic exposure. These are not exclusively paid impressions.'},(g?.rows||[]).length):null;
-    const table=U.tablePanel({id:'guru-summary',title:'Listings',icon:'megaphone',age:r=>originalAge(r.key),rows,search:true,searchText:r=>r.name,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:898,cls:'is-list is-placement-list',hideEmpty:false,limit:10,
+    const table=U.tablePanel({id:'guru-summary',title:'Listings',icon:'megaphone',age:r=>originalAge(r.key),rows,search:true,searchText:r=>r.name,rowKey:r=>r.key,rowLabel:r=>r.name,minWidth:898,cls:'is-list is-placement-list',hideEmpty:false,
       columns:rtSummaryColumns({name:r=>r.name,views:r=>C.num(r.r.views)===null?M.na('No verified original view reading.'):M.value(r.r.views),spend:r=>r.spend,rtCount:r=>r.list.filter(x=>x.paid).reduce((n,x)=>n+(C.num(x.raw.purchasedPosts)||1),0),url:r=>r.r.postUrl||r.list[0]?.raw.sourcePostUrl}),expand:r=>rtCosts(r.list)},tableState('guru-promotion','guru-summary'));
     const adSpend=C.num(g?.boostSpendKnown);
     const chart=campaignChart(viewsChart('guru-chart','guru-promotion',(g?.rows||[]).flatMap(r=>(r.history||[]).map(h=>({...h,id:r.id}))),{noun:'Views'}),'Daily Views');
@@ -859,7 +859,7 @@
       const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts||[]){if(keys.has(a.key)||a.platform!=='X')continue;rows.push({key:a.key,name:a.handle,platform:'X',campaigns:[],posts:0,records:[],spend:M.na('No paid placement.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});keys.add(a.key);}
     }
     rows.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
-    const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',rows,limit:20,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
+    const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',rows,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
       expand:accountHistory,
       columns:[
         {key:'name',label:'Account',type:'name',html:a=>{const raw=a.records.find(r=>r.raw?.profileUrl||r.link||r.raw?.handle||String(r.account||'').startsWith('@')),candidate=String(raw?.raw?.profileUrl||raw?.link||''),match=candidate.match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})(?:[/?#]|$)/i),explicit=String(raw?.raw?.handle||a.name||'').match(/^@([A-Za-z0-9_]{1,15})$/),handle=match?.[1]||explicit?.[1],url=handle?'https://x.com/'+handle:'';const label='<span class="fv-name">'+U.accountMark(a.name)+'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span></span>';return url?'<a class="fv-account-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+label+'</a>':label;},sort:a=>a.name.toLowerCase()},
@@ -1191,9 +1191,7 @@
       table.querySelector('thead').replaceWith(fresh.querySelector('thead'));
       table.querySelector('tbody').replaceWith(fresh.querySelector('tbody'));
       const a=old.querySelector('[data-mobile-sort]'),b=next.querySelector('[data-mobile-sort]');if(a&&b){a.value=b.value;a.toggleAttribute('data-user-sort',b.hasAttribute('data-user-sort'));}
-      const before=old.querySelector('.fv-count'),after=next.querySelector('.fv-count');
-      if(before&&after)before.replaceWith(after);else if(before)before.remove();else if(after)old.append(after);
-      renderedSections.set(old,signature);
+       renderedSections.set(old,signature);
     }else{renderedSections.set(next,signature);old.replaceWith(next);}
     const w=host.querySelector('#'+CSS.escape(id)+' .fv-table-wrap');if(w)w.scrollLeft=left;
     restoreFocus(focus);
@@ -1210,9 +1208,7 @@
     if(view&&current.kind==='page'){const def=defaultView(current.key);go(current.key+(view.dataset.view===def?'':'/'+view.dataset.view));return;}
     const ct=t.closest('[data-chart-type]');
     if(ct){const st=chartState(pageKey(),ct.dataset.chart);st.type=ct.dataset.chartType;rerender();return;}
-    const more=t.closest('[data-show-all]');
-    if(more){tableState(pageKey(),more.dataset.showAll).showAll=true;rerenderTable(more.dataset.showAll);return;}
-    const reset=t.closest('[data-reset]');
+     const reset=t.closest('[data-reset]');
     if(reset){const st=tableState(pageKey(),reset.dataset.reset);st.q='';st.filter='';if(st.xf)for(const k of Object.keys(st.xf))st.xf[k]='';rerender();return;}
     if(t.closest('[data-retry]')){void D.rep()?.reload?.();return;}
   }
