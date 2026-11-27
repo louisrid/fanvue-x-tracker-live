@@ -200,7 +200,7 @@ try{
     const yellow=el=>getComputedStyle(el).color==='rgb(199, 181, 255)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
-      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='2px'&&getComputedStyle(td).borderRightColor==='rgb(53, 48, 53)')};
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='2px'&&getComputedStyle(td).borderRightColor==='rgb(52, 48, 52)')};
   });
   assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values use the campaign colour');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');

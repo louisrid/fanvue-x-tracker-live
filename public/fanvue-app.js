@@ -668,10 +668,9 @@
     const table=U.tablePanel({id:'viral-results',title:'Listings',icon:'zap',age:publicationAge,records,rows:records,search:true,filter:xMatch(f),filters:xFilters('viral-results',records,f),rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
       minWidth:820,limit:10,cls:'is-list is-placement-list',hideEmpty:false,columns:resultColumns(records),
       expand:x=>{const o=mapping.get(C.postId(x.raw.postUrl));return xDetail(x,eff,{source:o?U.extLink(o.originalUrl,'@'+o.handle):'',extra:[['Quoted post views',o&&C.num(o.views)!==null?U.value(M.value(C.num(o.views))):''],['View count',o?'Views of the quoted post are excluded from QRT totals.':'']]});}},ts);
-    const originals=quoted.length?U.supportPanel('Viral Posts','zap','<div class="fv-original-context">'+quoted.map(o=>'<div><span>'+ (U.extLink(o.originalUrl,'@'+(o.handle||'Original post'))||'Original post')+'</span><b>'+ (C.num(o.views)===null?dash('No verified original view count.'):U.value(M.value(o.views)))+'</b><small>Post views · Not included in QRT totals</small></div>').join('')+'</div>'):'';
     const l=look(VIRAL.key);
     return {title:'Viral QRTs',chipHtml:'<span class="fv-campaign-chip" style="background:'+C.PALETTE[l.color].fill+'">'+U.icon(l.icon,15)+'</span>',refreshLabel:'Refresh',updated:ov?.checkedAt,
-      body:overviewTabs()+(ov?kpiStrip(xKpis(shown)):loadingStrip(KPI_LOADING))+chart+table+originals+overviewNotice()};
+      body:overviewTabs()+(ov?kpiStrip(xKpis(shown)):loadingStrip(KPI_LOADING))+chart+table+overviewNotice()};
   }
 
   function ofPage(st){
