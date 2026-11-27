@@ -1941,3 +1941,72 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage.fv-campaign-layout>.fv-support .fv-detail-grid>div{background:var(--fv-mobile-card);border:0;border-radius:8px}
  #fvPage.fv-campaign-layout>.fv-support .fv-notice{padding:0 12px 12px;line-height:1.4}
 }
+
+/* Current owner visual rules: one black/rose system, visible outlines and measured-number pills.
+   Deliberately preserve the current layout, desktop rows, mobile controls and data bindings. */
+#fvShell{
+ --fv-outline:#9B5279;--fv-kpi-outline:#D25897;--fv-number-fill:#783355;
+ --fv-number-radius:999px;--fv-number-pad:2px 7px;--fv-kpi-number-pad:3px 10px;
+}
+#fvShell.pg-discord,#fvPage.fv-dashboard-layout>.fv-home-discord{
+ --fv-outline:#9B87D2;--fv-kpi-outline:#9B87D2;--fv-number-fill:#5C488A;
+}
+/* Number pills belong to measured values in cards, not labels, dates, unavailable states,
+   desktop table cells, chart axes or statuses. A selected sort changes the number text only. */
+#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num{
+ display:inline-block;max-width:100%;padding:var(--fv-number-pad);border:0;
+ border-radius:var(--fv-number-radius);background:var(--fv-number-fill);color:#FFF;
+ font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.12;box-shadow:none;
+}
+#fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{
+ padding:var(--fv-kpi-number-pad);line-height:1.08;
+}
+#fvPage .fv-metric-value .fv-dash,#fvPage .fv-detail-grid .fv-dash{background:transparent;border:0;box-shadow:none}
+#fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-color:var(--fv-kpi-outline)}
+#fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-color:#F0357C}
+#fvPage.fv-campaign-layout>.fv-chart-panel,#fvPage.fv-campaign-layout>.fv-support,
+#fvPage.fv-dashboard-layout>.fv-home-discord{border-color:var(--fv-outline)}
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{border-bottom-color:var(--fv-outline)}
+#fvPage .fv-search,#fvPage .fv-select select,#fvPage .fv-show-all,#fvPage .fv-open-btn{border-color:var(--fv-outline)}
+#fvPage .fv-select select[data-user-sort],#fvPage .fv-select select[data-xfilter]:has(option:checked:not([value=""])),#fvPage .fv-select select[data-filter]:has(option:checked:not([value=""])){border-color:#FFE500}
+#fvPage a.fv-account-link:hover .fv-account-plain,#fvPage a.fv-campaign-row-name:hover,#fvPage a.fv-ext:hover{text-decoration:none}
+@media(min-width:768px){
+ #fvPage.fv-campaign-layout>.fv-table-panel,#fvPage.fv-accounts-layout>#acc-table{border-color:var(--fv-outline)}
+ #fvPage .fv-table-panel .fv-table .fv-expand,#fvPage .fv-table-panel .fv-table .fv-ext.is-icon{border-color:var(--fv-outline)}
+}
+@media(max-width:767px){
+ #fvShell #mainContent{--fv-mobile-line:var(--fv-outline);--fv-mobile-kpi-border:var(--fv-kpi-outline)}
+ #fvPage.fv-campaign-layout{--fv-mobile-kpi-border:var(--fv-kpi-outline)}
+ #fvShell.pg-discord #fvPage{--fv-mobile-kpi-border:var(--fv-kpi-outline)}
+ #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding:11px 12px;gap:5px;border-color:var(--fv-kpi-outline);border-left-color:var(--fv-mobile-accent)}
+ #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{padding:3px 8px}
+ #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row,
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row,
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{border-color:var(--fv-outline)}
+ #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num,
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num,
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num{
+  display:inline-block;max-width:100%;padding:var(--fv-number-pad);border:0;
+  background:var(--fv-number-fill);border-radius:var(--fv-number-radius);white-space:nowrap;overflow-wrap:normal;
+  font-variant-numeric:tabular-nums;line-height:1.12;box-shadow:none;
+ }
+ #fvPage .fv-table .fv-row td.is-highlighted-number .fv-num{color:#FFE500}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{gap:8px 14px;padding:12px 14px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:40px;gap:4px}
+ #fvPage.fv-campaign-layout>.fv-chart-panel>.fv-chart{border:0}
+ #fvPage.fv-dashboard-layout>.fv-home-discord .fv-metric-value .fv-num{padding:2px 6px}
+ #fvPage .fv-table-panel .fv-table-tools>.fv-search,#fvPage .fv-table-panel .fv-table-tools>.fv-select select,#fvPage .fv-table-panel>.fv-mobile-sort select{border-color:var(--fv-outline)}
+ #fvPage .fv-table-panel>.fv-mobile-sort select[data-user-sort],#fvPage .fv-table-panel .fv-table-tools>.fv-select select[data-xfilter]:has(option:checked:not([value=""])),#fvPage .fv-table-panel .fv-table-tools>.fv-select select[data-filter]:has(option:checked:not([value=""])){border-color:#FFE500}
+ #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="long"],
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="long"]{letter-spacing:-.04em;padding-inline:4px;font-size:var(--fv-fs-m);}
+ #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"],
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"]{letter-spacing:-.045em;padding-inline:3px;font-size:var(--fv-fs-s);}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length]{font-size:var(--fv-fs-l);padding-inline:7px;}
+}
+@media(max-width:359px){
+ #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding:10px 9px}
+ #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{padding-inline:6px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{padding:11px 12px}
+ #fvPage.fv-campaign-layout>.fv-table-panel:not(#home-comparison) .fv-table>tbody>tr.fv-row,
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

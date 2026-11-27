@@ -99,13 +99,12 @@
     format==='compact'?C.compact(v):format==='signed'?C.signed(v):format==='rate'?C.rate(v):C.full(v);
   /* Render a metric descriptor: a value (with optional partial/stale chip) or a
      labelled state whose reason is available on hover, focus and tap. */
+  const numberSpan=(value,reason='')=>{const raw=String(value),len=raw.length,attr=len>=12?' data-num-length="very-long"':len>=9?' data-num-length="long"':'';return '<span class="fv-num"'+attr+(reason?' tabindex="0" data-reason="'+esc(reason)+'"':'')+'>'+esc(raw)+'</span>';};
   function value(m,format='count',{chipText}={}){
     if(!m||m.state==='loading')return '<span class="fv-skel" aria-label="Loading"></span>';
     if(m.value===null||!['value','partial','stale'].includes(m.state))
       return reasonButton(STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
-    const text=esc(formatValue(m.value,format));
-    if(m.reason&&m.state!=='value')return '<span class="fv-num" tabindex="0" data-reason="'+esc(m.reason)+'">'+text+'</span>';
-    return '<span class="fv-num">'+text+'</span>';
+    return numberSpan(formatValue(m.value,format),m.reason&&m.state!=='value'?m.reason:'');
   }
   function chipFor(m,note){
     if(!m)return '';
@@ -242,8 +241,8 @@
     if(col.html)return col.html(row,v);
     if(v&&typeof v==='object'&&'state' in v)return unavailableState(v)?dashCell(v.reason):value(v,col.format||'count');
     if(v===null||v===undefined||v==='')return dashCell('');
-    if(col.type==='money')return esc(C.money(v));
-    if(col.type==='count')return esc(C.full(v));
+    if(col.type==='money')return numberSpan(C.money(v));
+    if(col.type==='count')return numberSpan(C.full(v));
     return esc(v);
   }
   const dashCell=reason=>'<span class="fv-dash" tabindex="0" data-reason="'+esc(reason||'Not available.')+'" aria-label="'+esc('No data. '+(reason||''))+'">–</span>';
