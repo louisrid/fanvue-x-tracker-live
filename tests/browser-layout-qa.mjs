@@ -286,6 +286,20 @@ try{
   assert.equal(await page.locator('#home-comparison .fv-row').count(),1);
   const filteredHome=await geometry();for(const k of ['strip','chart','plot','list','toolbar','cols'])close(filteredHome[k],homeReference[k],viewport.width+' Dashboard search '+k);
   await page.locator('#home-comparison [data-search]').fill('');
+  if(viewport.width>=768){
+   const cell=page.locator('#home-comparison tbody tr.fv-row td[data-column="spend"]').first();
+   await cell.hover();
+   const hover=await page.evaluate(()=>{
+    const cells=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="spend"]')];
+    const others=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="views"]')];
+    return {column:cells.every(e=>['rgb(48, 48, 48)','rgb(59, 59, 59)'].includes(getComputedStyle(e).backgroundColor)),
+     other:others.every(e=>getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'),
+     yellow:cells.filter(e=>e.classList.contains('is-highlighted-number')).every(e=>getComputedStyle(e.querySelector('.fv-num')||e).color==='rgb(255, 229, 0)')};
+   });
+   assert.ok(hover.column&&hover.other&&hover.yellow,'hover highlights only the column and preserves sorted text '+JSON.stringify(hover));
+   await page.mouse.move(0,0);
+   assert.equal(await cell.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)','column highlight clears on mouse exit');
+  }
   assert.deepEqual(errors,[],'browser errors at '+viewport.width);
   console.log('PASS '+viewport.width+'px: '+routes.length+' campaign/community views, Accounts, Dashboard, sorting, filters, seven-day charts');
   await page.close();
