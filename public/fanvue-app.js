@@ -287,8 +287,8 @@
     }
     const header=subTabs(tabs,active).replace('aria-label="Campaign sections"','aria-label="Dashboard periods"');
     const figures=U.strip([metric('Clicks','cursor',paid.clicks),metric('Views','eye',paid.views,'compact'),metric('Spend','wallet',paid.spend,'moneyShort'),metric('Live Posts','check',paid.posts)]);
-    const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord/'+active+'">'+U.icon('discord',15)+'View Discord</a>')+
-      '<div class="fv-discord-scope">'+esc(discordScope(active,community))+'</div>'+
+    const discordHeading=U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord/'+active+'">'+U.icon('discord',15)+'View Discord</a>').replace('<span>Discord</span>','<span class="fv-discord-heading">Discord <span class="fv-discord-scope" title="'+esc(discordScope(active,community))+'">'+esc(tabs.find(t=>t.key===active).label)+'</span></span>');
+    const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+discordHeading+
       U.strip([metric('Members','users',community.members,'count'),metric('Net Growth','trend',community.growth,'signed'),metric('Course Clicks','graduation',community.clicks)],{cls:'fv-home-community-strip',ariaLabel:'Discord metrics'})+'</section>';
     const chart=dashboardChart(period),comparison=campaignComparison(S,period);
     const lower=dashboardLayout==='2'||dashboardLayout==='5'?chart+discord+comparison:dashboardLayout==='3'?comparison+chart+discord:dashboardLayout==='8'?discord+chart+comparison:chart+comparison+discord;
@@ -547,10 +547,9 @@
   }
   function periodControls(page,st={},only=true,discordPeriods=null){
     const active=selectedPeriod(page,st);
-    return (only?overviewTabs():'')+'<nav class="fv-segments fv-kpi-periods'+(discordPeriods?' fv-discord-periods':'')+'" aria-label="KPI reporting period">'+KPI_PERIODS.map(([key,label])=>{
-      const p=discordPeriods&&periodRange(key),s=discordPeriods&&(key==='all-time'?discordPeriods.all:key==='last-week'?discordPeriods.last:discordPeriods.week);
-      const date=discordPeriods?(p?discordDateRange(p.from,p.to):s.growthFrom?'Since '+C.dayShort(s.growthFrom):'Since tracking'):'';
-      return '<button type="button" data-period="'+key+'" aria-pressed="'+(active===key)+'"'+(discordPeriods?' title="'+esc(discordScope(key,s))+'"':'')+'>'+label+(date?'<span class="fv-period-date">'+esc(date)+'</span>':'')+'</button>';
+    return (only?overviewTabs():'')+'<nav class="fv-segments fv-kpi-periods" aria-label="KPI reporting period">'+KPI_PERIODS.map(([key,label])=>{
+      const s=discordPeriods&&(key==='all-time'?discordPeriods.all:key==='last-week'?discordPeriods.last:discordPeriods.week);
+      return '<button type="button" data-period="'+key+'" aria-pressed="'+(active===key)+'"'+(discordPeriods?' title="'+esc(discordScope(key,s))+'"':'')+'>'+label+'</button>';
     }).join('')+'</nav>';
   }
   function scopedViews(history,period){

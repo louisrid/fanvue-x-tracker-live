@@ -107,6 +107,7 @@ try{
     assert.deepEqual(await controls.evaluateAll(es=>es.map(e=>e.dataset.period)),['this-week','last-week','all-time'],route+' period order');
     for(const period of ['last-week','all-time','this-week']){
       await page.locator('#fvPage>.fv-kpi-periods [data-period="'+period+'"]').click();
+      await page.waitForFunction(period=>document.querySelector('#fvPage>.fv-kpi-periods [aria-pressed="true"]')?.dataset.period===period,period);
       assert.equal(await page.locator('#fvPage>.fv-kpi-periods [aria-pressed="true"]').getAttribute('data-period'),period);
       assert.equal(await page.locator('#fvPage>.fv-strip .fv-metric').count(),4);
       assert.ok(await page.locator('#fvPage>.fv-kpi-periods').evaluate(e=>e.scrollWidth<=e.clientWidth+1),route+' period controls fit');
@@ -361,7 +362,9 @@ try{
    if(viewport.width>=768)assert.equal(await page.locator('#home-comparison th[data-column="name"] button').evaluate(e=>getComputedStyle(e).color),'rgb(255, 255, 255)','Campaign header stays white');
    assert.equal(await page.locator('.fv-home-discord .fv-home-community-strip>.fv-metric').count(),3);
    const expectedDiscordLabel=period==='last-week'?'Last Week':period==='all-time'?'All Time':'This Week';
-   assert.ok((await page.locator('.fv-discord-scope').innerText()).startsWith(expectedDiscordLabel));
+   assert.equal(await page.locator('.fv-home-discord .fv-panel-head .fv-discord-scope').innerText(),expectedDiscordLabel);
+   assert.equal(await page.locator('.fv-home-discord > .fv-discord-scope').count(),0,'no extra Discord scope row');
+   assert.ok(await page.locator('.fv-home-discord .fv-panel-head').evaluate(e=>{const h=e.querySelector('.fv-discord-heading'),b=e.querySelector('.fv-home-discord-link'),x=h.getBoundingClientRect(),y=b.getBoundingClientRect();return h.scrollWidth<=h.clientWidth+1&&x.right<=y.left+1;}),'compact Discord heading fits beside button');
    assert.equal(await page.locator('.fv-home-discord-link').getAttribute('href'),'#discord/'+period);
    assert.ok((await page.locator('.fv-home-community-strip').innerText()).includes('Net Growth'));
    const flat=await page.evaluate(()=>{

@@ -2816,8 +2816,7 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
  #fvShell #fvPage.fv-dashboard-layout>.fv-subnav>button{padding:0 4px;min-width:0;width:100%}
 }
 
-/* Discord reporting period: visible, compact and uses the existing type scale. */
-#fvShell #fvPage .fv-home-discord>.fv-discord-scope{padding:8px 16px 0;color:#FFF;font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);line-height:1.25;text-align:center;overflow-wrap:anywhere}
-#fvShell #fvPage.fv-campaign-layout>.fv-discord-periods>button{flex-direction:column;gap:1px;line-height:1.05}
-#fvShell #fvPage .fv-discord-periods .fv-period-date{display:block;color:#FFF;font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);line-height:1;white-space:nowrap}
-@media(max-width:767px){#fvShell #fvPage .fv-home-discord>.fv-discord-scope{padding:6px 8px 0}#fvShell #fvPage .fv-discord-periods .fv-period-date{font-size:var(--fv-fs-s)}}
+/* Discord follows the Dashboard period; one compact inline label, no extra panel row. */
+#fvShell #fvPage .fv-home-discord .fv-discord-heading{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap;min-width:0}
+#fvShell #fvPage .fv-home-discord .fv-discord-scope{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:#FFF;line-height:1;white-space:nowrap;letter-spacing:0}
+@media(max-width:767px){#fvShell #fvPage .fv-home-discord .fv-discord-heading{gap:5px}#fvShell #fvPage .fv-home-discord .fv-home-discord-link{padding-inline:8px;gap:4px}}
