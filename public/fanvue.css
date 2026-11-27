@@ -2010,3 +2010,7 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage.fv-campaign-layout>.fv-table-panel:not(#home-comparison) .fv-table>tbody>tr.fv-row,
  #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Override the older Dashboard-specific panel selector, using the shared outline. */
+#fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip):not(.fv-table-panel){border-color:var(--fv-outline)}
+@media(min-width:768px){#fvPage.fv-dashboard-layout>.fv-table-panel{border-color:var(--fv-outline)}}
