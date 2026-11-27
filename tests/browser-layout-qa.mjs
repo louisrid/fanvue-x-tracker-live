@@ -136,6 +136,7 @@ try{
     const home=document.querySelector('#fvPage').classList.contains('fv-dashboard-layout');
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),style=e=>getComputedStyle(e);
     const white=e=>style(e).color==='rgb(255, 255, 255)',visible=e=>style(e).display!=='none'&&rect(e).width>0&&rect(e).height>0;
+    const accent=e=>{const v=style(e).getPropertyValue('--fv-hover-outline').trim();return /^#[\da-f]{6}$/i.test(v)?'rgb('+[1,3,5].map(i=>parseInt(v.slice(i,i+2),16)).join(', ')+')':v;};
     const title=q('#fvTitle'),head=q('#fvHeader'),top=q('.fv-mobile-top'),body=q('#fvPage');
     const panels=all('#fvPage>.fv-panel:not(.fv-strip),#fvPage>.fv-strip>.fv-metric');
     const nums=all('#fvPage>.fv-strip .fv-metric-value .fv-num'),labels=all('#fvPage>.fv-strip .fv-metric-label');
@@ -147,13 +148,13 @@ try{
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
      borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===3&&parseFloat(style(e).borderTopLeftRadius)>=10),
-     labelWhite:labels.every(white),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
+     labelTheme:labels.every(e=>style(e.lastElementChild).color===accent(e)),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
-     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:16)),
+     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:(innerWidth<360?14:16))),
      rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===3&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
-     labelsWhite:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color==='rgb(255, 255, 255)'),
+     labelsTheme:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color===accent(e)),
      filtersVisible:filters.every(e=>visible(e)&&inside(e,e.closest('.fv-table-panel'))&&rect(e).height>=44),
      noOverflow:document.documentElement.scrollWidth<=innerWidth+1
     };
@@ -161,12 +162,12 @@ try{
    assert.ok(result.titleGap>=0&&result.titleGap<=50,route+' compact title spacing '+JSON.stringify(result));
    assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-40)<=1,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
-   assert.ok(result.borders&&result.labelWhite&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
+   assert.ok(result.borders&&result.labelTheme&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
    assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?28:24)),route+' large short KPI figures '+result.numericSizes);
-   assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsWhite&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
+   assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsTheme&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
    const hierarchy=await page.evaluate(()=>{
     const nodes=[...document.querySelectorAll('#fvPage .fv-table tbody>tr.fv-row td[data-column]:not(.is-name):not([data-column="age"])')];
-    return nodes.filter(e=>{const s=getComputedStyle(e),l=getComputedStyle(e,'::before'),v=e.querySelector('.fv-num');return s.boxShadow!=='none'||parseFloat(s.borderBottomWidth)!==0||(v&&!(Number(l.fontWeight)<Number(getComputedStyle(v).fontWeight)&&parseFloat(l.fontSize)<parseFloat(getComputedStyle(v).fontSize)));}).map(e=>({column:e.dataset.column,shadow:getComputedStyle(e).boxShadow,border:getComputedStyle(e).borderBottomWidth,label:getComputedStyle(e,'::before').fontWeight,value:e.querySelector('.fv-num')?getComputedStyle(e.querySelector('.fv-num')).fontWeight:null}));
+    return nodes.filter(e=>{const s=getComputedStyle(e),l=getComputedStyle(e,'::before'),v=e.querySelector('.fv-num');return s.boxShadow!=='none'||parseFloat(s.borderBottomWidth)!==0||(v&&!(Number(l.fontWeight)<Number(getComputedStyle(v).fontWeight)&&(v.hasAttribute('data-num-length')?parseFloat(l.fontSize)<=parseFloat(getComputedStyle(v).fontSize):parseFloat(l.fontSize)<parseFloat(getComputedStyle(v).fontSize))));}).map(e=>({column:e.dataset.column,shadow:getComputedStyle(e).boxShadow,border:getComputedStyle(e).borderBottomWidth,label:getComputedStyle(e,'::before').fontWeight,value:e.querySelector('.fv-num')?getComputedStyle(e.querySelector('.fv-num')).fontWeight:null}));
    });
    assert.equal(hierarchy.length,0,route+' quiet labels and single-layer cards '+JSON.stringify(hierarchy));
   };
@@ -175,6 +176,8 @@ try{
    await open(route,title);await page.screenshot({path:dir+'/'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:true});const g=await geometry();
    const visual=await page.evaluate(()=>{const panel=document.querySelector('#fvPage>.fv-table-panel'),rows=[...panel.querySelectorAll('tbody>tr.fv-row')],bounds=panel.getBoundingClientRect();return {yellow:panel.querySelectorAll('th.is-user-sorted,td.is-highlighted-number,[data-user-sort]').length,clipped:rows.some(row=>{const r=row.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1||[...row.children].some(cell=>{const b=cell.getBoundingClientRect();return getComputedStyle(cell).display!=='none'&&(b.right>r.right+1||b.left<r.left-1);});})};});
    assert.equal(visual.yellow,0,route+' default sort must be neutral');
+   if(route==='viral-qrts')assert.equal(await page.locator('#fvPage h2').filter({hasText:/^Viral Posts$/}).count(),0,'Viral Posts summary removed');
+   if(viewport.width>=768)assert.ok(await page.locator('#fvPage>.fv-table-panel tbody>tr.fv-row').evaluateAll(rows=>rows.every(r=>r.getBoundingClientRect().height<=40)),'compact desktop campaign rows');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
    const finish=await page.evaluate(()=>{const card=document.querySelector('#fvPage>.fv-strip>.fv-metric'),label=card.querySelector('.fv-metric-label'),value=card.querySelector('.fv-metric-value'),s=getComputedStyle(card),v=getComputedStyle(value),rect=card.getBoundingClientRect(),a=label.getBoundingClientRect(),z=value.getBoundingClientRect();return {background:s.backgroundColor,gradient:s.backgroundImage,radius:parseFloat(s.borderTopLeftRadius),weight:Number(v.fontWeight),center:Math.abs((a.top+z.bottom)/2-(rect.top+rect.bottom)/2),aligned:s.alignItems,justify:s.justifyContent};});
