@@ -240,7 +240,7 @@ try{
      noOverflow:document.documentElement.scrollWidth<=innerWidth+1
     };
    });
-   assert.ok(result.titleGap>=0&&result.titleGap<=50,route+' compact title spacing '+JSON.stringify(result));
+   assert.ok(result.titleGap>=24&&result.titleGap<=50,route+' comfortable black spacing above title '+JSON.stringify(result));
    assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-20)<=1,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelTheme&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));

@@ -2842,9 +2842,9 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 /* Phone-only visual system. Desktop retains its existing component design.
    Neutral surfaces, fine outlines, quiet plain labels and one accent per campaign. */
 @media(max-width:767px){
- /* A tighter, consistent header and comfortable tap targets on phone. */
- #fvShell #mainContent{padding-top:20px}
- #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{top:20px}
+ /* Keep a deliberate black buffer between the mobile masthead and page title. */
+ #fvShell #mainContent{padding-top:32px}
+ #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{top:32px}
  #fvShell #mainContent #fvHeader{margin-bottom:20px}
  #fvShell #fvHeader #fvTitle{letter-spacing:-.035em}
  #fvShell[data-campaign-theme] #fvHeader #fvRefresh{border-width:1px;border-radius:8px;box-shadow:none}
