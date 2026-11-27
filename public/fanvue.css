@@ -1942,24 +1942,23 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage.fv-campaign-layout>.fv-support .fv-notice{padding:0 12px 12px;line-height:1.4}
 }
 
-/* Current owner visual rules: one black/rose system, visible outlines and measured-number pills.
+/* Current owner visual rules: one black/rose system, visible outlines and plain numeric text.
    Deliberately preserve the current layout, desktop rows, mobile controls and data bindings. */
 #fvShell{
- --fv-outline:#9B5279;--fv-kpi-outline:#D25897;--fv-number-fill:#783355;
- --fv-number-radius:999px;--fv-number-pad:2px 7px;--fv-kpi-number-pad:3px 10px;
+ --fv-outline:#9B5279;--fv-kpi-outline:#D25897;
+ 
 }
 #fvShell.pg-discord,#fvPage.fv-dashboard-layout>.fv-home-discord{
- --fv-outline:#9B87D2;--fv-kpi-outline:#9B87D2;--fv-number-fill:#5C488A;
+ --fv-outline:#9B87D2;--fv-kpi-outline:#9B87D2;
 }
-/* Number pills belong to measured values in cards, not labels, dates, unavailable states,
-   desktop table cells, chart axes or statuses. A selected sort changes the number text only. */
+/* Plain numbers throughout. A selected sort changes numeric text only. */
 #fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num{
- display:inline-block;max-width:100%;padding:var(--fv-number-pad);border:0;
- border-radius:var(--fv-number-radius);background:var(--fv-number-fill);color:#FFF;
+ display:inline-block;max-width:100%;padding:0;border:0;
+ border-radius:0;background:transparent;color:#FFF;
  font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.12;box-shadow:none;
 }
 #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{
- padding:var(--fv-kpi-number-pad);line-height:1.08;
+ padding:0;line-height:1.08;
 }
 #fvPage .fv-metric-value .fv-dash,#fvPage .fv-detail-grid .fv-dash{background:transparent;border:0;box-shadow:none}
 #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-color:var(--fv-kpi-outline)}
@@ -1979,33 +1978,33 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage.fv-campaign-layout{--fv-mobile-kpi-border:var(--fv-kpi-outline)}
  #fvShell.pg-discord #fvPage{--fv-mobile-kpi-border:var(--fv-kpi-outline)}
  #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding:11px 12px;gap:5px;border-color:var(--fv-kpi-outline);border-left-color:var(--fv-mobile-accent)}
- #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{padding:3px 8px}
+ #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{padding:0}
  #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row,
  #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row,
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{border-color:var(--fv-outline)}
  #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num,
  #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num,
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num{
-  display:inline-block;max-width:100%;padding:var(--fv-number-pad);border:0;
-  background:var(--fv-number-fill);border-radius:var(--fv-number-radius);white-space:nowrap;overflow-wrap:normal;
+  display:inline-block;max-width:100%;padding:0;border:0;
+  background:transparent;border-radius:0;white-space:nowrap;overflow-wrap:normal;
   font-variant-numeric:tabular-nums;line-height:1.12;box-shadow:none;
  }
  #fvPage .fv-table .fv-row td.is-highlighted-number .fv-num{color:#FFE500}
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{gap:8px 14px;padding:12px 14px}
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:40px;gap:4px}
  #fvPage.fv-campaign-layout>.fv-chart-panel>.fv-chart{border:0}
- #fvPage.fv-dashboard-layout>.fv-home-discord .fv-metric-value .fv-num{padding:2px 6px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord .fv-metric-value .fv-num{padding:0}
  #fvPage .fv-table-panel .fv-table-tools>.fv-search,#fvPage .fv-table-panel .fv-table-tools>.fv-select select,#fvPage .fv-table-panel>.fv-mobile-sort select{border-color:var(--fv-outline)}
  #fvPage .fv-table-panel>.fv-mobile-sort select[data-user-sort],#fvPage .fv-table-panel .fv-table-tools>.fv-select select[data-xfilter]:has(option:checked:not([value=""])),#fvPage .fv-table-panel .fv-table-tools>.fv-select select[data-filter]:has(option:checked:not([value=""])){border-color:#FFE500}
  #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="long"],
- #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="long"]{letter-spacing:-.04em;padding-inline:4px;font-size:var(--fv-fs-m);}
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="long"]{letter-spacing:-.04em;padding:0;font-size:var(--fv-fs-m);}
  #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"],
- #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"]{letter-spacing:-.045em;padding-inline:3px;font-size:var(--fv-fs-s);}
- #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length]{font-size:var(--fv-fs-l);padding-inline:7px;}
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"]{letter-spacing:-.045em;padding:0;font-size:var(--fv-fs-s);}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length]{font-size:var(--fv-fs-l);padding:0;}
 }
 @media(max-width:359px){
  #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding:10px 9px}
- #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{padding-inline:6px}
+ #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num{padding:0}
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{padding:11px 12px}
  #fvPage.fv-campaign-layout>.fv-table-panel:not(#home-comparison) .fv-table>tbody>tr.fv-row,
  #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -2014,3 +2013,45 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
 /* Override the older Dashboard-specific panel selector, using the shared outline. */
 #fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip):not(.fv-table-panel){border-color:var(--fv-outline)}
 @media(min-width:768px){#fvPage.fv-dashboard-layout>.fv-table-panel{border-color:var(--fv-outline)}}
+
+/* Dashboard: leave the original period tabs and KPI cards intact.
+   Remove nested chart outline; keep the real reporting components and source data. */
+#fvPage.fv-dashboard-layout>.fv-chart-panel>.fv-chart{border:0;border-radius:0;background:#000}
+#fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-num{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none}
+@media(max-width:767px){
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{background:#10080D}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){gap:3px;min-height:36px}
+}
+/* Opt-in comparisons. Only Dashboard changes; same real data and all three periods.
+   Layout 1 is the default. No changes to the first two Dashboard components. */
+html[data-dashboard-layout="6"] #fvPage.fv-dashboard-layout>.fv-chart-panel{height:244px;min-height:244px;max-height:244px}
+html[data-dashboard-layout="6"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:44px;max-height:44px}
+html[data-dashboard-layout="7"] #fvPage.fv-dashboard-layout>.fv-chart-panel{height:390px;min-height:390px;max-height:390px}
+html[data-dashboard-layout="7"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:64px;max-height:64px}
+html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-chart-panel{height:270px;min-height:270px;max-height:270px}
+html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{padding-top:8px;padding-bottom:8px}
+@media(min-width:1440px){
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout{grid-template-columns:minmax(0,2.25fr) minmax(0,1fr)}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout>*{grid-column:1/-1;min-width:0}
+ html[data-dashboard-layout="4"] #fvPage.fv-dashboard-layout>#home-comparison,
+ html[data-dashboard-layout="5"] #fvPage.fv-dashboard-layout>.fv-chart-panel{grid-column:1}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout>.fv-home-discord{grid-column:2;align-self:start}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{grid-template-columns:minmax(0,1fr);padding:8px 14px}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){grid-column:1;flex-direction:row;min-height:70px;border:0;border-bottom:1px solid #62528E;justify-content:space-between;padding:8px 0;gap:8px}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:last-child{border-bottom:0}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value{width:auto;flex-shrink:0}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-label{justify-content:flex-start;text-align:left;min-width:0}
+ html:is([data-dashboard-layout="4"],[data-dashboard-layout="5"]) #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-num{font-size:var(--fv-fs-l)}
+}
+@media(max-width:767px){
+ html[data-dashboard-layout="6"] #fvPage.fv-dashboard-layout>.fv-chart-panel{height:190px;min-height:190px;max-height:190px}
+ html[data-dashboard-layout="7"] #fvPage.fv-dashboard-layout>.fv-chart-panel{height:270px;min-height:270px;max-height:270px}
+ html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-chart-panel{height:216px;min-height:216px;max-height:216px}
+ html:is([data-dashboard-layout="6"],[data-dashboard-layout="7"]) #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:auto;max-height:none}
+ html[data-dashboard-layout="6"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{padding:9px 12px;gap:6px 12px}
+ html[data-dashboard-layout="6"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:32px}
+ html[data-dashboard-layout="7"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{padding:16px;gap:12px 16px}
+ html[data-dashboard-layout="7"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:44px}
+ html[data-dashboard-layout="4"] #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{border-left:3px solid #C71667}
+ html[data-dashboard-layout="5"] #fvPage.fv-dashboard-layout>.fv-home-discord{background:#15102A}
+}
