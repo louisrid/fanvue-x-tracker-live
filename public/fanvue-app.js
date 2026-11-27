@@ -745,6 +745,16 @@
     const best=new Set(eligible.length>=4?eligible.slice(0,Math.ceil(eligible.length/4)).map(a=>a.key):[]);
     return rows.map(a=>({...a,bestValue:best.has(a.key)}));
   }
+  function accountHistory(account){
+    if(!account.records.length)return '<p class="fv-detail-note">No placements recorded for this account.</p>';
+    const rows=[...account.records].sort((a,b)=>(publicationAge(b)?.at||0)-(publicationAge(a)?.at||0));
+    const stat=m=>C.hasValue(m)?esc(C.full(m.value)):dash(m?.reason||'Not recorded');
+    const history=rows.map(x=>{
+      const date=publicationAge(x),cost=x.price===null?dash('No price recorded.'):esc(C.money(x.price)),post=x.link?U.extLink(x.link,'View'):x.type==='RT'?U.extLink(x.raw.sourcePostUrl,'Source post'):'';
+      return '<div class="fv-account-history-row"><span class="fv-account-history-date">'+(date?esc(U.ageText(date.at,date.dayOnly)):dash('No publication date recorded.'))+'</span><span class="fv-account-history-campaign">'+esc(x.campaign)+'</span><span>'+esc(x.type)+'</span><span data-label="Clicks">'+stat(x.clicks)+'</span><span data-label="Price">'+cost+'</span><span>'+esc(x.paid?'Paid':x.planned?'Planned':'Unpaid')+'</span><span>'+(post||dash('No link recorded.'))+'</span></div>';
+    }).join('');
+    return '<div class="fv-account-history"><div class="fv-account-history-title"><strong>Post history</strong>'+(C.hasValue(account.perDollar)?'<span>'+esc(C.rate(account.perDollar.value))+' clicks per $</span>':'')+'</div><div class="fv-account-history-head"><span>Posted</span><span>Campaign</span><span>Type</span><span>Clicks</span><span>Price</span><span>Payment</span><span>Post</span></div>'+history+'</div>';
+  }
   function accountsPage(st){
     ensure('overview');ensure('gta');ensure('directory');
     const ov=D.overview();
@@ -760,7 +770,7 @@
       const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts||[]){if(keys.has(a.key)||a.platform!=='X')continue;rows.push({key:a.key,name:a.handle,platform:'X',campaigns:[],posts:0,records:[],spend:M.na('No paid placement.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});keys.add(a.key);}
     }
     const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',filters,rows,limit:20,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
-      expand:a=>!a.records.length?'<p class="fv-detail-note">No purchased placements recorded.</p>':U.detailGrid([['Campaigns',esc(a.campaigns.join(', '))],['Clicks per dollar',U.value(a.perDollar,'rate')]])+rtCosts(a.records)+U.detailGrid(a.records.map(x=>[x.campaign+' · '+x.type,(x.link?U.extLink(x.link,'Post'):'')+' · '+U.value(x.clicks)+' clicks'])),
+      expand:accountHistory,
       columns:[
         {key:'name',label:'Account',type:'name',html:a=>{const raw=a.records.find(r=>r.raw?.profileUrl||r.link||r.raw?.handle||String(r.account||'').startsWith('@')),candidate=String(raw?.raw?.profileUrl||raw?.link||''),match=candidate.match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})(?:[/?#]|$)/i),explicit=String(raw?.raw?.handle||a.name||'').match(/^@([A-Za-z0-9_]{1,15})$/),handle=match?.[1]||explicit?.[1],url=handle?'https://x.com/'+handle:'';const label='<span class="fv-name">'+U.accountMark(a.name)+'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span></span>';return url?'<a class="fv-account-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+label+'</a>':label;},sort:a=>a.name.toLowerCase()},
         {key:'clicks',label:'Clicks',get:a=>a.clicks},{key:'views',label:'Views',get:a=>a.views},{key:'spend',label:'Spend',format:'money',get:a=>a.spend},{key:'cpc',label:'CPC',format:'money',get:a=>a.cpc},{key:'posts',label:'Posts',get:a=>a.records.length?M.value(a.posts):M.na('No recorded placements.')},{key:'campaigns',label:'Campaigns',get:a=>a.records.length?M.value(a.campaigns.length):M.na('No recorded campaigns.')}

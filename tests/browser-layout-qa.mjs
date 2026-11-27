@@ -97,7 +97,7 @@ try{
   assert.ok(await page.locator('#acc-table .fv-account-mark').count()>0,'account initials are present');
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge').count(),0,'no account tags');
   if(viewport.width<768){
-   const cards=await page.evaluate(()=>[...document.querySelectorAll('#acc-table tbody>tr.fv-row')].map(r=>({width:r.getBoundingClientRect().width,clipped:[...r.querySelectorAll('td[data-column]')].some(c=>getComputedStyle(c).display!=='none'&&c.getBoundingClientRect().right>r.getBoundingClientRect().right+1)})));
+   const cards=await page.evaluate(()=>[...document.querySelectorAll('#acc-table tbody>tr.fv-row')].map(r=>({width:r.getBoundingClientRect().width,clipped:[...r.querySelectorAll('td[data-column]')].some(c=>getComputedStyle(c).display==='none'||c.getBoundingClientRect().right>r.getBoundingClientRect().right+1)})));
    assert.ok(cards.every(r=>r.width<=viewport.width-20&&!r.clipped),'mobile Accounts fits its panel');
   }
   close(accountBounds.title,reference.title,viewport.width+' Accounts title');
@@ -106,7 +106,14 @@ try{
   await page.locator('#acc-table [data-search]').fill('unused');assert.equal(await page.locator('#acc-table .fv-account-plain').innerText(),'@unused');
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('used');assert.equal(await page.locator('#acc-table .fv-account-plain').count(),0);
   await page.locator('#acc-table [data-xfilter="scope"]').selectOption('');await page.locator('#acc-table [data-search]').fill('');
-  await page.screenshot({path:dir+'/'+viewport.width+'-accounts.png'});
+  await page.screenshot({path:dir+'/'+viewport.width+'-accounts.png',fullPage:true});
+  const usedRow=page.locator('#acc-table .fv-row').filter({hasText:'@qa'}).first();
+  if(await usedRow.count()){
+   await usedRow.locator('[data-expand]').click();
+   assert.ok(await page.locator('#acc-table .fv-account-history-row').count()>0,'account details contain actual placement history');
+   assert.equal(await page.locator('#acc-table .fv-detail-grid,#acc-table .fv-publisher-costs').count(),0,'no duplicate detail cards');
+   await usedRow.locator('[data-expand]').click();
+  }
   await open('home','Dashboard');
   let homeReference;
   for(const period of ['all-time','this-week','last-week','all-time']){
