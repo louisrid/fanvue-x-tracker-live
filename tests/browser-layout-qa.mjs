@@ -1,7 +1,7 @@
 // Browser-level regression checks with synthetic data only; no live campaign data or secrets.
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import {readFileSync,mkdirSync,existsSync} from 'node:fs';
+import {readFileSync,mkdirSync,existsSync,copyFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {chromium} from 'playwright';
 const publicDir=path.resolve('public');
@@ -43,9 +43,12 @@ const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined,args:['--no-sandbox']});
 const routes=[['gta-vi','GTA VI'],['gta-vi/lucia','GTA VI'],['gta-vi/mandy','GTA VI'],['viral-qrts','Viral QRTs'],['x-articles','X Articles'],['x-articles/articles','X Articles'],['x-articles/rts','X Articles'],['of-terms','OF Terms'],['guru-promotion','Guru RTs'],['discord','Discord'],['campaign/qa-campaign','QA Campaign']];
 const dir='artifacts/browser-layout';mkdirSync(dir,{recursive:true});
+const preview=dir+'/preview';mkdirSync(preview,{recursive:true});
+for(const name of ['fanvue.css','fanvue-records.css','fanvue-core.js','fanvue-ui.js','fanvue-app.js','fanvue-campaigns.js'])copyFileSync(path.join(publicDir,name),path.join(preview,name));
+writeFileSync(path.join(preview,'index.html'),template);writeFileSync(path.join(preview,'registry.json'),JSON.stringify({ok:true,campaigns:[custom],builtIns:{}}));
 function close(a,b,label){for(let i=0;i<a.length;i++)assert.ok(Math.abs(a[i]-b[i])<=1.1,label+': '+a+' vs '+b);}
 try{
- for(const viewport of [{width:1440,height:900},{width:1024,height:768},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:740}]){
+ for(const viewport of [{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:740},{width:1440,height:900},{width:1024,height:768}]){
   const page=await browser.newPage({viewport,deviceScaleFactor:1,isMobile:viewport.width<768,hasTouch:viewport.width<768});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>/^(https:\/\/fonts\.(googleapis|gstatic)\.com\/)/.test(route.request().url())||route.request().url().startsWith(base)?route.continue():route.abort());
@@ -237,7 +240,7 @@ try{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&[3,4].includes(parseFloat(css(main).borderLeftWidth)),compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===12&&css(main).alignItems==='flex-start'&&[3,4].includes(parseFloat(css(main).borderLeftWidth)),restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
