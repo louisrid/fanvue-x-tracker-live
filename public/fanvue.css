@@ -2142,8 +2142,8 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
  #fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head{border-radius:12px 12px 0 0}
  #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-width:4px;border-radius:14px}
  /* Mobile listings retain one outlined card per record, without an outer frame. */
- #fvShell #fvPage>.fv-table-panel{border:0;border-radius:0}
- #fvShell #fvPage>.fv-table-panel>.fv-panel-head{border:0;border-radius:0}
+ #fvShell #fvPage>.fv-panel.fv-table-panel:not(.fv-strip){border:0;border-radius:0}
+ #fvShell #fvPage>.fv-panel.fv-table-panel:not(.fv-strip)>.fv-panel-head{border:0;border-radius:0}
  #fvShell #fvPage .fv-table>tbody>tr.fv-row{border-width:2px;border-radius:14px}
  #fvShell #fvPage .fv-table>tbody>tr.fv-row.is-open{border-radius:14px 14px 0 0}
  #fvShell #fvPage .fv-table>tbody>tr.fv-detail{border-width:2px;border-top-width:0;border-radius:0 0 14px 14px}
