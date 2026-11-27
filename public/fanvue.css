@@ -2786,8 +2786,6 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
  letter-spacing:-.035em;text-align:left;color:#FFF;font-variant-numeric:tabular-nums;
 }
 #fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value.is-state{font-size:var(--fv-fs-m);white-space:normal;letter-spacing:0}
-#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num[data-num-length="long"]{font-size:calc(var(--fv-fs-num) * .75)}
-#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num[data-num-length="very-long"]{font-size:calc(var(--fv-fs-num) * .58)}
 #fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-dash{font-size:var(--fv-fs-num);line-height:1;color:#FFF}
 @media(min-width:768px) and (max-width:1100px){
  #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding-inline:12px}
