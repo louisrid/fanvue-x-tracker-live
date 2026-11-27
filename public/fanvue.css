@@ -2060,14 +2060,14 @@ html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv
 /* Owner visual refinement: heavier single-layer outlines and readable hover feedback.
    No reporting, route, chart data, or numeric value styling changes. */
 #fvShell{
- --fv-outline:#B56791;--fv-kpi-outline:#DC6DA3;--fv-hover-outline:#E995C2;
- --fv-hover-surface:#1C1C1C;--fv-hover-column:#303030;--fv-hover-control:#282828;
+ --fv-outline:#CC78A6;--fv-kpi-outline:#E47FB5;--fv-hover-outline:#F0AAD3;
+ --fv-hover-surface:#100C0F;--fv-hover-column:#130C10;--fv-hover-control:#171217;
 }
 #fvShell.pg-discord,#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord{
- --fv-outline:#AA97E7;--fv-kpi-outline:#AA97E7;--fv-hover-outline:#C7B7FF;
+ --fv-outline:#B5A0F0;--fv-kpi-outline:#B5A0F0;--fv-hover-outline:#C7B7FF;
 }
 #fvShell #fvPage>.fv-panel:not(.fv-strip){
- border-width:2px;border-radius:8px;
+ border-width:3px;border-radius:10px;
 }
 #fvShell #fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip),
 #fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
@@ -2080,17 +2080,17 @@ html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv
  border-radius:12px 12px 0 0;
 }
 #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
- border-width:2px;border-radius:8px;
+ border-width:3px;border-radius:10px;
 }
 #fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
- border-left-width:4px;border-radius:14px;
+ border-left-width:5px;border-radius:14px;
 }
 #fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){border-right-width:2px}
 #fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:last-child{border-right-width:0}
 #fvShell #fvPage :is(.fv-search,.fv-show-all,.fv-open-btn,.fv-control,.fv-select select,.fv-mobile-sort select,.fv-table .fv-expand,.fv-table .fv-ext.is-icon),
 #fvShell #fvPage>.fv-subnav button,#fvShell #fvPage>.fv-view-slot>span,
 #fvShell #fvRefresh,#fvShell #fvBack{
- border-width:2px;border-radius:10px;
+ border-width:3px;border-radius:10px;
 }
 #fvShell .fv-sidebar .fv-nav-item{border-radius:8px}
 #fvShell .fv-sidebar .fv-nav-item[aria-current="page"]{box-shadow:inset 0 0 0 2px #FFFFFF}
@@ -2107,20 +2107,20 @@ html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv
  border-radius:6px;
 }
 #fvShell :is(.fv-editor,.fv-popover,.fv-range-menu){
- border-width:2px;border-radius:10px;border-color:var(--fv-outline,#B56791);
+ border-width:3px;border-radius:10px;border-color:var(--fv-outline,#CC78A6);
 }
 #fvShell .fv-editor-head{border-bottom-width:2px;border-radius:8px 8px 0 0}
-#fvShell .fv-editor :is(input:not([type="checkbox"]),select,textarea){border-width:2px;border-radius:8px}
+#fvShell .fv-editor :is(input:not([type="checkbox"]),select,textarea){border-width:3px;border-radius:10px}
 body.fv .fv-tooltip,body.fv .fv-tooltip.is-chart{
- border:2px solid #646464;border-radius:8px;background:#252525;color:#FFF;
+ border:3px solid #646464;border-radius:8px;background:#222025;color:#FFF;
 }
-#fvShell .fv-notice{border-width:2px;border-radius:10px}
+#fvShell .fv-notice{border-width:3px;border-radius:10px}
 body.fv .fv-records :is(.tracker-controls,.accounts-tools,.xt-table-wrap,.account-table-wrap,.loading-card,.empty-state),
 body.fv .article-modal .modal-content{
- border-width:2px;border-radius:10px;
+ border-width:3px;border-radius:10px;
 }
 body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="modal-metric"]){
- border-width:2px;border-radius:8px;
+ border-width:3px;border-radius:10px;
 }
 @media(min-width:768px){
  #fvShell #fvPage .fv-table>thead>tr>th,
@@ -2140,13 +2140,13 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
  #fvShell .fv-mobile-top{border-bottom-width:2px}
  #fvShell #fvPage>.fv-panel:not(.fv-strip){border-radius:14px}
  #fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head{border-radius:12px 12px 0 0}
- #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-width:4px;border-radius:14px}
+ #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-width:5px;border-radius:14px}
  /* Mobile listings retain one outlined card per record, without an outer frame. */
  #fvShell #fvPage>.fv-panel.fv-table-panel:not(.fv-strip){border:0;border-radius:0}
  #fvShell #fvPage>.fv-panel.fv-table-panel:not(.fv-strip)>.fv-panel-head{border:0;border-radius:0}
- #fvShell #fvPage .fv-table>tbody>tr.fv-row{border-width:2px;border-radius:14px}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row{border-width:3px;border-radius:14px}
  #fvShell #fvPage .fv-table>tbody>tr.fv-row.is-open{border-radius:14px 14px 0 0}
- #fvShell #fvPage .fv-table>tbody>tr.fv-detail{border-width:2px;border-top-width:0;border-radius:0 0 14px 14px}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-detail{border-width:3px;border-top-width:0;border-radius:0 0 14px 14px}
  #fvShell #fvPage .fv-chart-panel>.fv-chart{border:0;border-radius:0}
  #fvShell .fv-editor{border:0;border-radius:0}
  #fvShell .fv-editor-head{border-radius:0}
@@ -2154,54 +2154,54 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
 @media(hover:hover) and (pointer:fine){
  /* Keep feedback restrained, and never recolour the numbers themselves. */
  #fvShell #fvPage>.fv-panel:not(.fv-strip):hover{
-  border-color:var(--fv-hover-outline,#E995C2);
+  border-color:var(--fv-hover-outline,#F0AAD3);
  }
  #fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head:hover{
-  background-color:#191919;
+  background-color:#100D10;
  }
  #fvShell #fvPage>.fv-panel.fv-strip>.fv-metric:nth-child(n):hover{
-  background-color:#202020;border-color:var(--fv-hover-outline,#E995C2);
+  background-color:#151015;border-color:var(--fv-hover-outline,#F0AAD3);
  }
  #fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n):hover{
-  background-color:#482438;border-left-color:#F0357C;
+  background-color:#402035;border-left-color:#F0357C;
  }
- #fvShell #fvPage>.fv-home-discord>.fv-panel-head:hover{background-color:#30264A}
- #fvShell #fvPage>.fv-home-discord .fv-metric:nth-child(n):hover{background-color:#232034}
+ #fvShell #fvPage>.fv-home-discord>.fv-panel-head:hover{background-color:#29213D}
+ #fvShell #fvPage>.fv-home-discord .fv-metric:nth-child(n):hover{background-color:#1A172A}
  #fvShell #fvPage .fv-chart-panel>.fv-chart:hover{background-color:#101010}
  #fvShell #fvPage :is(.fv-tile,.fv-period-card,.fv-notice,.fv-inline-metrics>div,.fv-detail-grid>div,.fv-original-context>div,.fv-community-summary>div,.fv-support-line,.fv-account-history-row):hover{
-  background-color:var(--fv-hover-surface,#1C1C1C);
+  background-color:var(--fv-hover-surface,#100C0F);
  }
- #fvShell #fvPage .fv-table>tbody>tr.fv-detail>td:hover{background-color:#181818}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-detail>td:hover{background-color:#130F13}
  #fvShell #fvPage :is(.fv-search,.fv-show-all,.fv-open-btn,.fv-select select,.fv-mobile-sort select,.fv-table .fv-expand,.fv-table .fv-ext.is-icon):hover{
-  background-color:var(--fv-hover-control,#282828);
+  background-color:var(--fv-hover-control,#171217);
  }
  #fvShell #fvPage .fv-search:hover input{background:transparent}
  #fvShell #fvPage :is(.fv-subnav,.fv-segments) button:not([aria-current="page"]):not([aria-pressed="true"]):hover,
  #fvShell #fvBack:hover,#fvShell .fv-sidebar .fv-nav-item:not([aria-current="page"]):hover{
-  background-color:var(--fv-hover-control,#282828);color:#FFF;
+  background-color:var(--fv-hover-control,#171217);color:#FFF;
  }
- #fvShell .fv-sidebar .fv-nav-item[aria-current="page"]:hover{background-color:#252525}
+ #fvShell .fv-sidebar .fv-nav-item[aria-current="page"]:hover{background-color:#171217}
  #fvShell #fvPage .fv-control:hover,#fvShell #fvRefresh:hover:not(:disabled),
  #fvShell #fvPage :is(.fv-subnav,.fv-segments) button:is([aria-current="page"],[aria-pressed="true"]):hover{
   filter:brightness(1.12);
  }
  #fvShell :is(.fv-editor,.fv-popover,.fv-range-menu):hover{
-  border-color:var(--fv-hover-outline,#E995C2);
+  border-color:var(--fv-hover-outline,#F0AAD3);
  }
  #fvShell :is(.fv-editor-preview,.fv-editor-note,.fv-editor-head):hover,
  #fvShell .fv-editor :is(input:not([type="checkbox"]),select,textarea):hover{
-  background-color:#202020;
+  background-color:#151015;
  }
  body.fv .fv-records :is(.tracker-controls,.accounts-tools,.xt-table-wrap,.account-table-wrap,.loading-card,.empty-state):hover,
  body.fv .article-modal :is(.modal-content,.history-row,.modal-link:not(.main-link),[class*="modal-metric"]):hover{
-  border-color:#B56791;background-color:#1C1C1C;
+  border-color:#CC78A6;background-color:#100C0F;
  }
  body.fv .fv-records :is(.button:not(.button-primary),.x-refresh-button,.page-back-button,details.filter-details>summary):hover,
  body.fv .article-modal :is(.button:not(.button-primary),.modal-close,input:not([type="checkbox"]),select,textarea):hover{
-  background-color:#282828;color:#FFF;
+  background-color:#171217;color:#FFF;
  }
  @media(max-width:767px){
-  #fvShell #fvPage .fv-table>tbody>tr.fv-row:hover{background-color:#1C1C1C;border-color:var(--fv-hover-outline,#E995C2)}
+  #fvShell #fvPage .fv-table>tbody>tr.fv-row:hover{background-color:#100C0F;border-color:var(--fv-hover-outline,#F0AAD3)}
  }
  /* Column hover is scoped to the table under the pointer. Group/detail/empty
     rows span multiple columns and are intentionally excluded. */
@@ -2238,13 +2238,56 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
  body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]),
  body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]),
  body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]){
-  background-color:#303030!important;
+  background-color:#130C10!important;
  }
  body.fv :is(.fv-table,.xt-data-table,.account-table) > :is(thead,tbody,tfoot) > tr > :is(th,td):not([colspan]):hover{
-  background-color:#3B3B3B!important;
+  background-color:#211219!important;
  }
 }
 /* Keyboard focus keeps its existing outline; avoid sticky hover on touch. */
 @media(prefers-reduced-motion:reduce){
  #fvShell #fvPage :is(.fv-panel,.fv-metric,.fv-control,.fv-tile),body.fv .article-modal .modal-content{transition:none}
+}
+
+/* Final owner correction: near-black rose hover, crisp outlines, and text-only labels. */
+#fvShell #mainContent #fvHeader{margin-bottom:32px}
+#fvShell #fvPage :is(.fv-select select,.fv-mobile-sort select,.fv-table-tools .fv-select select){font-weight:750}
+#fvShell #fvPage .fv-account-mark{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);border-radius:6px;color:#FFF}
+#fvShell #fvPage .fv-metric-label>span:last-child,
+#fvShell #fvPage :is(.fv-tile-label,.fv-detail-grid dt,.fv-inline-metrics>div>span){
+ display:inline-block;width:fit-content;max-width:100%;padding:2px 5px;border-radius:4px;
+ background:rgba(255,255,255,.10);color:#FFF;font-weight:700;line-height:1.2;
+}
+#fvShell #fvPage .fv-metric-label>span:last-child{white-space:normal}
+#fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-width:3px}
+#fvShell #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-width:5px;border-radius:14px}
+#fvShell #fvPage.fv-accounts-layout>#acc-table{border-width:3px;border-radius:10px}
+#fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){border-right-color:#75679D}
+#fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:last-child{border-right-width:0}
+#fvShell #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head{border-bottom-color:#383038}
+#fvShell #fvPage>.fv-home-discord>.fv-panel-head{border-bottom-color:#75679D}
+@media(min-width:768px){
+ #fvShell #fvPage>.fv-panel:not(.fv-strip){border-width:3px}
+ #fvShell #fvPage.fv-dashboard-layout>.fv-panel:not(.fv-strip){border-radius:14px}
+ #fvShell #fvPage .fv-table>thead>tr>th,#fvShell #fvPage .fv-table>tbody>tr.fv-row>td{border-bottom-color:#353035}
+ #fvShell #fvPage .fv-table>thead>tr>th:not(:last-child),#fvShell #fvPage .fv-table>tbody>tr.fv-row>td:not(:last-child){border-right-color:#353035}
+}
+@media(max-width:767px){
+ #fvShell #fvPage.fv-accounts-layout>#acc-table{border:0;border-radius:0}
+ #fvShell #fvPage.fv-accounts-layout>#acc-table>.fv-panel-head{border:0;border-radius:0}
+ #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-width:5px;border-radius:14px;padding:10px 10px;gap:4px}
+ #fvShell #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row,
+ #fvShell #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row,
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{border:3px solid var(--fv-outline);border-radius:14px;box-sizing:border-box}
+ #fvShell #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row.is-open,
+ #fvShell #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row.is-open{border-radius:14px 14px 0 0}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"])::before{
+  display:inline-block;width:fit-content;max-width:100%;padding:2px 5px;border-radius:4px;background:rgba(255,255,255,.10);color:#FFF;
+  font-weight:700;line-height:1.2;overflow-wrap:anywhere;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:40px}
+}
+/* A rose underline is a quiet directional cue, not a bright fill or a number badge. */
+@media(hover:hover) and (pointer:fine) and (min-width:768px){
+ body.fv :is(.fv-table,.xt-data-table,.account-table) > :is(thead,tbody,tfoot) > tr > :is(th,td):not([colspan]):hover{box-shadow:inset 0 -2px #A95A83}
 }
