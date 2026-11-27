@@ -2061,7 +2061,7 @@ html[data-dashboard-layout="8"] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv
    No reporting, route, chart data, or numeric value styling changes. */
 #fvShell{
  --fv-outline:#CC78A6;--fv-kpi-outline:#E47FB5;--fv-hover-outline:#F0AAD3;
- --fv-hover-surface:#100C0F;--fv-hover-column:#130C10;--fv-hover-control:#171217;
+ --fv-hover-surface:#100C0F;--fv-hover-column:#080608;--fv-hover-control:#171217;
 }
 #fvShell.pg-discord,#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord{
  --fv-outline:#B5A0F0;--fv-kpi-outline:#B5A0F0;--fv-hover-outline:#C7B7FF;
@@ -2203,45 +2203,52 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
  @media(max-width:767px){
   #fvShell #fvPage .fv-table>tbody>tr.fv-row:hover{background-color:#100C0F;border-color:var(--fv-hover-outline,#F0AAD3)}
  }
- /* Column hover is scoped to the table under the pointer. Group/detail/empty
-    rows span multiple columns and are intentionally excluded. */
-
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(17):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(17):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(18):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(18):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(19):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(19):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(20):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(20):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(21):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(21):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(22):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(22):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(23):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(23):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(24):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(24):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(25):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(25):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(26):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(26):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(27):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(27):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(28):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(28):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(29):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(29):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]),
- body.fv :is(.fv-table,.xt-data-table,.account-table):where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]){
-  background-color:#130C10!important;
- }
- body.fv :is(.fv-table,.xt-data-table,.account-table) > :is(thead,tbody,tfoot) > tr > :is(th,td):not([colspan]):hover{
-  background-color:#211219!important;
+ /* Comparison tables highlight a metric column; record-oriented tables highlight a row.
+    The actual hovered cell is stronger than the almost-black supporting cells.
+    Touch and narrow card layouts do not receive a desktop column stripe. */
+ @media(min-width:768px){
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(17):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(17):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(18):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(18):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(19):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(19):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(20):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(20):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(21):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(21):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(22):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(22):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(23):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(23):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(24):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(24):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(25):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(25):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(26):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(26):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(27):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(27):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(28):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(28):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(29):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(29):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(30):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(31):not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table:where(:has(> :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not(.is-left,.is-name,.is-link,.fv-x-col,[colspan]):hover)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(32):not([colspan]):not(:hover){
+   background-color:#080608!important;
+  }
+  body.fv :where(.fv-table-panel:is(.is-accounts,.is-discord-history) .fv-table).fv-table > tbody > tr.fv-row:hover > td:not([colspan]):not(:hover),
+  body.fv :where(.fv-table-panel:not(.is-accounts,.is-discord-history) .fv-table).fv-table > tbody > tr.fv-row:has(> td:is(.is-left,.is-name,.is-link,.fv-x-col):hover) > td:not([colspan]):not(:hover),
+  body.fv :is(.xt-data-table,.account-table) > tbody > tr:has(> td:not([colspan]):hover) > td:not([colspan]):not(:hover){
+   background-color:#080608!important;
+  }
+  body.fv :is(.fv-table,.xt-data-table,.account-table) > :is(thead,tbody,tfoot) > tr > :is(th,td):not([colspan]):hover{
+   background-color:#211219!important;
+  }
  }
 }
 /* Keyboard focus keeps its existing outline; avoid sticky hover on touch. */

@@ -290,13 +290,29 @@ try{
    const hover=await page.evaluate(()=>{
     const cells=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="spend"]')];
     const others=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="views"]')];
-    return {column:cells.every(e=>['rgb(19, 12, 16)','rgb(33, 18, 25)'].includes(getComputedStyle(e).backgroundColor)),
+    return {column:cells.every(e=>getComputedStyle(e).backgroundColor===(e.matches(':hover')?'rgb(33, 18, 25)':'rgb(8, 6, 8)')),
      other:others.every(e=>getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'),
      yellow:cells.filter(e=>e.classList.contains('is-highlighted-number')).every(e=>getComputedStyle(e.querySelector('.fv-num')||e).color==='rgb(255, 229, 0)')};
    });
    assert.ok(hover.column&&hover.other&&hover.yellow,'hover highlights only the column and preserves sorted text '+JSON.stringify(hover));
    await page.mouse.move(0,0);
    assert.equal(await cell.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)','column highlight clears on mouse exit');
+   const nameCell=page.locator('#home-comparison tbody tr.fv-row td.is-name').first();
+   await nameCell.hover();
+   assert.ok(await nameCell.evaluate(e=>[...e.closest('tr').cells].filter(x=>x!==e).every(x=>getComputedStyle(x).backgroundColor==='rgb(8, 6, 8)')),'campaign name highlights its row subtly');
+   await page.mouse.move(0,0);
+   for(const route of ['all-accounts','discord']){
+    await page.evaluate(r=>{location.hash=r},route);
+    const panel=route==='discord'?'#discord-table':'#acc-table';
+    const recordCell=page.locator(panel+' tbody tr.fv-row td:not(.is-left):not(.fv-x-col)').first();
+    await recordCell.hover();
+    const rowHover=await recordCell.evaluate(e=>{
+     const table=e.closest('table'),row=e.closest('tr'),bg=x=>getComputedStyle(x).backgroundColor;
+     return bg(e)==='rgb(33, 18, 25)'&&[...row.cells].filter(x=>x!==e).every(x=>bg(x)==='rgb(8, 6, 8)')&&[...table.querySelectorAll('tbody tr.fv-row')].filter(r=>r!==row).every(r=>[...r.cells].every(x=>bg(x)==='rgb(0, 0, 0)'));
+    });
+    assert.ok(rowHover,route+' record-oriented row hover');
+    await page.mouse.move(0,0);
+   }
   }
   assert.deepEqual(errors,[],'browser errors at '+viewport.width);
   console.log('PASS '+viewport.width+'px: '+routes.length+' campaign/community views, Accounts, Dashboard, sorting, filters, seven-day charts');
