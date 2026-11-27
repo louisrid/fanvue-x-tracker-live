@@ -203,7 +203,7 @@ try{
     const cards=all('#fvPage>.fv-strip>.fv-metric,#fvPage>.fv-chart-panel,#fvPage>.fv-home-discord,#fvPage>.fv-support'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row':',#fvPage>.fv-table-panel'));
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
     const bad=[];
-    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==3||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(!mobile&&e.classList.contains('fv-table-panel')?(width!==1||!['rgb(53, 53, 53)','rgb(64, 64, 64)'].includes(s.borderTopColor)):(width!==2||!['rgb(73, 73, 73)','rgb(90, 90, 90)'].includes(s.borderTopColor)))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
+    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==(mobile?1:3)||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(!mobile&&e.classList.contains('fv-table-panel')?(width!==1||!['rgb(53, 53, 53)','rgb(64, 64, 64)'].includes(s.borderTopColor)):(width!==(mobile?1:2)||!(mobile?['rgb(58, 58, 61)']:['rgb(73, 73, 73)','rgb(90, 90, 90)']).includes(s.borderTopColor)))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
     for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)!==0||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
     if(!mobile)for(const e of all('#fvPage .fv-table-panel tr.fv-row .fv-num'))if(css(e).backgroundColor!=='rgba(0, 0, 0, 0)')bad.push({desktopTablePill:e.textContent});
     return bad;
@@ -228,14 +228,14 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===(e.classList.contains('fv-metric')?3:2)&&parseFloat(style(e).borderTopLeftRadius)>=10),
-     labelTheme:labels.every(e=>style(e.lastElementChild).color===accent(e)),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
+     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===1&&parseFloat(style(e).borderTopLeftRadius)>=10),
+     labelTheme:labels.every(e=>white(e.lastElementChild)&&style(e.lastElementChild).backgroundColor==='rgba(0, 0, 0, 0)'),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
      tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:14)),
-     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===2&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
+     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===1&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
-     labelsTheme:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color===(e.dataset.column==='campaign'?'rgb(255, 255, 255)':accent(e))),
+     labelsTheme:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color==='rgb(255, 255, 255)'&&getComputedStyle(e,'::before').backgroundColor==='rgba(0, 0, 0, 0)'),
      filtersVisible:filters.every(e=>visible(e)&&inside(e,e.closest('.fv-table-panel'))&&rect(e).height>=44),
      noOverflow:document.documentElement.scrollWidth<=innerWidth+1
     };
@@ -373,21 +373,24 @@ try{
    const flat=await page.evaluate(()=>{
     const p=document.querySelector('.fv-home-discord'),strip=p.querySelector('.fv-home-community-strip'),cards=[...strip.children],s=e=>getComputedStyle(e);
     const markers=[...document.querySelectorAll('#home-comparison .fv-campaign-row-name')].map(e=>getComputedStyle(e,'::before').backgroundColor);
-    return {outer:s(p).borderTopWidth==='2px'&&s(p).boxShadow==='none',inner:s(strip).borderTopWidth==='0px'&&cards.every(e=>s(e).borderTopWidth==='0px'&&s(e).borderRightWidth==='0px'&&s(e).boxShadow==='none'),markers:markers.length===5&&new Set(markers).size===5};
+    return {outer:s(p).borderTopWidth===(innerWidth<768?'1px':'2px')&&s(p).boxShadow==='none',inner:s(strip).borderTopWidth==='0px'&&cards.every(e=>s(e).borderTopWidth==='0px'&&s(e).borderRightWidth==='0px'&&s(e).boxShadow==='none'),markers:markers.length===5&&new Set(markers).size===5};
    });
    assert.ok(flat.outer&&flat.inner&&flat.markers,'single Discord frame and distinct campaign markers '+JSON.stringify(flat));
    const homeVisual=await page.evaluate(()=>{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===(innerWidth<768?14:12)&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===3,restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===(innerWidth<768?14:12)&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===(innerWidth<768?2:3),restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
    assert.equal(homeVisual.scope,period==='last-week'?'Last Week':'This Week','visible chart scope');
    assert.ok(homeVisual.restored&&homeVisual.compactCommunity&&homeVisual.summaryFits,'Restored rounded rose KPI cards and compact Discord strip '+JSON.stringify(homeVisual));
    if(viewport.width<768)assert.ok(homeVisual.compactRows,'Dashboard campaign rows are compact '+JSON.stringify(homeVisual.rowHeights));
-   if(viewport.width<768)assert.ok(homeVisual.metricPairs,'Home campaign values occupy a balanced 2x2 grid');
+   if(viewport.width<768){assert.ok(homeVisual.metricPairs,'Home campaign values occupy a balanced 2x2 grid');
+    const clean=await page.evaluate(()=>{const css=e=>getComputedStyle(e),rows=[...document.querySelectorAll('#home-comparison tr.fv-row')],cells=rows.flatMap(r=>[...r.querySelectorAll('td[data-column]:not(.is-name)')]);return rows.every(r=>css(r).backgroundColor==='rgb(13, 13, 16)'&&css(r).borderTopWidth==='1px')&&cells.every(e=>css(e).flexDirection==='column'&&getComputedStyle(e,'::before').backgroundColor==='rgba(0, 0, 0, 0)')&&css(document.querySelector('.fv-home-discord>.fv-panel-head')).backgroundColor==='rgb(13, 13, 16)';});
+    assert.ok(clean,'mobile-only neutral cards, unboxed labels and flat Discord surface');
+   }
    await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});
    if(viewport.width<768){
     const realistic=await page.evaluate(()=>{

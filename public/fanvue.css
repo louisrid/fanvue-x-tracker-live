@@ -2838,3 +2838,92 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 #fvShell .fv-sidebar .fv-nav-item[href="#discord"]:is(:hover,[aria-current="page"]){box-shadow:none;filter:none}
 #fvShell .fv-sidebar .fv-nav-item[href="#discord"][aria-current="page"]{outline:1px solid var(--fv-outline);outline-offset:-1px}
 #fvShell :is(.fv-home-discord-link,.fv-discord-btn,.fv-nav-item[href="#discord"]):focus-visible{outline:2px solid #FFF;outline-offset:2px}
+
+/* Phone-only visual system. Desktop retains its existing component design.
+   Neutral surfaces, fine outlines, quiet plain labels and one accent per campaign. */
+@media(max-width:767px){
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel:not(.fv-strip):not(.fv-table-panel),
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord{
+  border:1px solid #3A3A3D;border-radius:12px;box-shadow:none;
+ }
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-strip>.fv-metric:nth-child(n),
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n),
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+  border-width:1px;border-left-width:2px;box-shadow:none;
+ }
+ #fvShell[data-campaign-theme] #fvPage>.fv-strip .fv-metric-label>span:last-child,
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-strip .fv-metric-label>span:last-child{
+  background:transparent;border:0;border-radius:0;padding:0;color:#FFF;font-weight:var(--fv-w-light);
+ }
+ #fvShell[data-campaign-theme] #fvPage :is(.fv-search,.fv-select select,.fv-mobile-sort select,.fv-open-btn,.fv-expand,.fv-ext.is-icon,.fv-control:not(.is-primary):not(.fv-discord-btn):not(.fv-home-discord-link)),
+ #fvShell[data-campaign-theme] #fvPage :is(.fv-subnav,.fv-segments) button,
+ #fvShell[data-campaign-theme] #mainContent:has(#fvPage:not([hidden])) #fvBack{
+  border-width:1px;box-shadow:none;
+ }
+ #fvShell[data-campaign-theme] #fvPage :is(.fv-search,.fv-select select,.fv-mobile-sort select){
+  background:#0D0D10;border-color:#3A3A3D;border-radius:8px;
+ }
+ #fvShell[data-campaign-theme] #fvPage .fv-search:focus-within,
+ #fvShell[data-campaign-theme] #fvPage :is(.fv-select select,.fv-mobile-sort select)[data-user-sort],
+ #fvShell[data-campaign-theme] #fvPage .fv-select select:is([data-xfilter],[data-filter]):has(option:checked:not([value=""])){border-color:var(--fv-selection)}
+ #fvShell #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row,
+ #fvShell #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row,
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{
+  border:1px solid #3A3A3D;border-radius:12px;background:#0D0D10;
+  padding:13px 14px;gap:7px 12px;margin-bottom:9px;box-shadow:none;
+ }
+ #fvShell #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row.is-open,
+ #fvShell #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row.is-open{border-radius:12px 12px 0 0}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-detail{border:1px solid #3A3A3D;border-top:0;border-radius:0 0 12px 12px;margin-top:-9px;background:#0D0D10}
+ #fvShell #fvPage .fv-table-panel .fv-detail-inner{background:#0D0D10}
+ #fvShell[data-campaign-theme] #fvPage .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"])::before{
+  background:transparent;border:0;border-radius:0;padding:0;color:#FFF;
+  font-size:var(--fv-fs-s);font-weight:var(--fv-w-light);line-height:1.2;text-align:left;
+ }
+ #fvShell #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){
+  gap:4px;line-height:1.2;min-width:0;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;padding:13px 14px;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td.is-name{
+  min-height:24px;padding:0 0 7px;border-bottom:1px solid #28282B;
+  font-size:var(--fv-fs-l);line-height:1.2;
+ }
+ #fvShell #fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name{gap:7px}
+ #fvShell #fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name::before{
+  width:3px;flex:0 0 3px;height:15px;border-radius:2px;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){
+  display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;justify-content:flex-start;
+  gap:3px;min-height:0;height:auto;max-height:none;text-align:left;padding:0;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td :is(.fv-num,.fv-dash){
+  font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong);line-height:1.15;letter-spacing:-.02em;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"]{font-size:var(--fv-fs-m)}
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord{background:#0D0D10}
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{
+  background:#0D0D10;border-bottom:1px solid #28282B;padding-inline:12px;
+ }
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{
+  background:#0D0D10;padding:9px 7px;
+ }
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){
+  min-height:64px;padding:6px 4px;gap:7px;
+ }
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n+2){border-left-color:#28282B}
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord .fv-metric-label{
+  font-weight:var(--fv-w-light);font-size:var(--fv-fs-s);line-height:1.2;
+ }
+ #fvShell #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-num{
+  font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong);
+ }
+ #fvShell #fvPage .fv-home-discord .fv-discord-heading{gap:6px}
+ #fvShell #fvPage .fv-home-discord .fv-discord-scope{font-weight:var(--fv-w-light)}
+ #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord .fv-home-discord-link{border-radius:8px}
+}
+@media(max-width:359px){
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{padding-inline:11px;column-gap:12px}
+ #fvShell #fvPage .fv-home-discord .fv-discord-heading{gap:4px}
+}
