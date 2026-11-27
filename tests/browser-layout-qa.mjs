@@ -71,6 +71,8 @@ try{
    assert.equal(visual.yellow,0,route+' default sort must be neutral');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
+   const finish=await page.evaluate(()=>{const card=document.querySelector('#fvPage>.fv-strip>.fv-metric'),label=card.querySelector('.fv-metric-label'),value=card.querySelector('.fv-metric-value'),s=getComputedStyle(card),v=getComputedStyle(value),rect=card.getBoundingClientRect(),a=label.getBoundingClientRect(),z=value.getBoundingClientRect();return {background:s.backgroundColor,gradient:s.backgroundImage,radius:parseFloat(s.borderTopLeftRadius),weight:Number(v.fontWeight),center:Math.abs((a.top+z.bottom)/2-(rect.top+rect.bottom)/2),aligned:s.alignItems,justify:s.justifyContent};});
+   assert.equal(finish.background,'rgb(8, 8, 8)',route+' neutral card');assert.equal(finish.gradient,'none');assert.ok(finish.radius<=4);assert.ok(finish.weight<=700);assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');
    assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
    if(!reference)reference=g;
    for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(g[k],reference[k],viewport.width+' '+route+' '+k);

@@ -173,3 +173,13 @@ body.modal-open{overflow:hidden}
 /* One search per table: the table's own search box replaces the duplicate above it. */
 .fv-records #page-campaigns .campaign-controls .search-control{display:none}
 .fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#fff;border-color:var(--fv-line);outline:none;box-shadow:0 0 0 2px rgba(22,139,243,.15)}
+
+/* Match the main site's monochrome finish in record views and dialogs. */
+.fv-records,.article-modal{--fv-ink:#FFF;--fv-label:#DDD;--fv-muted:#B5B5B5;--fv-surface:#080808;--fv-border:#303030;--fv-rule:#292929;--fv-field:#0C0C0C;--fv-thead:#111;--fv-hover:#161616;--fv-tint:#101010;--fv-neutral-bg:#171717;--fv-neutral:#DDD;--fv-w-light:400;--fv-w:500;--fv-w-strong:650;--fv-w-black:700;color:#FFF}
+.fv-records .page-intro h1,.fv-records .page-intro p{color:#FFF}
+.fv-records .tracker-controls,.fv-records .accounts-tools,.fv-records .xt-table-wrap,.fv-records .account-table-wrap,.fv-records .loading-card,.fv-records .empty-state,.fv-records .xt-data-table td,.fv-records .account-table td,.article-modal .modal-content,.article-modal .history-row,.article-modal .modal-link{background:#080808;border-color:#303030;color:#FFF}
+.fv-records .xt-data-table th,.fv-records .account-table th{background:#111;color:#CCC;font-weight:var(--fv-w-strong)}
+.fv-records .page-back-button,.fv-records .button,.fv-records .x-refresh-button,.fv-records details.filter-details>summary,.article-modal .button,.article-modal .modal-close{background:#0C0C0C;border-color:#404040;color:#FFF}
+.fv-records .button-primary,.article-modal .button-primary,.article-modal .modal-link.main-link{background:#F2F2F2;border-color:#F2F2F2;color:#080808}
+.fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#D5D5D5;color:#080808}
+.fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#101010;border-color:#888;box-shadow:none}

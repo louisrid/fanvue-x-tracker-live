@@ -211,7 +211,7 @@
       s+='<text class="fv-axis'+(p.incomplete?' is-incomplete':'')+'" x="'+X(i)+'" y="'+(H-6-(lines.length-1)*15)+'" text-anchor="middle">'+lines.map((t,j)=>'<tspan x="'+X(i)+'"'+(j?' dy="15"':'')+'>'+esc(t)+'</tspan>').join('')+'</text>';});
     if(bar){
       const bw=Math.max(6,Math.min(52,iw/n*.68));
-      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}if(v===0)return;const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="8"/>';});
+      pts.forEach((p,i)=>{const v=C.num(p.value);if(v===null){if(cat)s+='<text class="fv-axis is-muted" x="'+X(i)+'" y="'+(Y(0)-8)+'" text-anchor="middle">'+esc(p.state||'Not available')+'</text>';return;}if(v===0)return;const y0=Y(0),y=Y(v);s+='<rect data-bar="'+i+'" class="fv-bar'+(p.incomplete?' is-incomplete':'')+'" x="'+(X(i)-bw/2)+'" y="'+Math.min(y,y0)+'" width="'+bw+'" height="'+Math.max(1,Math.abs(y0-y))+'" rx="2"/>';});
     }else{
       const seg=[];pts.forEach((p,i)=>{const v=C.num(p.value);if(v!==null)seg.push([X(i),Y(v),p]);});
       if(seg.length){
