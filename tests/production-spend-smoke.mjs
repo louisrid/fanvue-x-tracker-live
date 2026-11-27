@@ -37,13 +37,13 @@ const expectedGroups=Object.fromEntries(Object.entries(groupTabs).map(([id,tabs]
 const sheetAllocated=name=>{const s=book.getWorksheet(name);const total=Number(v(s.getCell('C2')));assert.ok(Number.isFinite(total),name+' source total');return total;};
 const expectedAllocated=Object.fromEntries(Object.entries(groupTabs).filter(([id])=>id.startsWith('gta-')).map(([id,tabs])=>[id,tabs.reduce((n,t)=>n+sheetAllocated(t),0)]));
 const gtaExpected=Object.values(expectedAllocated).reduce((n,v)=>n+v,0),planTab='X Accounts 16 (GTA VI QRTs)',planAmount=sheetAllocated(planTab);
-const eqMoney=(a,b,msg)=>assert.ok(Math.abs(a-b)<.011,msg+': '+a+' vs '+b);
+const eqMoney=(a,b,msg)=>assert.ok(typeof a==='number'&&typeof b==='number'&&Math.abs(a-b)<.011,msg+': '+a+' vs '+b);
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const add=(d,n)=>new Date(Date.parse(d+'T12:00:00Z')+n*86400000).toISOString().slice(0,10);
 const monday=add(today,-((new Date(today+'T12:00:00Z').getUTCDay()+6)%7)),lastMonday=add(monday,-7),lastSunday=add(monday,-1);
 const periods={'this-week':[monday,today],'last-week':[lastMonday,lastSunday],'all-time':null};
 // Independently sum each canonical source row using only recorded dates, no app financial helper.
-function rowSpend(rows,period,gta){const seen=new Set();return rows.reduce((sum,r)=>{const paid=r.paid===true&&r.planned!==true,cost=Number(r.cost);if(r.cost==null||!Number.isFinite(cost)||cost<0||(!paid&&!(gta&&cost>0)))return sum;const key=r.campaign==='GTAM'&&r.trackingUrl?'GTAM|'+r.trackingUrl:r.sourceTab&&r.sourceRow?r.sourceTab+'#'+r.sourceRow:r.code||r.id;if(key&&seen.has(key))return sum;if(key)seen.add(key);if(!period)return sum+cost;const allocation=gta&&(r.plannedAt||r.bookedAt),date=allocation||(paid?r.paidAt:'');if(!date||date.slice(0,10)<period[0]||date.slice(0,10)>period[1])return sum;const amount=allocation?r.datedPlannedAmount:r.datedPaidAmount;return sum+(amount==null?cost:Math.min(cost,Number(amount)));},0);}
+function rowSpend(rows,period,gta){const seen=new Set();let dated=0,eligible=0;const total=rows.reduce((sum,r)=>{const paid=r.paid===true&&r.planned!==true,cost=Number(r.cost);if(r.cost==null||!Number.isFinite(cost)||cost<0||(!paid&&!(gta&&cost>0)))return sum;const key=r.campaign==='GTAM'&&r.trackingUrl?'GTAM|'+r.trackingUrl:r.sourceTab&&r.sourceRow?r.sourceTab+'#'+r.sourceRow:r.code||r.id;if(key&&seen.has(key))return sum;if(key)seen.add(key);eligible++;if(!period)return sum+cost;const allocation=gta&&(r.plannedAt||r.bookedAt),date=allocation||(paid?r.paidAt:'');if(!date)return sum;dated++;if(date.slice(0,10)<period[0]||date.slice(0,10)>period[1])return sum;const amount=allocation?r.datedPlannedAmount:r.datedPaidAmount;return sum+(amount==null?cost:Math.min(cost,Number(amount)));},0);return period&&eligible&&!dated?null:total;}
 
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined,args:['--no-sandbox']});
 try{
@@ -58,6 +58,7 @@ try{
   return page.locator('#fvPage>.fv-strip .fv-metric').filter({has:page.locator('.fv-metric-label',{hasText:'Spend'})}).locator('.fv-metric-value .fv-num').innerText({timeout:15000});
  };
  const check=async(label)=>{
+  await page.waitForFunction(()=>!window.XTrackerCampaignReporting.status().loading&&window.XTrackerCampaignReporting.getData()?.campaigns?.filter(c=>c.id.startsWith('gta-')).every(c=>typeof c.spendKnown==='number'),{},{timeout:100000});
   const data=await page.evaluate(([monday,today,lastMonday,lastSunday])=>{const a=window.FanvueApp.reporting;return {week:a.periodTotals(monday,today).spend.value,last:a.periodTotals(lastMonday,lastSunday).spend.value};},[monday,today,lastMonday,lastSunday]);
   assert.ok(data.week>=expected.paid+planAmount,label+' this week includes Mandy payments and allocated QRTs');
   const week=await read('this-week'),last=await read('last-week'),all=await read('all-time');
@@ -81,11 +82,11 @@ try{
   const rowsFor=(key)=>groupsForKey[key].flatMap(c=>c.id==='guru-rts'?c.paidReposts||[]:c.rows||[]);
   const expectedByPeriod={};for(const [key,p] of Object.entries(periods)){const totals=Object.fromEntries(Object.keys(groupsForKey).map(k=>[k,rowSpend(rowsFor(k),p,k==='gta-vi'||k==='viral-qrts')]));totals.dashboard=totals['gta-vi']+totals['x-articles']+totals['of-terms']+totals['guru-promotion'];totals.lucia=rowSpend(allocatedRows.filter(r=>['GTA1','GTA2','GTAQ','GTAQ2'].includes(r.campaign)),p,true);totals.mandy=totals['viral-qrts'];expectedByPeriod[key]=totals;}
   eqMoney(data.week,expectedByPeriod['this-week'].dashboard,label+' independent dated dashboard total');eqMoney(data.last,expectedByPeriod['last-week'].dashboard,label+' independent last week total');eqMoney(summary.total,expectedByPeriod['all-time'].dashboard,label+' independent lifetime dashboard');
-  const readSpend=()=>page.locator('#fvPage>.fv-strip .fv-metric').filter({has:page.locator('.fv-metric-label',{hasText:'Spend'})}).locator('.fv-metric-value .fv-num').innerText({timeout:15000});
+  const readSpend=()=>page.locator('#fvPage>.fv-strip .fv-metric').filter({has:page.locator('.fv-metric-label',{hasText:'Spend'})}).locator('.fv-metric-value :is(.fv-num,.fv-dash)').innerText({timeout:15000});
   for(const period of Object.keys(periods)){
     await read(period);
-    const amounts=await page.locator('#home-comparison tr.fv-row').evaluateAll(rs=>Object.fromEntries(rs.map(r=>[r.querySelector('a.fv-campaign-row-name')?.getAttribute('href')?.slice(1),r.querySelector('[data-column="spend"] .fv-num')?.textContent])));
-    for(const k of Object.keys(groupsForKey))if(amounts[k])eqMoney(Number(amounts[k].replace(/[$,]/g,'')),expectedByPeriod[period][k],label+' comparison '+k+' '+period);
+    const amounts=await page.locator('#home-comparison tr.fv-row').evaluateAll(rs=>Object.fromEntries(rs.map(r=>[r.querySelector('a.fv-campaign-row-name')?.getAttribute('href')?.slice(1),r.querySelector('[data-column="spend"] :is(.fv-num,.fv-dash)')?.textContent])));
+    for(const k of Object.keys(groupsForKey)){assert.ok(amounts[k],label+' comparison row '+k);const expected=expectedByPeriod[period][k];if(expected===null)assert.equal(amounts[k],'–',label+' comparison unknown '+k+' '+period);else eqMoney(Number(amounts[k].replace(/[$,]/g,'')),expected,label+' comparison '+k+' '+period);}
   }
   for(const [route,key] of [['gta-vi','gta-vi'],['gta-vi/lucia','lucia'],['gta-vi/mandy','mandy'],['viral-qrts','viral-qrts'],['x-articles','x-articles'],['of-terms','of-terms'],['guru-promotion','guru-promotion']]){
     await page.evaluate(route=>{location.hash=route},route);
@@ -93,8 +94,9 @@ try{
     for(const period of Object.keys(periods)){
       await page.locator('#fvPage>.fv-kpi-periods [data-period="'+period+'"]').click();
       await page.waitForFunction(p=>document.querySelector('#fvPage>.fv-kpi-periods [aria-pressed="true"]')?.dataset.period===p,period);
-      const expectedDisplay=await page.evaluate(v=>window.FanvueCore.moneyShort(v),expectedByPeriod[period][key]);
-      if(['gta-vi','lucia','mandy','viral-qrts','of-terms'].includes(key))assert.equal(await readSpend(),expectedDisplay,label+' '+route+' '+period);
+      const expectedValue=expectedByPeriod[period][key],expectedDisplay=expectedValue===null?'–':await page.evaluate(v=>window.FanvueCore.moneyShort(v),expectedValue);
+      console.log('LIVE check '+label+' '+route+' '+period+' expected '+expectedDisplay);
+      assert.equal(await readSpend(),expectedDisplay,label+' '+route+' '+period);
     }
   }
   console.log('LIVE independently reconciled '+label+' '+JSON.stringify(expectedByPeriod));
