@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {parseRows,inGroup,publishedQrts,countPlannedAsPaid,GTA_BUDGET,findSheet,matchSheetByContent,SOURCE_TAB_IDS} from '../netlify/functions/gta-report.mjs';
 import {summarisePlacements} from '../netlify/lib/placement-reporting.mjs';
+import {campaignLinkClicks} from '../netlify/lib/gta-shortio.mjs';
 import {assembleCampaignOverview} from '../netlify/functions/campaign-overview.mjs';
 
 // Synthetic fixtures only: publishers, links and prices below are invented.
@@ -348,4 +349,13 @@ test('link-only paid rows retain identity when enriched; duplicate copy cannot d
  rows=read();assert.equal(rows.length,3);assert.equal(summarisePlacements(rows).paidSpend,155);assert.equal(rows[0].code,code);assert.equal(rows[0].publisher,'Example');assert.equal(rows[0].posted,true);
  m.getRow(8).values=['Example','https://x.com/Example','','https://createmyai.app/example',35,true,true,post(1),'$35 USD paid 27 Nov 2026'];
  assert.equal(read()[0].code,code);assert.equal(summarisePlacements(read()).paidSpend,155);
+});
+
+test('API verification accepts both domains and keeps unpublished and ambiguous links out of attributed traffic',async()=>{
+ const calls=[],store={get:async()=>null,setJSON:async()=>{}};
+ const fetcher=async(url,opts)=>{const u=new URL(url);assert.equal(opts.redirect,'error');calls.push(u);if(u.hostname==='api.short.io')return Response.json({idString:u.searchParams.get('domain')+'-'+u.searchParams.get('path')});assert.equal(u.hostname,'statistics.short.io');return Response.json({humanClicks:0});};
+ const rows=[{trackingUrl:'https://createmyai.app/same',posted:false},{trackingUrl:'https://irxc49.s.gy/same',posted:true,postUrl:post(1),identityAmbiguous:true}];
+ const r=await campaignLinkClicks(rows,{store,key:'test',fetcher,force:true});
+ assert.equal(r.links.length,2);assert.ok(r.links.every(p=>p.clicks===0&&!p.attributed));assert.equal(r.postPublicationTotal,null);
+ assert.deepEqual(calls.filter(u=>u.hostname==='api.short.io').map(u=>u.searchParams.get('domain')),['createmyai.app','irxc49.s.gy']);
 });

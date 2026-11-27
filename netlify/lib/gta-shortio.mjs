@@ -115,7 +115,7 @@ export async function campaignLinkClicks(rows,options={}){
   for(const p of rows){const url=trackingLink(p.trackingUrl)?.url;if(url)grouped.set(url,[...(grouped.get(url)||[]),p]);}
   const unique=[...grouped.values()].map(group=>{
     const live=[...new Map(group.filter(p=>p.posted).map(p=>[p.postUrl,p])).values()];
-    return {...(live[0]||group[0]),attributed:live.length===1&&!live[0]?.sharedTracking,attributionError:live.length>1||live[0]?.sharedTracking?'Shared Short.io link; publisher attribution excluded.':''};
+    return {...(live[0]||group[0]),attributed:live.length===1&&!live[0]?.sharedTracking&&!live[0]?.identityAmbiguous,attributionError:live.length>1||live[0]?.sharedTracking||live[0]?.identityAmbiguous?'Shared Short.io link; publisher attribution excluded.':''};
   });
   const links=[];
   for(let i=0;i<unique.length;i+=2)links.push(...await Promise.all(unique.slice(i,i+2).map(async p=>({...p,...await readClicks(p,{...options,linkTotals:true}),...await (async()=>{if(!p.attributed||!publicationTime(p.postUrl))return {postPublicationClicks:null,publicationAt:null};const r=await readClicks(p,{...options,dailyHistory:options.dailyHistory===true||p.viral===true});return {postPublicationClicks:r.clicks,publicationAt:r.clickStartAt,publicationVerifiedAt:r.clickAt,publicationStale:r.stale,attributionError:r.clickError,dailyClicks:r.dailyClicks||[]};})()}))));

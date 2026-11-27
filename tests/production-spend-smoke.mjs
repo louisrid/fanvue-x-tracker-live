@@ -26,8 +26,14 @@ for(let i=8;i<=sheet.rowCount;i++){
  expected.paid+=cost;const url=String(c('UTM LINK')||'');
  if(String(c('POSTED?')).toLowerCase()!=='true'&&url.startsWith('https://createmyai.app/')){expected.pending++;expected.pendingCost+=cost;expected.links.push(url);}
 }
-assert.equal(expected.pending,21);assert.equal(expected.pendingCost,820);assert.equal(expected.paid,1350);assert.equal(expected.total,1450);assert.equal(new Set(expected.links).size,21);
+assert.equal(expected.pending,21);assert.equal(expected.pendingCost,820);assert.equal(expected.paid,Number(v(sheet.getCell('C4'))));assert.equal(expected.total,Number(v(sheet.getCell('C2'))));assert.equal(new Set(expected.links).size,21);
 console.log('LIVE source sheet '+JSON.stringify({...expected,links:undefined}));
+const groupTabs={'gta-qrts':['X Accounts 15 (GTA VI QRTs)','X Accounts 16 (GTA VI QRTs)'],'gta-originals':['X Accounts 12 (GTA)','X Accounts 14 (GTA VI V2)'],'gta-instagram':['IG Accounts 3 (GTA VI)'],'gta-mandy':['X Accounts 17 (Mandy QRTs)'],'of-terms':['X Accounts 13 (OF Terms)']};
+const sheetPaid=name=>{const s=book.getWorksheet(name);assert.ok(s,name);const h={};s.getRow(7).eachCell((c,i)=>{h[String(v(c)).trim()]=i;});let total=0;
+ for(let i=8;i<=s.rowCount;i++){const c=k=>v(s.getRow(i).getCell(h[k]));if(String(c('PAID?')).toLowerCase()!=='true')continue;const n=Number(String(c('ACCOUNT SUM')??'').replace(/[$,]/g,''));if(Number.isFinite(n))total+=n;}
+ return Math.round(total*100)/100;
+};
+const expectedGroups=Object.fromEntries(Object.entries(groupTabs).map(([id,tabs])=>[id,tabs.reduce((n,t)=>n+sheetPaid(t),0)]));
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined,args:['--no-sandbox']});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});
@@ -47,6 +53,12 @@ try{
   assert.equal(week,await page.evaluate(v=>window.FanvueCore.moneyShort(v),data.week));
   assert.equal(last,await page.evaluate(v=>window.FanvueCore.moneyShort(v),data.last));
   assert.match(all,/^\$[\d,.]+[KM]?$/);
+  const groups=await page.evaluate(()=>Object.fromEntries(window.XTrackerCampaignReporting.getData().campaigns.map(c=>[c.id,c.paidSpendKnown])));
+  for(const [id,amount] of Object.entries(expectedGroups))assert.ok(Math.abs((groups[id]??0)-amount)<.011,label+' '+id+' paid matches spreadsheet: '+groups[id]+' vs '+amount);
+  const summary=await page.evaluate(()=>{const ov=window.FanvuePaymentDates.applyPaymentDates(window.XTrackerCampaignReporting.getData()),C=window.FanvueCore,s=C.CAMPAIGNS.map(c=>C.campaignSummary(ov,c.key));return {total:C.homeTotals(ov,s).spend.value,parts:Object.fromEntries(s.map(c=>[c.key,c.spend.value]))};});
+  assert.ok(Math.abs(summary.total-Object.values(summary.parts).reduce((n,x)=>n+(x||0),0))<.011,'dashboard totals count each canonical campaign once');
+  assert.equal(all,await page.evaluate(v=>window.FanvueCore.moneyShort(v),summary.total));
+  console.log('LIVE campaign paid '+JSON.stringify({groups,summary}));
   const gta=await page.evaluate(()=>{const ov=window.FanvuePaymentDates.applyPaymentDates(window.XTrackerCampaignReporting.getData());const s=window.FanvueCore.campaignSummary(ov,'gta-vi');return {allocated:s.allocatedSpend.value,paid:s.paidSpend.value,planned:s.planned,committed:s.committed};});
   assert.ok(gta.planned>=1700,label+' tab 16 reserved allocation included');
   assert.ok(Math.abs(gta.allocated-gta.paid-gta.planned-gta.committed)<.011,label+' GTA VI allocation reconciliation');
