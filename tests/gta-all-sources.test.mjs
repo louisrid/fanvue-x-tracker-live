@@ -84,7 +84,7 @@ test('campaign feed adds an Instagram group, committed spend and the GTA VI budg
   assert.equal(find('gta-instagram').committedUnpaidKnown,0);
   assert.deepEqual(find('gta-qrts').budget,{amount:10000,currency:'USD'});
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.paidSpend.value,690);assert.equal(s.spend.value,880);assert.equal(s.planned,150); // owner (26 Nov): no trailing .00
+  assert.equal(s.paidSpend.value,690);assert.equal(s.spend.value,690);assert.equal(s.allocatedSpend.value,880);assert.equal(s.planned,150); // owner (26 Nov): no trailing .00
   assert.equal(s.budget.remaining.value,10000-690-150-40);
 });
 
@@ -129,7 +129,7 @@ test('GTA VI totals include Instagram; budget shows spend, committed and remaini
   const ov={campaigns:[obj('gta-qrts',1840,100,{budget:{amount:10000,currency:'USD'}}),obj('gta-originals',2600.85,0),obj('gta-instagram',1140,0)]};
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(Math.round(s.paidSpend.value*100)/100,5580.85);
-  assert.equal(Math.round(s.spend.value*100)/100,5680.85);
+  assert.equal(Math.round(s.spend.value*100)/100,5580.85);assert.equal(Math.round(s.allocatedSpend.value*100)/100,5680.85);
   assert.equal(s.committed,100);
   assert.equal(s.budget.budget.value,10000);
   assert.equal(Math.round(s.budget.remaining.value*100)/100,4319.15);
@@ -192,12 +192,12 @@ test('a GTA report from before Instagram, or a group with no paid rows, never ma
   assert.equal(ov.campaigns.some(c=>c.id==='gta-instagram'),false);
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(s.spend.state,'value');
-  assert.equal(s.paidSpend.value,350);assert.equal(s.spend.value,540);
+  assert.equal(s.paidSpend.value,350);assert.equal(s.spend.value,350);assert.equal(s.allocatedSpend.value,540);
   // A connected Instagram group with nothing paid adds $0 rather than a gap.
   const withEmpty=assembleCampaignOverview({gta:{data:{...old,instagram:group(['GTAIG'])}},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const s2=C.campaignSummary(withEmpty,'gta-vi');
   assert.equal(s2.spend.state,'value');
-  assert.equal(s2.paidSpend.value,350);assert.equal(s2.spend.value,540);
+  assert.equal(s2.paidSpend.value,350);assert.equal(s2.spend.value,350);assert.equal(s2.allocatedSpend.value,540);
 });
 
 const uctx=vm.createContext({window:{FanvueCore:C},Intl,Date,Math,Number,String,Object,Array,Map,Set,JSON,RegExp,URL});
@@ -278,7 +278,7 @@ test('Mandy QRTs (tab 17) is its own campaign inside GTA VI and counted exactly 
   assert.equal(mq.paidSpendKnown,250);assert.equal(mq.purchasedPosts,4);assert.equal(mq.committedUnpaidKnown,0);assert.equal(mq.plannedSpendKnown,100);
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(s.paidSpend.value,250+100+340+250);
-  assert.equal(s.spend.value,250+100+340+250+150+40+100);
+  assert.equal(s.spend.value,250+100+340+250);assert.equal(s.allocatedSpend.value,250+100+340+250+150+40+100);
   // Two posts on one row each count once for views; CPM waits for both readings.
   const vrow={paid:true,posted:true,cost:180,postUrl:'https://x.com/kyro/status/2124900000000000001',views:300,postViews:{'2124900000000000001':300,'2124900000000000002':null}};
   assert.equal(C.viewsOf([{source:'GOOGLE_SHEETS_LIVE',rows:[vrow]}]).state,'partial');
@@ -331,4 +331,21 @@ test('Accounts page: one row per platform + handle across campaigns, from the sh
 test('"Spend" replaces "Paid spend" in every visible label',()=>{
   for(const f of ['public/fanvue-app.js','public/fanvue-core.js','public/fanvue-campaigns.js','public/campaign-reporting.js','public/app.js'])
     assert.doesNotMatch(readFileSync(f,'utf8'),/Paid spend/,f);
+});
+
+test('link-only paid rows retain identity when enriched; duplicate copy cannot double count; payment dates are read from cells',()=>{
+ const w=book(),m=w.addWorksheet('X Accounts 17 (Mandy QRTs)');
+ m.getRow(7).values=['ACCOUNT','LINK','NOTES','UTM LINK','ACCOUNT SUM','PAID?','POSTED?','LINK','PAYMENT DETAILS'];
+ m.getRow(8).values=['','','','https://createmyai.app/example',35,true,false,'','Partner | $35 USD paid 27 Nov 2026 | $700 batch paid'];
+ m.getRow(9).values=['','','','https://irxc49.s.gy/example',120,true,false,'','$120 USD paid 27 Nov 2026'];
+ m.getRow(10).values=['','','','https://createmyai.app/planned',100,false,false,'',''];
+ m.getRow(11).values=['','','','',null,false,false,'',''];
+ const read=()=>parseRows(w).filter(r=>r.campaign==='GTAM');
+ let rows=read();assert.equal(rows.length,3);assert.equal(summarisePlacements(rows).paidSpend,155);assert.equal(summarisePlacements(rows).totalSpend,255);
+ assert.equal(rows[0].publisherPending,true);assert.equal(rows[0].paidAt,'2026-11-27');assert.equal(rows[1].paidAt,'2026-11-27');
+ const code=rows[0].code;assert.notEqual(code,rows[1].code);
+ m.getRow(12).values=['Example','https://x.com/Example','','https://createmyai.app/example',35,true,true,post(1),'$35 USD paid 27 Nov 2026'];
+ rows=read();assert.equal(rows.length,3);assert.equal(summarisePlacements(rows).paidSpend,155);assert.equal(rows[0].code,code);assert.equal(rows[0].publisher,'Example');assert.equal(rows[0].posted,true);
+ m.getRow(8).values=['Example','https://x.com/Example','','https://createmyai.app/example',35,true,true,post(1),'$35 USD paid 27 Nov 2026'];
+ assert.equal(read()[0].code,code);assert.equal(summarisePlacements(read()).paidSpend,155);
 });

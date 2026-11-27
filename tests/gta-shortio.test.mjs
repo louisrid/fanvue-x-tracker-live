@@ -196,3 +196,13 @@ test('dashboard human totals ignore bot-inclusive cache and accept provider corr
  const cached=await campaignLinkClicks([placement],{store,cacheOnly:true,fetcher:()=>{throw Error('cooldown must not fetch');}});assert.equal(cached.total,24);
  const shared=await campaignLinkClicks([placement,{...placement,postUrl:'https://x.com/other/status/2122351628162641991'}],{store,cacheOnly:true});assert.equal(shared.total,24);assert.equal(shared.postPublicationTotal,null);
 });
+
+test('both tracking domains use full domain and slug for API lookups, not redirects',async()=>{
+ const calls=[],cache={get:async()=>null,setJSON:async()=>{}};
+ const fetcher=async(url,opts)=>{const u=new URL(url);assert.equal(opts.redirect,'error');calls.push(u);if(u.hostname==='api.short.io')return Response.json({idString:u.searchParams.get('domain')+'-'+u.searchParams.get('path')});assert.equal(u.hostname,'statistics.short.io');return Response.json({humanClicks:0});};
+ for(const domain of ['createmyai.app','irxc49.s.gy']){
+  const r=await readClicks({trackingUrl:'https://'+domain+'/same',posted:false},{store:cache,key:'test',fetcher,force:true,linkTotals:true});
+  assert.equal(r.clicks,0);assert.equal(r.clickError,'');
+ }
+ assert.deepEqual(calls.filter(u=>u.hostname==='api.short.io').map(u=>u.searchParams.get('domain')),['createmyai.app','irxc49.s.gy']);
+});

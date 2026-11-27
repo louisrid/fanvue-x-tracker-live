@@ -5,7 +5,7 @@
  * Historical metrics never reset on provider errors. No synthetic UTM clicks.
  */
 import ExcelJS from 'exceljs';
-import {paymentDay,confirmedPayment,confirmedPlan} from '../lib/payment-dates.mjs';
+import {paymentDay,paymentDetailsDate,confirmedPayment,confirmedPlan} from '../lib/payment-dates.mjs';
 import {createHash} from 'node:crypto';
 import {summarisePlacements} from '../lib/placement-reporting.mjs';
 import {getStore} from '@netlify/blobs';
@@ -85,7 +85,7 @@ export function parseRows(workbook,report={read:[],skipped:[]},resolved={}){
     const formats=instagram?['POST','STORY','BOTH'].filter(k=>col[k]):[];
     for(let i=8;i<=sheet.rowCount;i++){
       const r=sheet.getRow(i),cell=key=>r.getCell(col[key]),publisher=txt(cell('ACCOUNT'));
-      if(!publisher||publisher.length>100)continue;
+      if(publisher.length>100)continue;
       const priced=formats.filter(k=>txt(cell(k))!=='');
       const formatKey=priced.length===1?priced[0]:priced.length>1?'BOTH':null;
       // Instagram: a blank total with a single priced format (e.g. a $0 post) uses that price.
@@ -101,21 +101,43 @@ export function parseRows(workbook,report={read:[],skipped:[]},resolved={}){
       const noted=Number(txt(col['NOTES']?cell('NOTES'):null).match(/\b(\d{1,2})\s*(?:x\s*)?posts?\b/i)?.[1]);
       const accountUrl=safeUrl(link(r.getCell(col['ACCOUNT']+1)),hosts);
       const trackingUrl=col['UTM LINK']?trackingLink(link(r.getCell(col['UTM LINK'])))?.url||'':'';
-      const identity=trackingUrl||accountUrl||publisher.toLowerCase();
-      const code=campaign+'-'+createHash('sha256').update(identity+'|'+publisher.toLowerCase()).digest('hex').slice(0,20);
+      // Paid bookings survive missing handles and publication URLs; blank template rows do not qualify.
+      if(!publisher&&!paid&&!posted&&!(trackingUrl&&cost!==null))continue;
+      const identity=trackingUrl||accountUrl||publisher.toLowerCase()||('row:'+gid+':'+i);
+      const code=campaign+'-'+createHash('sha256').update(trackingUrl?identity:identity+'|'+publisher.toLowerCase()).digest('hex').slice(0,20);
+      const explicitDate=paymentDay(val(col['PAID DATE']?cell('PAID DATE'):col['PAYMENT DATE']?cell('PAYMENT DATE'):col['PAID AT']?cell('PAID AT'):null));
+      const payment=paid&&!explicitDate?paymentDetailsDate(val(col['PAYMENT DETAILS']?cell('PAYMENT DETAILS'):null),cost):{};
       const format=instagram?(formatKey||'').toLowerCase()||null:(QUOTE_CAMPAIGNS.has(campaign)?'qrt':'original');
       result.push({code,campaign,sourceRow:i,sourceTab:tab,sourceGid:gid,platform:instagram?'instagram':'x',format,
-        publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
+        publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),publisherPending:!publisher,profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
         cost,paid,posted,trackingUrl,clicks:null,
-        paidAt:paymentDay(val(col['PAID DATE']?cell('PAID DATE'):col['PAYMENT DATE']?cell('PAYMENT DATE'):col['PAID AT']?cell('PAID AT'):null)),
+        paidAt:explicitDate||payment.paidAt||'',...payment,
         plannedAt:paymentDay(val(col['PLANNED DATE']?cell('PLANNED DATE'):col['BOOKING DATE']?cell('BOOKING DATE'):col['BOOKED DATE']?cell('BOOKED DATE'):col['PLANNED AT']?cell('PLANNED AT'):col['BOOKED AT']?cell('BOOKED AT'):null)),
         ...(postUrls.length>1?{postUrls}:{}),...(campaign==='GTAM'?{purchasedPosts:Number.isSafeInteger(noted)&&noted>0?noted:paid?1:null}:{})});
     }
   }
-  // Financial rows are authoritative, even when two placements share a post.
-  // Analytics deduplicate links/posts separately and exclude ambiguous attribution.
-  const counts=new Map();for(const p of result)counts.set(p.code,(counts.get(p.code)||0)+1);
-  return result.map(p=>({...p,identityAmbiguous:counts.get(p.code)>1}));
+  // Mandy has one unique tracking link per booking. Enrich rather than count a copied row again.
+  // Preserve separate historical bookings in other tabs, where shared links can be legitimate.
+  const canonical=new Map(),rows=[];
+  for(const r of result){
+    if(r.campaign!=='GTAM'||!r.trackingUrl){rows.push(r);continue;}
+    const prior=canonical.get(r.trackingUrl);
+    if(!prior){canonical.set(r.trackingUrl,r);rows.push(r);continue;}
+    const conflict=!!(prior.identityAmbiguous||r.identityAmbiguous||
+      (prior.paid&&r.paid&&prior.cost!==r.cost)||
+      (prior.publisher&&r.publisher&&prior.publisher.toLowerCase()!==r.publisher.toLowerCase())||
+      (prior.postUrl&&r.postUrl&&prior.postUrl!==r.postUrl));
+    const paidRow=prior.paid?prior:r.paid?r:prior;
+    const enriched={...paidRow,publisher:paidRow.publisher||prior.publisher||r.publisher,
+      profileUrl:paidRow.profileUrl||prior.profileUrl||r.profileUrl,
+      postUrl:paidRow.postUrl||prior.postUrl||r.postUrl,
+      posted:prior.posted||r.posted,identityAmbiguous:conflict};
+    enriched.publisherPending=!enriched.publisher;
+    canonical.set(r.trackingUrl,enriched);
+  }
+  const merged=rows.map(r=>r.campaign==='GTAM'&&r.trackingUrl?canonical.get(r.trackingUrl):r);
+  const counts=new Map();for(const r of merged)counts.set(r.code,(counts.get(r.code)||0)+1);
+  return merged.map(r=>({...r,identityAmbiguous:!!r.identityAmbiguous||counts.get(r.code)>1}));
 }
 
 // Only when a tab cannot be found by name or prefix: fetch that tab's CSV by its gid and match it to a
@@ -169,8 +191,8 @@ async function readWorkbook(){
 async function readSourceRows(force=false){
   const store=sheetStore();let cache=null;
   try{cache=await store.get('last-good-groups-v2',{type:'json'});}catch{}
-  if(!force&&Array.isArray(cache?.rows)&&Date.now()-Date.parse(cache.at)<SHEET_TTL)return {...cache,cached:true};
-  try{const {rows,report}=await readWorkbook(),updated={rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:report.read,tabIds:report.readIds,skippedTabs:report.skipped};
+  if(!force&&cache?.schema===3&&Array.isArray(cache?.rows)&&Date.now()-Date.parse(cache.at)<SHEET_TTL)return {...cache,cached:true};
+  try{const {rows,report}=await readWorkbook(),updated={schema:3,rows,at:new Date().toISOString(),source:'GOOGLE_SHEETS_LIVE',tabs:report.read,tabIds:report.readIds,skippedTabs:report.skipped};
     try{await store.setJSON('last-good-groups-v2',updated);}catch{}return {...updated,cached:false};
   }catch(e){
     if(!Array.isArray(cache?.rows))for(const key of ['last-good-groups-v1','last-good-shortio-v3','last-good']){
@@ -226,7 +248,7 @@ export async function groupReport(source,metric,{force=false,refreshClicks=false
   const publishers=mergeMetrics(source.rows,metric.metrics).map(p=>{
     const reading=byLink.get(trackingLink(p.trackingUrl)?.url);
     const attributed=p.posted&&p.postUrl?reading?.postPublicationClicks??null:null;
-    const shared=p.crossCampaignTracking||p.sharedTracking||source.rows.filter(r=>r.posted&&r.trackingUrl&&r.trackingUrl===p.trackingUrl).length>1;
+    const shared=p.identityAmbiguous||p.crossCampaignTracking||p.sharedTracking||source.rows.filter(r=>r.posted&&r.trackingUrl&&r.trackingUrl===p.trackingUrl).length>1;
     return {...p,clicks:shared?null:attributed,allTimeClicks:reading?.clicks??null,clickAt:reading?.clickAt,postPublicationVerifiedAt:reading?.publicationVerifiedAt,clickStale:!!(reading?.stale||reading?.publicationStale),clickError:shared?'Shared link; see campaign link breakdown.':reading?.clickError||reading?.attributionError||'',clickTracked:!!reading&&!shared,cpc:!shared&&p.paid&&p.cost!==null&&attributed>0?p.cost/attributed:null};
   });
   const xStatus=gtaMetricStatus(source.rows,metric);

@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import {paymentDay} from './payment-dates.mjs';
+import {paymentDay,paymentDetailsDate} from './payment-dates.mjs';
 
 export const SPREADSHEET_ID='1iaKTKoGf58i9uH5sT23r6vxX5XYVx3VfS8fLp-8xRbM';
 export const OWNER_TABS=[['WEEK 1 - LOUIS','LOUIS'],['WEEK 1 - CONNOR','CONNOR'],['WEEK X - TEMP','TEMP']];
@@ -35,7 +35,7 @@ export function columns(sheet){
   const out={publisher:map.ACCOUNT,profile:3,article:map['ARTICLE LINK'],cost,active:cost+1,
     paid:map['PAID?'],posted:map['POSTED?'],code:map['UTM ID'],tracking:map.UTM||map['UTM LINK'],
     clicks:map['TRACKED CLICKS'],lastClick:map['LAST CLICK'],linkIn:map['LINK IN'],
-    views:map['X POST VIEWS'],likes:map['X POST LIKES'],updated:map['X UPDATED (UK)'],campaign:map.CAMPAIGN,paidDate:map['PAID DATE']||map['PAYMENT DATE']};
+    views:map['X POST VIEWS'],likes:map['X POST LIKES'],updated:map['X UPDATED (UK)'],campaign:map.CAMPAIGN,paidDate:map['PAID DATE']||map['PAYMENT DATE']||map['PAID AT'],paymentDetails:map['PAYMENT DETAILS']};
   out.post=out.code-1;
   for(const k of ['publisher','article','cost','paid','posted','code','views','likes','updated'])
     if(!out[k])throw new Error('Missing '+k+' column in '+sheet.name);
@@ -73,7 +73,7 @@ export function parseWorkbook(workbook,now=Date.now()){
     const m=columns(sheet);
     for(let row=8;row<=sheet.rowCount;row++){
       const r=sheet.getRow(row),c=k=>r.getCell(m[k]),publisher=text(c('publisher')),code=text(c('code')).toUpperCase();
-      if(!publisher)continue;
+      if(!publisher&&!code)continue;
       if(!/^A\d{2}-P\d{2,3}$/.test(code))throw new Error('Invalid tracking ID for '+publisher+' in '+name);
       if(seen.has(code))throw new Error('Duplicate tracking ID: '+code);seen.add(code);
       const paid=bool(c('paid')),posted=bool(c('posted')),active=bool(c('active'));
@@ -83,13 +83,14 @@ export function parseWorkbook(workbook,now=Date.now()){
       const campaign=m.campaign?text(c('campaign')):'';
       const sheetPaidDate=m.paidDate?paymentDay(value(c('paidDate'))):'';
       const metadata=meta.get(code),extra=n=>metadata?.getCell(n);
+      const paidDate=sheetPaidDate||paymentDay(value(extra(7))),payment=paid&&!paidDate?paymentDetailsDate(m.paymentDetails?value(c('paymentDetails')):null,number(c('cost'))):{};
       placements.push({code,publisher,owner,sourceTab:name,sourceRow:row,
         profileUrl:link(c('profile')),articleUrl:link(c('article')),articleLabel:text(c('article')),
         cost:number(c('cost')),active,paid,posted,postUrl:link(c('post')),platform:'X',
         campaignId:resolveCampaignId(publisher,campaignByName.get(campaign)||campaign||text(extra(2))),
         stage:text(extra(3))||(posted?'published':paid||active?'booked':'planned'),
         postedAt:metricDate(text(extra(5))),bookedAt:metricDate(text(extra(6))),
-        paidAt:sheetPaidDate||paymentDay(value(extra(7))),
+        paidAt:paidDate||payment.paidAt||'',...payment,
         linkPlacement:m.linkIn?text(c('linkIn')):'',xViews,xLikes,xComments:number(extra(11)),xShares:number(extra(12)),
         engagementRate:xViews>0&&xLikes!==null?Math.round(10000*xLikes/xViews)/100:null,
         xUpdated,metricStatus:!xUpdated||xViews===null?'unverified':now-Date.parse(xUpdated)>4*3600000?'stale':'ok',unavailable:false});

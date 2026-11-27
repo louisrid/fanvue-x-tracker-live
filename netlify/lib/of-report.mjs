@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import {paymentDay} from './payment-dates.mjs';
+import {paymentDay,paymentDetailsDate} from './payment-dates.mjs';
 import {value,link} from './sheet-source.mjs';
 export const OF_SHEET_ID='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
 export const OF_TAB='X Accounts 13 (OF Terms)';
@@ -8,10 +8,10 @@ export function parseOfWorkbook(workbook){
   const sheet=workbook.getWorksheet(OF_TAB);
   if(!sheet)throw new Error('OF campaign source tab missing');
   const publishers=[],seen=new Set();
-  let paymentColumn=0;sheet.getRow(7).eachCell((c,i)=>{if(/^(PAID DATE|PAYMENT DATE|PAID AT)$/i.test(String(value(c)).trim()))paymentColumn=i;});
+  let paymentColumn=0,detailsColumn=0;sheet.getRow(7).eachCell((c,i)=>{const name=String(value(c)).trim();if(/^(PAID DATE|PAYMENT DATE|PAID AT)$/i.test(name))paymentColumn=i;if(/^PAYMENT DETAILS$/i.test(name))detailsColumn=i;});
   for(let row=8;row<=sheet.rowCount;row++){
     const r=sheet.getRow(row),c=n=>r.getCell(n),publisher=String(value(c(2))).trim();
-    if(!publisher)continue;
+    if(!publisher&&!link(c(5)))continue;
     const trackingUrl=link(c(5));let url;try{url=new URL(trackingUrl);}catch{throw new Error('Missing OF tracking URL at row '+row);}
     const code=url.pathname.match(/^\/of\/(OF[1-9]\d*)\/?$/)?.[1];
     if(url.hostname!=='elegant-swan-98c20a.netlify.app'||!code||seen.has(code))throw new Error('Invalid or duplicate OF tracking URL at row '+row);
@@ -19,7 +19,8 @@ export function parseOfWorkbook(workbook){
     const amount=value(c(19));const cost=amount===''?null:Number(amount);
     if(cost!==null&&(!Number.isFinite(cost)||cost<0))throw new Error('Invalid OF amount at row '+row);
     const truth=n=>value(c(n))===true||String(value(c(n))).trim().toUpperCase()==='TRUE';
-    publishers.push({code,publisher,campaignId:'C001',sourceRow:row,sourceTab:OF_TAB,profileUrl:link(c(3)),articleUrl:link(c(4)),trackingUrl,postUrl:link(c(7)),cost,paid:truth(21),posted:truth(22),paidAt:paymentDay(paymentColumn?value(c(paymentColumn)):null)});
+    const explicitDate=paymentDay(paymentColumn?value(c(paymentColumn)):null),payment=truth(21)&&!explicitDate?paymentDetailsDate(detailsColumn?value(c(detailsColumn)):null,cost):{};
+    publishers.push({code,publisher,campaignId:'C001',sourceRow:row,sourceTab:OF_TAB,profileUrl:link(c(3)),articleUrl:link(c(4)),trackingUrl,postUrl:link(c(7)),cost,paid:truth(21),posted:truth(22),paidAt:explicitDate||payment.paidAt||'',...payment});
   }
   return publishers;
 }

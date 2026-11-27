@@ -2,7 +2,7 @@
 // It composes the *existing* independently tracked campaigns, never redirects tracking URLs,
 // never writes to operational sheets and never represents missing conversions as zero.
 import ExcelJS from 'exceljs';
-import {paymentDay,applyPaymentDates} from '../lib/payment-dates.mjs';
+import {paymentDay,paymentDetailsDate,applyPaymentDates} from '../lib/payment-dates.mjs';
 import {getStore} from '@netlify/blobs';
 const SHEET='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
 const ARTICLE_RTS='X Accounts 11 (Article RTs)';
@@ -40,17 +40,20 @@ export function parseArticleRtWorkbook(workbook){
   for(let i=8;i<=sheet.rowCount;i++){
     const get=k=>sheet.getRow(i).getCell(cols[k]);
     const publisher=cellText(get('ACCOUNT'));
-    if(!publisher||publisher.length>100)continue;
+    if(publisher.length>100||(!publisher&&!yes(cellValue(get('PAID?')))&&!yes(cellValue(get('POSTED?')))))continue;
     // C is the publisher's profile, while the final LINK/X column is the
     // original post being retweeted. They must never be conflated.
     const postUrl=goodUrl(cellLink(sheet.getRow(i).getCell(linkColumns.at(-1)||cols['LINK'])));
     const profile=goodUrl(cellLink(sheet.getRow(i).getCell(linkColumns[0]||cols['ACCOUNT']+1)));
+    const cost=num(cellText(get('ACCOUNT SUM')).replace(/[$,\s]/g,''));
+    const explicitDate=paymentDay(cellValue(cols['PAID DATE']?get('PAID DATE'):cols['PAYMENT DATE']?get('PAYMENT DATE'):cols['PAID AT']?get('PAID AT'):null));
+    const payment=yes(cellValue(get('PAID?')))&&!explicitDate?paymentDetailsDate(cellValue(cols['PAYMENT DETAILS']?get('PAYMENT DETAILS'):null),cost):{};
     rows.push({
       id:'ARTICLERT-'+i,sourceTab:ARTICLE_RTS,sourceRow:i,publisher,profileUrl:profile,
       postUrl:xPost(postUrl)?postUrl:'',sourcePostUrl:xPost(postUrl)?postUrl:'',trackingUrl:goodUrl(cols['UTM LINK']?cellLink(get('UTM LINK')):''),
       cost:num(cellText(get('ACCOUNT SUM')).replace(/[$,\s]/g,'')),
       paid:yes(cellValue(get('PAID?'))),posted:yes(cellValue(get('POSTED?'))),
-      paidAt:paymentDay(cellValue(cols['PAID DATE']?get('PAID DATE'):cols['PAYMENT DATE']?get('PAYMENT DATE'):cols['PAID AT']?get('PAID AT'):null)),
+      paidAt:explicitDate||payment.paidAt||'',...payment,
       views:null,likes:null,reposts:null,replies:null,clicks:null,signups:null,kyc:null,earningCreators:null
     });
   }

@@ -110,7 +110,8 @@
     if(r.posted!==true)return M.na('Not live yet.');
     if(!C.postId(r.postUrl))return M.na('No X post link recorded.');
     return M.na(r.metricError||'No verified X reading yet.');};
-  const accountName=(r)=>{const name=r.publisher||r.name||r.handle||'Unnamed account';return '<span class="fv-name" title="'+esc(name)+'">'+U.accountMark(name)+'<span>'+esc(name)+'</span></span>';};
+  const accountLabel=r=>r.publisher||r.name||r.handle||(r.trackingUrl?'Pending · '+r.trackingUrl.replace(/^https:\/\//,''):'Pending publisher');
+  const accountName=(r)=>{const name=accountLabel(r);return '<span class="fv-name" title="'+esc(name)+'">'+U.accountMark(name)+'<span>'+esc(name)+'</span></span>';};
   const trackingText=url=>url?'<span class="fv-mono">'+esc(url)+'</span>':'';
   const engagement=r=>{const l=C.num(r.likes??r.xLikes),rp=C.num(r.reposts??r.xShares),re=C.num(r.replies??r.xComments),v=C.num(r.views??r.xViews);
     if([l,rp,re].some(x=>x===null))return '';
@@ -128,7 +129,7 @@
   function xRecord(r,{campaign,parent,platform='X',type,clicks,views,ownLink=true}){
     const deleted=isDeleted(r);
     const link=ownLink&&!deleted&&r.posted===true&&C.safeUrl(r.postUrl)&&C.postId(r.postUrl)?r.postUrl:'';
-    return {raw:r,campaign,parent:parent||campaign,platform,type:typeName(type),account:r.publisher||r.handle||'',price:C.num(r.cost),
+    return {raw:r,campaign,parent:parent||campaign,platform,type:typeName(type),account:accountLabel(r),price:C.num(r.cost),
       live:deleted?false:r.posted===true?true:r.posted===false?false:null,deleted,link,paid:r.paid===true&&r.planned!==true,planned:r.planned===true,
       views:views?views(r):viewsOfRow(r),clicks:clicks?clicks(r):M.na('No tracked link for this placement.')};
   }
@@ -188,7 +189,7 @@
   function xTable(page,id,{title,icon='layers',records,f,expand,empty,groups=true,includeType=true}){
     const ts=tableState(page,id);if(!ts.sort)ts.sort={key:'clicks',dir:-1};
     return U.tablePanel({id,title,icon,age:publicationAge,hideEmpty:false,search:true,filters:xFilters(id,records,f,{groups}),filter:xMatch(f),rows:records,rowKey:x=>rowKeyOf(x.raw),rowLabel:x=>x.account,
-      minWidth:820,limit:10,cls:'is-list is-placement-list',searchText:x=>[x.account,x.campaign,x.raw.articleLabel||''].join(' '),empty,columns:resultColumns(records,{includeType}),expand},ts);
+      minWidth:820,limit:10,cls:'is-list is-placement-list',searchText:x=>[x.account,x.campaign,x.raw.trackingUrl||'',x.raw.articleLabel||''].join(' '),empty,columns:resultColumns(records,{includeType}),expand},ts);
   }
   const articleHeadline=r=>r.articleTitle||r.headline||(!/^ARTICLE\s*\d/i.test(r.articleLabel||'')?r.articleLabel:'')||'';
   function resultColumns(records,{article=false}={}){
@@ -220,7 +221,7 @@
   // The four core KPIs for a set of records. RT rows never contribute views: their only reading is the original post's.
   const gtaFinance=x=>x.parent==='GTA VI'||C.isGtaRow(x.raw);
   const actualPaid=x=>x.raw?.paid===true&&x.raw?.planned!==true;
-  const bookedCost=x=>actualPaid(x)||(gtaFinance(x)&&((C.num(x.raw?.cost)>0)||x.raw?.planned===true));
+  const bookedCost=x=>actualPaid(x);
   function recordSpend(x){
     if(!bookedCost(x))return M.na('Not paid.');
     const cost=C.num(x.raw.cost);
@@ -230,8 +231,7 @@
     const raws=records.map(x=>x.raw),own=records.filter(x=>x.type!=='RT').map(x=>x.raw);
     const costs=records.filter(bookedCost),known=costs.filter(x=>C.num(x.raw.cost)!==null);
     const total=Math.round(known.reduce((n,x)=>n+C.num(x.raw.cost),0)*100)/100;
-    const pending=known.filter(x=>!actualPaid(x)).reduce((n,x)=>n+C.num(x.raw.cost),0);
-    const reason=pending?'Includes '+C.money(pending)+' planned or committed unpaid GTA VI allocations.':'Recorded payments.';
+    const reason='Recorded payments only; planned and unpaid placements are excluded.';
     const spend=!costs.length?M.value(0,{reason:'No recorded costs in this selection.'}):known.length<costs.length?M.partial(total,(costs.length-known.length)+' placements have no price. '+reason):M.value(total,{reason});
     const views=C.viewsOf([{source:'FILTER',rows:own}]);
     const links=new Map();
@@ -355,7 +355,7 @@
   // UK week, Monday to today.
   const weekRange=ws=>{const we=C.addDays(ws,6);return C.dayShort(ws).split(' ')[0]+(ws.slice(5,7)===we.slice(5,7)?'':' '+C.dayShort(ws).split(' ')[1])+'–'+C.dayShort(we);};
   const postIdsOfRecord=x=>(x.raw.postUrls?.length?x.raw.postUrls:[x.raw.postUrl]).map(u=>C.postId(u)).filter(Boolean).map(String);
-  // Paid costs follow payment dates. Unpaid GTA VI bookings follow confirmed planning/booking dates.
+  // Confirmed spend follows payment dates only; unpaid allocations remain in the separate budget.
   // Undated costs remain in all-time totals, not invented weekly figures.
   function periodTotals(from,to,records,financeOnly){
     const all=records||[...xaRecords(),...gtaRecords(),...ofRecords(),...guruRecords()];
@@ -364,11 +364,11 @@
     for(const x of [...all,...spendOnly]){
       if(!bookedCost(x))continue;
       const k=rowKeyOf(x.raw);if(seen.has(k))continue;seen.add(k);
-      const paid=actualPaid(x),date=paid?x.raw.paidAt:x.raw.plannedAt||x.raw.bookedAt;
+      const paid=actualPaid(x),date=x.raw.paidAt;
       const day=date?(window.FanvuePaymentDates?.paymentDay(date)||C.londonDay(date)):'';
       if(!day||x.price===null)undated++;
       else{
-        const recorded=C.num(paid?x.raw.datedPaidAmount:x.raw.datedPlannedAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
+        const recorded=C.num(x.raw.datedPaidAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
         dated++;if(day>=from&&day<=to)spend+=amount;
         if(amount<x.price)undated++;
       }
@@ -376,7 +376,7 @@
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:records?M.na('Scoped clicks are calculated separately.'):clickBreakdown(from,to),
-      spend:!dated&&!undated&&records?M.value(0,{reason:'No recorded costs in this selection.'}):!dated?M.na('Payment or GTA VI booking dates are not recorded. Weekly spend cannot be inferred from publication dates.',{label:undated?'Undated':undefined}):undated?M.partial(spend,undated+' placements have some undated or unknown cost. Includes dated payments and GTA VI allocations only.'):M.value(spend),
+      spend:!dated&&!undated&&records?M.value(0,{reason:'No recorded costs in this selection.'}):!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.',{label:undated?'Undated':undefined}):undated?M.partial(spend,undated+' placements have some undated or unknown cost. Includes dated payments only.'):M.value(spend),
       views:gained.length?M.partial(gained.reduce((n,p)=>n+p.value,0),'Measured increases on dated X post readings. Coverage is incomplete; lifetime views are not assigned to weeks.'):M.na('No dated view readings for this period.'),
       posts:M.value(posts.size,{reason:'Distinct paid X posts published in this period, based on verified post IDs.'})};
   }
@@ -691,6 +691,7 @@
     const budget=tab==='overview'&&b?U.supportPanel('Budget','wallet',U.inlineMetrics([
       ['Budget',U.value(b.budget,'money')],
       ['Paid',U.value(s.paidSpend,'money')],
+      ['Allocated',U.value(s.allocatedSpend,'money')],
       ['Committed',U.value(M.value(s.committed||0),'money')],
       ['Planned',U.value(M.value(s.planned||0),'money')],
       ['Remaining',U.value(b.remaining,'money')],
@@ -786,6 +787,7 @@
   /* ---------- Accounts: every account across the site's own promotion and article sources ---------- */
   // One account = one platform + handle (from the profile link), else the recorded name.
   function accountKey(x){
+    if(!x.raw.publisher&&!x.raw.handle&&x.raw.trackingUrl)return {key:x.platform+'|pending|'+x.raw.trackingUrl,handle:x.account};
     const u=String(x.raw.profileUrl||x.link||''),m=u.match(/^https:\/\/(?:www\.)?(x\.com|twitter\.com|instagram\.com)\/([A-Za-z0-9_.]+)/i);
     const handle=m?m[2]:String(x.raw.handle||x.account||'').match(/@([A-Za-z0-9_.]+)/)?.[1]||String(x.raw.handle||x.account||'').replace(/^@/,'').trim();
     return {key:x.platform+'|'+handle.toLowerCase().replace(/\s+/g,''),handle:m?'@'+m[2]:(x.account||handle)};

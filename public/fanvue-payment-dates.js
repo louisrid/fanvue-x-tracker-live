@@ -12,6 +12,18 @@ function paymentDay(value){
  const date=new Date(Date.UTC(y,m-1,d));if(date.getUTCFullYear()!==y||date.getUTCMonth()!==m-1||date.getUTCDate()!==d)return '';
  return date.toISOString().slice(0,10);
 }
+// Explicit dates from ordinary spreadsheet cells, never cell pop-up notes.
+function paymentDetailsDate(value,cost){
+ const text=String(value??'');
+ const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+ const dates=[...text.matchAll(/\bpaid\s+(?:on\s+)?(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})\b/gi)].map(m=>{const month=months[m[2].slice(0,3).toLowerCase()];return month?paymentDay(m[3]+'-'+String(month).padStart(2,'0')+'-'+m[1].padStart(2,'0')):'';}).filter(Boolean);
+ dates.push(...[...text.matchAll(/\bpaid\s+(?:on\s+)?(\d{4}-\d{2}-\d{2}|\d{1,2}[/.\-]\d{1,2}[/.\-]\d{4})\b/gi)].map(m=>paymentDay(m[1])).filter(Boolean));
+ if(new Set(dates).size!==1)return {};
+ const paidAt=dates[0],out={paidAt,paymentDateSource:'Spreadsheet Payment Details'};
+ const explicit=[...text.matchAll(/\$([\d,]+(?:\.\d{1,2})?)\s*(?:USD\s*)?(?:crypto\s+|PayPal\s+|USDT\s+)?paid\s+(?:on\s+)?(?:\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}[/.\-]\d{1,2}[/.\-]\d{4})\b/gi)];
+ if(explicit.length===1&&typeof cost==='number'){const amount=Number(explicit[0][1].replace(/,/g,''));if(Number.isFinite(amount)&&amount>=0&&amount<cost)out.datedPaidAmount=amount;}
+ return out;
+}
 // Explicit owner payment confirmations (not post publication dates).
 // 25 Nov: all six unpaid at 16:38 UTC, then confirmed paid at 16:53 UTC.
 // 16 Nov 15:19–15:39 UTC: explicit Aaliyah $80, Insomnia $70 and Alina $50 QRT payments.
@@ -59,5 +71,5 @@ function applyPaymentDates(overview){
  if(!overview||!Array.isArray(overview.campaigns))return overview;
  return {...overview,campaigns:overview.campaigns.map(c=>({...c,...(Array.isArray(c.rows)?{rows:c.rows.map(reconcileRow)}:{}),...(Array.isArray(c.paidReposts)?{paidReposts:c.paidReposts.map(reconcileRow)}:{})}))};
 }
-root.FanvuePaymentDates=Object.freeze({paymentDay,confirmedPayment,confirmedPlan,applyPaymentDates});
+root.FanvuePaymentDates=Object.freeze({paymentDay,paymentDetailsDate,confirmedPayment,confirmedPlan,applyPaymentDates});
 })(globalThis);

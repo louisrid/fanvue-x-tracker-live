@@ -373,7 +373,8 @@
       const parts=[o['gta-qrts'],o['gta-originals'],o['gta-mandy']].filter((c,i)=>c||i<2);
       const financeParts=[...parts,...(o['gta-instagram']?[o['gta-instagram']]:[])];
       out.paidSpend=addSpend(financeParts.map(c=>spendOf(c)),'Recorded payments');
-      out.spend=addSpend(financeParts.map(allocatedGtaSpend),'GTA VI paid, planned and committed costs');
+      out.spend=out.paidSpend;
+      out.allocatedSpend=addSpend(financeParts.map(allocatedGtaSpend),'GTA VI paid, planned and committed costs');
       out.views=viewsOf([o['gta-qrts'],o['gta-originals'],o['gta-mandy']]);
       const pp=parts.map(c=>num(c?.postPublicationClicks)).filter(v=>v!==null);
       const all=parts.map(c=>num(c?.allTimeHumanClicks)).filter(v=>v!==null);
@@ -390,10 +391,10 @@
       out.published=parts.every(unavailable)?null:parts.reduce((n,c)=>n+(num(c?.published)||0),0);
       out.paidCount=parts.reduce((n,c)=>n+(num(c?.paidCount)||0),0);
       out.committed=financeParts.every(unavailable)?null:Math.round(financeParts.reduce((n,c)=>n+(num(c?.committedUnpaidKnown)||0),0)*100)/100;
-      // Planned and committed costs are included in headline spend, but never become paid.
+      // Planned and committed costs belong to budget allocation, not confirmed spend.
       out.planned=Math.round(financeParts.reduce((n,c)=>n+(num(c?.plannedSpendKnown)||0),0)*100)/100;
 
-      out.budget=budgetOf(out.spend,0,o['gta-qrts']?.budget);
+      out.budget=budgetOf(out.allocatedSpend,0,o['gta-qrts']?.budget);
       if(out.budget)out.budget.committed=M.value(out.committed||0);
       Object.assign(out,efficiency(parts));
     }else if(key==='of-terms'){
@@ -437,7 +438,7 @@
     for(const s of summaries)for(const c of Object.values(s.objects)){
       if(!c)continue;
       for(const r of [...(c.rows||[]),...(c.paidReposts||[])]){
-        if(r.paid!==true&&!(isGtaSource(c)&&num(r.cost)>0))continue;
+        if(r.paid!==true||r.planned===true)continue;
         const k=rowKey(r);if(!k){keyless++;continue;}
         if(keys.has(k)&&keys.get(k)!==c.id)duplicates++;keys.set(k,c.id);
       }
@@ -448,7 +449,7 @@
     else{
       const known=parts.filter(hasValue).reduce((a,p)=>a+p.value,0);
       const gaps=summaries.filter(s=>!hasValue(s.spend)||s.spend.state==='partial').map(s=>CAMPAIGNS.find(c=>c.key===s.key)?.name);
-      spend=gaps.length?M.partial(known,'Known subtotal of payments and GTA VI allocations. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{reason:'Recorded payments plus GTA VI planned and committed costs.',chip:'Campaign costs'});
+      spend=gaps.length?M.partial(known,'Known subtotal of recorded payments. Not included or incomplete: '+gaps.join(', ')+'.',{chip:'Known subtotal'}):M.value(known,{reason:'Recorded payments only; unpaid allocations are separate.',chip:'Campaign costs'});
     }
     const placementObjects=['x-articles','gta-qrts','gta-originals','gta-mandy','of-terms','guru-rts'].map(id=>overview?.campaigns?.find(c=>c.id===id)).filter(Boolean);
     const views=viewsOf(placementObjects);

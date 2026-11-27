@@ -30,7 +30,7 @@ test('paid, committed, planned and remaining are separate amounts in the reporti
   const group={ready:true,source:'CONNECTED',publishers:rows,shortIo:{}};
   const ov=assembleCampaignOverview({gta:{data:{...group,budget:{amount:1000,currency:'USD'},originals:{...group,publishers:[]},instagram:{...group,publishers:[]},mandy:{...group,publishers:[]}}}});
   const s=C.campaignSummary(ov,'gta-vi');
-  assert.equal(s.paidSpend.value,180);assert.equal(s.spend.value,320);assert.equal(s.committed,40);assert.equal(s.planned,100);assert.equal(s.budget.remaining.value,680);
+  assert.equal(s.paidSpend.value,180);assert.equal(s.spend.value,180);assert.equal(s.allocatedSpend.value,320);assert.equal(s.committed,40);assert.equal(s.planned,100);assert.equal(s.budget.remaining.value,680);
 });
 test('CPC and clicks per dollar use matched paid traffic and exclude planned and shared counters',()=>{
   const rows=[{paid:true,posted:true,cost:100,clicks:25,trackingUrl:'https://example.com/a',postUrl:url(1)},{paid:true,planned:true,posted:true,cost:500,clicks:1000,trackingUrl:'https://example.com/b',postUrl:url(2)},{paid:true,posted:true,cost:1000,clicks:500,sharedTracking:true,trackingUrl:'https://example.com/c',postUrl:url(3)}];
@@ -217,28 +217,28 @@ test('old saved campaign data receives confirmed payment dates without losing al
  assert.match(app(raw).pages.home({view:'this-week'}).body,/\$280/);
 });
 
-test('GTA VI headline includes planned and committed allocations once, dated plan counts in its week, non-GTA unpaid excluded',()=>{
+test('GTA VI confirmed spend excludes unpaid allocations; budget counts allocations once',()=>{
  const planned={code:'gta-plan',campaign:'GTAQ2',publisher:'arkavx',paid:false,planned:true,cost:150};
  const committed={code:'gta-book',campaign:'GTAQ',paid:false,cost:100,plannedAt:'2026-11-24'};
  const paid={code:'gta-paid',campaign:'GTAM',paid:true,cost:50,paidAt:'2026-11-25'};
  const nonGta={code:'non-gta',paid:false,planned:true,cost:900,plannedAt:'2026-11-24'};
  const ov={campaigns:[campaign('gta-qrts',[planned,committed],{plannedSpendKnown:150,committedUnpaidKnown:100}),campaign('gta-originals',[]),campaign('gta-mandy',[paid]),campaign('x-articles',[nonGta])]};
  const a=app(ov);
- assert.equal(a.periodTotals('2026-11-23','2026-11-29').spend.value,300);
- const s=C.campaignSummary(ov,'gta-vi');assert.equal(s.spend.value,300);assert.equal(s.paidSpend.value,50);
- assert.match(a.pages.home({view:'this-week'}).body,/\$300/);
+ assert.equal(a.periodTotals('2026-11-23','2026-11-29').spend.value,50);
+ const s=C.campaignSummary(ov,'gta-vi');assert.equal(s.spend.value,50);assert.equal(s.allocatedSpend.value,300);assert.equal(s.paidSpend.value,50);
+ assert.match(a.pages.home({view:'this-week'}).body,/\$50/);
  const converted={...planned,paid:true,planned:false,paidAt:'2026-11-25'};
  const next={campaigns:[campaign('gta-qrts',[converted,committed],{plannedSpendKnown:0,committedUnpaidKnown:100}),campaign('gta-originals',[]),campaign('gta-mandy',[paid]),campaign('x-articles',[nonGta])]};
- assert.equal(app(next).periodTotals('2026-11-23','2026-11-29').spend.value,300);
- assert.equal(C.campaignSummary(next,'gta-vi').spend.value,300);
+ assert.equal(app(next).periodTotals('2026-11-23','2026-11-29').spend.value,200);
+ assert.equal(C.campaignSummary(next,'gta-vi').spend.value,200);assert.equal(C.campaignSummary(next,'gta-vi').allocatedSpend.value,300);
  assert.equal(C.campaignSummary(next,'gta-vi').paidSpend.value,200);
 });
 
-test('every campaign KPI group has the same period controls; GTA VI period spend uses dated allocations',()=>{
+test('every campaign KPI group has the same period controls; GTA VI period spend uses dated payments',()=>{
  const now=C.londonDay(Date.now()),ws=C.weekStart(now),prior=C.addDays(ws,-7);
  const rows=[{code:'current',campaign:'GTAM',publisher:'Current',paid:true,paidAt:now,cost:50},{code:'last',campaign:'GTAM',publisher:'Last',paid:true,paidAt:prior,cost:120},{code:'plan',campaign:'GTAM',publisher:'Future',paid:false,planned:true,plannedAt:now,cost:70}];
  const ov={campaigns:[campaign('gta-mandy',rows,{plannedSpendKnown:70}),campaign('gta-qrts',[]),campaign('gta-originals',[]),campaign('x-articles',[]),campaign('article-rts',[]),campaign('of-terms',[]),campaign('guru-rts',[])]};
  const a=app(ov),pages=['gta-vi','viral-qrts','x-articles','of-terms','guru-promotion','discord'];
  for(const key of pages){const html=a.pages[key]({}).body;assert.deepEqual([...html.matchAll(/data-period="([^"]+)"/g)].map(m=>m[1]),['this-week','last-week','all-time'],key);assert.match(html,/data-period="this-week" aria-pressed="true"/);}
- for(const key of ['gta-vi','viral-qrts']){for(const [period,amount] of [['this-week',120],['last-week',120],['all-time',240]]){const html=a.pages[key]({period}).body;assert.match(html,new RegExp('data-period="'+period+'" aria-pressed="true"'));const strip=html.split('aria-label="Key metrics"')[1]?.split('</section>')[0]||html;assert.ok(strip.includes('$'+amount),key+' '+period+' '+amount);}}
+ for(const key of ['gta-vi','viral-qrts']){for(const [period,amount] of [['this-week',50],['last-week',120],['all-time',170]]){const html=a.pages[key]({period}).body;assert.match(html,new RegExp('data-period="'+period+'" aria-pressed="true"'));const strip=html.split('aria-label="Key metrics"')[1]?.split('</section>')[0]||html;assert.ok(strip.includes('$'+amount),key+' '+period+' '+amount);}}
 });
