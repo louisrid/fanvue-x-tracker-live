@@ -1566,3 +1566,16 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  .fv-shell .fv-main .fv-table-panel .fv-table>tbody>tr.fv-row{background:#000000;border-radius:6px}
  .fv-shell .fv-main .fv-table-panel .fv-table>tbody>tr.fv-row>td{background:#000000}
 }
+
+/* Explicit sort: yellow numbers only, with black cell backgrounds retained. */
+#fvPage .fv-table .fv-row td.is-highlighted-number,
+#fvPage .fv-table .fv-row td.is-highlighted-number .fv-num{color:#FFE500}
+@media(min-width:768px){
+ #fvPage .fv-table-panel .fv-table>thead>tr>th,
+ #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td{border-bottom:1px solid #292929}
+ #fvPage .fv-table-panel .fv-table>thead>tr>th:not(:last-child),
+ #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td:not(:last-child){border-right:1px solid #292929}
+}
+@media(max-width:767px){
+ #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){box-shadow:inset 0 -1px #292929}
+}

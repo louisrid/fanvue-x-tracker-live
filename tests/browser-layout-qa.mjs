@@ -67,7 +67,7 @@ try{
   let reference,cols;
   for(const [route,title] of routes){
    await open(route,title);const g=await geometry();
-   const visual=await page.evaluate(()=>{const panel=document.querySelector('#fvPage>.fv-table-panel'),rows=[...panel.querySelectorAll('tbody>tr.fv-row')],bounds=panel.getBoundingClientRect();return {yellow:panel.querySelectorAll('th.is-user-sorted,td.is-sorted,[data-user-sort]').length,clipped:rows.some(row=>{const r=row.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1||[...row.children].some(cell=>{const b=cell.getBoundingClientRect();return getComputedStyle(cell).display!=='none'&&(b.right>r.right+1||b.left<r.left-1);});})};});
+   const visual=await page.evaluate(()=>{const panel=document.querySelector('#fvPage>.fv-table-panel'),rows=[...panel.querySelectorAll('tbody>tr.fv-row')],bounds=panel.getBoundingClientRect();return {yellow:panel.querySelectorAll('th.is-user-sorted,td.is-highlighted-number,[data-user-sort]').length,clipped:rows.some(row=>{const r=row.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1||[...row.children].some(cell=>{const b=cell.getBoundingClientRect();return getComputedStyle(cell).display!=='none'&&(b.right>r.right+1||b.left<r.left-1);});})};});
    assert.equal(visual.yellow,0,route+' default sort must be neutral');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
@@ -85,7 +85,15 @@ try{
   if(viewport.width>=768)await page.locator('#gta-overview [data-sort="views"]').click();
   else await page.locator('#gta-overview [data-mobile-sort]').selectOption('views:-1');
   const after=await geometry();
-  assert.equal(await page.locator('#gta-overview td.is-sorted').count(),0,'sorting never colours data cells');
+  const highlight=await page.evaluate(()=>{
+    const table=document.querySelector('#gta-overview'),cells=[...table.querySelectorAll('tbody>tr.fv-row td[data-column="views"] .fv-num')];
+    const yellow=el=>getComputedStyle(el).color==='rgb(255, 229, 0)';
+    return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
+      wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(41, 41, 41)')};
+  });
+  assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values are yellow');
+  if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
   assert.equal(await page.locator(viewport.width>=768?'#gta-overview th.is-user-sorted':'#gta-overview [data-user-sort]').count(),1,'only explicit sort indicated');
   for(const k of ['strip','chart','plot','list','toolbar','cols'])close(after[k],before[k],viewport.width+' sort '+k);
   assert.equal(await page.evaluate(()=>window.__qaChart===document.querySelector('#fvPage .fv-chart')&&window.__qaCard===document.querySelector('#fvPage .fv-metric')),true,'sort preserves chart and cards');

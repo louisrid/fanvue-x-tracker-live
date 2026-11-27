@@ -337,8 +337,12 @@
       const detailId='fvd-'+cfg.id+'-'+key.replace(/[^A-Za-z0-9_-]/g,'_');
       const cells=cols.map(c=>{
         const left=['name','text','status','link'].includes(c.type)||c.align==='left';
+        // Highlight measured numbers only after an explicit sort, never a default ranking or missing value.
+        const selected=st.sort?.user&&st.sort.key===c.key&&!['name','text','status','link'].includes(c.type);
+        const n=selected?sortValue(c,r):null;
+        const highlighted=typeof n==='number'&&Number.isFinite(n);
         // data-label lets a row read as a labelled card on phones.
-        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'" data-column="'+esc(c.key)+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
+        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+(highlighted?' is-highlighted-number':'')+'" data-column="'+esc(c.key)+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
       });
       const tr='<tr class="fv-row'+(open?' is-open':'')+(cfg.rowClass?' '+esc(cfg.rowClass(r)||''):'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'minus':'plus',18)+'</button></td>':'')+'</tr>';
