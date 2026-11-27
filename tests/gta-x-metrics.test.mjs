@@ -88,11 +88,11 @@ test('dashboard refresh progress counts actual settled source operations and pre
  const context=vm.createContext({el,gtaState:{report:{},refreshing:false},gtaSourceStatus:()=>null,refreshXStats:async()=>({ok:true}),refreshGtaReport:async()=>true,load:async()=>true,loadOfReport:async()=>true,loadBoosts:async()=>true,state:{},boostsState:{},window:{XTrackerCampaignReporting:{reload:async()=>true,refreshDiscord:async()=>true}}});
  vm.runInContext(app.slice(app.indexOf('async function reloadAllData('),app.indexOf('function applyDashboard(')),context);
  assert.equal(await context.reloadAllData(p=>events.push(p.completed)),true);
- assert.deepEqual(events,[0,1,2,3,4,5,6]);
+ assert.deepEqual(events.filter((n,i)=>i===0||n!==events[i-1]),[0,1,2,3,4,5,6]);
  assert.equal(el('reloadAllButton').disabled,false);
  events.length=0;context.loadOfReport=async()=>false;
  assert.equal(await context.reloadAllData(p=>events.push(p.completed)),false);
- assert.deepEqual(events,[0,1,2,3,4,5,6]);
+ assert.deepEqual(events.filter((n,i)=>i===0||n!==events[i-1]),[0,1,2,3,4,5,6]);
  assert.equal(el('reloadAllStatus').dataset.summary,'Latest available data');
 });
 
@@ -102,4 +102,17 @@ test('payment-date import accepts explicit UK dates, not ambiguous invalid dates
  const p=confirmedPayment({campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100});assert.equal(p.paidAt,'2026-11-25');assert.equal(p.datedPaidAmount,70);assert.equal(p.cost,100);
  assert.equal(confirmedPayment({campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:60}).paidAt,undefined);
  assert.equal(confirmedPayment({campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100,paidAt:'2026-11-26'}).paidAt,'2026-11-26');
+});
+
+test('X, GTA and Discord begin concurrently; campaign overview waits for dependent readers',async()=>{
+ const {readFileSync}=await import('node:fs'),{default:vm}=await import('node:vm');
+ const app=readFileSync('public/app.js','utf8'),nodes=new Map(),starts=[],finish={};
+ const el=id=>{if(!nodes.has(id))nodes.set(id,{dataset:{},classList:{add(){},remove(){}},setAttribute(){},removeAttribute(){}});return nodes.get(id);};
+ const task=(name,value)=>()=>{starts.push(name);return new Promise(resolve=>{finish[name]=()=>resolve(value);});};
+ const context=vm.createContext({el,gtaState:{report:{},refreshing:false},gtaSourceStatus:()=>null,refreshXStats:task('x',{ok:true}),refreshGtaReport:task('gta',true),loadOfReport:task('of',true),loadBoosts:task('boosts',true),state:{},boostsState:{},window:{XTrackerCampaignReporting:{reload:async options=>{starts.push('summary');assert.equal(options.reuseReports,true);return true;},refreshDiscord:task('discord',true)}}});
+ vm.runInContext(app.slice(app.indexOf('async function reloadAllData('),app.indexOf('function applyDashboard(')),context);
+ const pending=context.reloadAllData();assert.deepEqual(starts,['x','gta','discord']);
+ finish.x();await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(starts,['x','gta','discord','of','boosts']);
+ finish.of();finish.boosts();finish.discord();await new Promise(resolve=>setImmediate(resolve));assert.equal(starts.includes('summary'),false);
+ finish.gta();assert.equal(await pending,true);assert.equal(starts.at(-1),'summary');
 });

@@ -1062,7 +1062,7 @@
           if(fn){if(!app?.refresh?.[fn])throw Error('Refresh service unavailable');const result=await app.refresh[fn](label=>progress(0,label));const s=app.status?.(ids[k]);message=s?.text||'';error=result===false||!!s?.error;}
         }
         progress(1,'Updating campaign summary…');
-        const ok=await rep?.reload?.({reuseReports:!error});
+        const ok=await rep?.reload?.();
         if(ok===false){error=true;message=(message?message+' ':'')+'Campaign summary kept from last verified data.';}
         progress(2,'Campaign checks complete');
       }
