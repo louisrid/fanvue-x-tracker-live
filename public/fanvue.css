@@ -1560,7 +1560,7 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td:not(:last-child){border-right:1px solid #252525}
 }
 @media(max-width:767px){
- #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){box-shadow:inset 0 -1px #252525}
+ #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){box-shadow:none}
 }
 
 /* Phone-only finish: desktop geometry, data and accent colours are untouched. */
@@ -1651,7 +1651,7 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-num{font-family:var(--fv-font);font-size:var(--fv-fs-l);font-weight:var(--fv-w-black);color:#FFF;line-height:1.15;max-width:100%;overflow-wrap:anywhere}
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td .fv-dash{color:#FFF}
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td.is-highlighted-number,#fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td.is-highlighted-number .fv-num{color:#FFE500}
- #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){box-shadow:inset 0 -1px #353535}
+ #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){box-shadow:none}
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column="age"]{order:-2;grid-column:1/-1;min-height:18px;justify-content:center;align-items:flex-start;text-align:left;padding:0 44px 0 0;margin:0;color:#FFF;font-size:var(--fv-fs-s);font-weight:var(--fv-w);}
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td.is-name{order:-1;grid-column:1/-1;min-height:32px;justify-content:center;align-items:flex-start;text-align:left;padding:0 40px 9px 0;border-bottom:1px solid #404040;color:#FFF;font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong);}
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td.is-name::before,#fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column="age"]::before{content:none}
@@ -1919,4 +1919,14 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
 }
 @media(max-width:767px) and (prefers-reduced-motion:reduce){
  #fvShell .fv-sidebar,#fvShell.is-nav-open .fv-sidebar,#fvShell .fv-scrim{transition:none!important}
+}
+
+@media(max-width:767px){
+ #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name):not([data-column="age"]){box-shadow:none;border-bottom:0}
+ #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td.is-highlighted-number,
+ #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row>td.is-highlighted-number .fv-num,
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td.is-highlighted-number,
+ #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row>td.is-highlighted-number .fv-num{color:#FFE500}
+ #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-dash{font-weight:var(--fv-w-black);}
+ #fvShell .fv-menu-button:focus:not(:focus-visible){outline:none}
 }

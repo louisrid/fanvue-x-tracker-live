@@ -48,13 +48,33 @@ try{
  for(const viewport of [{width:1440,height:900},{width:1024,height:768},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:740}]){
   const page=await browser.newPage({viewport,deviceScaleFactor:1,isMobile:viewport.width<768,hasTouch:viewport.width<768});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
+  await page.route('**/*',route=>/^(https:\/\/fonts\.(googleapis|gstatic)\.com\/)/.test(route.request().url())||route.request().url().startsWith(base)?route.continue():route.abort());
   await page.goto(base+'/#gta-vi');await page.waitForFunction(()=>window.FanvueCampaigns?.state?.loaded);
   const open=async(route,title)=>{
    await page.evaluate(route=>{location.hash=route;},route);
    await page.waitForFunction(({route,title})=>location.hash.slice(1)===route&&document.getElementById('fvTitle')?.textContent===title&&document.querySelector('#fvPage .fv-chart .fv-hit'),{route,title});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   };
+  // The 430px sweep captures every page before assertions. The other widths still
+  // use the normal per-page screenshots, keeping the artifact reasonably sized.
+  if(viewport.width===430){
+   await page.evaluate(()=>Promise.race([document.fonts?.ready||Promise.resolve(),new Promise(r=>setTimeout(r,2000))]));
+   for(const [route,title] of routes){
+    await open(route,title);
+    await page.screenshot({path:dir+'/sweep-'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:true});
+   }
+   await page.evaluate(()=>location.hash='all-accounts');
+   await page.waitForFunction(()=>document.querySelector('#acc-table .fv-account-plain'));
+   await page.screenshot({path:dir+'/sweep-'+viewport.width+'-accounts.png',fullPage:true});
+   await open('home','Dashboard');
+   for(const period of ['this-week','last-week','all-time']){
+    await page.locator('[data-view="'+period+'"]').click();
+    await page.waitForFunction(p=>document.querySelector('[data-view="'+p+'"]')?.getAttribute('aria-current')==='page',period);
+    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+    await page.screenshot({path:dir+'/sweep-'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});
+   }
+   await open('gta-vi','GTA VI');
+  }
   if(viewport.width<768){
    const menu=page.locator('#fvMenu'),sidebar=page.locator('#fvSidebar');
    assert.equal(await menu.locator('svg path').getAttribute('d'),'M4 7h16M4 12h16M4 17h16','standard hamburger');
@@ -129,9 +149,9 @@ try{
    assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsWhite&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
    const hierarchy=await page.evaluate(()=>{
     const nodes=[...document.querySelectorAll('#fvPage .fv-table tbody>tr.fv-row td[data-column]:not(.is-name):not([data-column="age"])')];
-    return nodes.every(e=>{const s=getComputedStyle(e),l=getComputedStyle(e,'::before'),v=e.querySelector('.fv-num');return s.boxShadow==='none'&&parseFloat(s.borderBottomWidth)===0&&(!v||(Number(l.fontWeight)<Number(getComputedStyle(v).fontWeight)&&parseFloat(l.fontSize)<parseFloat(getComputedStyle(v).fontSize)));});
+    return nodes.filter(e=>{const s=getComputedStyle(e),l=getComputedStyle(e,'::before'),v=e.querySelector('.fv-num');return s.boxShadow!=='none'||parseFloat(s.borderBottomWidth)!==0||(v&&!(Number(l.fontWeight)<Number(getComputedStyle(v).fontWeight)&&parseFloat(l.fontSize)<parseFloat(getComputedStyle(v).fontSize)));}).map(e=>({column:e.dataset.column,shadow:getComputedStyle(e).boxShadow,border:getComputedStyle(e).borderBottomWidth,label:getComputedStyle(e,'::before').fontWeight,value:e.querySelector('.fv-num')?getComputedStyle(e.querySelector('.fv-num')).fontWeight:null}));
    });
-   assert.ok(hierarchy,route+' quiet labels and single-layer cards');
+   assert.equal(hierarchy.length,0,route+' quiet labels and single-layer cards '+JSON.stringify(hierarchy));
   };
   let reference,cols;
   for(const [route,title] of routes){
