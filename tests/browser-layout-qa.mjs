@@ -66,20 +66,20 @@ try{
   const geometryBefore=await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]}));
   await page.evaluate(()=>{
    window.qaRefreshCalls=0;window.qaRefreshError=false;
-   window.XTrackerApp.refresh={all:cb=>{window.qaRefreshCalls++;cb({completed:0,total:8,label:'Refreshing sources…'});window.qaRefreshProgress=cb;return new Promise(resolve=>window.qaRefreshFinish=()=>resolve(!window.qaRefreshError));}};
+   window.XTrackerApp.refresh={all:cb=>{window.qaRefreshCalls++;cb({completed:0,total:6,label:'Refreshing sources…'});window.qaRefreshProgress=cb;return new Promise(resolve=>window.qaRefreshFinish=()=>resolve(!window.qaRefreshError));}};
    window.XTrackerApp.status=()=>({error:window.qaRefreshError,text:window.qaRefreshError?'Saved readings retained':'All sources updated'});
   });
   await page.locator('#fvRefresh').click();
   await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing')&&!document.querySelector('#fvRefreshProgress').hidden);
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
-  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuemax'),'8');
+  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuemax'),'6');
   assert.ok(await page.locator('#fvPage>.fv-strip .fv-metric-value').evaluateAll(es=>es.length>0&&es.every(e=>getComputedStyle(e,'::after').animationName==='fv-spin'&&[...e.children].every(c=>getComputedStyle(c).visibility==='hidden'))),'only KPI values show loading wheels');
   assert.ok(await page.locator('#fvPage>.fv-strip .fv-metric-label').first().isVisible());
   assert.ok(await page.locator('#home-comparison tbody .fv-row').first().isVisible());
   assert.deepEqual(await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]})),geometryBefore,'refresh preserves KPI geometry');
-  await page.evaluate(()=>window.qaRefreshProgress({completed:3,total:8,label:'Updating sources…'}));
+  await page.evaluate(()=>window.qaRefreshProgress({completed:3,total:6,label:'Updating sources…'}));
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'3');
-  assert.equal(await page.locator('#fvRefreshFill').evaluate(e=>e.style.width),'37.5%');
+  assert.equal(await page.locator('#fvRefreshFill').evaluate(e=>e.style.width),'50%');
   await page.screenshot({path:dir+'/refresh-'+viewport.width+'.png',fullPage:true});
   if(viewport.width===430||viewport.width===1440){
    await open('gta-vi','GTA VI');assert.equal(await page.locator('#fvRefreshProgress').isVisible(),false);assert.equal(await page.locator('#fvRefresh').isDisabled(),true);

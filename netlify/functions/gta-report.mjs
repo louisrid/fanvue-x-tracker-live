@@ -5,6 +5,7 @@
  * Historical metrics never reset on provider errors. No synthetic UTM clicks.
  */
 import ExcelJS from 'exceljs';
+import {paymentDay,confirmedPayment} from '../lib/payment-dates.mjs';
 import {createHash} from 'node:crypto';
 import {summarisePlacements} from '../lib/placement-reporting.mjs';
 import {getStore} from '@netlify/blobs';
@@ -106,6 +107,7 @@ export function parseRows(workbook,report={read:[],skipped:[]},resolved={}){
       result.push({code,campaign,sourceRow:i,sourceTab:tab,sourceGid:gid,platform:instagram?'instagram':'x',format,
         publisher:publisher.replace(/\s*\((?:TBC|TBD)\)/gi,'').trim(),profileUrl:accountUrl||(!instagram&&/^\w{1,20}$/.test(publisher)?`https://x.com/${publisher}`:''),postUrl:xPost(postUrl)?postUrl:'',
         cost,paid,posted,trackingUrl,clicks:null,
+        paidAt:paymentDay(val(col['PAID DATE']?cell('PAID DATE'):col['PAYMENT DATE']?cell('PAYMENT DATE'):col['PAID AT']?cell('PAID AT'):null)),
         ...(postUrls.length>1?{postUrls}:{}),...(campaign==='GTAM'?{purchasedPosts:Number.isSafeInteger(noted)&&noted>0?noted:paid?1:null}:{})});
     }
   }
@@ -189,7 +191,7 @@ export const countPlannedAsPaid=rows=>(rows||[]).map(p=>{
 });
 async function sourceRows(force=false){
   const source=await readSourceRows(force);
-  const rows=countPlannedAsPaid(source.rows);
+  const rows=countPlannedAsPaid(source.rows).map(confirmedPayment);
   const usage=new Map();
   for(const p of rows){if(p.posted&&p.postUrl&&p.trackingUrl){const posts=usage.get(p.trackingUrl)||new Set();posts.add(p.postUrl);usage.set(p.trackingUrl,posts);}}
   // A link used both by a separately reported campaign and by another group cannot be credited to either.
@@ -301,7 +303,9 @@ export default async function handler(request){
       const params=new URL(request.url).searchParams;
       if(params.has('status'))return json({ok:true,refresh:await refreshStatus()});
       // A job-status lookup must never invalidate an otherwise verified report.
-      const report=await getReport({force:params.has('refresh')});
+      const saved=(params.has('job')||params.has('reuse'))?await metricStore().get('latest-refresh-report-v1',{type:'json'}).catch(()=>null):null;
+      const fresh=saved?.report?.ready===true&&((params.has('job')&&saved.id===params.get('job'))||(params.has('reuse')&&Date.now()-Date.parse(saved.at)<120000));
+      const report=fresh?saved.report:await getReport({force:params.has('refresh')});
       const refresh=await refreshStatus().catch(()=>null);
       return json({...report,refresh});
     }
@@ -332,6 +336,8 @@ export async function runRefreshJob(id){
  if(prior?.data?.id!==id||prior.data.state!=='queued')return;
  const job={...prior.data,state:'running'};
  const claimed=await st.setJSON('refresh-job-v2',job,{onlyIfMatch:prior.etag});if(!claimed.modified)return;
- try{const report=await refreshGtaMetrics({manual:true});await st.setJSON('refresh-job-v2',{...job,state:'complete',expiresAt:0,completedAt:new Date().toISOString(),errors:report.shortIo.errors+report.originals.shortIo.errors+(report.instagram?.shortIo.errors||0)+(report.mandy?.shortIo.errors||0)+(report.errors?.length||0),updated:report.updated,total:report.total});}
+ try{const report=await refreshGtaMetrics({manual:true});
+ const {at:unused,...snapshot}=report;await st.setJSON('latest-refresh-report-v1',{id,at:new Date().toISOString(),report:snapshot}).catch(()=>{});
+ await st.setJSON('refresh-job-v2',{...job,state:'complete',expiresAt:0,completedAt:new Date().toISOString(),errors:report.shortIo.errors+report.originals.shortIo.errors+(report.instagram?.shortIo.errors||0)+(report.mandy?.shortIo.errors||0)+(report.errors?.length||0),updated:report.updated,total:report.total});}
  catch{await st.setJSON('refresh-job-v2',{...job,state:'failed',expiresAt:0,error:'Refresh failed; last verified readings retained',completedAt:new Date().toISOString()});}
 }

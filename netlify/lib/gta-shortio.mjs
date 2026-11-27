@@ -43,7 +43,9 @@ export async function dailyHumanClicks(id,start,end,{key,fetcher,cache,now=Date.
     const to=new Date(Math.min(midnight(nextDay(date))-1,Date.parse(end))).toISOString();
     const cacheKey=createHash('sha256').update('daily-human-v1|'+id+'|'+from+'|'+date).digest('hex');
     let prior;try{prior=await cache.get(cacheKey,{type:'json'});}catch{}
-    if(prior&&count(prior.clicks)&&now-Date.parse(prior.at)<(date===last?60000:86400000)){out.push({...prior,stale:false});continue;}
+    // A partial day must be reread after midnight; completed historical intervals can be reused for a week.
+    const final=prior?.end===to&&Date.parse(prior.end)<midnight(last),age=now-Date.parse(prior?.at||'');
+    if(prior&&count(prior.clicks)&&age>=0&&age<(date===last?60000:final?7*86400000:0)){out.push({...prior,stale:false});continue;}
     try{
       const data=await api('https://statistics.short.io/statistics/link/'+encodeURIComponent(id)+'?'+new URLSearchParams({period:'custom',startDate:from,endDate:to,tz:'Europe/London',skipTops:'true'}),key,fetcher);
       if(data.loading===true||!count(data.humanClicks)||Date.parse(data.interval?.startDate)!==Date.parse(from)||Date.parse(data.interval?.endDate)!==Date.parse(to))throw Error('Unverified Short.io daily interval');

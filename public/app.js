@@ -826,49 +826,47 @@ async function reloadAllData(onProgress){
   const button=el('reloadAllButton'),status=el('reloadAllStatus');
   if(!button||button.disabled||el('refreshXStats').disabled||gtaState.refreshing)return false;
   button.disabled=true;button.classList.add('is-refreshing');button.setAttribute('aria-busy','true');
-  const issues=new Set();let gone=0;status.dataset.summary='';
-  let completed=0;const total=8;
-  const progress=(message,label)=>{status.className='x-refresh-status';status.textContent=message;if(typeof onProgress==='function')onProgress({completed,total,label:label||message});};
+  const issues=new Set();let gone=0,completed=0;const total=6;
+  status.dataset.summary='';
+  const progress=label=>{status.className='x-refresh-status';status.textContent=label;if(typeof onProgress==='function')onProgress({completed,total,label});};
+  const settle=async(task,label)=>{
+    try{return {status:'fulfilled',value:await task()};}
+    catch(reason){return {status:'rejected',reason};}
+    finally{completed++;progress(label);}
+  };
+  const ok=r=>r.status==='fulfilled'&&r.value===true;
   try{
-    // The existing dashboard refresh coordinates X Articles, OF Terms and X RTs
-    // as one server job. Reuse it instead of issuing duplicate provider POSTs.
-    progress('1/3 · Reloading X articles, OF Terms and X RTs…','Refreshing X articles and RTs…');
-    const x=await refreshXStats();
+    progress('Refreshing connected sources…');
+    // Independent refresh jobs start together. Only dependent report reads wait.
+    // refreshXStats already reloads the dashboard; do not fetch it again.
+    const xTask=settle(()=>refreshXStats(),'X metrics checked');
+    const gtaTask=settle(()=>refreshGtaReport(label=>progress(label)),'GTA VI metrics checked');
+    const discordTask=settle(()=>window.XTrackerCampaignReporting?.refreshDiscord?.(true),'Discord sources checked');
+    // OF and Boosts metrics are written by the X refresh job; read only afterwards.
+    const dependent=xTask.then(()=>Promise.all([
+      settle(()=>loadOfReport(true,false),'OF Terms checked'),
+      settle(async()=>{await loadBoosts(true);return !boostsState.error;},'Guru RTs checked')
+    ]));
+    const [xResult,gtaResult,discordResult,[ofResult,boostResult]]=await Promise.all([xTask,gtaTask,discordTask,dependent]);
+    const x=xResult.value;
     if(!x?.ok)issues.add('X article metrics');
     if(!x||x.of?.error)issues.add('OF Terms X metrics');
     if(!x||x.boosts?.error)issues.add('X RT metrics');
-    completed++;
-    progress('2/3 · Reloading GTA VI QRTs, standalone posts and quoted X sources…','Refreshing GTA VI and Viral QRTs…');
-    const gtaRefreshed=await refreshGtaReport(label=>progress('2/3 · '+label,label));
+    if(!ok(ofResult)||state.ofError)issues.add('OF Terms');
+    if(!ok(boostResult))issues.add('Guru RTs');
+    if(!ok(discordResult))issues.add('Discord');
     const gtaGroups=[gtaState.report,gtaState.report?.originals,gtaState.report?.mandy,gtaState.report?.instagram].filter(Boolean);
     const gtaStatus=gtaGroups.map(gtaSourceStatus).filter(Boolean);
-    if(gtaRefreshed===false||gtaState.error||!gtaState.report||gtaStatus.some(g=>g.failed))issues.add('GTA VI metrics');
+    if(!ok(gtaResult)||gtaState.error||!gtaState.report||gtaStatus.some(g=>g.failed))issues.add('GTA VI metrics');
     gone+=gtaStatus.reduce((n,g)=>n+(g.gone||0),0)+(x?.gonePosts||0);
-    completed++;
-    progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…','Updating reporting sources…');
-    // These are GETs only. Count each settled source, not simulated time.
-    const tasks=[
-      ()=>load(true),
-      ()=>loadOfReport(true,false),
-      ()=>loadBoosts(true),
-      ()=>window.XTrackerCampaignReporting?.reload?.(),
-      ()=>window.XTrackerDiscordMembers?.refresh?.(),
-      ()=>window.XTrackerDiscordCourse?.refresh?.()
-    ];
-    const results=await Promise.allSettled(tasks.map(task=>Promise.resolve().then(task).finally(()=>{
-      completed++;progress('3/3 · Reloading reporting sources…','Updating reporting sources…');
-    })));
-    if(results[0].status!=='fulfilled'||results[0].value!==true)issues.add('Dashboard');
-    if(results[1].status!=='fulfilled'||results[1].value!==true||state.ofError)issues.add('OF Terms');
-    if(results[2].status!=='fulfilled'||boostsState.error)issues.add('X RTs');
-    if(results[3].status!=='fulfilled'||results[3].value!==true)issues.add('Campaigns');
-    if(results[4].status!=='fulfilled'||results[4].value!==true)issues.add('Discord members');
-    if(results[5].status!=='fulfilled'||results[5].value!==true)issues.add('Discord course clicks');
+    // Assemble after the writers finish. Recently fetched reports can be reused;
+    // the Article RT spreadsheet still receives its own fresh read.
+    progress('Updating campaign summary…');
+    const overview=await settle(()=>window.XTrackerCampaignReporting?.reload?.({reuseReports:!issues.size}),'Campaign summary checked');
+    if(!ok(overview))issues.add('Campaigns');
     status.className='x-refresh-status '+(issues.size?'is-error':'is-success');
     const goneNote=gone?' '+gone+(gone===1?' post was':' posts were')+' deleted on X; '+(gone===1?'its':'their')+' last verified views are kept.':'';
-    status.textContent=issues.size
-      ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'+goneNote
-      : 'All connected sources checked and refreshed.'+goneNote;
+    status.textContent=issues.size?'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'+goneNote:'All connected sources checked and refreshed.'+goneNote;
     status.dataset.summary=issues.size?'Latest available data':'Updated';
     return issues.size===0;
   }catch(error){
@@ -1310,7 +1308,7 @@ async function refreshGtaReport(onProgress){
       }
       if(job.state==='failed')jobFailure=job.error||'Refresh incomplete';
       notify('Loading verified GTA VI metrics…');
-      data=await read(endpoint);
+      data=await read(endpoint+'?job='+encodeURIComponent(id));
       data.updated=job.updated??0;data.total=job.total??0;
     }
     if(!validReport(data,'publishers','ready'))throw Error(data.error||'GTA VI metrics unavailable');

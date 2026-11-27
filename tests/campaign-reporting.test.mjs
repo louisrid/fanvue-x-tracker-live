@@ -180,11 +180,11 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  const end=app.indexOf('function applyDashboard(data)',start);
  assert.ok(start>0&&end>start);
  const coordinator=app.slice(start,end);
- assert.match(coordinator,/await refreshXStats\(\)/);
- assert.match(coordinator,/await refreshGtaReport\(label=>progress\(/);
+ assert.match(coordinator,/settle\(\(\)=>refreshXStats\(\)/);
+ assert.match(coordinator,/settle\(\(\)=>refreshGtaReport\(label=>progress\(/);
  assert.match(coordinator,/loadOfReport\(true,false\)/);
  assert.match(coordinator,/loadBoosts\(true\)/);
- assert.match(coordinator,/XTrackerCampaignReporting\?\.reload\?\.\(\)/);
+ assert.match(coordinator,/XTrackerCampaignReporting\?\.reload\?\.\(\{reuseReports:/);
  assert.doesNotMatch(coordinator,/refreshBoostStats\(\)|refreshOfReport\(\)/);
  assert.match(app,/el\('reloadAllButton'\)\.addEventListener\('click',reloadAllData\)/);
  assert.match(css,/\.fv-control\{display:inline-flex/);
@@ -205,4 +205,10 @@ test('manual reporting force-refresh bypasses Sheet and report caching without P
  assert.ok(calls.every(r=>r.options.cache==='no-store'));
  assert.ok(calls.every(r=>!r.options.method||r.options.method==='GET'));
  assert.equal(values.articleRts.data.rows.length,0);
+});
+
+test('completed refresh reuses freshly fetched reports but still rereads Article RT spend',async()=>{
+ const calls=[];let force;
+ await readReportParts('https://example.netlify.app/',{force:true,reuseReports:true,fetcher:async u=>{calls.push(String(u));return Response.json({ok:true});},readRts:async o=>{force=o.force;return {rows:[]};}});
+ assert.equal(calls.length,4);assert.equal(force,true);assert.ok(calls.some(u=>u.includes('gta-report?reuse=1')));assert.ok(calls.every(u=>!u.includes('refresh=1')));
 });

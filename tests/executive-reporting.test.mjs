@@ -198,3 +198,8 @@ test('dashboard weekly clicks include scoped Short.io readings exactly once, not
  const a=app(ov,{gta:{mandy:{activity:[{code:'G1',date:day,clicks:7},{code:'G1',date:day,clicks:7}]}},dashboard:{activityReady:true,activity:[{code:'A1',date:day,clicks:3},{code:'UNRELATED',date:day,clicks:1000}]},of:{ready:true,activity:[{code:'O1',date:day,clicks:2}]}});
  assert.equal(a.periodTotals(day,day).clicks.value,12);
 });
+
+test('only the confirmed portion of a changed payment amount is allocated to its known week',()=>{
+ const ov={campaigns:[campaign('gta-mandy',[{code:'GTAM-N',campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100,paidAt:'2026-11-25',datedPaidAmount:70}])]};
+ const r=app(ov).periodTotals('2026-11-23','2026-11-29');assert.equal(r.spend.value,70);assert.equal(r.spend.state,'partial');
+});

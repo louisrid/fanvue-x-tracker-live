@@ -355,12 +355,16 @@
       const k=rowKeyOf(x.raw);if(seen.has(k))continue;seen.add(k);
       const payment=C.londonDay(x.raw.paidAt);
       if(!payment||x.price===null)undated++;
-      else{dated++;if(payment>=from&&payment<=to)spend+=x.price;}
+      else{
+        const recorded=C.num(x.raw.datedPaidAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
+        dated++;if(payment>=from&&payment<=to)spend+=amount;
+        if(amount<x.price)undated++;
+      }
       if(x.live===true&&x.platform==='X')for(const id of postIdsOfRecord(x)){const t=postBorn(id),d=t?C.londonDay(t):'';if(d>=from&&d<=to)posts.add(id);}
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:clickBreakdown(from,to),
-      spend:!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.'):undated?M.partial(spend,undated+' paid placements have no payment date or cost and cannot be assigned to a week.'):M.value(spend),
+      spend:!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.'):undated?M.partial(spend,undated+' paid placements have some undated or unknown cost. Only verified dated payments are included.'):M.value(spend),
       views:gained.length?M.partial(gained.reduce((n,p)=>n+p.value,0),'Measured increases on dated X post readings. Coverage is incomplete; lifetime views are not assigned to weeks.'):M.na('No dated view readings for this period.'),
       posts:M.value(posts.size,{reason:'Distinct paid X posts published in this period, based on verified post IDs.'})};
   }
@@ -1028,7 +1032,7 @@
     if(activeRefresh?.busy)return;
     const route=current,k=route.kind==='page'?route.key:'',status=$('fvRefreshStatus'),app=D.app(),rep=D.rep();
     const all=k==='home'||k==='all-accounts',offset=k==='all-accounts'?1:0;
-    const run={route:refreshRouteKey(),busy:true,completed:0,total:all?8+offset:2,label:'Starting refresh…'};
+    const run={route:refreshRouteKey(),busy:true,completed:0,total:all?6+offset:2,label:'Starting refresh…'};
     activeRefresh=run;
     function progress(completed,label,total=run.total){
       if(activeRefresh!==run)return;
@@ -1058,7 +1062,7 @@
           if(fn){if(!app?.refresh?.[fn])throw Error('Refresh service unavailable');const result=await app.refresh[fn](label=>progress(0,label));const s=app.status?.(ids[k]);message=s?.text||'';error=result===false||!!s?.error;}
         }
         progress(1,'Updating campaign summary…');
-        const ok=await rep?.reload?.();
+        const ok=await rep?.reload?.({reuseReports:!error});
         if(ok===false){error=true;message=(message?message+' ':'')+'Campaign summary kept from last verified data.';}
         progress(2,'Campaign checks complete');
       }

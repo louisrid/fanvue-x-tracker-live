@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import {paymentDay} from './payment-dates.mjs';
 
 export const SPREADSHEET_ID='1iaKTKoGf58i9uH5sT23r6vxX5XYVx3VfS8fLp-8xRbM';
 export const OWNER_TABS=[['WEEK 1 - LOUIS','LOUIS'],['WEEK 1 - CONNOR','CONNOR'],['WEEK X - TEMP','TEMP']];
@@ -80,7 +81,7 @@ export function parseWorkbook(workbook,now=Date.now()){
       // Optional source fields live in the original weekly tabs, so they are
       // available immediately on the next automatic Google Sheets refresh.
       const campaign=m.campaign?text(c('campaign')):'';
-      const sheetPaidDate=m.paidDate?metricDate(text(c('paidDate'))):'';
+      const sheetPaidDate=m.paidDate?paymentDay(value(c('paidDate'))):'';
       const metadata=meta.get(code),extra=n=>metadata?.getCell(n);
       placements.push({code,publisher,owner,sourceTab:name,sourceRow:row,
         profileUrl:link(c('profile')),articleUrl:link(c('article')),articleLabel:text(c('article')),
@@ -88,7 +89,7 @@ export function parseWorkbook(workbook,now=Date.now()){
         campaignId:resolveCampaignId(publisher,campaignByName.get(campaign)||campaign||text(extra(2))),
         stage:text(extra(3))||(posted?'published':paid||active?'booked':'planned'),
         postedAt:metricDate(text(extra(5))),bookedAt:metricDate(text(extra(6))),
-        paidAt:sheetPaidDate||metricDate(text(extra(7))),
+        paidAt:sheetPaidDate||paymentDay(value(extra(7))),
         linkPlacement:m.linkIn?text(c('linkIn')):'',xViews,xLikes,xComments:number(extra(11)),xShares:number(extra(12)),
         engagementRate:xViews>0&&xLikes!==null?Math.round(10000*xLikes/xViews)/100:null,
         xUpdated,metricStatus:!xUpdated||xViews===null?'unverified':now-Date.parse(xUpdated)>4*3600000?'stale':'ok',unavailable:false});
@@ -102,7 +103,7 @@ export function parseWorkbook(workbook,now=Date.now()){
     const at=metricDate(text(c(21)));
     placements.push({code,publisher,owner:text(c(3)).toUpperCase(),sourceTab:'PROMO PLACEMENTS',sourceRow:i,
       profileUrl:link(c(4)),platform:text(c(5))||'X',campaignId:resolveCampaignId(publisher,text(c(6))),cost:number(c(7)),stage:text(c(8))||'planned',
-      active:true,paid:bool(c(9)),posted:bool(c(10)),postUrl:link(c(11)),postedAt:metricDate(text(c(12))),bookedAt:metricDate(text(c(13))),paidAt:metricDate(text(c(14))),
+      active:true,paid:bool(c(9)),posted:bool(c(10)),postUrl:link(c(11)),postedAt:metricDate(text(c(12))),bookedAt:metricDate(text(c(13))),paidAt:paymentDay(value(c(14))),
       articleUrl:link(c(15)),articleLabel:'',xViews:number(c(17)),xLikes:number(c(18)),xComments:number(c(19)),xShares:number(c(20)),xUpdated:at,
       unavailable:bool(c(22)),metricStatus:bool(c(22))?'unavailable':!at?'unverified':now-Date.parse(at)>4*3600000?'stale':'ok'});
   }

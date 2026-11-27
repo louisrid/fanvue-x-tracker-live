@@ -85,13 +85,21 @@ test('dashboard refresh progress counts actual settled source operations and pre
  const {readFileSync}=await import('node:fs'),{default:vm}=await import('node:vm');
  const app=readFileSync('public/app.js','utf8'),nodes=new Map(),events=[];
  const el=id=>{if(!nodes.has(id))nodes.set(id,{dataset:{},classList:{add(){},remove(){}},setAttribute(){},removeAttribute(){}});return nodes.get(id);};
- const context=vm.createContext({el,gtaState:{report:{},refreshing:false},gtaSourceStatus:()=>null,refreshXStats:async()=>({ok:true}),refreshGtaReport:async()=>true,load:async()=>true,loadOfReport:async()=>true,loadBoosts:async()=>true,state:{},boostsState:{},window:{XTrackerCampaignReporting:{reload:async()=>true},XTrackerDiscordMembers:{refresh:async()=>true},XTrackerDiscordCourse:{refresh:async()=>true}}});
+ const context=vm.createContext({el,gtaState:{report:{},refreshing:false},gtaSourceStatus:()=>null,refreshXStats:async()=>({ok:true}),refreshGtaReport:async()=>true,load:async()=>true,loadOfReport:async()=>true,loadBoosts:async()=>true,state:{},boostsState:{},window:{XTrackerCampaignReporting:{reload:async()=>true,refreshDiscord:async()=>true}}});
  vm.runInContext(app.slice(app.indexOf('async function reloadAllData('),app.indexOf('function applyDashboard(')),context);
  assert.equal(await context.reloadAllData(p=>events.push(p.completed)),true);
- assert.deepEqual(events,[0,1,2,3,4,5,6,7,8]);
+ assert.deepEqual(events,[0,1,2,3,4,5,6]);
  assert.equal(el('reloadAllButton').disabled,false);
- events.length=0;context.load=async()=>false;
+ events.length=0;context.loadOfReport=async()=>false;
  assert.equal(await context.reloadAllData(p=>events.push(p.completed)),false);
- assert.deepEqual(events,[0,1,2,3,4,5,6,7,8]);
+ assert.deepEqual(events,[0,1,2,3,4,5,6]);
  assert.equal(el('reloadAllStatus').dataset.summary,'Latest available data');
+});
+
+test('payment-date import accepts explicit UK dates, not ambiguous invalid dates, and preserves confirmed partial payments',async()=>{
+ const {paymentDay,confirmedPayment}=await import('../netlify/lib/payment-dates.mjs');
+ assert.equal(paymentDay('25/11/2026'),'2026-11-25');assert.equal(paymentDay('2026-11-25'),'2026-11-25');assert.equal(paymentDay('31/11/2026'),'');
+ const p=confirmedPayment({campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100});assert.equal(p.paidAt,'2026-11-25');assert.equal(p.datedPaidAmount,70);assert.equal(p.cost,100);
+ assert.equal(confirmedPayment({campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:60}).paidAt,undefined);
+ assert.equal(confirmedPayment({campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100,paidAt:'2026-11-26'}).paidAt,'2026-11-26');
 });
