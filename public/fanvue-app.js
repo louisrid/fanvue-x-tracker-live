@@ -814,6 +814,11 @@
   function setNav(active){const el=$('fvNav'),markup=navHtml(active);if(el.dataset.renderedNav!==markup){el.innerHTML=markup;el.dataset.renderedNav=markup;}}
   // Built-in campaign icon and colour, with any saved override from the campaign manager.
   function look(key){const d=C.CAMPAIGNS.find(c=>c.key===key)||(key===VIRAL.key?VIRAL:null);const o=hooks.override?.(key);return {icon:o?.icon?glyphName(o.icon):(d.icon==='x'?'xmark':d.icon),color:o?.color||d.color};}
+  // Use the saved campaign colour on every subpage and record view.
+  function setTheme(shell,key,customColor){
+    const color=customColor||(key==='home'?'pink':key==='discord'?'discord':key==='all-accounts'?'slate':NAV_ORDER.includes(key)?look(key).color:'slate');
+    if(shell.dataset)shell.dataset.campaignTheme=color==='discord'||Object.prototype.hasOwnProperty.call(C.PALETTE,color)?color:'slate';
+  }
   const glyphName=n=>({'trending-up':'trend','user-plus':'userplus','graduation-cap':'graduation'}[n]||n);
   function setTitle(text){document.title=text+' · '+APP_NAME;}
 
@@ -851,6 +856,7 @@
     $('fvBack').hidden=r.kind==='page'&&r.key==='home';
     // Page colour for tiles, graphs and pills (owner, 26 Nov, style 74).
     shell.className=shell.className.replace(/\bpg-[\w-]+/g,'').trim()+' pg-'+(r.kind==='page'?r.key:r.kind);
+    setTheme(shell,r.kind==='records'?RECORDS[r.key].parent:r.kind==='page'?r.key:'');
     if(r.kind==='records'){
       const rec=RECORDS[r.key];
       setNav(rec.parent);setTitle(rec.title);
@@ -865,6 +871,7 @@
     let page;
     if(r.kind==='added'){page=hooks.addedRoute?hooks.addedRoute(r.key):null;
       if(!page)page={title:'Campaign not found',refreshLabel:'',body:'<section class="fv-panel fv-notfound"><h2>Campaign not found</h2><p>This campaign does not exist or has been archived.</p><a class="fv-control" href="#home">'+U.icon('home',15)+'Go to Dashboard</a></section>'};
+      setTheme(shell,'',page.themeColor);
       setNav(page.navKey||'');
     }else{
       page=RENDER[r.key]({view:r.view});

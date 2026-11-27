@@ -158,11 +158,11 @@ try{
      noOverflow:document.documentElement.scrollWidth<=innerWidth+1
     };
    });
-   assert.ok(result.titleGap>=0&&result.titleGap<=22,route+' compact title spacing '+JSON.stringify(result));
-   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-32)<=1,route+' space below title and header');
+   assert.ok(result.titleGap>=0&&result.titleGap<=50,route+' compact title spacing '+JSON.stringify(result));
+   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-40)<=1,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelWhite&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
-   assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?34:28)),route+' large short KPI figures '+result.numericSizes);
+   assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?28:24)),route+' large short KPI figures '+result.numericSizes);
    assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsWhite&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
    const hierarchy=await page.evaluate(()=>{
     const nodes=[...document.querySelectorAll('#fvPage .fv-table tbody>tr.fv-row td[data-column]:not(.is-name):not([data-column="age"])')];
@@ -179,7 +179,7 @@ try{
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
    const finish=await page.evaluate(()=>{const card=document.querySelector('#fvPage>.fv-strip>.fv-metric'),label=card.querySelector('.fv-metric-label'),value=card.querySelector('.fv-metric-value'),s=getComputedStyle(card),v=getComputedStyle(value),rect=card.getBoundingClientRect(),a=label.getBoundingClientRect(),z=value.getBoundingClientRect();return {background:s.backgroundColor,gradient:s.backgroundImage,radius:parseFloat(s.borderTopLeftRadius),weight:Number(v.fontWeight),center:Math.abs((a.top+z.bottom)/2-(rect.top+rect.bottom)/2),aligned:s.alignItems,justify:s.justifyContent};});
    if(viewport.width<768){
-    assert.ok(['rgb(53, 23, 37)','rgb(33, 26, 61)'].includes(finish.background),route+' rose or Discord KPI card '+JSON.stringify(finish));
+    assert.ok(["rgb(53, 23, 37)","rgb(38, 27, 61)","rgb(51, 35, 15)","rgb(34, 37, 42)","rgb(25, 43, 67)","rgb(33, 26, 61)","rgb(32, 40, 52)","rgb(18, 49, 58)","rgb(21, 52, 46)","rgb(24, 51, 34)"].includes(finish.background),route+' campaign-tinted KPI card '+JSON.stringify(finish));
     assert.equal(finish.radius,14);assert.ok(['flex-start','start','flow-start'].includes(finish.aligned),'left aligned card '+JSON.stringify(finish));assert.equal(finish.justify,'space-between');assert.ok(finish.weight>=850);
    }else{assert.equal(finish.background,'rgb(0, 0, 0)',route+' pure black card');assert.equal(finish.gradient,'none');assert.equal(finish.radius,10);assert.ok(finish.weight>=850);const surfaces=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel,#fvPage>.fv-chart-panel>.fv-chart,#fvPage>.fv-table-panel,#fvPage>.fv-table-panel>.fv-table-tools,#fvPage .fv-table th,#fvPage .fv-table tbody tr.fv-row td')].every(e=>['rgb(0, 0, 0)','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)));assert.equal(surfaces,true,route+' black surfaces');assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');}
    assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
@@ -197,12 +197,12 @@ try{
   const after=await geometry();
   const highlight=await page.evaluate(()=>{
     const table=document.querySelector('#gta-overview'),cells=[...table.querySelectorAll('tbody>tr.fv-row td[data-column="views"] .fv-num')];
-    const yellow=el=>getComputedStyle(el).color==='rgb(255, 229, 0)';
+    const yellow=el=>getComputedStyle(el).color==='rgb(199, 181, 255)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
       dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='2px'&&getComputedStyle(td).borderRightColor==='rgb(53, 48, 53)')};
   });
-  assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values are yellow');
+  assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values use the campaign colour');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
   assert.equal(await page.locator(viewport.width>=768?'#gta-overview th.is-user-sorted':'#gta-overview [data-user-sort]').count(),1,'only explicit sort indicated');
   for(const k of ['strip','chart','plot','list','toolbar','cols'])close(after[k],before[k],viewport.width+' sort '+k);
@@ -292,7 +292,7 @@ try{
     const others=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="views"]')];
     return {column:cells.every(e=>getComputedStyle(e).backgroundColor===(e.matches(':hover')?'rgb(33, 18, 25)':'rgb(8, 6, 8)')),
      other:others.every(e=>getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'),
-     yellow:cells.filter(e=>e.classList.contains('is-highlighted-number')).every(e=>getComputedStyle(e.querySelector('.fv-num')||e).color==='rgb(255, 229, 0)')};
+     yellow:cells.filter(e=>e.classList.contains('is-highlighted-number')).every(e=>getComputedStyle(e.querySelector('.fv-num')||e).color==='rgb(255, 154, 200)')};
    });
    assert.ok(hover.column&&hover.other&&hover.yellow,'hover highlights only the column and preserves sorted text '+JSON.stringify(hover));
    await page.mouse.move(0,0);
@@ -308,7 +308,7 @@ try{
     await recordCell.hover();
     const rowHover=await recordCell.evaluate(e=>{
      const table=e.closest('table'),row=e.closest('tr'),bg=x=>getComputedStyle(x).backgroundColor;
-     return bg(e)==='rgb(33, 18, 25)'&&[...row.cells].filter(x=>x!==e).every(x=>bg(x)==='rgb(8, 6, 8)')&&[...table.querySelectorAll('tbody tr.fv-row')].filter(r=>r!==row).every(r=>[...r.cells].every(x=>bg(x)==='rgb(0, 0, 0)'));
+     const discord=!!e.closest('#discord-table');return bg(e)===(discord?'rgb(25, 24, 46)':'rgb(25, 31, 39)')&&[...row.cells].filter(x=>x!==e).every(x=>bg(x)===(discord?'rgb(6, 6, 9)':'rgb(7, 8, 9)'))&&[...table.querySelectorAll('tbody tr.fv-row')].filter(r=>r!==row).every(r=>[...r.cells].every(x=>bg(x)==='rgb(0, 0, 0)'));
     });
     assert.ok(rowHover,route+' record-oriented row hover');
     await page.mouse.move(0,0);

@@ -73,7 +73,7 @@
     const D=window.FanvueApp.data,ov=D.overview(),xa=D.campaign('x-articles');
     const linked=c.dataLink?(xa?.sourceCampaigns||[]).find(s=>s.id===c.dataLink):null;
     const rows=linked?(xa?.rows||[]).filter(r=>r.campaignId===c.dataLink):[];
-    return {title:c.name,chipHtml:render.chip(c),refreshLabel:'Refresh',updated:ov?.checkedAt,navKey:'campaign/'+slug,
+    return {title:c.name,themeColor:c.color,chipHtml:render.chip(c),refreshLabel:'Refresh',updated:ov?.checkedAt,navKey:'campaign/'+slug,
       body:window.FanvueApp.customCampaignBody(slug,rows,linked,c.name)+render.info(c)};
   }
 
