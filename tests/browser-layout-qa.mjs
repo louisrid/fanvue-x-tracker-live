@@ -60,7 +60,7 @@ try{
   };
   // The 430px sweep captures every page before assertions. The other widths still
   // use the normal per-page screenshots, keeping the artifact reasonably sized.
-  if(viewport.width===430){
+  if(true){
    await page.evaluate(()=>Promise.race([document.fonts?.ready||Promise.resolve(),new Promise(r=>setTimeout(r,2000))]));
    for(const [route,title] of routes){
     await open(route,title);
@@ -92,12 +92,11 @@ try{
    assert.equal(await sidebar.evaluate(e=>getComputedStyle(e).visibility),'visible');
    await page.locator('#fvNav a[href="#home"]').click();
    await page.waitForFunction(()=>document.querySelector('#fvTitle').textContent==='Dashboard');
-   assert.equal(await menu.getAttribute('aria-expanded'),'true','menu stays open during navigation');
-   assert.ok(await sidebar.evaluate(e=>e.closest('#fvShell').classList.contains('is-nav-open')));
-   await page.screenshot({path:dir+'/'+viewport.width+'-menu-open.png'});
-   await menu.click();
+   assert.equal(await menu.getAttribute('aria-expanded'),'false','menu closes on destination selection');
    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).visibility==='hidden');
-   assert.equal(await menu.getAttribute('aria-expanded'),'false');
+   assert.ok(await sidebar.evaluate(e=>!e.closest('#fvShell').classList.contains('is-nav-open')));
+   await menu.click();await page.screenshot({path:dir+'/'+viewport.width+'-menu-open.png'});
+   await menu.click();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).visibility==='hidden');
    await menu.click();await page.keyboard.press('Escape');
    assert.equal(await menu.getAttribute('aria-label'),'Open menu');
    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#fvSidebar')).visibility==='hidden');
@@ -148,11 +147,11 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===2&&parseFloat(style(e).borderTopLeftRadius)>=10),
+     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===3&&parseFloat(style(e).borderTopLeftRadius)>=10),
      labelWhite:labels.every(white),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
      tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:16)),
-     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===2&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
+     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===3&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
      labelsWhite:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color==='rgb(255, 255, 255)'),
@@ -161,7 +160,7 @@ try{
     };
    });
    assert.ok(result.titleGap>=0&&result.titleGap<=22,route+' compact title spacing '+JSON.stringify(result));
-   assert.ok(result.belowTitle>=10&&result.afterHeader>=20,route+' space below title and header');
+   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-32)<=1,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelWhite&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
    assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?34:28)),route+' large short KPI figures '+result.numericSizes);
@@ -183,7 +182,7 @@ try{
    if(viewport.width<768){
     assert.ok(['rgb(53, 23, 37)','rgb(33, 26, 61)'].includes(finish.background),route+' rose or Discord KPI card '+JSON.stringify(finish));
     assert.equal(finish.radius,14);assert.ok(['flex-start','start','flow-start'].includes(finish.aligned),'left aligned card '+JSON.stringify(finish));assert.equal(finish.justify,'space-between');assert.ok(finish.weight>=850);
-   }else{assert.equal(finish.background,'rgb(0, 0, 0)',route+' pure black card');assert.equal(finish.gradient,'none');assert.equal(finish.radius,8);assert.ok(finish.weight>=850);const surfaces=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel,#fvPage>.fv-chart-panel>.fv-chart,#fvPage>.fv-table-panel,#fvPage>.fv-table-panel>.fv-table-tools,#fvPage .fv-table th,#fvPage .fv-table tbody tr.fv-row td')].every(e=>['rgb(0, 0, 0)','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)));assert.equal(surfaces,true,route+' black surfaces');assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');}
+   }else{assert.equal(finish.background,'rgb(0, 0, 0)',route+' pure black card');assert.equal(finish.gradient,'none');assert.equal(finish.radius,10);assert.ok(finish.weight>=850);const surfaces=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel,#fvPage>.fv-chart-panel>.fv-chart,#fvPage>.fv-table-panel,#fvPage>.fv-table-panel>.fv-table-tools,#fvPage .fv-table th,#fvPage .fv-table tbody tr.fv-row td')].every(e=>['rgb(0, 0, 0)','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)));assert.equal(surfaces,true,route+' black surfaces');assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');}
    assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
    if(!reference)reference=g;
    for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(k==='toolbar'&&viewport.width<768?g[k].slice(0,3):g[k],k==='toolbar'&&viewport.width<768?reference[k].slice(0,3):reference[k],viewport.width+' '+route+' '+k);
@@ -202,7 +201,7 @@ try{
     const yellow=el=>getComputedStyle(el).color==='rgb(255, 229, 0)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
-      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(37, 37, 37)')};
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='2px'&&getComputedStyle(td).borderRightColor==='rgb(53, 48, 53)')};
   });
   assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values are yellow');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
@@ -256,7 +255,7 @@ try{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===14&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&[3,4].includes(parseFloat(css(main).borderLeftWidth)),restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===14&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===5,restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
@@ -292,7 +291,7 @@ try{
    const hover=await page.evaluate(()=>{
     const cells=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="spend"]')];
     const others=[...document.querySelectorAll('#home-comparison tbody tr.fv-row td[data-column="views"]')];
-    return {column:cells.every(e=>['rgb(48, 48, 48)','rgb(59, 59, 59)'].includes(getComputedStyle(e).backgroundColor)),
+    return {column:cells.every(e=>['rgb(19, 12, 16)','rgb(33, 18, 25)'].includes(getComputedStyle(e).backgroundColor)),
      other:others.every(e=>getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'),
      yellow:cells.filter(e=>e.classList.contains('is-highlighted-number')).every(e=>getComputedStyle(e.querySelector('.fv-num')||e).color==='rgb(255, 229, 0)')};
    });
