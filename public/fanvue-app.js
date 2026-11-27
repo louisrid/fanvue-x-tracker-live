@@ -810,7 +810,50 @@
       '<div class="fv-nav" role="group" aria-labelledby="fvCommunityLabel">'+PAGES.filter(p=>p.group==='community').map(item).join('')+'</div>'+
       '<div class="fv-nav fv-nav-more" role="group" aria-label="More">'+PAGES.filter(p=>p.group==='more').map(item).join('')+'</div>';
   }
-  function setNav(active){const el=$('fvNav'),markup=navHtml(active);if(el.dataset.renderedNav!==markup){el.innerHTML=markup;el.dataset.renderedNav=markup;}}
+  // Keep navigation nodes stable across data refreshes and active-route changes.
+  // If a very short viewport or a long custom campaign list would overflow, page
+  // the menu rather than scrolling it or silently clipping any destinations.
+  let navPage=0,navPageSize=0,navActive='',navFitPending=false;
+  function navLinks(){return [...$('fvNav').querySelectorAll('a.fv-nav-item')];}
+  function showNavPage(page){
+    const links=navLinks(),pager=$('fvNav').querySelector('.fv-nav-pager');
+    if(!pager||!navPageSize)return;
+    const total=Math.max(1,Math.ceil(links.length/navPageSize));
+    navPage=Math.max(0,Math.min(total-1,page));
+    links.forEach((a,i)=>{a.hidden=i<navPage*navPageSize||i>=(navPage+1)*navPageSize;});
+    pager.querySelector('[data-fv-nav-page="prev"]').disabled=navPage===0;
+    pager.querySelector('[data-fv-nav-page="next"]').disabled=navPage>=total-1;
+    pager.querySelector('.fv-nav-page-label').textContent=(navPage+1)+' / '+total;
+  }
+  function fitNav(){
+    const nav=$('fvNav'),sidebar=$('fvSidebar'),links=navLinks();
+    nav.querySelector('.fv-nav-pager')?.remove();
+    links.forEach(a=>{a.hidden=false;});
+    sidebar.classList.remove('is-nav-compact','is-nav-paged');
+    navPageSize=0;
+    const fits=()=>sidebar.scrollHeight<=sidebar.clientHeight+1;
+    if(fits()){navPage=0;return;}
+    sidebar.classList.add('is-nav-compact');
+    if(fits()){navPage=0;return;}
+    sidebar.classList.add('is-nav-paged');
+    const pager=document.createElement('div');pager.className='fv-nav-pager';
+    pager.innerHTML='<button type="button" data-fv-nav-page="prev" aria-label="Previous navigation page">'+U.icon('left',15)+'</button><span class="fv-nav-page-label" aria-live="polite"></span><button type="button" data-fv-nav-page="next" aria-label="Next navigation page">'+U.icon('right',15)+'</button>';
+    nav.append(pager);links.forEach(a=>{a.hidden=true;});
+    for(const a of links){a.hidden=false;if(!fits()){a.hidden=true;break;}navPageSize++;}
+    navPageSize=Math.max(1,navPageSize);
+    const activeIndex=links.findIndex(a=>a.getAttribute('aria-current')==='page');
+    showNavPage(activeIndex>=0?Math.floor(activeIndex/navPageSize):navPage);
+  }
+  function queueNavFit(){if(navFitPending)return;navFitPending=true;requestAnimationFrame(()=>{navFitPending=false;fitNav();});}
+  function setNav(active){
+    const el=$('fvNav'),markup=navHtml(''),changed=el.dataset.renderedNav!==markup;
+    if(changed){el.innerHTML=markup;el.dataset.renderedNav=markup;}
+    const links=navLinks();
+    for(const a of links){const selected=a.getAttribute('href')==='#'+active;if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
+    if(changed)fitNav();
+    else if(active!==navActive&&navPageSize){const i=links.findIndex(a=>a.getAttribute('aria-current')==='page');if(i>=0)showNavPage(Math.floor(i/navPageSize));}
+    navActive=active;
+  }
   // Built-in campaign icon and colour, with any saved override from the campaign manager.
   function look(key){const d=C.CAMPAIGNS.find(c=>c.key===key)||(key===VIRAL.key?VIRAL:null);const o=hooks.override?.(key);return {icon:o?.icon?glyphName(o.icon):(d.icon==='x'?'xmark':d.icon),color:o?.color||d.color};}
   // Use the saved campaign colour on every subpage and record view.
@@ -1075,7 +1118,7 @@
     const close=()=>setMenuOpen(false,true);
     $('fvMenu').addEventListener('click',()=>setMenuOpen(!$('fvShell').classList.contains('is-nav-open')));
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('fvShell').classList.contains('is-nav-open'))close();});
-    $('fvNav').addEventListener('click',e=>{const link=e.target.closest?.('a[href^="#"]');if(link&&$('fvShell').classList.contains('is-nav-open'))close();});
+    $('fvNav').addEventListener('click',e=>{const pager=e.target.closest?.('[data-fv-nav-page]');if(pager){showNavPage(navPage+(pager.dataset.fvNavPage==='next'?1:-1));return;}const link=e.target.closest?.('a[href^="#"]');if(link&&$('fvShell').classList.contains('is-nav-open'))close();});
     $('fvDrawerClose').addEventListener('click',close);
     $('fvScrim').addEventListener('click',close);
     window.addEventListener('hashchange',onHash);
@@ -1085,12 +1128,13 @@
     // Tile figures are re-fitted once the display font has loaded (it is wider than the fallback).
     document.fonts?.ready?.then(()=>{if(current.kind!=='records')fitTiles();});document.fonts?.load?.('900 25px Montserrat').then(()=>{if(current.kind!=='records')fitTiles();}).catch(()=>{});document.fonts?.addEventListener?.('loadingdone',()=>{if(current.kind!=='records')fitTiles();});
     let w=window.innerWidth;
-    window.addEventListener('resize',()=>{if(Math.abs(window.innerWidth-w)<2)return;w=window.innerWidth;U.hideTip();if(current.kind!=='records')drawCharts();},{passive:true});
+    window.addEventListener('resize',()=>{queueNavFit();if(window.innerWidth>=768&&$('fvShell').classList.contains('is-nav-open'))setMenuOpen(false);if(Math.abs(window.innerWidth-w)<2)return;w=window.innerWidth;U.hideTip();if(current.kind!=='records')drawCharts();},{passive:true});
     // Reload-all reports Discord status through these hooks; they reuse the
     // validated Discord adapter instead of the superseded standalone scripts.
     window.XTrackerDiscordMembers={refresh:()=>D.rep()?.refreshDiscord?.(true)};
     window.XTrackerDiscordCourse={refresh:()=>D.rep()?.refreshDiscord?.(true)};
     onHash();
+    document.fonts?.ready?.then(queueNavFit);
   }
   window.FanvueApp=Object.freeze({hooks,rerender,go,parseHash,RECORDS,LEGACY,PAGES,data:D,state:pageState,tableState,
     placementColumns,publicationAge,metric,outcomeItems,overviewTabs,campaignChart,customCampaignBody,reporting:Object.freeze({xKpis,periodTotals,accountRows,markAccountValue,discordStats,pages:RENDER})});

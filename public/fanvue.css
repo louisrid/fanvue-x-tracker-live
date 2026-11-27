@@ -2629,3 +2629,69 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
  #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head:hover{background:#1C1830}
  #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n):hover{background:var(--fv-hover-column)}
 }
+
+/* Owner final stability pass: navigation is fixed, never a scroll container.
+   Content alone scrolls. Compact/paged navigation is used only when required to keep all links reachable. */
+#fvShell{--fv-chart-control-h:32px;--fv-chart-control-gap:8px;--fv-chart-inset:16px}
+#fvShell #fvSidebar{overflow:clip;overscroll-behavior:none;overflow-anchor:none;box-shadow:none}
+#fvShell #fvSidebar .fv-sidebar-inner{position:static;top:auto;transform:none}
+#fvShell #fvSidebar .fv-nav-item{flex:none;min-width:0}
+#fvShell #fvSidebar .fv-nav-item[hidden]{display:none!important}
+#fvShell #fvSidebar.is-nav-compact{padding-block:10px}
+#fvShell #fvSidebar.is-nav-compact .fv-wordmark{margin-block:2px 12px}
+#fvShell #fvSidebar.is-nav-compact .fv-nav{gap:2px}
+#fvShell #fvSidebar.is-nav-compact .fv-nav-item{height:34px;gap:8px}
+#fvShell #fvSidebar.is-nav-compact .fv-nav-group{margin-block:7px 3px;min-height:20px}
+#fvShell #fvSidebar.is-nav-compact .fv-nav-add{width:24px;height:24px}
+#fvShell #fvSidebar.is-nav-compact .fv-nav-more{margin-top:2px}
+#fvShell #fvSidebar.is-nav-paged .fv-nav-item{height:32px}
+#fvShell #fvSidebar.is-nav-paged .fv-nav-group{margin-block:4px 2px;min-height:20px}
+#fvShell #fvSidebar.is-nav-paged .fv-nav-group:not(:has(.fv-nav-add)){display:none}
+#fvShell #fvSidebar .fv-nav-pager{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:6px;min-height:30px}
+#fvShell #fvSidebar .fv-nav-pager button{height:30px;min-width:30px;display:grid;place-items:center;border:2px solid #494949;border-radius:6px;background:#000;color:#FFF}
+#fvShell #fvSidebar .fv-nav-pager button:disabled{opacity:.35;cursor:default}
+#fvShell #fvSidebar .fv-nav-pager span{font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:#FFF;white-space:nowrap}
+@media(min-width:768px){
+ #fvShell{padding-inline-start:var(--fv-side-w);min-height:100dvh;overflow:visible}
+ #fvShell #fvSidebar{position:fixed;inset:0 auto 0 0;width:var(--fv-side-w);height:100dvh;max-height:none;z-index:35;transform:none;transition:none;visibility:visible}
+ #fvShell #mainContent{min-width:0;max-width:1480px}
+}
+@media(max-width:767px){
+ #fvShell{padding-inline-start:0;--fv-chart-control-h:28px;--fv-chart-inset:12px}
+ #fvShell #fvSidebar{inset:var(--fv-top-h) 0 auto 0;width:auto;max-height:calc(100dvh - var(--fv-top-h));transform:none;transition:opacity 130ms ease,visibility 0s linear 130ms}
+ #fvShell.is-nav-open #fvSidebar{transform:none;transition:opacity 150ms ease,visibility 0s}
+ #fvShell #fvSidebar::before{display:none}
+ html:has(#fvShell.is-nav-open){overflow:hidden;overscroll-behavior:none}
+ #fvShell #fvSidebar.is-nav-compact{padding-block:6px 10px}
+ #fvShell #fvSidebar.is-nav-compact .fv-nav-item{height:34px;font-size:var(--fv-fs-m)}
+}
+@media(prefers-reduced-motion:reduce){#fvShell #fvSidebar,#fvShell.is-nav-open #fvSidebar{transition:none!important}}
+/* Panel sizing: one frame, 8px minimum clearance above/below inset controls and 12/16px at the sides. */
+#fvShell #fvPage>.fv-chart-panel>.fv-panel-head{padding-inline:var(--fv-chart-inset);gap:var(--fv-chart-control-gap);flex-wrap:nowrap;align-items:center}
+#fvShell #fvPage>.fv-chart-panel>.fv-panel-head>.fv-tools{min-width:0;max-width:48%;flex:0 1 auto;gap:var(--fv-chart-control-gap);justify-content:flex-end;margin:0;align-items:center}
+#fvShell #fvPage>.fv-chart-panel>.fv-panel-head .fv-select{min-width:0;max-width:100%;margin:0}
+#fvShell #fvPage>.fv-chart-panel>.fv-panel-head .fv-select select[data-chart-measure]{height:var(--fv-chart-control-h);min-height:var(--fv-chart-control-h);max-height:var(--fv-chart-control-h);min-width:0;max-width:100%;width:auto;padding:0 25px 0 9px;font-size:var(--fv-fs-s);line-height:1.15;box-shadow:none}
+#fvShell #fvPage>.fv-chart-panel>.fv-panel-head .fv-select>.fv-icon{width:12px;height:12px;right:8px}
+#fvShell #fvPage>.fv-chart-panel>.fv-chart{border:0;border-radius:0;box-shadow:none}
+#fvShell #fvPage>.fv-panel>.fv-panel-head .fv-control{height:32px;min-height:32px;max-height:32px;padding-inline:10px;gap:6px;box-shadow:none}
+@media(max-width:767px){
+ #fvShell #fvPage>.fv-panel>.fv-panel-head .fv-control{height:28px;min-height:28px;max-height:28px;padding-inline:8px;gap:4px}
+ #fvShell #fvPage>.fv-chart-panel>.fv-panel-head .fv-select select[data-chart-measure]{padding-left:7px;padding-right:21px}
+ #fvShell #fvPage>.fv-chart-panel>.fv-panel-head .fv-select>.fv-icon{right:6px}
+}
+/* Big desktop tables use a quieter 1px grid; keep cards and chart frames unchanged. */
+@media(min-width:768px){
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-table-panel:not(.fv-strip),
+ #fvShell[data-campaign-theme] #fvPage.fv-accounts-layout>#acc-table{border-width:1px;border-color:#353535}
+ #fvShell #fvPage .fv-table>thead>tr>th,
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td{border-bottom-width:1px;border-bottom-color:#252525}
+ #fvShell #fvPage .fv-table>thead>tr>th:not(:last-child),
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td:not(:last-child){border-right-width:1px;border-right-color:#252525}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row:last-child>td{border-bottom-width:0}
+ body.fv .fv-records :is(.xt-table-wrap,.account-table-wrap){border-width:1px;border-color:#353535}
+ body.fv .fv-records :is(.xt-data-table,.account-table) :is(th,td):not([colspan]){border-bottom-width:1px;border-bottom-color:#252525}
+}
+@media(hover:hover) and (pointer:fine) and (min-width:768px){
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-table-panel:not(.fv-strip):hover,
+ #fvShell[data-campaign-theme] #fvPage.fv-accounts-layout>#acc-table:hover{border-color:#404040}
+}

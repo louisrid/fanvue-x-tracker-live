@@ -54,6 +54,7 @@ try{
   await page.route('**/*',route=>/^(https:\/\/fonts\.(googleapis|gstatic)\.com\/)/.test(route.request().url())||route.request().url().startsWith(base)?route.continue():route.abort());
   await page.goto(base+'/#gta-vi');await page.waitForFunction(()=>window.FanvueCampaigns?.state?.loaded);
   const open=async(route,title)=>{
+   await page.mouse.move(0,0);
    await page.evaluate(route=>{location.hash=route;},route);
    await page.waitForFunction(({route,title})=>location.hash.slice(1)===route&&document.getElementById('fvTitle')?.textContent===title&&document.querySelector('#fvPage .fv-chart .fv-hit'),{route,title});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -114,6 +115,22 @@ try{
   await page.waitForFunction(()=>location.hash==='#home'&&document.querySelector('#fvTitle')?.textContent==='Dashboard');
   assert.equal(await page.locator('#fvBack').isVisible(),false,'Back hidden on Dashboard');
   await open('gta-vi','GTA VI');
+  // The sidebar must never become a scroll container or shift during route changes.
+  const sidebarState=()=>page.evaluate(()=>{
+   const s=document.querySelector('#fvSidebar'),r=s.getBoundingClientRect(),c=getComputedStyle(s);
+   return {x:r.x,y:r.y,width:r.width,position:c.position,overflow:c.overflowY,scroll:s.scrollTop,fits:s.scrollHeight<=s.clientHeight+1,main:document.querySelector('#mainContent').getBoundingClientRect().left};
+  });
+  const navBefore=await sidebarState();
+  assert.equal(navBefore.position,'fixed');assert.equal(navBefore.overflow,'clip');assert.equal(navBefore.scroll,0);assert.ok(navBefore.fits,'all navigation links fit or paginate');
+  await page.evaluate(()=>{window.__stableNav=document.querySelector('#fvNav a.fv-nav-item');window.dispatchEvent(new Event('xtracker:data'));});
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.equal(await page.evaluate(()=>window.__stableNav===document.querySelector('#fvNav a.fv-nav-item')),true,'refresh must preserve navigation nodes');
+  if(viewport.width>=768){
+   assert.ok(navBefore.main>=navBefore.width-1,'content stays outside fixed sidebar');
+   await page.evaluate(()=>{document.body.style.minHeight='2400px';window.scrollTo(0,600);});
+   const afterScroll=await sidebarState();close([navBefore.x,navBefore.y],[afterScroll.x,afterScroll.y],'sidebar fixed while content scrolls');assert.equal(afterScroll.scroll,0);
+   await page.evaluate(()=>{document.body.style.minHeight='';window.scrollTo(0,0);});
+  }
   const geometry=()=>page.evaluate(()=>{
    const box=el=>{const r=el.getBoundingClientRect();return [r.x,r.y+scrollY,r.width,r.height].map(n=>Math.round(n*10)/10);};
    const q=s=>document.querySelector(s);
@@ -131,7 +148,7 @@ try{
     const cards=all('#fvPage>.fv-strip>.fv-metric,#fvPage>.fv-chart-panel,#fvPage>.fv-home-discord,#fvPage>.fv-support'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row':',#fvPage>.fv-table-panel'));
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
     const bad=[];
-    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(width!==2||!['rgb(73, 73, 73)','rgb(90, 90, 90)'].includes(s.borderTopColor))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
+    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(!mobile&&e.classList.contains('fv-table-panel')?(width!==1||!['rgb(53, 53, 53)','rgb(64, 64, 64)'].includes(s.borderTopColor)):(width!==2||!['rgb(73, 73, 73)','rgb(90, 90, 90)'].includes(s.borderTopColor)))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
     for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)!==0||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
     if(!mobile)for(const e of all('#fvPage .fv-table-panel tr.fv-row .fv-num'))if(css(e).backgroundColor!=='rgba(0, 0, 0, 0)')bad.push({desktopTablePill:e.textContent});
     return bad;
@@ -192,11 +209,14 @@ try{
     assert.match(await page.locator('#viral-results .fv-detail-inner').innerText(),/Quoted post views/,'quoted original context remains in the expanded record');
     assert.match(await page.locator('#viral-results .fv-detail-inner').innerText(),/1,000,000|1M/);
     await page.locator('#viral-results [data-expand]').first().click();
+    await page.mouse.move(0,0);
     await page.evaluate(()=>window.scrollTo(0,0));
    }
    if(viewport.width>=768)assert.ok(await page.locator('#fvPage>.fv-table-panel tbody>tr.fv-row').evaluateAll(rows=>rows.every(r=>r.getBoundingClientRect().height<=40)),'compact desktop campaign rows');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
+   const inset=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel>.fv-panel-head select[data-chart-measure],#fvPage>.fv-panel>.fv-panel-head .fv-control')].filter(e=>e.getBoundingClientRect().width>0).every(e=>{const a=e.getBoundingClientRect(),b=e.closest('.fv-panel-head').getBoundingClientRect(),p=e.closest('.fv-panel').getBoundingClientRect();return a.top-b.top>=6&&b.bottom-a.bottom>=6&&a.left-p.left>=8&&p.right-a.right>=8;}));
+   assert.ok(inset,route+' nested controls have breathing room');
    const finish=await page.evaluate(()=>{const card=document.querySelector('#fvPage>.fv-strip>.fv-metric'),label=card.querySelector('.fv-metric-label'),value=card.querySelector('.fv-metric-value'),s=getComputedStyle(card),v=getComputedStyle(value),rect=card.getBoundingClientRect(),a=label.getBoundingClientRect(),z=value.getBoundingClientRect();return {background:s.backgroundColor,gradient:s.backgroundImage,radius:parseFloat(s.borderTopLeftRadius),weight:Number(v.fontWeight),center:Math.abs((a.top+z.bottom)/2-(rect.top+rect.bottom)/2),aligned:s.alignItems,justify:s.justifyContent};});
    if(viewport.width<768){
     assert.ok(["rgb(53, 23, 37)","rgb(38, 27, 61)","rgb(51, 35, 15)","rgb(34, 37, 42)","rgb(25, 43, 67)","rgb(33, 26, 61)","rgb(32, 40, 52)","rgb(18, 49, 58)","rgb(21, 52, 46)","rgb(24, 51, 34)"].includes(finish.background),route+' campaign-tinted KPI card '+JSON.stringify(finish));
@@ -220,7 +240,7 @@ try{
     const yellow=el=>getComputedStyle(el).color==='rgb(199, 181, 255)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
-      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='2px'&&getComputedStyle(td).borderRightColor==='rgb(48, 48, 48)')};
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(37, 37, 37)')};
   });
   assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values use the campaign colour');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
