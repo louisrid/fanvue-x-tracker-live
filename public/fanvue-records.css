@@ -188,3 +188,9 @@ body.modal-open{overflow:hidden}
 .article-modal,.fv-records .filter-grid,.fv-records .tracker-advanced-fields,.fv-records .xt-detail-row td,.fv-records .boost-paid-rt-strip,.fv-records #boostStatus,.article-modal [class*="modal-metric"],.article-modal .history-row,.article-modal .modal-link:not(.main-link){background:#000000;border-color:#404040;color:#FFFFFF}
 .fv-records input,.fv-records select,.article-modal input:not([type="checkbox"]),.article-modal select,.article-modal textarea{background:#000000;color:#FFFFFF;border-color:#404040;border-radius:4px}
 .fv-records .button-primary,.article-modal .button-primary,.article-modal .modal-link.main-link,.fv-records .button-primary:hover,.article-modal .button-primary:hover{background:#FFFFFF;color:#000000;border-color:#FFFFFF}
+
+body.fv .fv-records :is(.x-refresh-status,.x-refresh-status.is-error,.xt-state,.error-message,.form-error,.warning,.error,.is-error),
+body.fv .article-modal :is(.error-message,.form-error,.warning,.error,.is-error){
+ color:#FFF;font-weight:var(--fv-w-strong);text-shadow:none;
+}
+body.fv .fv-records .xt-state{background:#181818}

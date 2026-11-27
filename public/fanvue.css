@@ -2714,3 +2714,15 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
  #fvShell #fvHeader .fv-title{min-height:44px}
  #fvShell:not(.is-home) #fvHeader .fv-title{padding-right:82px}
 }
+
+/* Neutral, bold diagnostics: never colour an availability warning red or amber.
+   Keep the explanation and retry controls accessible; never hide missing data. */
+#fvShell :is(.fv-refresh-status,.fv-updated.is-stale,.fv-notice,.fv-notice.is-error,.fv-filter-note,.fv-editor-message,.fv-field-error,.fv-link-button.is-danger),
+#fvShell :is(.fv-notice-reason,.fv-chip.is-warn,.fv-status.is-warn,.fv-status.is-bad){
+ color:#FFF;font-weight:var(--fv-w-strong);text-shadow:none;
+}
+#fvShell :is(.fv-chip.is-warn,.fv-status.is-warn,.fv-status.is-bad){background:#181818;border-color:#494949}
+#fvShell :is(.fv-notice,.fv-notice.is-error){background:#000;border-color:#494949}
+#fvShell .fv-field.has-error :is(input,select,textarea){border-color:#AAA}
+#fvShell .fv-refresh-status{overflow-wrap:anywhere}
+#fvShell .fv-notice>.fv-icon{display:none}

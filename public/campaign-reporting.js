@@ -321,7 +321,7 @@
       state.discordLastLoadAt=Date.now();state.discordError=results.some(x=>x.status!=='fulfilled');
       if(state.tab==='discord')render();
       window.dispatchEvent(new Event('xtracker:discord'));
-      return results.some(x=>x.status==='fulfilled');
+      return results.every(x=>x.status==='fulfilled');
     })();
     try{return await state.discordLoading;}finally{state.discordLoading=null;}
   }
@@ -369,12 +369,18 @@
   }
   async function load(force=false){
     if(state.loading)return state.loading;
-    if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return true;}
+    if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return !state.error&&!state.data.stale&&Object.values(state.data.sourceHealth||{}).every(s=>s.ok)&&!state.data.campaigns.some(c=>c.dataWarning||c.sourceStale);}
     state.loading=(async()=>{
       try{
-        const res=await fetch('/.netlify/functions/campaign-overview'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
-        const data=await res.json();
-        if(!res.ok||!validOverview(data))throw Error(data.error||'Campaign reporting temporarily unavailable');
+        let data;
+        for(let attempt=0;attempt<2;attempt++){
+          try{
+            const res=await fetch('/.netlify/functions/campaign-overview'+(force&&!attempt?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
+            data=await res.json();
+            if(!res.ok||!validOverview(data))throw Object.assign(Error(data?.error||'Campaign reporting temporarily unavailable'),{permanent:!res.ok&&res.status<500&&![408,429].includes(res.status)});
+            break;
+          }catch(e){if(e.permanent||attempt===1)throw e;await new Promise(resolve=>setTimeout(resolve,500));}
+        }
         // When a source fails, preserve that campaign's last verified rows.
         // Successful source updates, including legitimate removals, remain authoritative.
         const prior=new Map((state.data?.campaigns||[]).map(c=>[c.id,c]));
@@ -388,7 +394,7 @@
         })};
         state.data=safe;state.error='';state.lastLoadAt=Date.now();
         window.XTrackerLastGood?.write('campaign-overview',safe,validOverview);
-        return Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!safe.campaigns.some(c=>c.dataWarning||c.sourceStale);
+        return !data.stale&&Object.values(data.sourceHealth||{}).every(source=>source.ok)&&!safe.campaigns.some(c=>c.dataWarning||c.sourceStale);
       }catch(e){state.error=txt(e.message||e);return false;}
       finally{state.loading=null;render();window.dispatchEvent(new Event('xtracker:campaign-overview'));}
     })();

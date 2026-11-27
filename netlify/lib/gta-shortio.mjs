@@ -120,7 +120,7 @@ export async function campaignLinkClicks(rows,options={}){
   const eligible=links.filter(p=>p.posted),verified=eligible.filter(p=>count(p.clicks));
   const successful=links.filter(p=>count(p.clicks)&&!p.clickError&&!p.stale);
   return {links,postPublicationTotal:links.some(p=>count(p.postPublicationClicks))?links.reduce((n,p)=>n+(p.postPublicationClicks??0),0):null,total:verified.length?verified.reduce((sum,p)=>sum+p.clicks,0):null,verified:verified.length,totalPublishers:eligible.length,
-    stale:links.some(p=>p.stale||p.publicationStale||p.clickError||p.attributionError),errors:links.filter(p=>p.clickError||p.attributionError).length,
+    stale:links.some(p=>p.stale||p.publicationStale||p.clickError||(p.attributed&&p.attributionError)),errors:links.filter(p=>p.clickError||(p.attributed&&p.attributionError)).length,
     refreshed:successful.length,linkCount:links.length,
     lastSuccessfulAt:links.filter(p=>p.clickAt).map(p=>p.clickAt).sort().at(-1)||null,
     oldestVerifiedAt:links.length&&links.every(p=>p.clickAt)?links.map(p=>p.clickAt).sort()[0]:null,

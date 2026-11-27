@@ -245,8 +245,8 @@
   /* ---------- pages ---------- */
   function overviewNotice(){
     const st=D.overviewStatus(),ov=D.overview();
-    if(st.error&&ov)return '<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+U.reasonButton('Last Verified '+C.stamp(ov.checkedAt),'The latest refresh failed; these are the last verified figures.','fv-notice-reason')+'</span><button type="button" data-retry>Retry</button></div>';
-    if(st.error&&!ov)return '<div class="fv-notice is-error" role="alert">'+U.icon('alert',15)+'<span>Data Unavailable</span><button type="button" data-retry>Retry</button></div>';
+    if(st.error&&ov)return '<div class="fv-notice" role="status">'+'<span>'+U.reasonButton('Last Verified '+C.stamp(ov.checkedAt),'The latest refresh failed; these are the last verified figures.','fv-notice-reason')+'</span><button type="button" data-retry>Retry</button></div>';
+    if(st.error&&!ov)return '<div class="fv-notice is-error" role="alert">'+'<span>Data Unavailable</span><button type="button" data-retry>Retry</button></div>';
     if(ov?.stale)return '<div class="fv-notice" role="status">'+U.icon('alert',15)+'<span>'+U.reasonButton('Cached Data','The reporting feed is showing its last verified snapshot.','fv-notice-reason')+'</span></div>';
     return '';
   }
@@ -1007,7 +1007,7 @@
     if(btn.disabled)return;
     btn.disabled=true;btn.classList.add('is-busy');btn.setAttribute('aria-busy','true');
     status.className='fv-refresh-status';status.textContent='Refreshing…';
-    const app=D.app(),rep=D.rep();
+    const app=D.app(),rep=D.rep(),refreshRoute=current.kind+':'+current.key;
     let message='',error=false,summary='';
     try{
       const k=current.kind==='page'?current.key:'';
@@ -1024,10 +1024,10 @@
       }
     }catch(e){error=true;message='Refresh failed; last verified figures kept.';}
     finally{btn.disabled=false;btn.classList.remove('is-busy');btn.removeAttribute('aria-busy');}
-    // Short visible state; the full source detail stays available on hover and to screen readers.
-    const partial=error&&/partial|some|kept|unavailable/i.test(message)&&!/failed/i.test(message);
-    // Visible, specific result: which sources were unavailable, or how many posts were deleted on X.
-    const label=summary||(!error?'Updated':partial?'Partial Refresh':'Refresh Failed');
+    // Avoid carrying status from another page when navigation occurs during a refresh.
+    if(refreshRoute!==current.kind+':'+current.key)return;
+    // Keep diagnostics available without a conspicuous red failure banner.
+    const label=error?(D.overview()||D.gta().report?'Latest available data':'Refresh unavailable'):'Updated';
     status.className='fv-refresh-status '+(error?'is-error':'is-ok');status.title=message||label;status.textContent=label;
     status.setAttribute('aria-label',label+(message?': '+message:''));
     rerender();

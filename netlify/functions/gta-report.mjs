@@ -215,7 +215,7 @@ const mergeMetrics=(rows,metrics)=>rows.map(p=>{
   return {...p,views:m.views,likes:m.likes,reposts:m.reposts,replies:m.replies,metricAt:m.at,metricError:m.error||'',metricErrorCategory:m.errorCategory||'',metricLastAttemptAt:m.lastAttemptAt||null};
 });
 
-async function getMetrics(storage=metricStore()){try{return await storage.get('latest',{type:'json'})||{metrics:{},history:[],lastSuccessfulAt:null};}catch{return {metrics:{},history:[],lastSuccessfulAt:null};}}
+async function getMetrics(storage=metricStore()){return await storage.get('latest',{type:'json'})||{metrics:{},history:[],lastSuccessfulAt:null};}
 
 export async function groupReport(source,metric,{force=false,refreshClicks=false,cacheOnly=true,clickOptions={}}={}){
   const shortIo=await campaignLinkClicks(source.rows.filter(p=>!p.crossCampaignTracking),{force:refreshClicks||force,cacheOnly,...clickOptions,dailyHistory:true});
@@ -297,7 +297,14 @@ export async function refreshGtaMetrics({manual=false,fetcher=fetch,storage=metr
 
 export default async function handler(request){
   if(request.method==='GET'||request.method==='HEAD'){
-    try{return json({...await getReport({force:new URL(request.url).searchParams.has('refresh')}),refresh:await refreshStatus()});}
+    try{
+      const params=new URL(request.url).searchParams;
+      if(params.has('status'))return json({ok:true,refresh:await refreshStatus()});
+      // A job-status lookup must never invalidate an otherwise verified report.
+      const report=await getReport({force:params.has('refresh')});
+      const refresh=await refreshStatus().catch(()=>null);
+      return json({...report,refresh});
+    }
     catch(e){return json({ok:false,ready:false,error:String(e.message||e)},503);}
   }
   if(request.method==='POST'){

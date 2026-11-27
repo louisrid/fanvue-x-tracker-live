@@ -418,6 +418,11 @@ export default async function handler(request){
   }
   try{
     const parts=await readReportParts(request.url,{force});
+    // A failed source can change RT attribution and totals. Retain the coherent prior snapshot rather than cache a degraded replacement.
+    if(saved?.data?.ok&&Object.values(parts).some(part=>part.error)){
+      const errors=Object.entries(parts).filter(([,part])=>part.error).map(([name,part])=>name+': '+diagnostic(part.error));
+      return Response.json({...saved.data,cached:true,stale:true,errors:[...new Set([...(saved.data.errors||[]),...errors])]}, {headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
+    }
     const result=assembleCampaignOverview(parts);
     try{await store.setJSON('latest',{at:new Date().toISOString(),data:result});}catch{}
     return Response.json({...result,cached:false},{headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});

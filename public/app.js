@@ -826,7 +826,7 @@ async function reloadAllData(){
   const button=el('reloadAllButton'),status=el('reloadAllStatus');
   if(!button||button.disabled||el('refreshXStats').disabled||gtaState.refreshing)return;
   button.disabled=true;button.classList.add('is-refreshing');button.setAttribute('aria-busy','true');
-  const issues=new Set();let gone=0;
+  const issues=new Set();let gone=0;status.dataset.summary='';
   const progress=message=>{status.className='x-refresh-status';status.textContent=message;};
   try{
     // The existing dashboard refresh coordinates X Articles, OF Terms and X RTs
@@ -837,10 +837,10 @@ async function reloadAllData(){
     if(!x||x.of?.error)issues.add('OF Terms X metrics');
     if(!x||x.boosts?.error)issues.add('X RT metrics');
     progress('2/3 · Reloading GTA VI QRTs, standalone posts and quoted X sources…');
-    await refreshGtaReport();
+    const gtaRefreshed=await refreshGtaReport();
     const gtaGroups=[gtaState.report,gtaState.report?.originals,gtaState.report?.mandy,gtaState.report?.instagram].filter(Boolean);
     const gtaStatus=gtaGroups.map(gtaSourceStatus).filter(Boolean);
-    if(gtaState.error||!gtaState.report||gtaStatus.some(g=>g.failed))issues.add('GTA VI metrics');
+    if(gtaRefreshed===false||gtaState.error||!gtaState.report||gtaStatus.some(g=>g.failed))issues.add('GTA VI metrics');
     gone+=gtaStatus.reduce((n,g)=>n+(g.gone||0),0)+(x?.gonePosts||0);
     progress('3/3 · Reloading live campaigns, Google Sheets, Short.io and Discord…');
     // These are GETs only. The X data providers were already refreshed above.
@@ -863,7 +863,7 @@ async function reloadAllData(){
     status.textContent=issues.size
       ? 'Reload finished with partial or unavailable sources: '+[...issues].join(', ')+'. Last verified figures are preserved.'+goneNote
       : 'All connected sources checked and refreshed.'+goneNote;
-    status.dataset.summary=issues.size?'Partial Refresh: '+[...issues].join(', ')+' unavailable':'Updated'+(gone?' · '+gone+' deleted '+(gone===1?'post':'posts')+' on X':'');
+    status.dataset.summary=issues.size?'Latest available data':'Updated';
   }catch(error){
     status.className='x-refresh-status is-error';
     status.textContent='Reload could not finish: '+String(error?.message||error)+'. Previously verified figures are preserved.';
@@ -1129,7 +1129,8 @@ function gtaSourceStatus(report){
   const gone=(x.errors||[]).filter(postGone).length,real=(x.errors||[]).filter(e=>!postGone(e)).length;
   const issues=[];
   if(real||x.unverified>gone)issues.push(`${x.retained} saved X readings retained; ${x.unverified} X posts unverified`);
-  if(short?.errors||short?.stale)issues.push('Short.io has saved or incomplete readings');
+  const linkIssues=Array.isArray(short?.links)&&short.links.length?short.links.some(p=>p.clickError||p.stale||p.publicationStale||(p.attributed&&p.attributionError)):!!(short?.errors||short?.stale);
+  if(linkIssues)issues.push('Short.io has saved or incomplete readings');
   if(report?.warning)issues.push('Sheet source unavailable; saved records retained');
   const failed=issues.length>0;
   const text=`X: ${x.updated} of ${x.total} posts · Short.io: ${short?.refreshed||0} of ${short?.linkCount||0} links`+(failed?' · '+issues.join(' · '):' · Latest available readings verified')+(gone?` · ${gone} deleted on X`:'');
@@ -1256,8 +1257,9 @@ async function loadGtaReport(force=false){
   gtaState.loading=(async()=>{
     try{const response=await fetch('/.netlify/functions/gta-report'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(30000)}),data=await response.json();
       if(!response.ok||!validReport(data,'publishers','ready'))throw new Error(data.error||'GTA VI report unavailable');
-      if(!force&&gtaState.report?.publishers?.length&&data.publishers.length===0)
+      if(gtaState.report?.publishers?.length&&data.publishers.length===0&&(!force||data.sourceStale))
         throw new Error('Source temporarily empty; preserving saved GTA VI publishers');
+      if(data.sourceStale&&gtaState.report?.sourceVerifiedAt&&(!data.sourceVerifiedAt||Date.parse(data.sourceVerifiedAt)<Date.parse(gtaState.report.sourceVerifiedAt)))throw Error('Older source snapshot; preserving verified GTA VI records');
       gtaState.report=data;gtaState.error='';saveReportCache('xtracker-gta-report-qrts-v1',gtaState.report);
     }catch(e){gtaState.error=String(e.message||e);}
     finally{gtaState.loading=null;preserveReadingPosition(renderGtaReport);}
@@ -1267,29 +1269,50 @@ async function refreshGtaReport(){
   const button=el('gtaRefreshButton'),status=el('gtaRefreshStatus');if(gtaState.refreshing)return;
   gtaState.refreshing=true;button.disabled=true;button.setAttribute('aria-busy','true');button.classList.add('is-refreshing');
   status.className='x-refresh-status';status.textContent='Refreshing X and Short.io stats…';
-  try{let response=await fetch('/.netlify/functions/gta-report',{method:'POST',cache:'no-store',signal:AbortSignal.timeout(20000)}),data=await response.json();
-    if(!response.ok)throw new Error(data.error||'Refresh could not start');
-    if(data.refresh){
-      const jobId=data.refresh.id;
-      while(['queued','running'].includes(data.refresh?.state)){
-        status.textContent='Refreshing X and Short.io stats…';
-        await new Promise(resolve=>setTimeout(resolve,2500));
-        response=await fetch('/.netlify/functions/gta-report',{cache:'no-store',signal:AbortSignal.timeout(20000)});data=await response.json();
-        if(!response.ok)throw new Error(data.error||'Refresh status unavailable; job continues on server');
-        if(data.refresh?.id!==jobId)break;
-        gtaState.report=data;saveReportCache('xtracker-gta-report-qrts-v1',data);renderGtaReport();
-      }
-      if(data.refresh?.state==='failed')throw new Error(data.refresh.error);
-      if(!data.ready){response=await fetch('/.netlify/functions/gta-report',{cache:'no-store'});data=await response.json();}
-      data.updated=data.refresh?.updated??0;data.total=data.refresh?.total??0;
+  const endpoint='/.netlify/functions/gta-report';
+  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  // Retrying reads is safe. Never blindly repeat a POST that may already have started a job.
+  async function read(url){
+    let lastError;
+    for(let attempt=0;attempt<3;attempt++){
+      try{
+        const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(30000)});
+        if(!response.ok)throw Object.assign(Error('Refresh data HTTP '+response.status),{permanent:response.status<500&&![408,429].includes(response.status)});
+        return await response.json();
+      }catch(e){lastError=e;if(e.permanent||attempt===2)throw e;await pause(500*2**attempt);}
     }
-    if(!response.ok||!validReport(data,'publishers','ready'))throw new Error(data.error||'GTA VI metrics unavailable');
-    gtaState.report=data;gtaState.error='';saveReportCache('xtracker-gta-report-qrts-v1',gtaState.report);renderGtaReport();
+    throw lastError;
+  }
+  try{
+    const response=await fetch(endpoint,{method:'POST',cache:'no-store',signal:AbortSignal.timeout(30000)}),initial=await response.json();
+    if(!response.ok)throw Error(initial.error||'Refresh could not start');
+    let data=initial,job=initial.refresh,jobFailure='';
+    if(job){
+      const id=job.id,deadline=Date.now()+16*60_000;
+      // Poll only the job record, not the workbook, metrics and every Short.io link.
+      while(['queued','running'].includes(job.state)){
+        if(Date.now()>=deadline)throw Error('Refresh is still pending; last verified figures retained');
+        await pause(3000);
+        const result=await read(endpoint+'?status=1');
+        if(!result.refresh)throw Error('Refresh status temporarily unavailable');
+        job=result.refresh;
+        if(job.id!==id)throw Error('Refresh job changed; reload to view the latest verified readings');
+      }
+      if(job.state==='failed')jobFailure=job.error||'Refresh incomplete';
+      data=await read(endpoint);
+      data.updated=job.updated??0;data.total=job.total??0;
+    }
+    if(!validReport(data,'publishers','ready'))throw Error(data.error||'GTA VI metrics unavailable');
+    if(data.sourceStale&&gtaState.report?.sourceVerifiedAt&&(!data.sourceVerifiedAt||Date.parse(data.sourceVerifiedAt)<Date.parse(gtaState.report.sourceVerifiedAt)))throw Error('Older source snapshot; preserving verified GTA VI records');
+    gtaState.report=data;gtaState.error=jobFailure;saveReportCache('xtracker-gta-report-qrts-v1',data);renderGtaReport();
+    const groups=[data,data.originals,data.mandy,data.instagram].filter(Boolean),statuses=groups.map(gtaSourceStatus).filter(Boolean);
+    const failed=!!jobFailure||statuses.some(s=>s.failed);
     const active=gtaState.tab==='originals'?data.originals:data,sourceStatus=gtaSourceStatus(active);
-    if(sourceStatus){status.className='x-refresh-status '+(sourceStatus.failed?'is-error':'is-success');status.textContent=sourceStatus.text;}
+    status.className='x-refresh-status '+(failed?'is-error':'is-success');
+    status.textContent=failed?[jobFailure,...statuses.filter(s=>s.failed).map(s=>s.text)].filter(Boolean).join(' · '):sourceStatus?.text||'Latest available readings verified';
     if(active?.shortIo?.lastSuccessfulAt)status.title='Short.io last successful: '+gtaUKDate(active.shortIo.lastSuccessfulAt);
-
-  }catch(e){status.className='x-refresh-status is-error';status.textContent=String(e.message||e);}
+    return !failed;
+  }catch(e){gtaState.error=String(e.message||e);status.className='x-refresh-status is-error';status.textContent=gtaState.error;return false;}
   finally{gtaState.refreshing=false;button.disabled=false;button.removeAttribute('aria-busy');button.classList.remove('is-refreshing');}
 }
 

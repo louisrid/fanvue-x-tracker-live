@@ -50,3 +50,33 @@ test('cache read failures abort without requesting providers or writing an empty
  await assert.rejects(refreshGtaMetrics({storage:{get:async()=>{throw Error('storage unavailable');},setJSON:async()=>writes++},fetcher:async()=>{calls++;return valid();}}),/storage unavailable/);
  assert.equal(writes,0);assert.equal(calls,0);
 });
+
+test('shared Short.io attribution exclusions do not trigger a refresh failure',async()=>{
+ const {readFileSync}=await import('node:fs'),{default:vm}=await import('node:vm');
+ const app=readFileSync('public/app.js','utf8');
+ const context=vm.createContext({});
+ vm.runInContext(app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaQuotedSources(')),context);
+ const xStatus={updated:1,total:1,retained:0,unverified:0,errors:[]};
+ const shared={attributed:false,attributionError:'Shared Short.io link; publisher attribution excluded.',clickError:'',stale:false};
+ const report={xStatus,shortIo:{links:[shared],errors:1,stale:true}};
+ assert.equal(context.gtaSourceStatus(report).failed,false);
+ assert.equal(context.gtaSourceStatus({...report,shortIo:{links:[{...shared,clickError:'Provider unavailable'}]}}).failed,true);
+});
+test('GTA refresh polls status only, retries a transient GET, and fetches final report once',async()=>{
+ const {readFileSync}=await import('node:fs'),{default:vm}=await import('node:vm');
+ const app=readFileSync('public/app.js','utf8'),nodes=new Map();
+ const el=id=>{if(!nodes.has(id))nodes.set(id,{classList:{add(){},remove(){}},setAttribute(){},removeAttribute(){}});return nodes.get(id);};
+ const fresh={ready:true,publishers:[{views:42}],xStatus:{updated:1,total:1,retained:0,unverified:0,errors:[]},shortIo:{errors:0}};
+ let polls=0,posts=0,reads=0;
+ const context=vm.createContext({el,Date,AbortSignal,setTimeout:fn=>fn(),gtaState:{report:{ready:true,publishers:[{views:20}]}},validReport:d=>d.ready===true,saveReportCache(){},renderGtaReport(){},gtaUKDate:String,
+ fetch:async(url,opts)=>{
+  if(opts.method==='POST'){posts++;return Response.json({refresh:{id:'job',state:'queued'}});}
+  if(url.endsWith('?status=1')){polls++;if(polls===1)throw Error('temporary network failure');return Response.json({refresh:{id:'job',state:'complete',updated:1,total:1}});}
+  reads++;return Response.json(fresh);
+ }});
+ vm.runInContext(app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaQuotedSources('))+app.slice(app.indexOf('async function refreshGtaReport(){'),app.indexOf('function initGtaUi(){')),context);
+ assert.equal(await context.refreshGtaReport(),true);
+ assert.deepEqual([posts,polls,reads],[1,2,1]);
+ assert.equal(context.gtaState.report.publishers[0].views,42);
+ assert.equal(el('gtaRefreshButton').disabled,false);
+});
