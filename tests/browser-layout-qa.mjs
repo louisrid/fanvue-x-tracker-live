@@ -287,9 +287,12 @@ try{
    await usedRow.locator('[data-expand]').click();
   }
   await open('home','Dashboard');
+  assert.deepEqual(await page.locator('#fvPage>.fv-subnav [data-view]').evaluateAll(buttons=>buttons.map(b=>b.dataset.view)),['this-week','last-week','all-time'],'period order');
+  assert.equal(await page.locator('#fvPage>.fv-subnav [aria-current="page"]').getAttribute('data-view'),'this-week','Dashboard defaults to This Week');
   let homeReference;
-  for(const period of ['all-time','this-week','last-week','all-time']){
+  for(const period of ['this-week','last-week','all-time','this-week','all-time']){
    await page.locator('[data-view="'+period+'"]').click();
+   await page.waitForFunction(period=>location.hash===(period==='this-week'?'#home':'#home/'+period),period);
    await page.waitForFunction(period=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks'),week=C.weekStart(C.londonDay(Date.now()));return document.querySelector('[data-view="'+period+'"]')?.getAttribute('aria-current')==='page'&&m&&m.weekFrom===(period==='all-time'?undefined:period==='this-week'?week:C.addDays(week,-7));},period);
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);

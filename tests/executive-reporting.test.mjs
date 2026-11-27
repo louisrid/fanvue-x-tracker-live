@@ -107,6 +107,13 @@ test('Dashboard uses one selected period and one click figure; the Viral view is
   assert.doesNotMatch(all,/fv-period-card|fv-click-breakdown|fv-coverage/);
   for(const p of ['this-week','last-week','all-time'])assert.match(all,new RegExp('data-view="'+p+'"'));
   const week=a.pages.home({view:'this-week'}).body;assert.match(week,/data-view="this-week" aria-pressed="true"/);
+  const initial=a.pages.home({view:''}).body;
+  assert.match(initial,/data-view="this-week" aria-pressed="true"/,'This Week is selected by default');
+  assert.match(initial,/data-view="last-week" aria-pressed="false"/);
+  assert.match(initial,/data-view="all-time" aria-pressed="false"/);
+  assert.deepEqual([...initial.matchAll(/data-view="(this-week|last-week|all-time)"/g)].map(m=>m[1]),['this-week','last-week','all-time']);
+  assert.match(a.pages.home({view:'last-week'}).body,/data-view="last-week" aria-pressed="true"/);
+  assert.match(all,/data-view="all-time" aria-pressed="true"/);
   assert.doesNotMatch(week,/fv-period-card/);
 });
 test('published headlines remain tied to the verified post identity',async()=>{

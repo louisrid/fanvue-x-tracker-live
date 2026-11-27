@@ -267,7 +267,7 @@
     ensure('overview');ensure('discord');ensure('gta');ensure('of');
     const ov=D.overview(),S=summaries(),today=C.londonDay(Date.now()),ws=C.weekStart(today),lws=C.addDays(ws,-7),lwe=C.addDays(ws,-1);
     const tabs=[{key:'this-week',label:'This Week'},{key:'last-week',label:'Last Week'},{key:'all-time',label:'All Time'}];
-    const active=tabs.some(t=>t.key===st.view)?st.view:'all-time';
+    const active=tabs.some(t=>t.key===st.view)?st.view:'this-week';
     const period=active==='all-time'?null:active==='this-week'?{from:ws,to:today}:{from:lws,to:lwe};
     const dc=discordStats(ws,today,lws,lwe),community=active==='all-time'?dc.all:active==='this-week'?dc.week:dc.last;
     const load=M.loading();let paid={clicks:load,views:load,spend:load,posts:load};
@@ -1075,7 +1075,7 @@
     if(t.closest('[data-retry]')){void D.rep()?.reload?.();return;}
   }
   const pageKey=()=>current.kind==='page'?current.key:'added:'+current.key;
-  const defaultView=k=>({'home':'all-time','x-articles':'overview','gta-vi':'overview','of-terms':'overview',discord:'weekly-history','guru-promotion':'overview','viral-qrts':'overview'}[k]||'');
+  const defaultView=k=>({'home':'this-week','x-articles':'overview','gta-vi':'overview','of-terms':'overview',discord:'weekly-history','guru-promotion':'overview','viral-qrts':'overview'}[k]||'');
   function onInput(e){
     const s=e.target.closest('[data-search]');
     if(s){tableState(pageKey(),s.dataset.search).q=s.value;rerenderTable(s.dataset.search);}
