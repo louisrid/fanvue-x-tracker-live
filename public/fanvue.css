@@ -2842,6 +2842,16 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 /* Phone-only visual system. Desktop retains its existing component design.
    Neutral surfaces, fine outlines, quiet plain labels and one accent per campaign. */
 @media(max-width:767px){
+ /* A tighter, consistent header and comfortable tap targets on phone. */
+ #fvShell #mainContent{padding-top:20px}
+ #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{top:20px}
+ #fvShell #mainContent #fvHeader{margin-bottom:20px}
+ #fvShell #fvHeader #fvTitle{letter-spacing:-.035em}
+ #fvShell[data-campaign-theme] #fvHeader #fvRefresh{border-width:1px;border-radius:8px;box-shadow:none}
+ #fvShell[data-campaign-theme] #fvPage :is(.fv-subnav,.fv-segments) button:nth-child(n):not([aria-current="page"]):not([aria-pressed="true"]){
+  background:#0D0D10;border:1px solid #3A3A3D;box-shadow:none;
+ }
+ #fvShell[data-campaign-theme] #fvPage :is(.fv-subnav,.fv-segments) button:nth-child(n):is([aria-current="page"],[aria-pressed="true"]){border-width:1px;box-shadow:none}
  #fvShell[data-campaign-theme] #fvPage>.fv-panel:not(.fv-strip):not(.fv-table-panel),
  #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord{
   border:1px solid #3A3A3D;border-radius:12px;box-shadow:none;
@@ -2849,7 +2859,7 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
  #fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-strip>.fv-metric:nth-child(n),
  #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n),
  #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
-  border-width:1px;border-left-width:2px;box-shadow:none;
+  border-width:1px;border-left-width:2px;box-shadow:none;padding-inline:14px;
  }
  #fvShell[data-campaign-theme] #fvPage>.fv-strip .fv-metric-label>span:last-child,
  #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-strip .fv-metric-label>span:last-child{
@@ -2884,10 +2894,10 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
   gap:4px;line-height:1.2;min-width:0;
  }
  #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{
-  grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;padding:13px 14px;
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px;padding:12px 14px;
  }
  #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td.is-name{
-  min-height:24px;padding:0 0 7px;border-bottom:1px solid #28282B;
+  min-height:24px;padding:0 0 6px;border-bottom:1px solid #28282B;
   font-size:var(--fv-fs-l);line-height:1.2;
  }
  #fvShell #fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name{gap:7px}
@@ -2898,8 +2908,11 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
   display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;justify-content:flex-start;
   gap:3px;min-height:0;height:auto;max-height:none;text-align:left;padding:0;
  }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name)::before{
+  font-weight:var(--fv-w-light);color:#FFF;letter-spacing:0;
+ }
  #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td :is(.fv-num,.fv-dash){
-  font-size:var(--fv-fs-l);font-weight:var(--fv-w-strong);line-height:1.15;letter-spacing:-.02em;
+  font-size:var(--fv-fs-l);font-weight:var(--fv-w-black);line-height:1.15;letter-spacing:-.02em;
  }
  #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td .fv-num[data-num-length="very-long"]{font-size:var(--fv-fs-m)}
  #fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord{background:#0D0D10}
@@ -2926,4 +2939,31 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 @media(max-width:359px){
  #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{padding-inline:11px;column-gap:12px}
  #fvShell #fvPage .fv-home-discord .fv-discord-heading{gap:4px}
+}
+
+/* On regular-width phones, keep the two dashboard controls on a single row.
+   The narrower phone layout retains two full-width controls for readability. */
+@media(min-width:390px) and (max-width:767px){
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;column-gap:8px;row-gap:8px;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison>:is(.fv-panel-head,.fv-table-wrap,.fv-empty){grid-column:1/-1;min-width:0}
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison>.fv-table-tools{
+  grid-column:1;display:flex;min-width:0;width:100%;height:44px;min-height:44px;max-height:44px;margin:0;padding:0;overflow:visible;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison>.fv-mobile-sort{
+  grid-column:2;width:100%;min-width:0;height:44px;min-height:44px;margin:0;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-search{
+  min-width:0;max-width:none;width:100%;margin:0;padding-inline:10px;gap:6px;
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-search input,
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison>.fv-mobile-sort select{
+  font-size:var(--fv-fs-s);font-weight:var(--fv-w-light);
+ }
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison>.fv-mobile-sort select{padding-left:10px;padding-right:24px}
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison>.fv-mobile-sort>.fv-icon{right:9px}
+}
+@media(max-width:359px){
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding-inline:10px}
 }

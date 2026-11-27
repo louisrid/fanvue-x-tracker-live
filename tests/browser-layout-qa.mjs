@@ -241,7 +241,7 @@ try{
     };
    });
    assert.ok(result.titleGap>=0&&result.titleGap<=50,route+' compact title spacing '+JSON.stringify(result));
-   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-32)<=1,route+' space below title and header');
+   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-20)<=1,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelTheme&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
    assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?28:24)),route+' large short KPI figures '+result.numericSizes);
@@ -355,7 +355,12 @@ try{
    for(const k of ['title','header'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
    assert.deepEqual(await kpiStyle(),kpiReference,'Dashboard and campaign headline card styling match');
     // Dashboard retains the common page alignment, but restores its compact card and chart sizes.
-   for(const k of ['strip','chart','list','toolbar'])close([g[k][0],g[k][2]],[reference[k][0],reference[k][2]],viewport.width+' Dashboard '+k+' width');
+   for(const k of ['strip','chart','list','toolbar']){
+     if(k==='toolbar'&&viewport.width>=390&&viewport.width<768){
+      assert.ok(g.toolbar[2]>0&&g.toolbar[2]<g.list[2],'Dashboard has a compact two-column toolbar');
+      assert.ok(await page.locator('#home-comparison').evaluate(e=>{const a=e.querySelector('.fv-table-tools').getBoundingClientRect(),b=e.querySelector('.fv-mobile-sort').getBoundingClientRect();return Math.abs(a.top-b.top)<=1&&a.right<=b.left&&Math.abs(a.height-b.height)<=1;}),'Search and sort fit on one row');
+     }else close([g[k][0],g[k][2]],[reference[k][0],reference[k][2]],viewport.width+' Dashboard '+k+' width');
+    }
    if(viewport.width<768){assert.equal(g.card[3],92);assert.equal(g.chart[3],216);}else{assert.equal(g.card[3],104);assert.equal(g.chart[3],310);}
    await auditPhone('Dashboard '+period);
    if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
