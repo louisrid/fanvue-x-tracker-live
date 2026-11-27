@@ -296,10 +296,7 @@
     const views=cfg.views&&cfg.views.length>1?'<div class="fv-segments" role="group" aria-label="Table view">'+cfg.views.map(v=>'<button type="button" data-view="'+esc(v.key)+'" data-table="'+esc(cfg.id)+'" aria-pressed="'+(v.key===cfg.view)+'">'+esc(v.label)+'</button>').join('')+'</div>':'';
     const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search</span><input type="search" placeholder="'+esc(cfg.searchPlaceholder||'Search')+'" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
-    const activeFilters=Object.values(st.xf||{}).filter(Boolean).length+(st.filter?1:0);
-    const filterButton=filters?'<button class="fv-filter-toggle" type="button" data-filter-toggle="'+esc(cfg.id)+'" aria-expanded="'+!!st.filtersOpen+'" aria-controls="'+esc(cfg.id)+'-filters"'+(activeFilters?' data-filter-active="true"':'')+'>'+icon('filter',15)+'<span>Filters'+(activeFilters?' ('+activeFilters+')':'')+'</span></button>':'';
-    const filterFields=filters?'<div class="fv-table-filters'+(st.filtersOpen?' is-open':'')+'" id="'+esc(cfg.id)+'-filters">'+filters+'</div>':'';
-    const tools=views||search||filters?'<div class="fv-table-tools">'+search+filterButton+views+filterFields+'</div>':'';
+    const tools=views||search||filters?'<div class="fv-table-tools">'+search+views+filters+'</div>':'';
     // Columns with no data for any record are hidden and listed once above the table.
     const hidden=[];
     const cols=(cfg.rows||[]).length&&cfg.hideEmpty!==false?cfg.columns.filter(c=>{
