@@ -45,8 +45,8 @@ const routes=[['gta-vi','GTA VI'],['gta-vi/lucia','GTA VI'],['gta-vi/mandy','GTA
 const dir='artifacts/browser-layout';mkdirSync(dir,{recursive:true});
 function close(a,b,label){for(let i=0;i<a.length;i++)assert.ok(Math.abs(a[i]-b[i])<=1.1,label+': '+a+' vs '+b);}
 try{
- for(const viewport of [{width:1440,height:900},{width:1024,height:768},{width:430,height:932},{width:390,height:844},{width:320,height:740}]){
-  const page=await browser.newPage({viewport,deviceScaleFactor:1});
+ for(const viewport of [{width:1440,height:900},{width:1024,height:768},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:740}]){
+  const page=await browser.newPage({viewport,deviceScaleFactor:1,isMobile:viewport.width<768,hasTouch:viewport.width<768});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>route.request().url().startsWith(base)?route.continue():route.abort());
   await page.goto(base+'/#gta-vi');await page.waitForFunction(()=>window.FanvueCampaigns?.state?.loaded);
@@ -64,6 +64,40 @@ try{
    const heads=[chart,table].every(panel=>{const header=panel.querySelector('.fv-panel-head'),title=header.querySelector('h2');return contained(header,panel)&&contained(title,header)&&title.getBoundingClientRect().left>=panel.getBoundingClientRect().left+10;});
    return {heads,title:box(q('#fvTitle')).slice(0,2),header:box(q('#fvHeader')),strip:box(strip),card:box(strip.querySelector('.fv-metric')),chart:box(chart),plot:box(chart.querySelector('.fv-plot')),list:box(table).slice(0,3),toolbar:box(table.querySelector('.fv-table-tools')),cols:[...table.querySelectorAll('thead th')].map(e=>box(e)[2]),overflow:document.documentElement.scrollWidth>innerWidth+1,slots:chart.querySelectorAll('.fv-hit').length,bars:chart.querySelectorAll('[data-bar]').length,labels:chart.querySelectorAll('.fv-bar-value').length,cards:strip.querySelectorAll('.fv-metric').length};
   });
+  const auditPhone=async(route)=>{
+   if(viewport.width>=768)return;
+   const result=await page.evaluate(()=>{
+    const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),style=e=>getComputedStyle(e);
+    const white=e=>style(e).color==='rgb(255, 255, 255)',visible=e=>style(e).display!=='none'&&rect(e).width>0&&rect(e).height>0;
+    const title=q('#fvTitle'),head=q('#fvHeader'),top=q('.fv-mobile-top'),body=q('#fvPage');
+    const panels=all('#fvPage>.fv-panel:not(.fv-strip),#fvPage>.fv-strip>.fv-metric');
+    const nums=all('#fvPage>.fv-strip .fv-metric-value .fv-num'),labels=all('#fvPage>.fv-strip .fv-metric-label');
+    const cells=all('#fvPage .fv-table tbody>tr.fv-row>td[data-column]');
+    const filters=all('#fvPage .fv-table-tools .fv-select select,#fvPage .fv-table-tools .fv-search,#fvPage .fv-mobile-sort select');
+    const rows=all('#fvPage .fv-table tbody>tr.fv-row');
+    const inside=(e,o)=>rect(e).left>=rect(o).left-1&&rect(e).right<=rect(o).right+1;
+    return {
+     titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
+     afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
+     borders:panels.every(e=>parseFloat(style(e).borderTopWidth)>=2&&style(e).borderTopColor==='rgb(102, 102, 102)'),
+     labelWhite:labels.every(white),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
+     numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
+     tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=17),
+     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)>=2&&inside(e,e.closest('.fv-table-panel'))),
+     cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
+     cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
+     labelsWhite:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color==='rgb(255, 255, 255)'),
+     filtersVisible:filters.every(e=>visible(e)&&inside(e,e.closest('.fv-table-panel'))&&rect(e).height>=44),
+     noOverflow:document.documentElement.scrollWidth<=innerWidth+1
+    };
+   });
+   assert.ok(result.titleGap>=0&&result.titleGap<=22,route+' compact title spacing '+JSON.stringify(result));
+   assert.ok(result.belowTitle>=10&&result.afterHeader>=20,route+' space below title and header');
+   assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
+   assert.ok(result.borders&&result.labelWhite&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
+   assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=390?38:32)),route+' large short KPI figures '+result.numericSizes);
+   assert.ok(result.tableNumbers&&result.rowBorders&&result.cellVisible&&result.cellWhite&&result.labelsWhite&&result.filtersVisible&&result.noOverflow,route+' readable full-width listings '+JSON.stringify(result));
+  };
   let reference,cols;
   for(const [route,title] of routes){
    await open(route,title);const g=await geometry();
@@ -75,9 +109,10 @@ try{
    assert.equal(finish.background,'rgb(0, 0, 0)',route+' pure black card');assert.equal(finish.gradient,'none');assert.equal(finish.radius,6);assert.ok(finish.weight>=850);const surfaces=await page.evaluate(()=>[...document.querySelectorAll('#fvPage>.fv-chart-panel,#fvPage>.fv-chart-panel>.fv-chart,#fvPage>.fv-table-panel,#fvPage>.fv-table-panel>.fv-table-tools,#fvPage .fv-table th,#fvPage .fv-table tbody tr.fv-row td')].every(e=>['rgb(0, 0, 0)','rgba(0, 0, 0, 0)'].includes(getComputedStyle(e).backgroundColor)));assert.equal(surfaces,true,route+' black surfaces');assert.equal(finish.aligned,'center');assert.equal(finish.justify,'center');assert.ok(finish.center<=5,route+' centred card contents');
    assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
    if(!reference)reference=g;
-   for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(g[k],reference[k],viewport.width+' '+route+' '+k);
+   for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(k==='toolbar'&&viewport.width<768?g[k].slice(0,3):g[k],k==='toolbar'&&viewport.width<768?reference[k].slice(0,3):reference[k],viewport.width+' '+route+' '+k);
    if(route!=='discord'&&viewport.width>=768){if(!cols)cols=g.cols;close(g.cols,cols,route+' column widths');}
-   if(['of-terms','x-articles','discord'].includes(route))await page.screenshot({path:dir+'/'+viewport.width+'-'+route+'.png'});
+   await auditPhone(route);
+   if(viewport.width<768||['of-terms','x-articles','discord'].includes(route))await page.screenshot({path:dir+'/'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:viewport.width<768});
   }
   await open('gta-vi','GTA VI');
   const before=await geometry();
@@ -111,6 +146,7 @@ try{
    assert.ok(cards.every(r=>r.width<=viewport.width-20&&!r.clipped),'mobile Accounts fits its panel');
   }
   close(accountBounds.title,reference.title,viewport.width+' Accounts title');
+  await auditPhone('Accounts');
   const accountHeader=await page.locator('#acc-table thead').innerText().catch(()=> '');
   if(viewport.width>=768)assert.match(accountHeader,/Last Post/);
   await page.locator('#acc-table [data-search]').fill('unused');assert.equal(await page.locator('#acc-table .fv-account-plain').innerText(),'@unused');
@@ -131,11 +167,16 @@ try{
    await page.waitForFunction(period=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks'),week=C.weekStart(C.londonDay(Date.now()));return document.querySelector('[data-view="'+period+'"]')?.getAttribute('aria-current')==='page'&&m&&m.weekFrom===(period==='all-time'?undefined:period==='this-week'?week:C.addDays(week,-7));},period);
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);
-   for(const k of ['title','header','strip','card','chart','plot','list','toolbar'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
+   for(const k of ['title','header','strip','card','chart','plot','list','toolbar']){
+    const expected=[...reference[k]];
+    if(viewport.width<768&&['strip','card','chart','plot','list','toolbar'].includes(k))expected[1]+=24;
+    close(k==='toolbar'&&viewport.width<768?g[k].slice(0,3):g[k],k==='toolbar'&&viewport.width<768?expected.slice(0,3):expected,viewport.width+' dashboard '+period+' '+k);
+   }
+   await auditPhone('Dashboard '+period);
    if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
    assert.equal(await page.locator('.fv-home-discord .fv-community-summary>div').count(),3);
-   await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png'});
+   await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:viewport.width<768});
   }
   await page.evaluate(()=>{window.__qaChart=document.querySelector('#home-chart');window.__qaCard=document.querySelector('#fvPage .fv-metric');});
   if(viewport.width>=768)await page.locator('#home-comparison [data-sort="spend"]').click();
