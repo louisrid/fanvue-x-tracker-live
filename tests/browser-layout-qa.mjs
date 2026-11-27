@@ -58,9 +58,8 @@ try{
    await page.waitForFunction(({route,title})=>location.hash.slice(1)===route&&document.getElementById('fvTitle')?.textContent===title&&document.querySelector('#fvPage .fv-chart .fv-hit'),{route,title});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   };
-  // The 430px sweep captures every page before assertions. The other widths still
-  // use the normal per-page screenshots, keeping the artifact reasonably sized.
-  if(true){
+  // Capture every page at every tested width before detailed assertions, even if later QA fails.
+  {
    await page.evaluate(()=>Promise.race([document.fonts?.ready||Promise.resolve(),new Promise(r=>setTimeout(r,2000))]));
    for(const [route,title] of routes){
     await open(route,title);
