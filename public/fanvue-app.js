@@ -272,13 +272,11 @@
       if(period)paid=periodTotals(period.from,period.to);
       else{const T=C.homeTotals(ov,S);paid={clicks:clickBreakdown(),views:T.views,spend:T.spend,posts:M.value(livePosts(ov,Object.values(LIVE_SOURCES).flat()))};}
     }
-    const date=period?C.dayShort(period.from)+' – '+C.dayShort(period.to):'All-time totals · Weekly graph';
-    const header='<div class="fv-executive-controls">'+subTabs(tabs,active)+'<span class="fv-executive-date">'+esc(date)+'</span></div>';
+    const header=subTabs(tabs,active).replace('aria-label="Campaign sections"','aria-label="Dashboard periods"');
     const figures=U.strip([metric('Clicks','cursor',paid.clicks),metric('Views','eye',paid.views,'compact'),metric('Spend','wallet',paid.spend,'moneyShort'),metric('Live Posts','check',paid.posts)]);
-    const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord">'+U.icon('discord',15)+'View Discord</a>')+'<div class="fv-community-summary">'+[
-      ['Members',community.members,'count'],['Growth',community.growth,'signed'],['Course Clicks',community.clicks,'count']
-    ].map(([label,m,format])=>'<div><span>'+esc(label)+'</span><strong>'+(C.hasValue(m)?U.value(m,format):dash(m?.reason))+'</strong></div>').join('')+'</div></section>';
-    return {title:'Dashboard',refreshLabel:'Refresh All',chipHtml:'<span class="fv-campaign-chip" style="background:#475569" aria-hidden="true">'+U.icon('home',15)+'</span>',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+dashboardChart(period)+campaignComparison(S,period)+discord+overviewNotice()};
+    const discord='<section class="fv-panel fv-home-discord" aria-label="Discord">'+U.panelHead('Discord','discord','<a class="fv-control fv-home-discord-link" href="#discord">'+U.icon('discord',15)+'View Discord</a>')+
+      U.strip([metric('Members','users',community.members,'count'),metric('Growth','trend',community.growth,'signed'),metric('Course Clicks','graduation',community.clicks)],{cls:'fv-home-community-strip'})+'</section>';
+    return {title:'Dashboard',refreshLabel:'Refresh All',chipHtml:'<span class="fv-campaign-chip" aria-hidden="true">'+U.icon('home',15)+'</span>',updated:ov?.checkedAt,stale:!!(D.overviewStatus().error||ov?.stale),body:header+figures+dashboardChart(period)+campaignComparison(S,period)+discord+overviewNotice()};
   }
   // The graph and period totals share the exact same scoped, dated click series.
   function datedClicks(key,records){
@@ -304,7 +302,9 @@
     const values=new Map();
     for(const [name,series] of dashboardClickSources())for(const p of series){const d=values.get(p.week)||{value:0,sources:[],incomplete:false};d.value+=p.value;d.sources.push(name+': '+C.full(p.value));d.incomplete||=p.incomplete===true;values.set(p.week,d);}
     const series=[...values].sort(([a],[b])=>a.localeCompare(b)).map(([date,d])=>({week:date,label:C.dayShort(date),range:C.dayLong(date),value:d.value,incomplete:d.incomplete||d.sources.length<3||date===C.londonDay(Date.now()),extra:d.sources.join(' · ')+'. Dated recorded clicks only; unavailable sources are excluded. Provider filtering differs.'}));
-    return U.chartPanel({id:'home-chart',allowEmptyWeek:true,measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',weekFrom:period?.from,unit:'Clicks'}]},chartState('home','home-chart'));
+    const week=C.weekStart(C.londonDay(Date.now())),start=period?.from||week,end=C.addDays(start,6);
+    const chartNote={text:start===week?'This Week':'Last Week',detail:C.dayShort(start)+' – '+C.dayShort(end)+(period?'':' · Weekly graph; KPI totals are all time')};
+    return U.chartPanel({id:'home-chart',allowEmptyWeek:true,headerNote:chartNote,measures:[{key:'clicks',label:'Daily Clicks',title:'Daily Clicks',series,period:'Day',weekFrom:period?.from,unit:'Clicks'}]},chartState('home','home-chart'));
   }
   function clickBreakdown(from,to){
     const s=summaries();if(!s)return M.loading();

@@ -169,14 +169,25 @@ try{
    const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);
    for(const k of ['title','header','strip','card','chart','plot','list','toolbar']){
     const expected=[...reference[k]];
-    if(viewport.width<768&&['strip','card','chart','plot','list','toolbar'].includes(k))expected[1]+=24;
+    // Home now uses exactly the same single-height top row as campaigns, at every width.
     close(k==='toolbar'&&viewport.width<768?g[k].slice(0,3):g[k],k==='toolbar'&&viewport.width<768?expected.slice(0,3):expected,viewport.width+' dashboard '+period+' '+k);
    }
    await auditPhone('Dashboard '+period);
    if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
-   assert.equal(await page.locator('.fv-home-discord .fv-community-summary>div').count(),3);
-   await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:viewport.width<768});
+   assert.equal(await page.locator('.fv-home-discord .fv-home-community-strip>.fv-metric').count(),3);
+   const homeVisual=await page.evaluate(()=>{
+    const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
+    const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
+    const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).borderTopColor==='rgb(255, 255, 255)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,cardHeights:cards.every(e=>Math.abs(rect(e).height-rect(main).height)<=1),cardBorders:cards.every(e=>css(e).borderTopWidth===css(main).borderTopWidth),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+     summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
+   });
+   assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
+   assert.equal(homeVisual.scope,period==='last-week'?'Last Week':'This Week','visible chart scope');
+   assert.ok(homeVisual.cardHeights&&homeVisual.cardBorders&&homeVisual.summaryFits,'Discord uses the same KPI card dimensions and border weight');
+   if(viewport.width<768)assert.ok(homeVisual.metricPairs,'Home campaign values occupy a balanced 2x2 grid');
+   await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});
   }
   await page.evaluate(()=>{window.__qaChart=document.querySelector('#home-chart');window.__qaCard=document.querySelector('#fvPage .fv-metric');});
   if(viewport.width>=768)await page.locator('#home-comparison [data-sort="spend"]').click();

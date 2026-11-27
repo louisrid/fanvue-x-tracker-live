@@ -1288,29 +1288,15 @@ html{scrollbar-gutter:stable}
    Only its period selector and community summary have dashboard-specific content. */
 .is-home #fvBack[hidden]{display:inline-flex!important;visibility:hidden;pointer-events:none}
 .is-home .fv-updated{display:block}
-#fvPage.fv-dashboard-layout>.fv-executive-controls{height:42px;min-height:42px;max-height:42px;margin:0;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;overflow-x:auto;box-sizing:border-box}
-#fvPage.fv-dashboard-layout>.fv-executive-controls>.fv-subnav{display:flex;flex:0 0 auto;flex-wrap:nowrap;align-items:center;height:42px;min-height:42px;max-height:42px;margin:0;padding:0;gap:8px}
-#fvPage.fv-dashboard-layout>.fv-executive-controls .fv-subnav button{height:40px;min-height:40px;padding:0 16px;white-space:nowrap;flex:0 0 auto}
-#fvPage.fv-dashboard-layout .fv-executive-date{flex:0 0 auto;white-space:nowrap;font-size:var(--fv-fs-s);color:#CCC9D7}
 #fvPage.fv-dashboard-layout>#home-comparison .fv-table.is-aligned{min-width:var(--min-w)}
 #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:60px}
 #fvPage.fv-dashboard-layout>.fv-home-discord{padding:0;margin:0;overflow:hidden;border:1px solid #62528E;border-radius:4px;background:#000000}
 #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{background:#211A3D;border-bottom:1px solid #62528E}
 #fvPage.fv-dashboard-layout .fv-home-discord-link{display:inline-flex;align-items:center;gap:7px;background:#5865F2;color:#fff;border-color:#858DFF;white-space:nowrap}
-#fvPage.fv-dashboard-layout .fv-community-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-width:0;margin:0;padding:16px;border:0;border-radius:0;background:none}
-#fvPage.fv-dashboard-layout .fv-community-summary>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;min-height:84px;padding:14px 16px;border:1px solid #62528E;border-radius:4px;background:#211A3D}
-#fvPage.fv-dashboard-layout .fv-community-summary>div>span{font-size:var(--fv-fs-s);font-weight:var(--fv-w);white-space:nowrap}
-#fvPage.fv-dashboard-layout .fv-community-summary strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 @media(max-width:767px){
- #fvPage.fv-dashboard-layout>.fv-executive-controls{gap:10px}
- #fvPage.fv-dashboard-layout>.fv-executive-controls>.fv-subnav{gap:5px}
- #fvPage.fv-dashboard-layout>.fv-executive-controls .fv-subnav button{padding:0 10px}
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table.is-aligned{min-width:0}
  #fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:auto;max-height:none}
- #fvPage.fv-dashboard-layout .fv-community-summary{gap:8px;padding:10px}
- #fvPage.fv-dashboard-layout .fv-community-summary>div{padding:10px;min-height:75px}
  #fvPage.fv-dashboard-layout .fv-community-summary strong,#fvPage.fv-dashboard-layout .fv-community-summary .fv-num{font-size:var(--fv-fs-l)}
- #fvPage.fv-dashboard-layout .fv-community-summary>div>span{white-space:normal}
 }
 
 /* Owner correction: keep the original design, with no automatic colour on ranked data.
@@ -1501,8 +1487,6 @@ body.fv .fv-shell .fv-main button.fv-back:hover,.fv-shell .fv-main .fv-table .fv
 .fv-shell .fv-main .fv-table-panel .fv-detail-inner,.fv-shell .fv-main .fv-table-panel .fv-detail td,.fv-shell .fv-main .fv-group-row td{background:#000000}
 .fv-shell .fv-main .fv-detail-grid>div,.fv-shell .fv-main .fv-original-context>div,#fvPage.fv-dashboard-layout .fv-community-summary>div{background:#000000;border:1px solid #303030;border-radius:4px}
 .fv-shell .fv-main .fv-original-context small,.fv-shell .fv-main .fv-detail-grid dt,.fv-shell .fv-main .fv-publisher-costs span{color:#B5B5B5}
-#fvPage.fv-dashboard-layout .fv-community-summary>div{align-items:center;justify-content:center;text-align:center}
-#fvPage.fv-dashboard-layout .fv-community-summary>div>span{color:#BEBEBE}
 #fvPage.fv-dashboard-layout .fv-community-summary strong,#fvPage.fv-dashboard-layout .fv-community-summary .fv-num{font-weight:var(--fv-w-strong)}
 .fv-shell .fv-main .fv-inline-metrics>div,.fv-shell .fv-main .fv-tile{background:#000000;border-color:#303030;border-radius:4px}
 .fv-shell .fv-main :focus-visible{outline-color:#DDD}
@@ -1521,7 +1505,6 @@ body.fv .fv-shell .fv-main button.fv-back:hover,.fv-shell .fv-main .fv-table .fv
  .fv-shell .fv-main .fv-table-panel .fv-table>tbody>tr.fv-row>td{background:transparent}
  .fv-shell .fv-main .fv-table-panel .fv-table>tbody>tr.fv-row>td::before{color:#AFAFAF}
  .fv-shell .fv-main .fv-table-panel .fv-table>tbody>tr.fv-row:hover td{background:transparent}
- #fvPage.fv-dashboard-layout .fv-community-summary>div{padding:10px 5px}
 }
 @media(max-width:359px){.fv-shell .fv-main{--fv-fs-num:25px;--fv-fs-hero:25px;--fv-fs-m:13px}}
 .fv-shell .fv-editor,.fv-shell .fv-editor-head,.fv-shell .fv-popover,.fv-shell .fv-range-menu{background:#000000;color:#FFF;border-color:#333;border-radius:6px}
@@ -1645,10 +1628,6 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage .fv-chart-panel .fv-tools .fv-select{min-width:0;max-width:100%}
  #fvPage .fv-chart-panel .fv-tools .fv-select select{max-width:100%;min-width:0}
  /* Display the Dashboard date scope on its own visible line. */
- #fvPage.fv-dashboard-layout>.fv-executive-controls{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:44px 18px;height:68px;min-height:68px;max-height:68px;gap:6px;overflow:visible}
- #fvPage.fv-dashboard-layout>.fv-executive-controls>.fv-subnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:44px;min-height:44px;max-height:44px;width:100%;min-width:0;gap:6px;overflow:visible}
- #fvPage.fv-dashboard-layout>.fv-executive-controls .fv-subnav button{height:44px;min-height:44px;min-width:0;width:100%;padding:0 5px;justify-content:center}
- #fvPage.fv-dashboard-layout .fv-executive-date{color:#FFF;white-space:normal;line-height:18px}
  #fvPage.fv-campaign-layout>.fv-subnav,#fvPage.fv-campaign-layout>.fv-view-slot{height:44px;min-height:44px;max-height:44px}
  #fvPage .fv-subnav button,#fvPage .fv-view-slot>span{height:42px;min-height:42px}
  #fvPage .fv-subnav button:not([aria-current="page"]):not([aria-pressed="true"]){color:#FFF;border-color:#666}
@@ -1688,8 +1667,6 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage .fv-table-panel .fv-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  #fvPage .fv-detail-grid>div,#fvPage .fv-original-context>div{border:1px solid #666;min-width:0}
  #fvPage .fv-detail-grid dt,#fvPage .fv-detail-grid dd,#fvPage .fv-original-context small,#fvPage .fv-account-history-date,#fvPage #acc-table .fv-account-history-title span,#fvPage #acc-table .fv-account-history-row [data-label]::before,#fvPage .fv-filter-note,#fvPage .fv-cost-split,#fvPage .fv-group-head small,#fvPage .fv-notice{color:#FFF}
- #fvPage.fv-dashboard-layout .fv-community-summary>div{border:2px solid #666;min-height:96px;padding:8px 3px;gap:8px}
- #fvPage.fv-dashboard-layout .fv-community-summary>div>span{color:#FFF}
  #fvPage.fv-dashboard-layout .fv-community-summary strong,#fvPage.fv-dashboard-layout .fv-community-summary .fv-num{font-size:var(--fv-fs-l);font-weight:var(--fv-w-black);color:#FFF}
  .fv-tooltip.is-chart>b,.fv-tooltip.is-chart>span:not(.fv-tip-result){color:#FFF}
 }
@@ -1700,4 +1677,48 @@ body.fv .fv-shell .fv-main button.fv-back,body.fv .fv-shell .fv-main .fv-show-al
  #fvPage.fv-campaign-layout>.fv-strip{height:250px;min-height:250px;max-height:250px;grid-template-rows:120px 120px}
  #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){height:120px;min-height:120px;max-height:120px;padding:10px 5px}
  #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row{padding:10px;gap:10px 6px}
+}
+
+/* Dashboard uses the campaign-page scaffold, including its single-height tab row.
+   Only the four-column campaign overview and the small community section need local layout. */
+#fvShell.is-home #fvTitleChip .fv-campaign-chip{background:transparent;color:#FFF}
+#fvPage.fv-dashboard-layout>.fv-subnav button[aria-current="page"]{background:#000;border-color:#FFF;color:#FFF;box-shadow:inset 0 0 0 1px #FFF}
+#fvPage.fv-dashboard-layout>.fv-chart-panel .fv-chart-scope{font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);color:#FFF;white-space:nowrap}
+#fvPage.fv-dashboard-layout>#home-comparison .fv-table .fv-row td{height:56px;max-height:56px}
+#fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name{display:block;color:#FFF;font-weight:var(--fv-w-strong);text-decoration:none}
+#fvPage.fv-dashboard-layout #home-comparison .fv-campaign-row-name:hover{text-decoration:underline}
+#fvPage.fv-dashboard-layout>.fv-home-discord{width:100%;padding:0;margin:0;overflow:hidden}
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{padding:0 16px}
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:124px;gap:12px;
+ margin:0!important;padding:16px;border:0;background:transparent;min-height:0;height:auto
+}
+#fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){
+ min-width:0;height:124px;min-height:124px;max-height:124px;
+ border:1px solid #404040;border-radius:6px;padding:12px;gap:8px;justify-content:center;align-items:center;overflow:hidden
+}
+#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-label{
+ color:#FFF;font-weight:var(--fv-w-strong);white-space:normal
+}
+#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-label>span:last-child{white-space:normal}
+#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value{display:flex;width:100%;justify-content:center;align-items:center}
+#fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-dash{color:#FFF;font-size:var(--fv-fs-xl)}
+@media(max-width:767px){
+ #fvPage.fv-dashboard-layout>.fv-subnav{gap:8px}
+ #fvPage.fv-dashboard-layout>.fv-subnav button{height:42px;min-height:42px;flex:0 0 auto;padding:0 12px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td{height:auto;max-height:none}
+ #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row>td[data-column]:not(.is-name){min-height:56px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-panel-head{padding:0 12px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:125px;gap:10px;padding:10px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){height:125px;min-height:125px;max-height:125px;border:2px solid #666;padding:12px 8px;grid-column:auto;gap:10px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:first-child{grid-column:1/-1}
+ #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value,
+ #fvPage.fv-dashboard-layout .fv-home-community-strip .fv-metric-value .fv-num{font-family:var(--fv-display);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);color:#FFF;line-height:1.06}
+}
+@media(max-width:359px){
+ #fvPage.fv-dashboard-layout>.fv-subnav{gap:5px}
+ #fvPage.fv-dashboard-layout>.fv-subnav button{padding:0 9px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip{grid-auto-rows:120px}
+ #fvPage.fv-dashboard-layout>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){height:120px;min-height:120px;max-height:120px;padding:10px 5px}
 }

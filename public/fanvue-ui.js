@@ -164,7 +164,8 @@
     const type='bar';
     const select=measures.length>1?'<label class="fv-select"><span class="fv-sr">Chart metric</span><select data-chart-measure="'+esc(opts.id)+'">'+
       measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('select',14)+'</label>':'';
-    return '<section class="fv-panel fv-chart-panel" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(sel.title,'trend',select,opts.id+'-t')+
+    const note=opts.headerNote?'<span class="fv-chart-scope" title="'+esc(opts.headerNote.detail||opts.headerNote.text)+'" aria-label="'+esc(opts.headerNote.detail||opts.headerNote.text)+'">'+esc(opts.headerNote.text)+'</span>':'';
+    return '<section class="fv-panel fv-chart-panel" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(sel.title,'trend',select+note,opts.id+'-t')+
       '<div class="fv-chart" id="'+esc(opts.id)+'" data-type="'+type+'" data-measure="'+esc(sel.key)+'">'+chartBody(sel,type)+'</div>'+
       '</section>';
   }
