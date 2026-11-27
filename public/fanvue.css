@@ -2762,3 +2762,58 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 #fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-width:0;min-height:42px;height:42px;max-height:42px;overflow:visible;margin:0!important;padding:0;background:none;border:0}
 #fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods>button{display:flex;align-items:center;justify-content:center;min-width:0;height:40px;min-height:40px;padding:0 14px;border-radius:8px;box-shadow:none;font-weight:var(--fv-w-strong);white-space:nowrap}
 @media(max-width:767px){#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods>button{width:100%;padding:0 4px;height:40px;min-height:40px}}
+
+/* Shared headline KPI component: Dashboard geometry, campaign palette. */
+#fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+ box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;
+ background:var(--fv-theme-tint);background-image:none;border:3px solid var(--fv-outline);border-left-color:var(--fv-accent);
+ border-radius:12px;padding:16px 20px;gap:5px;box-shadow:none;
+}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-label{
+ display:flex;justify-content:flex-start;align-items:center;text-align:left;width:100%;min-width:0;min-height:18px;
+ font-family:var(--fv-font);font-size:var(--fv-fs-m);font-weight:var(--fv-w-strong);line-height:1.2;
+}
+#fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-strip .fv-metric-label>span:last-child{
+ display:inline-block;width:fit-content;max-width:100%;padding:2px 5px;border-radius:4px;
+ background:rgba(255,255,255,.10);color:var(--fv-hover-outline);font-weight:var(--fv-w);
+ white-space:normal;overflow-wrap:anywhere;overflow:visible;text-overflow:clip;line-height:1.2;
+}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value{
+ display:flex;justify-content:flex-start;align-items:center;width:100%;min-width:0;min-height:0;text-align:left;
+}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip :is(.fv-metric-value,.fv-metric-value .fv-num){
+ font-family:var(--fv-font);font-size:var(--fv-fs-num);font-weight:var(--fv-w-black);line-height:1.08;
+ letter-spacing:-.035em;text-align:left;color:#FFF;font-variant-numeric:tabular-nums;
+}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value.is-state{font-size:var(--fv-fs-m);white-space:normal;letter-spacing:0}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num[data-num-length="long"]{font-size:calc(var(--fv-fs-num) * .75)}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-num[data-num-length="very-long"]{font-size:calc(var(--fv-fs-num) * .58)}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-value .fv-dash{font-size:var(--fv-fs-num);line-height:1;color:#FFF}
+@media(min-width:768px) and (max-width:1100px){
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding-inline:12px}
+ #fvShell #fvPage.fv-campaign-layout>.fv-strip{--fv-fs-num:30px;--fv-fs-hero:30px}
+}
+@media(max-width:767px){
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-radius:14px;padding:13px 11px;gap:3px}
+ #fvShell #fvPage.fv-campaign-layout>.fv-strip .fv-metric-label{font-size:var(--fv-fs-s);min-height:15px}
+}
+@media(max-width:359px){
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){padding-inline:9px}
+}
+@media(hover:hover) and (pointer:fine){
+ #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n):hover{
+  background:color-mix(in srgb,var(--fv-theme-tint) 92%,#FFF);border-color:var(--fv-hover-outline);border-left-color:var(--fv-accent);
+ }
+}
+/* Match the Dashboard period control geometry across pages. */
+#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods>button,
+#fvShell #fvPage.fv-dashboard-layout>.fv-subnav>button{
+ height:40px;min-height:40px;max-height:40px;border-radius:8px;padding:0 14px;
+ font-size:var(--fv-fs-s);font-weight:var(--fv-w-strong);justify-content:center;box-sizing:border-box;
+}
+@media(max-width:767px){
+ #fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods,
+ #fvShell #fvPage.fv-dashboard-layout>.fv-subnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ #fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods>button,
+ #fvShell #fvPage.fv-dashboard-layout>.fv-subnav>button{padding:0 4px;min-width:0;width:100%}
+}
