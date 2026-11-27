@@ -331,7 +331,7 @@
     if(S&&period)for(const row of rows)Object.assign(row,periodCampaign(row.key,period));
     const ts=tableState('home','home-comparison');if(!ts.sort)ts.sort={key:'clicks',dir:-1};
     return U.tablePanel({id:'home-comparison',title:'Campaigns',rows,rowKey:r=>r.key,hideEmpty:false,cls:'is-list is-home-comparison',minWidth:650,search:true,searchPlaceholder:'Search campaigns',searchText:r=>r.name,
-      columns:[{key:'name',label:'Campaign',type:'name',html:r=>'<a class="fv-campaign-row-name" href="#'+esc(r.key)+'"'+(r.alias?' title="Included in GTA VI totals; counted once."':'')+'>'+esc(r.name)+'</a>',sort:r=>r.name},
+      columns:[{key:'name',label:'Campaign',type:'name',html:r=>'<a class="fv-campaign-row-name" style="--fv-row-accent:'+esc(C.PALETTE[look(r.key).color]?.icon||'#FFFFFF')+'" href="#'+esc(r.key)+'"'+(r.alias?' title="Included in GTA VI totals; counted once."':'')+'>'+esc(r.name)+'</a>',sort:r=>r.name},
       {key:'clicks',label:'Clicks',get:r=>r.clicks},{key:'views',label:'Views',get:r=>r.views},{key:'spend',label:'Spend',format:'money',get:r=>r.spend},{key:'cpc',label:'CPC',format:'money',get:r=>r.cpc}]},ts);
   }
   function periodCampaign(key,period){

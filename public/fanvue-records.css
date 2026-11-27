@@ -98,7 +98,7 @@ body.fv [hidden]{display:none!important}
 /* Detail modal and record editor. */
 body.modal-open{overflow:hidden}
 .modal-shade{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.42)}
-.article-modal{position:relative;width:min(640px,100%);max-height:min(86vh,900px);overflow:auto;padding:18px 20px 20px;background:#fff;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-r-l);box-shadow:0 18px 50px rgba(15,23,42,.18);color:var(--fv-ink);font-size:var(--fv-fs-s)}
+.article-modal{position:relative;width:min(640px,100%);max-height:min(86vh,900px);overflow:auto;padding:18px 20px 20px;background:#fff;border:var(--fv-bw) solid var(--fv-border);border-radius:var(--fv-r-l);box-shadow:none;color:var(--fv-ink);font-size:var(--fv-fs-s)}
 .article-modal .modal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px}
 .article-modal .modal-kicker{font-size:var(--fv-fs-s);font-weight:var(--fv-w);color:var(--fv-muted);text-transform:none}
 .article-modal .modal-close{font-size:var(--fv-fs-l);line-height:1}
@@ -172,7 +172,7 @@ body.modal-open{overflow:hidden}
 .fv-records .xt-state::first-letter{text-transform:uppercase}
 /* One search per table: the table's own search box replaces the duplicate above it. */
 .fv-records #page-campaigns .campaign-controls .search-control{display:none}
-.fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#fff;border-color:var(--fv-line);outline:none;box-shadow:0 0 0 2px rgba(22,139,243,.15)}
+.fv-records .xt-search input:focus,.fv-records select:focus,.fv-records input:focus,.article-modal input:focus,.article-modal select:focus,.article-modal textarea:focus{background:#fff;border-color:var(--fv-line);outline:none;box-shadow:none}
 
 /* Match the main site's monochrome finish in record views and dialogs. */
 .fv-records,.article-modal{--fv-ink:#FFF;--fv-label:#DDD;--fv-muted:#B5B5B5;--fv-surface:#000000;--fv-border:#303030;--fv-rule:#292929;--fv-field:#000000;--fv-thead:#000000;--fv-hover:#000000;--fv-tint:#000000;--fv-neutral-bg:#000000;--fv-neutral:#DDD;--fv-w-light:650;--fv-w:700;--fv-w-strong:850;--fv-w-black:900;color:#FFF}

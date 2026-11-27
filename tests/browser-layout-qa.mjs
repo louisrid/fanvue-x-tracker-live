@@ -131,7 +131,7 @@ try{
     const cards=all('#fvPage>.fv-strip>.fv-metric,#fvPage>.fv-chart-panel,#fvPage>.fv-home-discord,#fvPage>.fv-support'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row':',#fvPage>.fv-table-panel'));
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
     const bad=[];
-    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(width!==1||!['rgb(63, 63, 63)','rgb(78, 78, 78)'].includes(s.borderTopColor))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
+    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(width!==2||!['rgb(73, 73, 73)','rgb(90, 90, 90)'].includes(s.borderTopColor))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
     for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)!==0||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
     if(!mobile)for(const e of all('#fvPage .fv-table-panel tr.fv-row .fv-num'))if(css(e).backgroundColor!=='rgba(0, 0, 0, 0)')bad.push({desktopTablePill:e.textContent});
     return bad;
@@ -156,11 +156,11 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===(e.classList.contains('fv-metric')?2:1)&&parseFloat(style(e).borderTopLeftRadius)>=10),
+     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===2&&parseFloat(style(e).borderTopLeftRadius)>=10),
      labelTheme:labels.every(e=>style(e.lastElementChild).color===accent(e)),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
      tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:14)),
-     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===1&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
+     rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===2&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
      labelsTheme:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color===(e.dataset.column==='campaign'?'rgb(255, 255, 255)':accent(e))),
@@ -192,6 +192,7 @@ try{
     assert.match(await page.locator('#viral-results .fv-detail-inner').innerText(),/Quoted post views/,'quoted original context remains in the expanded record');
     assert.match(await page.locator('#viral-results .fv-detail-inner').innerText(),/1,000,000|1M/);
     await page.locator('#viral-results [data-expand]').first().click();
+    await page.evaluate(()=>window.scrollTo(0,0));
    }
    if(viewport.width>=768)assert.ok(await page.locator('#fvPage>.fv-table-panel tbody>tr.fv-row').evaluateAll(rows=>rows.every(r=>r.getBoundingClientRect().height<=40)),'compact desktop campaign rows');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
@@ -219,7 +220,7 @@ try{
     const yellow=el=>getComputedStyle(el).color==='rgb(199, 181, 255)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
-      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(47, 47, 47)')};
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='2px'&&getComputedStyle(td).borderRightColor==='rgb(48, 48, 48)')};
   });
   assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values use the campaign colour');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
@@ -270,11 +271,17 @@ try{
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
    if(viewport.width>=768)assert.equal(await page.locator('#home-comparison th[data-column="name"] button').evaluate(e=>getComputedStyle(e).color),'rgb(255, 255, 255)','Campaign header stays white');
    assert.equal(await page.locator('.fv-home-discord .fv-home-community-strip>.fv-metric').count(),3);
+   const flat=await page.evaluate(()=>{
+    const p=document.querySelector('.fv-home-discord'),strip=p.querySelector('.fv-home-community-strip'),cards=[...strip.children],s=e=>getComputedStyle(e);
+    const markers=[...document.querySelectorAll('#home-comparison .fv-campaign-row-name')].map(e=>getComputedStyle(e,'::before').backgroundColor);
+    return {outer:s(p).borderTopWidth==='2px'&&s(p).boxShadow==='none',inner:s(strip).borderTopWidth==='0px'&&cards.every(e=>s(e).borderTopWidth==='0px'&&s(e).borderRightWidth==='0px'&&s(e).boxShadow==='none'),markers:markers.length===5&&new Set(markers).size===5};
+   });
+   assert.ok(flat.outer&&flat.inner&&flat.markers,'single Discord frame and distinct campaign markers '+JSON.stringify(flat));
    const homeVisual=await page.evaluate(()=>{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===14&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===3,restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===14&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===2,restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
