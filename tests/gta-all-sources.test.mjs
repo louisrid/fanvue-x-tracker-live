@@ -318,7 +318,8 @@ test('Accounts page: one row per platform + handle across campaigns, from the sh
   // Each campaign page builds its table from the same functions, so figures always agree.
   assert.match(shell,/const records=xaRecords\(\);/);assert.match(shell,/const records=gtaRecords\(\);/);
   assert.match(shell,/records=ofRecords\(\)/);assert.match(shell,/records=guruRecords\(\)/);
-  assert.match(shell,/k==='home'\|\|k==='all-accounts'\)\{await app\?\.refresh\?\.all/);
+  assert.match(shell,/const all=k==='home'\|\|k==='all-accounts'/);
+  assert.match(shell,/await app\.refresh\.all\(p=>progress\(/);
   // One summary row per account; the optional history is a single list, not repeated cards.
   assert.match(shell,/expand:accountHistory,/);
   assert.match(shell,/function accountHistory\(account\)/);

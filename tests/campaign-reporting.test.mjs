@@ -169,19 +169,19 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  const reporting=readFileSync('public/campaign-reporting.js','utf8');
  const shell=readFileSync('public/fanvue-app.js','utf8');
  // One header refresh control. Home labels it "Refresh All"
- // and runs the existing reload coordinator unchanged.
+ // and runs the existing reload coordinator with real progress callbacks.
  assert.equal((html.match(/id="fvRefresh"/g)||[]).length,1);
  assert.match(html,/id="fvRefreshStatus"/);
 // Owner (26 Nov): Home is named Dashboard; OnlyFans Terms is OF Terms; Guru X RTs is Guru RTs.
   assert.match(shell,/title:'Dashboard',refreshLabel:'Refresh All'/);
- assert.match(shell,/await app\?\.refresh\?\.all\?\.\(\)/);
+ assert.match(shell,/await app\.refresh\.all\(p=>progress\(offset\+p\.completed,p\.label,offset\+p\.total\)\)/);
  assert.match(app,/refresh:Object\.freeze\(\{all:reloadAllData,/);
- const start=app.indexOf('async function reloadAllData()');
+ const start=app.indexOf('async function reloadAllData(');
  const end=app.indexOf('function applyDashboard(data)',start);
  assert.ok(start>0&&end>start);
  const coordinator=app.slice(start,end);
  assert.match(coordinator,/await refreshXStats\(\)/);
- assert.match(coordinator,/await refreshGtaReport\(\)/);
+ assert.match(coordinator,/await refreshGtaReport\(label=>progress\(/);
  assert.match(coordinator,/loadOfReport\(true,false\)/);
  assert.match(coordinator,/loadBoosts\(true\)/);
  assert.match(coordinator,/XTrackerCampaignReporting\?\.reload\?\.\(\)/);

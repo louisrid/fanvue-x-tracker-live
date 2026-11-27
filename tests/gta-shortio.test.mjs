@@ -176,7 +176,7 @@ test('source parser includes tracking links with no payment or live post',()=>{
 test('existing Refresh button posts once and renders fresh human clicks without navigation',async()=>{
  const {readFileSync}=await import('node:fs'),{default:vm}=await import('node:vm');
  const app=readFileSync('public/app.js','utf8');
- const code=app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaReport('))+app.slice(app.indexOf('async function refreshGtaReport(){'),app.indexOf('function initGtaUi(){'));
+ const code=app.slice(app.indexOf('function gtaSourceStatus('),app.indexOf('function renderGtaReport('))+app.slice(app.indexOf('async function refreshGtaReport('),app.indexOf('function initGtaUi(){'));
  const nodes=new Map(),el=id=>{if(!nodes.has(id))nodes.set(id,{classList:{add(){},remove(){}},setAttribute(){},removeAttribute(){}});return nodes.get(id);};
  let finish,calls=0,renders=0;
  const data={ready:true,xStatus:{updated:3,total:3,retained:0,unverified:0,errors:[]},publishers:[{...placement,clicks:46}],shortIo:{metric:'humanClicks',total:46,refreshed:9,linkCount:9,errors:0,lastSuccessfulAt:'2026-11-17T03:29:00Z'},updated:3,total:3,errors:[]};
