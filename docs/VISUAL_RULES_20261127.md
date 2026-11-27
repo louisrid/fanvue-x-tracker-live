@@ -4,8 +4,9 @@ This is a presentation-only addendum to the original DESIGN.md and SPECS.md and 
 
 - Pure black canvas; use restrained rose/pink accents and Discord purple. Do not introduce blue-grey fills, arbitrary gradients, or unrelated accent colours.
 - Same shared components and consistent page alignment. Preserve the approved current desktop layout and the compact mobile structure. No nested outlines around mobile listings.
-- Visible single-layer outlines: rose #9B5279 on dark surfaces, #D25897 on rose KPI cards, #9B87D2 on Discord cards. Aim for at least 3:1 outline-to-surface contrast. Thin table separators remain subdued; do not turn every cell into an outlined box.
+- Visible single-layer outlines: 2px rose #B56791 on dark surfaces, #DC6DA3 on KPI cards and #AA97E7 on Discord cards. Slightly rounder corners; 2px subdued grey table rules. Preserve frameless mobile listing sections and avoid nested outlines.
 - Owner correction: measured numbers use plain white text, without coloured rounded backgrounds or badge padding. Preserve the existing rose KPI cards, Discord purple panels and explicit-sort yellow text.
+- Hover: use a dark-grey background for the entire hovered table column, with a slightly brighter hovered cell. Cards, panels, controls and modal surfaces respond without obscuring white or yellow text; hover is pointer-only to prevent sticky touch interactions. 
 - Selected-column numeric text is yellow only after explicit user sorting. Never highlight the default Clicks sort, unrelated values or missing data.
 - Keep existing typography, bold headline numbers, white readable labels and clear hierarchy. Preserve long full values, fit exceptional lengths without clipping, and keep focus/tooltips accessible. Use the standard three-line menu with fast, smooth motion; remain open until deliberately dismissed.
 - Keep seven daily chart slots, chronological order, no numeric labels above bars and no invented history. Preserve the scope/attribution on hover.
