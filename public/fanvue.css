@@ -2440,3 +2440,84 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
 
 /* The hidden Dashboard Back placeholder has the same desktop spacing as visible Back. */
 @media(min-width:768px){#fvShell.is-home #mainContent #fvBack[hidden]{margin-bottom:32px}}
+
+/* Owner: separate key campaign accents from quiet structural outlines.
+   Keep all sizes, rounded corners, black surfaces, labels and hover logic. */
+#fvShell{--fv-structure-line:#404040;--fv-structure-hover:#505050;--fv-field-line:#606060;--fv-divider:#303030}
+#fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
+ border-width:2px;border-left-width:3px;
+}
+#fvShell[data-campaign-theme] #fvHeader #fvRefresh,
+#fvShell[data-campaign-theme] #fvPage :is(.fv-subnav,.fv-segments) button:is([aria-current="page"],[aria-pressed="true"]),
+#fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-view-slot>span,
+#fvShell[data-campaign-theme] .fv-control.is-primary,
+#fvShell[data-campaign-theme] #fvPage.fv-dashboard-layout>.fv-home-discord :is(.fv-home-discord-link,.fv-discord-btn),
+#fvShell[data-campaign-theme] .fv-records .button-primary{
+ border-width:2px;
+}
+#fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel:not(.fv-strip),
+#fvShell[data-campaign-theme] #fvPage.fv-accounts-layout>#acc-table,
+#fvShell[data-campaign-theme] #fvPage>.fv-panel:not(.fv-strip){
+ border-width:1px;border-color:var(--fv-structure-line);
+}
+#fvShell[data-campaign-theme] #fvPage>.fv-panel:not(.fv-strip)>.fv-panel-head,
+#fvShell[data-campaign-theme] #fvPage .fv-home-discord .fv-panel-head{
+ border-bottom-width:1px;border-bottom-color:var(--fv-structure-line);
+}
+#fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:nth-child(n){border-right-width:1px;border-right-color:var(--fv-structure-line)}
+#fvShell #fvPage>.fv-home-discord>.fv-home-community-strip>.fv-metric:last-child{border-right-width:0}
+#fvShell[data-campaign-theme] #fvPage :is(.fv-subnav,.fv-segments) button:not([aria-current="page"]):not([aria-pressed="true"]),
+#fvShell[data-campaign-theme] #fvPage :is(.fv-search,.fv-select select,.fv-mobile-sort select,.fv-show-all,.fv-open-btn,.fv-expand,.fv-ext.is-icon,.fv-control:not(.is-primary):not(.fv-discord-btn):not(.fv-home-discord-link)),
+#fvShell[data-campaign-theme] #mainContent:has(#fvPage:not([hidden])) #fvBack,
+#fvShell[data-campaign-theme] #fvHeaderExtra .fv-control,
+#fvShell[data-campaign-theme] .fv-records :is(.button:not(.button-primary),.x-refresh-button,.page-back-button,details.filter-details>summary),
+#fvShell .fv-editor :is(input:not([type="checkbox"]),select,textarea){
+ border-width:1px;border-color:var(--fv-field-line);
+}
+#fvShell[data-campaign-theme] #fvPage :is(.fv-select select,.fv-mobile-sort select)[data-user-sort],
+#fvShell[data-campaign-theme] #fvPage .fv-select select:is([data-xfilter],[data-filter]):has(option:checked:not([value=""])),
+#fvShell[data-campaign-theme] #fvPage .fv-search:focus-within{
+ border-color:var(--fv-selection);
+}
+#fvShell .fv-sidebar{border-right-width:1px;border-right-color:var(--fv-divider)}
+#fvShell .fv-mobile-top{border-bottom-width:1px;border-bottom-color:var(--fv-structure-line)}
+#fvShell .fv-plot .fv-grid{stroke-width:1;stroke-opacity:.25}
+#fvShell .fv-plot .fv-grid.is-zero{stroke-width:1;stroke-opacity:.4}
+#fvShell #fvPage .fv-support-line+.fv-support-line{border-top-width:1px;border-top-color:var(--fv-divider)}
+#fvShell #fvPage #acc-table :is(.fv-account-history-head,.fv-account-history-row){border-bottom-width:1px;border-bottom-color:var(--fv-divider)}
+#fvShell :is(.fv-editor,.fv-popover,.fv-range-menu,.fv-notice){border-width:1px;border-color:var(--fv-structure-line)}
+#fvShell .fv-editor-head{border-bottom-width:1px;border-bottom-color:var(--fv-structure-line)}
+body.fv .fv-tooltip,body.fv .fv-tooltip.is-chart{border-width:1px;border-color:#606060}
+body.fv .fv-records :is(.tracker-controls,.accounts-tools,.xt-table-wrap,.account-table-wrap,.loading-card,.empty-state),
+body.fv .article-modal :is(.modal-content,.history-row,.modal-link:not(.main-link),[class*="modal-metric"]){
+ border-width:1px;border-color:#404040;
+}
+@media(min-width:768px){
+ #fvShell #fvPage .fv-table>thead>tr>th,
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td{border-bottom-width:1px;border-bottom-color:var(--fv-divider)}
+ #fvShell #fvPage .fv-table>thead>tr>th:not(:last-child),
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row>td:not(:last-child){border-right-width:1px;border-right-color:var(--fv-divider)}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-row:last-child>td{border-bottom-width:0}
+ #fvShell #fvPage :is(.fv-detail-grid>div,.fv-original-context>div,.fv-community-summary>div){border-width:1px;border-color:var(--fv-structure-line)}
+ body.fv .fv-records :is(.xt-data-table,.account-table) :is(th,td):not([colspan]){border-bottom-width:1px;border-bottom-color:#303030}
+}
+@media(max-width:767px){
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-table-panel:not(.fv-strip),
+ #fvShell[data-campaign-theme] #fvPage.fv-accounts-layout>#acc-table{border:0}
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-table-panel:not(.fv-strip)>.fv-panel-head{border:0}
+ #fvShell #fvPage.fv-campaign-layout>.fv-table-panel .fv-table>tbody>tr.fv-row,
+ #fvShell #fvPage.fv-accounts-layout>#acc-table .fv-table>tbody>tr.fv-row,
+ #fvShell #fvPage.fv-dashboard-layout>#home-comparison .fv-table>tbody>tr.fv-row{border-width:1px;border-color:var(--fv-structure-line)}
+ #fvShell #fvPage .fv-table>tbody>tr.fv-detail{border-width:1px;border-top-width:0;border-color:var(--fv-structure-line)}
+ #fvShell .fv-editor{border:0}
+}
+@media(hover:hover) and (pointer:fine){
+ #fvShell[data-campaign-theme] #fvPage>.fv-panel:not(.fv-strip):hover,
+ #fvShell[data-campaign-theme] #fvPage.fv-accounts-layout>#acc-table:hover,
+ #fvShell :is(.fv-editor,.fv-popover,.fv-range-menu):hover{border-color:var(--fv-structure-hover)}
+ body.fv .fv-records :is(.tracker-controls,.accounts-tools,.xt-table-wrap,.account-table-wrap,.loading-card,.empty-state):hover,
+ body.fv .article-modal :is(.modal-content,.history-row,.modal-link:not(.main-link),[class*="modal-metric"]):hover{border-color:#505050}
+ @media(max-width:767px){
+  #fvShell #fvPage .fv-table>tbody>tr.fv-row:hover{border-color:var(--fv-structure-hover)}
+ }
+}
