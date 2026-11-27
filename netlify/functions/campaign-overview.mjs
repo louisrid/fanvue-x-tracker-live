@@ -2,7 +2,7 @@
 // It composes the *existing* independently tracked campaigns, never redirects tracking URLs,
 // never writes to operational sheets and never represents missing conversions as zero.
 import ExcelJS from 'exceljs';
-import {paymentDay} from '../lib/payment-dates.mjs';
+import {paymentDay,applyPaymentDates} from '../lib/payment-dates.mjs';
 import {getStore} from '@netlify/blobs';
 const SHEET='1D8rI3BuuFHIemYZY92QFiHDMkj876F8oiwpDR6sMiTE';
 const ARTICLE_RTS='X Accounts 11 (Article RTs)';
@@ -414,7 +414,7 @@ export default async function handler(request){
   let saved=null;
   try{saved=await store.get('latest',{type:'json'});}catch{}
   if(!force&&saved?.data?.ok&&Date.now()-Date.parse(saved.at)<OVERVIEW_CACHE_TTL){
-    return Response.json({...saved.data,cached:true,cacheAgeMs:Math.max(0,Date.now()-Date.parse(saved.at))},{
+    return Response.json({...applyPaymentDates(saved.data),cached:true,cacheAgeMs:Math.max(0,Date.now()-Date.parse(saved.at))},{
       headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}
     });
   }
@@ -423,15 +423,15 @@ export default async function handler(request){
     // A failed source can change RT attribution and totals. Retain the coherent prior snapshot rather than cache a degraded replacement.
     if(saved?.data?.ok&&Object.values(parts).some(part=>part.error)){
       const errors=Object.entries(parts).filter(([,part])=>part.error).map(([name,part])=>name+': '+diagnostic(part.error));
-      return Response.json({...saved.data,cached:true,stale:true,errors:[...new Set([...(saved.data.errors||[]),...errors])]}, {headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
+      return Response.json({...applyPaymentDates(saved.data),cached:true,stale:true,errors:[...new Set([...(saved.data.errors||[]),...errors])]}, {headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
     }
-    const result=assembleCampaignOverview(parts);
+    const result=applyPaymentDates(assembleCampaignOverview(parts));
     try{await store.setJSON('latest',{at:new Date().toISOString(),data:result});}catch{}
     return Response.json({...result,cached:false},{headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
   }catch{
     if(saved?.data?.ok){
       const warning='Overview refresh failed; showing the last verified campaign snapshot.';
-      return Response.json({...saved.data,cached:true,stale:true,errors:[...(saved.data.errors||[]),warning]},{
+      return Response.json({...applyPaymentDates(saved.data),cached:true,stale:true,errors:[...(saved.data.errors||[]),warning]},{
         headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}
       });
     }

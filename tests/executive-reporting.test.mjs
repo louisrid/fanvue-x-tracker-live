@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import ExcelJS from 'exceljs';
 import {countPlannedAsPaid} from '../netlify/functions/gta-report.mjs';
+import {applyPaymentDates} from '../netlify/lib/payment-dates.mjs';
 import {assembleCampaignOverview} from '../netlify/functions/campaign-overview.mjs';
 import {parseDirectory,createDirectoryHandler} from '../netlify/functions/publisher-directory.mjs';
 await import('../public/fanvue-core.js');
@@ -11,7 +12,7 @@ const C=globalThis.FanvueCore;
 const url=n=>'https://x.com/publisher/status/'+n;
 const campaign=(id,rows,extra={})=>({id,source:'CONNECTED',rows,paidCount:rows.filter(r=>r.paid&&!r.planned).length,paidSpendKnown:rows.filter(r=>r.paid&&!r.planned).reduce((n,r)=>n+(r.cost||0),0),unknownPaidCosts:0,...extra});
 function app(overview,extras={}){
-  const window={FanvueCore:C,FanvueDirectory:{state:{accounts:[]},load(){}},XTrackerCampaignReporting:{getData:()=>overview,status:()=>({}),ensure(){},discord:()=>extras.discord||{},refreshDiscord(){}},XTrackerApp:{dashboard:()=>extras.dashboard||null,gta:()=>({report:extras.gta||null}),of:()=>({report:extras.of}),loadGta(){},loadOf(){}}};
+  const window={FanvueCore:C,FanvuePaymentDates:globalThis.FanvuePaymentDates,FanvueDirectory:{state:{accounts:[]},load(){}},XTrackerCampaignReporting:{getData:()=>overview,status:()=>({}),ensure(){},discord:()=>extras.discord||{},refreshDiscord(){}},XTrackerApp:{dashboard:()=>extras.dashboard||null,gta:()=>({report:extras.gta||null}),of:()=>({report:extras.of}),loadGta(){},loadOf(){}}};
   const context=vm.createContext({window,location:{hash:'#home'},document:{readyState:'loading',addEventListener(){}},URL,Intl,Date,Math,Map,Set,Number,String,Array,Object,JSON,console,setTimeout,clearTimeout});
   vm.runInContext(readFileSync('public/fanvue-ui.js','utf8'),context);
   vm.runInContext(readFileSync('public/fanvue-app.js','utf8'),context);
@@ -202,4 +203,16 @@ test('dashboard weekly clicks include scoped Short.io readings exactly once, not
 test('only the confirmed portion of a changed payment amount is allocated to its known week',()=>{
  const ov={campaigns:[campaign('gta-mandy',[{code:'GTAM-N',campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100,paidAt:'2026-11-25',datedPaidAmount:70}])]};
  const r=app(ov).periodTotals('2026-11-23','2026-11-29');assert.equal(r.spend.value,70);assert.equal(r.spend.state,'partial');
+});
+
+test('old saved campaign data receives confirmed payment dates without losing all-time spend',()=>{
+ const rows=[{code:'old-mandy',campaign:'GTAM',publisher:'kyronis_talks',paid:true,cost:180},{code:'old-aman',campaign:'GTAM',publisher:'aiwithaman',paid:true,cost:50},{code:'old-nekt',campaign:'GTAM',publisher:'Nekt_0',paid:true,cost:100},{code:'old-q',campaign:'GTAQ',publisher:'Quam',paid:true,cost:100},{code:'undated',campaign:'GTAQ',publisher:'other',paid:true,cost:300}];
+ const raw={ok:true,campaigns:[campaign('gta-mandy',rows.slice(0,3)),campaign('gta-qrts',rows.slice(3))]};
+ const migrated=applyPaymentDates(raw);assert.equal(raw.campaigns[0].rows[0].paidAt,undefined);
+ assert.equal(migrated.campaigns[0].paidSpendKnown,330);
+ assert.equal(app(raw).periodTotals('2026-11-23','2026-11-29').spend.value,280);
+ assert.equal(app(raw).periodTotals('2026-11-16','2026-11-22').spend.value,75);
+ assert.equal(app(raw).periodTotals('2026-11-16','2026-11-22').spend.state,'partial');
+ assert.equal(app({campaigns:[campaign('x-articles',[{code:'null-date',paid:true,cost:100,paidAt:null}])]}).periodTotals('2026-11-23','2026-11-29').spend.label,'Undated');
+ assert.match(app(raw).pages.home({view:'this-week'}).body,/\$280/);
 });

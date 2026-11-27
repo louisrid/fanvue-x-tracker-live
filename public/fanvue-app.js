@@ -15,7 +15,7 @@
   const D={
     app:()=>window.XTrackerApp||null,
     rep:()=>window.XTrackerCampaignReporting||null,
-    overview(){return this.rep()?.getData?.()||null;},
+    overview(){const data=this.rep()?.getData?.()||null;return window.FanvuePaymentDates?.applyPaymentDates(data)||data;},
     overviewStatus(){return this.rep()?.status?.()||{};},
     discord(){return this.rep()?.discord?.()||{};},
     dashboard(){return this.app()?.dashboard?.()||null;},
@@ -353,7 +353,7 @@
     for(const x of [...all,...spendOnly]){
       if(!x.paid)continue;
       const k=rowKeyOf(x.raw);if(seen.has(k))continue;seen.add(k);
-      const payment=C.londonDay(x.raw.paidAt);
+      const payment=x.raw.paidAt?(window.FanvuePaymentDates?.paymentDay(x.raw.paidAt)||C.londonDay(x.raw.paidAt)):'';
       if(!payment||x.price===null)undated++;
       else{
         const recorded=C.num(x.raw.datedPaidAmount),amount=recorded===null?x.price:Math.min(x.price,recorded);
@@ -364,7 +364,7 @@
     }
     const gained=C.dailySeries(xHistory(all),{born:postBorn,days:21}).gained.filter(p=>p.week>=from&&p.week<=to&&p.value!==null);
     return {clicks:clickBreakdown(from,to),
-      spend:!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.'):undated?M.partial(spend,undated+' paid placements have some undated or unknown cost. Only verified dated payments are included.'):M.value(spend),
+      spend:!dated?M.na('Payment dates are not recorded. Weekly spend cannot be inferred from publication dates.',{label:undated?'Undated':undefined}):undated?M.partial(spend,undated+' paid placements have some undated or unknown cost. Only verified dated payments are included.'):M.value(spend),
       views:gained.length?M.partial(gained.reduce((n,p)=>n+p.value,0),'Measured increases on dated X post readings. Coverage is incomplete; lifetime views are not assigned to weeks.'):M.na('No dated view readings for this period.'),
       posts:M.value(posts.size,{reason:'Distinct paid X posts published in this period, based on verified post IDs.'})};
   }

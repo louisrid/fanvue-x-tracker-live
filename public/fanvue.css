@@ -2753,3 +2753,7 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
  #fvShell #fvPage.is-kpi-refreshing>.fv-panel.fv-strip>.fv-metric>.fv-metric-value::after{animation:none}
  #fvShell #fvRefresh.is-busy .fv-icon{animation:none}
 }
+
+/* Missing finance dates are labelled, never presented as zero or an unexplained dash. */
+#fvShell .fv-metric-value.is-state .is-na{color:#FFF;font-weight:var(--fv-w-strong);font-size:var(--fv-fs-m)}
+#fvShell .fv-table .is-na{color:#FFF;font-weight:var(--fv-w-strong)}

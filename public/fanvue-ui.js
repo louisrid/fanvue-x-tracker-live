@@ -104,7 +104,7 @@
   function value(m,format='count',{chipText}={}){
     if(!m||m.state==='loading')return '<span class="fv-skel" aria-label="Loading"></span>';
     if(m.value===null||!['value','partial','stale'].includes(m.state))
-      return reasonButton(STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
+      return reasonButton(m.label||STATE_LABEL[m.state]||'Not available',m.reason,'is-'+m.state);
     return numberSpan(formatValue(m.value,format),m.reason&&m.state!=='value'?m.reason:'');
   }
   function chipFor(m,note){
@@ -131,7 +131,7 @@
     const precise=tip?' data-reason="'+esc(tip)+'"':'';
     return '<div class="fv-metric">'+
       '<div class="fv-metric-label">'+chipIcon(it.icon)+'<span>'+esc(it.label)+'</span></div>'+
-      '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+(unavailable&&m?.state!=='loading'?dashCell(m?.reason):value(m,it.format||'count'))+
+      '<div class="fv-metric-value'+(unavailable&&m?.state!=='loading'?' is-state':'')+'"'+precise+'>'+(unavailable&&m?.state!=='loading'&&!m?.label?dashCell(m?.reason):value(m,it.format||'count'))+
         (precise?'<span class="fv-sr"> (exact '+esc(exact)+')</span>':'')+'</div>'+
 
     '</div>';
@@ -238,9 +238,9 @@
   function cellValue(col,row){
     const v=col.get?col.get(row):row[col.key];
     // Missing data shows one restrained dash (never zero); the reason is available on hover and focus.
-    if(v&&typeof v==='object'&&'state' in v&&unavailableState(v))return dashCell(v.reason);
+    if(v&&typeof v==='object'&&'state' in v&&unavailableState(v))return v.label?value(v,col.format||'count'):dashCell(v.reason);
     if(col.html)return col.html(row,v);
-    if(v&&typeof v==='object'&&'state' in v)return unavailableState(v)?dashCell(v.reason):value(v,col.format||'count');
+    if(v&&typeof v==='object'&&'state' in v)return unavailableState(v)&&!v.label?dashCell(v.reason):value(v,col.format||'count');
     if(v===null||v===undefined||v==='')return dashCell('');
     if(col.type==='money')return numberSpan(C.money(v));
     if(col.type==='count')return numberSpan(C.full(v));

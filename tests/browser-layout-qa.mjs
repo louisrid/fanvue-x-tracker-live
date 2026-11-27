@@ -28,7 +28,7 @@ window.XTrackerApp={dashboard:()=>({activityReady:true,activity:qaActivity([qaA,
 window.FanvueDirectory={state:{accounts:[{key:'X|unused',handle:'@unused',platform:'X'},{key:'Instagram|hidden',handle:'@hidden',platform:'Instagram'}],loaded:true},load(){}};
 `;
 const custom={slug:'qa-campaign',name:'QA Campaign',icon:'megaphone',color:'blue',status:'Live',dataLink:'qa-linked',links:[]};
-const template=readFileSync(path.join(publicDir,'index.html'),'utf8').replace(/<script src="[^"]+" defer><\/script>/g,match=>/\/fanvue-(core|ui|app|campaigns)\.js/.test(match)?match:'').replace('</head>','<script>'+fixture+'</script></head>');
+const template=readFileSync(path.join(publicDir,'index.html'),'utf8').replace(/<script src="[^"]+" defer><\/script>/g,match=>/\/fanvue-(core|ui|app|campaigns|payment-dates)\.js/.test(match)?match:'').replace('</head>','<script>'+fixture+'</script></head>');
 const types={'.js':'text/javascript','.css':'text/css','.html':'text/html','.json':'application/json'};
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
