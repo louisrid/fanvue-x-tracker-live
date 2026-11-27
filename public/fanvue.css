@@ -2302,16 +2302,16 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
 #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{border-width:2px;border-color:#666;border-radius:10px}
 
 /* Campaign colour and compact headline cards, owner 27 November. */
-#fvShell[data-campaign-theme="pink"]{--fv-accent:#F0357C;--fv-theme-fill:#C71667;--fv-outline:#C876A3;--fv-selection:#FF9AC8;--fv-theme-tint:#351725;--fv-hover-column:#080608;--fv-hover-cell:#211219;--fv-hover-line:#A95A83;--fv-hover-outline:#F0AAD3;}
-#fvShell[data-campaign-theme="violet"]{--fv-accent:#A994F0;--fv-theme-fill:#6D28D9;--fv-outline:#A691EB;--fv-selection:#C7B5FF;--fv-theme-tint:#261B3D;--fv-hover-column:#070609;--fv-hover-cell:#1B142B;--fv-hover-line:#8270B5;--fv-hover-outline:#C7B5FF;}
-#fvShell[data-campaign-theme="amber"]{--fv-accent:#F0AA42;--fv-theme-fill:#92500F;--fv-outline:#C29753;--fv-selection:#FFD48A;--fv-theme-tint:#33230F;--fv-hover-column:#090704;--fv-hover-cell:#241A0D;--fv-hover-line:#B48440;--fv-hover-outline:#FFD48A;}
-#fvShell[data-campaign-theme="white"]{--fv-accent:#DFE3E8;--fv-theme-fill:#363A40;--fv-outline:#A0A8B1;--fv-selection:#C6D0DD;--fv-theme-tint:#22252A;--fv-hover-column:#080809;--fv-hover-cell:#191B1E;--fv-hover-line:#929CA9;--fv-hover-outline:#E0E7F1;}
-#fvShell[data-campaign-theme="blue"]{--fv-accent:#6AA8F0;--fv-theme-fill:#1D5FB8;--fv-outline:#76A5DD;--fv-selection:#96C8FF;--fv-theme-tint:#192B43;--fv-hover-column:#05070A;--fv-hover-cell:#112039;--fv-hover-line:#608AC2;--fv-hover-outline:#A8D2FF;}
-#fvShell[data-campaign-theme="discord"],#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord{--fv-accent:#858DFF;--fv-theme-fill:#4752C4;--fv-outline:#B19DEB;--fv-selection:#B5C0FF;--fv-theme-tint:#211A3D;--fv-hover-column:#060609;--fv-hover-cell:#19182E;--fv-hover-line:#827BC1;--fv-hover-outline:#C7B7FF;}
-#fvShell[data-campaign-theme="slate"]{--fv-accent:#94A3B8;--fv-theme-fill:#475569;--fv-outline:#91A0B4;--fv-selection:#BAC9DA;--fv-theme-tint:#202834;--fv-hover-column:#070809;--fv-hover-cell:#191F27;--fv-hover-line:#778AA1;--fv-hover-outline:#CEDBED;}
-#fvShell[data-campaign-theme="cyan"]{--fv-accent:#4FC3D9;--fv-theme-fill:#0E6A83;--fv-outline:#61B0C1;--fv-selection:#99E9F6;--fv-theme-tint:#12313A;--fv-hover-column:#040809;--fv-hover-cell:#0D242B;--fv-hover-line:#5299A8;--fv-hover-outline:#B3F3FC;}
-#fvShell[data-campaign-theme="teal"]{--fv-accent:#3CC7B0;--fv-theme-fill:#0F6D61;--fv-outline:#60B5A7;--fv-selection:#91E9D6;--fv-theme-tint:#15342E;--fv-hover-column:#040907;--fv-hover-cell:#0D2822;--fv-hover-line:#4A9E8E;--fv-hover-outline:#A7F2E3;}
-#fvShell[data-campaign-theme="green"]{--fv-accent:#5FC98A;--fv-theme-fill:#146C3C;--fv-outline:#71B78D;--fv-selection:#9DE9B8;--fv-theme-tint:#183322;--fv-hover-column:#050907;--fv-hover-cell:#14261A;--fv-hover-line:#5B9D75;--fv-hover-outline:#B3F0C9;}
+#fvShell[data-campaign-theme="pink"]{--fv-accent:#F0357C;--fv-theme-fill:#C71667;--fv-outline:#C474A0;--fv-selection:#FF9AC8;--fv-theme-tint:#351725;--fv-hover-column:#080608;--fv-hover-cell:#211219;--fv-hover-line:#A95A83;--fv-hover-outline:#F0AAD3;}
+#fvShell[data-campaign-theme="violet"]{--fv-accent:#A994F0;--fv-theme-fill:#6D28D9;--fv-outline:#A38EE6;--fv-selection:#C7B5FF;--fv-theme-tint:#261B3D;--fv-hover-column:#070609;--fv-hover-cell:#1B142B;--fv-hover-line:#8270B5;--fv-hover-outline:#C7B5FF;}
+#fvShell[data-campaign-theme="amber"]{--fv-accent:#F0AA42;--fv-theme-fill:#92500F;--fv-outline:#BE9451;--fv-selection:#FFD48A;--fv-theme-tint:#33230F;--fv-hover-column:#090704;--fv-hover-cell:#241A0D;--fv-hover-line:#B48440;--fv-hover-outline:#FFD48A;}
+#fvShell[data-campaign-theme="white"]{--fv-accent:#DFE3E8;--fv-theme-fill:#363A40;--fv-outline:#9DA5AD;--fv-selection:#C6D0DD;--fv-theme-tint:#22252A;--fv-hover-column:#080809;--fv-hover-cell:#191B1E;--fv-hover-line:#929CA9;--fv-hover-outline:#E0E7F1;}
+#fvShell[data-campaign-theme="blue"]{--fv-accent:#6AA8F0;--fv-theme-fill:#1D5FB8;--fv-outline:#74A2D9;--fv-selection:#96C8FF;--fv-theme-tint:#192B43;--fv-hover-column:#05070A;--fv-hover-cell:#112039;--fv-hover-line:#608AC2;--fv-hover-outline:#A8D2FF;}
+#fvShell[data-campaign-theme="discord"],#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord{--fv-accent:#858DFF;--fv-theme-fill:#4752C4;--fv-outline:#AD9AE6;--fv-selection:#B5C0FF;--fv-theme-tint:#211A3D;--fv-hover-column:#060609;--fv-hover-cell:#19182E;--fv-hover-line:#827BC1;--fv-hover-outline:#C7B7FF;}
+#fvShell[data-campaign-theme="slate"]{--fv-accent:#94A3B8;--fv-theme-fill:#475569;--fv-outline:#8E9DB0;--fv-selection:#BAC9DA;--fv-theme-tint:#202834;--fv-hover-column:#070809;--fv-hover-cell:#191F27;--fv-hover-line:#778AA1;--fv-hover-outline:#CEDBED;}
+#fvShell[data-campaign-theme="cyan"]{--fv-accent:#4FC3D9;--fv-theme-fill:#0E6A83;--fv-outline:#5FACBD;--fv-selection:#99E9F6;--fv-theme-tint:#12313A;--fv-hover-column:#040809;--fv-hover-cell:#0D242B;--fv-hover-line:#5299A8;--fv-hover-outline:#B3F3FC;}
+#fvShell[data-campaign-theme="teal"]{--fv-accent:#3CC7B0;--fv-theme-fill:#0F6D61;--fv-outline:#5EB1A4;--fv-selection:#91E9D6;--fv-theme-tint:#15342E;--fv-hover-column:#040907;--fv-hover-cell:#0D2822;--fv-hover-line:#4A9E8E;--fv-hover-outline:#A7F2E3;}
+#fvShell[data-campaign-theme="green"]{--fv-accent:#5FC98A;--fv-theme-fill:#146C3C;--fv-outline:#6FB38A;--fv-selection:#9DE9B8;--fv-theme-tint:#183322;--fv-hover-column:#050907;--fv-hover-cell:#14261A;--fv-hover-line:#5B9D75;--fv-hover-outline:#B3F0C9;}
 #fvShell[data-campaign-theme],#fvShell #fvPage.fv-dashboard-layout>.fv-home-discord{
  --fv-kpi-outline:var(--fv-outline);--fv-hover-surface:var(--fv-hover-column);--fv-hover-control:var(--fv-hover-cell);
 }
@@ -2443,7 +2443,7 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
 
 /* Owner: separate key campaign accents from quiet structural outlines.
    Keep all sizes, rounded corners, black surfaces, labels and hover logic. */
-#fvShell{--fv-structure-line:#404040;--fv-structure-hover:#505050;--fv-field-line:#606060;--fv-divider:#303030}
+#fvShell{--fv-structure-line:#3F3F3F;--fv-structure-hover:#4E4E4E;--fv-field-line:#5E5E5E;--fv-divider:#2F2F2F}
 #fvShell[data-campaign-theme] #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){
  border-width:2px;border-left-width:3px;
 }
@@ -2520,4 +2520,34 @@ body.fv .article-modal :is(.modal-content,.history-row,.modal-link:not(.main-lin
  @media(max-width:767px){
   #fvShell #fvPage .fv-table>tbody>tr.fv-row:hover{border-color:var(--fv-structure-hover)}
  }
+}
+
+/* Owner: stronger page headings, white Campaign labels, and more KPI breathing room.
+   Keep physical 1px/2px stroke widths; a 2% optical reduction avoids a whole-pixel drop. */
+#fvShell #fvHeader .fv-title{min-height:40px;gap:10px}
+#fvShell #fvHeader #fvTitle{font-size:34px;line-height:1.1;color:#FFF}
+#fvShell #fvBack{gap:6px}
+#fvShell #fvBack .fv-icon{width:16px;height:16px;flex:none;color:#FFF;stroke-width:2}
+#fvShell[data-campaign-theme] #fvPage .fv-table>thead>tr>th[data-column="campaign"],
+#fvShell[data-campaign-theme] #fvPage .fv-table>thead>tr>th[data-column="campaign"]>button,
+#fvShell[data-campaign-theme] #home-comparison .fv-table>thead>tr>th[data-column="name"],
+#fvShell[data-campaign-theme] #home-comparison .fv-table>thead>tr>th[data-column="name"]>button{color:#FFF}
+#fvShell[data-campaign-theme] #fvPage>.fv-panel.fv-strip>.fv-metric:nth-child(n){border-left-color:color-mix(in srgb,var(--fv-accent) 98%,#000)}
+#fvShell #fvPage.fv-campaign-layout>.fv-strip{height:104px;min-height:104px;max-height:104px;grid-template-rows:104px}
+#fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){height:104px;min-height:104px;max-height:104px;padding-block:16px}
+@media(min-width:768px){
+ #fvShell #fvHeader .fv-title{min-height:48px}
+}
+@media(max-width:767px){
+ #fvShell #mainContent #fvHeader{grid-template-rows:40px 44px;height:98px;min-height:98px;max-height:98px}
+ #fvShell #fvHeader #fvTitle{font-size:clamp(27px,7.8vw,32px);line-height:1.1}
+ #fvShell #fvHeader .fv-title{gap:8px}
+ #fvShell:not(.is-home) #fvHeader .fv-title{padding-right:88px}
+ #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{padding-inline:10px;gap:5px;top:38px}
+ #fvShell #fvPage.fv-campaign-layout>.fv-strip{height:194px;min-height:194px;max-height:194px;grid-template-rows:92px 92px}
+ #fvShell #fvPage.fv-campaign-layout>.fv-panel.fv-strip>.fv-metric:nth-child(n){height:92px;min-height:92px;max-height:92px;padding-block:13px}
+ #fvShell[data-campaign-theme] #fvPage .fv-table>tbody>tr.fv-row>td[data-column="campaign"]::before{color:#FFF}
+ /* Do not let the compact date cell cover the expand button. */
+ #fvShell #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td[data-column="age"]{padding-right:0;margin-right:35px;max-width:73px;z-index:auto}
+ #fvShell #fvPage .fv-table-panel .fv-table>tbody>tr.fv-row>td.fv-x-col{z-index:2}
 }

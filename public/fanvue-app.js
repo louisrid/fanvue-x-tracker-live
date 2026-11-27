@@ -878,7 +878,7 @@
     }
     setTitle(page.title);
     const chipDef=C.CAMPAIGNS.find(c=>c.key===page.chip),chipLook=chipDef?look(chipDef.key):null;
-    $('fvTitleChip').innerHTML=page.chipHtml||(chipLook?'<span class="fv-campaign-chip" style="background:'+C.PALETTE[chipLook.color].fill+'" aria-hidden="true">'+U.icon(chipLook.icon,15)+'</span>':'');
+    $('fvTitleChip').innerHTML=r.kind==='page'&&r.key==='x-articles'?'':page.chipHtml||(chipLook?'<span class="fv-campaign-chip" style="background:'+C.PALETTE[chipLook.color].fill+'" aria-hidden="true">'+U.icon(chipLook.icon,15)+'</span>':'');
     if(chipDef&&hooks.extraBody)page.body+=hooks.extraBody(chipDef.key)||'';
     $('fvTitle').textContent=page.title;
     const upd=$('fvUpdated');
@@ -1057,8 +1057,9 @@
     // Header icons are injected so static HTML stays text-only.
     $('fvRefresh').insertAdjacentHTML('afterbegin',U.icon('refresh',15));
     $('fvMenu').innerHTML=U.icon('menu',26);$('fvDrawerClose').innerHTML=U.icon('close',20);
-    $('fvBack').innerHTML='<span>Back</span>';
-    $('fvBack').addEventListener('click',()=>history.back());
+    $('fvBack').innerHTML=U.icon('arrowLeft',16)+'<span>Back</span>';
+    $('fvBack').setAttribute('aria-label','Back to Dashboard');
+    $('fvBack').addEventListener('click',()=>go('home'));
     U.bindTips(document.body);
     const page=$('fvPage');
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);

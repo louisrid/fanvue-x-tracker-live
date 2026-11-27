@@ -105,6 +105,15 @@ try{
    await menu.click();await page.emulateMedia({reducedMotion:'no-preference'});
    await open('gta-vi','GTA VI');
   }
+  // Back is an explicit Dashboard destination, even after visiting a different page.
+  await open('x-articles','X Articles');
+  assert.equal(await page.locator('#fvTitleChip svg').count(),0,'no X title logo');
+  await open('viral-qrts','Viral QRTs');
+  assert.equal(await page.locator('#fvBack svg path').getAttribute('d'),'M19 12H5m6-6-6 6 6 6');
+  await page.locator('#fvBack').click();
+  await page.waitForFunction(()=>location.hash==='#home'&&document.querySelector('#fvTitle')?.textContent==='Dashboard');
+  assert.equal(await page.locator('#fvBack').isVisible(),false,'Back hidden on Dashboard');
+  await open('gta-vi','GTA VI');
   const geometry=()=>page.evaluate(()=>{
    const box=el=>{const r=el.getBoundingClientRect();return [r.x,r.y+scrollY,r.width,r.height].map(n=>Math.round(n*10)/10);};
    const q=s=>document.querySelector(s);
@@ -112,7 +121,7 @@ try{
    const chart=q(top+'.fv-chart-panel'),table=q(top+'.fv-table-panel'),strip=q(top+'.fv-strip');
    const contained=(el,outer)=>{const a=el.getBoundingClientRect(),b=outer.getBoundingClientRect();return a.left>=b.left-1&&a.top>=b.top-1&&a.right<=b.right+1&&a.bottom<=b.bottom+1;};
    const heads=[chart,table].every(panel=>{const header=panel.querySelector('.fv-panel-head'),title=header.querySelector('h2');return contained(header,panel)&&contained(title,header)&&title.getBoundingClientRect().left>=panel.getBoundingClientRect().left+(innerWidth<768&&panel.classList.contains('fv-table-panel')?0:10);});
-   return {heads,title:box(q('#fvTitle')).slice(0,2),header:box(q('#fvHeader')),strip:box(strip),card:box(strip.querySelector('.fv-metric')),chart:box(chart),plot:box(chart.querySelector('.fv-plot')),list:box(table).slice(0,3),toolbar:box(table.querySelector('.fv-table-tools')),cols:[...table.querySelectorAll('thead th')].map(e=>box(e)[2]),overflow:document.documentElement.scrollWidth>innerWidth+1,slots:chart.querySelectorAll('.fv-hit').length,bars:chart.querySelectorAll('[data-bar]').length,labels:chart.querySelectorAll('.fv-bar-value').length,cards:strip.querySelectorAll('.fv-metric').length};
+   return {heads,title:box(q('#fvHeader .fv-title')).slice(0,2),header:box(q('#fvHeader')),strip:box(strip),card:box(strip.querySelector('.fv-metric')),chart:box(chart),plot:box(chart.querySelector('.fv-plot')),list:box(table).slice(0,3),toolbar:box(table.querySelector('.fv-table-tools')),cols:[...table.querySelectorAll('thead th')].map(e=>box(e)[2]),overflow:document.documentElement.scrollWidth>innerWidth+1,slots:chart.querySelectorAll('.fv-hit').length,bars:chart.querySelectorAll('[data-bar]').length,labels:chart.querySelectorAll('.fv-bar-value').length,cards:strip.querySelectorAll('.fv-metric').length};
   });
   const auditContrast=async(route)=>{
    const violations=await page.evaluate(()=>{
@@ -122,7 +131,7 @@ try{
     const cards=all('#fvPage>.fv-strip>.fv-metric,#fvPage>.fv-chart-panel,#fvPage>.fv-home-discord,#fvPage>.fv-support'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row':',#fvPage>.fv-table-panel'));
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
     const bad=[];
-    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(width!==1||!['rgb(64, 64, 64)','rgb(80, 80, 80)'].includes(s.borderTopColor))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
+    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(width!==1||!['rgb(63, 63, 63)','rgb(78, 78, 78)'].includes(s.borderTopColor))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
     for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)!==0||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
     if(!mobile)for(const e of all('#fvPage .fv-table-panel tr.fv-row .fv-num'))if(css(e).backgroundColor!=='rgba(0, 0, 0, 0)')bad.push({desktopTablePill:e.textContent});
     return bad;
@@ -154,7 +163,7 @@ try{
      rowBorders:rows.every(e=>parseFloat(style(e).borderTopWidth)===1&&parseFloat(style(e).borderTopLeftRadius)>=10&&inside(e,e.closest('.fv-table-panel'))),
      cellVisible:cells.every(e=>visible(e)&&inside(e,e.closest('tr'))),
      cellWhite:cells.every(e=>white(e)||e.classList.contains('is-highlighted-number')),
-     labelsTheme:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color===accent(e)),
+     labelsTheme:cells.filter(e=>!e.classList.contains('is-name')&&e.dataset.column!=='age').every(e=>getComputedStyle(e,'::before').color===(e.dataset.column==='campaign'?'rgb(255, 255, 255)':accent(e))),
      filtersVisible:filters.every(e=>visible(e)&&inside(e,e.closest('.fv-table-panel'))&&rect(e).height>=44),
      noOverflow:document.documentElement.scrollWidth<=innerWidth+1
     };
@@ -210,7 +219,7 @@ try{
     const yellow=el=>getComputedStyle(el).color==='rgb(199, 181, 255)';
     return {numeric:cells.length,selected:cells.every(yellow),others:[...table.querySelectorAll('tbody>tr.fv-row td:not([data-column="views"]) .fv-num')].some(yellow),missing:[...table.querySelectorAll('tbody>tr.fv-row td.is-highlighted-number .fv-dash')].length,
       wrongColumn:table.querySelectorAll('td.is-highlighted-number:not([data-column="views"])').length,
-      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(48, 48, 48)')};
+      dividers:[...table.querySelectorAll('tbody>tr.fv-row td:not(:last-child)')].every(td=>getComputedStyle(td).borderRightWidth==='1px'&&getComputedStyle(td).borderRightColor==='rgb(47, 47, 47)')};
   });
   assert.ok(highlight.numeric>0&&highlight.selected&&!highlight.others&&!highlight.missing&&!highlight.wrongColumn,'only explicitly selected numeric values use the campaign colour');
   if(viewport.width>=768)assert.ok(highlight.dividers,'subtle vertical cell dividers');
@@ -222,7 +231,7 @@ try{
   await page.evaluate(()=>location.hash='all-accounts');
   await page.waitForFunction(()=>document.querySelector('#acc-table .fv-account-plain'));
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge,#acc-table .is-best-value').count(),0);
-  const accountBounds=await page.evaluate(()=>{const panel=document.querySelector('#acc-table'),head=panel.querySelector('.fv-panel-head'),title=head.querySelector('h2'),a=panel.getBoundingClientRect(),b=head.getBoundingClientRect(),c=title.getBoundingClientRect();return {contained:b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&c.left>=a.left+(innerWidth<768?0:10)&&c.top>=b.top-1&&c.bottom<=b.bottom+1,title:[document.querySelector('#fvTitle').getBoundingClientRect().x,document.querySelector('#fvTitle').getBoundingClientRect().y+scrollY],header:[...['x','y','width','height'].map(k=>document.querySelector('#fvHeader').getBoundingClientRect()[k])]};});
+  const accountBounds=await page.evaluate(()=>{const panel=document.querySelector('#acc-table'),head=panel.querySelector('.fv-panel-head'),title=head.querySelector('h2'),a=panel.getBoundingClientRect(),b=head.getBoundingClientRect(),c=title.getBoundingClientRect();return {contained:b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&c.left>=a.left+(innerWidth<768?0:10)&&c.top>=b.top-1&&c.bottom<=b.bottom+1,title:[document.querySelector('#fvHeader .fv-title').getBoundingClientRect().x,document.querySelector('#fvHeader .fv-title').getBoundingClientRect().y+scrollY],header:[...['x','y','width','height'].map(k=>document.querySelector('#fvHeader').getBoundingClientRect()[k])]};});
   assert.ok(accountBounds.contained,'Accounts heading must stay inside its panel');
   assert.ok(await page.locator('#acc-table .fv-account-mark').count()>0,'account initials are present');
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge').count(),0,'no account tags');
@@ -255,10 +264,11 @@ try{
    for(const k of ['title','header'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
    // Dashboard retains the common page alignment, but restores its compact card and chart sizes.
    for(const k of ['strip','chart','list','toolbar'])close([g[k][0],g[k][2]],[reference[k][0],reference[k][2]],viewport.width+' Dashboard '+k+' width');
-   if(viewport.width<768){assert.equal(g.card[3],78);assert.equal(g.chart[3],216);}else{assert.equal(g.card[3],90);assert.equal(g.chart[3],310);}
+   if(viewport.width<768){assert.equal(g.card[3],92);assert.equal(g.chart[3],216);}else{assert.equal(g.card[3],104);assert.equal(g.chart[3],310);}
    await auditPhone('Dashboard '+period);
    if(!homeReference)homeReference=g;else for(const k of ['strip','chart','plot','list','toolbar','cols'])close(g[k],homeReference[k],viewport.width+' dashboard period '+period+' '+k);
    assert.equal(await page.locator('#home-comparison .fv-row').count(),5);
+   if(viewport.width>=768)assert.equal(await page.locator('#home-comparison th[data-column="name"] button').evaluate(e=>getComputedStyle(e).color),'rgb(255, 255, 255)','Campaign header stays white');
    assert.equal(await page.locator('.fv-home-discord .fv-home-community-strip>.fv-metric').count(),3);
    const homeVisual=await page.evaluate(()=>{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
