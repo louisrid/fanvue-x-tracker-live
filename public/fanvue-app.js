@@ -763,17 +763,15 @@
     ensure('overview');ensure('gta');ensure('directory');
     const ov=D.overview();
     const all=ov?[...xaRecords(),...gtaRecords(),...ofRecords(),...guruRecords()]:[];
-    const ts=tableState('all-accounts','acc-table'),f=ts.xf||(ts.xf={camp:'',type:'',scope:''});
-    if(!ts.sort)ts.sort={key:'clicks',dir:-1};
-    const shown=all.filter(x=>x.platform==='X'&&(!f.camp||x.parent===f.camp)&&(!f.type||x.type===f.type));
-    const sel=(key,label,opts)=>'<label class="fv-select fv-filter"><span class="fv-sr">'+esc(label)+'</span><select data-xfilter="'+key+'" data-table="acc-table">'+opts.map(([v,l])=>'<option value="'+esc(v)+'"'+((f[key]||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'+U.icon('select',14)+'</label>';
-    const present=(get,order)=>order.filter(v=>all.some(x=>get(x)===v));
-    const filters=sel('camp','Campaign',[['','All campaigns'],...present(x=>x.parent,C.CAMPAIGNS.map(c=>c.name)).map(x=>[x,x])])+sel('type','Type',[['','All types'],...present(x=>x.type,['Post','Article','RT','QRT']).map(x=>[x,x])])+sel('scope','Account history',[['','All accounts'],['used','Used accounts']]);
-    const rows=accountRows(shown);
-    if(!f.camp&&!f.type&&f.scope!=='used'){
+    const ts=tableState('all-accounts','acc-table');
+    // Accounts uses the shared table controls. No extra filters or preselected sort arrow.
+    // Keep every publisher available, and apply numeric colour only on explicit sorting.
+    const rows=accountRows(all.filter(x=>x.platform==='X'));
+    {
       const keys=new Set(rows.map(a=>a.key));for(const a of directory.accounts||[]){if(keys.has(a.key)||a.platform!=='X')continue;rows.push({key:a.key,name:a.handle,platform:'X',campaigns:[],posts:0,records:[],spend:M.na('No paid placement.'),views:M.na('No measured post.'),clicks:M.na('No tracked placement.'),cpc:M.na('No matched traffic.'),perDollar:M.na('No matched traffic.')});keys.add(a.key);}
     }
-    const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',filters,rows,limit:20,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
+    rows.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+    const table=U.tablePanel({id:'acc-table',title:'Listings',icon:'users',age:a=>latestAge(a.records),ageLabel:'Last Post',search:true,searchPlaceholder:'Search accounts',rows,limit:20,cls:'is-list is-accounts',hideEmpty:false,rowKey:a=>a.key,rowLabel:a=>a.name,minWidth:820,searchText:a=>[a.name,...a.records.map(x=>x.account)].join(' '),empty:ov?'No accounts found':waiting('Loading…'),
       expand:accountHistory,
       columns:[
         {key:'name',label:'Account',type:'name',html:a=>{const raw=a.records.find(r=>r.raw?.profileUrl||r.link||r.raw?.handle||String(r.account||'').startsWith('@')),candidate=String(raw?.raw?.profileUrl||raw?.link||''),match=candidate.match(/^https:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})(?:[/?#]|$)/i),explicit=String(raw?.raw?.handle||a.name||'').match(/^@([A-Za-z0-9_]{1,15})$/),handle=match?.[1]||explicit?.[1],url=handle?'https://x.com/'+handle:'';const label='<span class="fv-name">'+U.accountMark(a.name)+'<span class="fv-account-plain" title="'+esc(a.name)+'">'+esc(a.name)+'</span></span>';return url?'<a class="fv-account-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+label+'</a>':label;},sort:a=>a.name.toLowerCase()},
@@ -920,10 +918,11 @@
       setNav(r.key);
     }
     setTitle(page.title);
-    const chipDef=C.CAMPAIGNS.find(c=>c.key===page.chip),chipLook=chipDef?look(chipDef.key):null;
-    $('fvTitleChip').innerHTML=r.kind==='page'&&r.key==='x-articles'?'':page.chipHtml||(chipLook?'<span class="fv-campaign-chip" style="background:'+C.PALETTE[chipLook.color].fill+'" aria-hidden="true">'+U.icon(chipLook.icon,15)+'</span>':'');
+    const chipDef=C.CAMPAIGNS.find(c=>c.key===page.chip);
+    $('fvTitleChip').innerHTML='';
     if(chipDef&&hooks.extraBody)page.body+=hooks.extraBody(chipDef.key)||'';
     $('fvTitle').textContent=page.title;
+    $('fvTitle').title=page.title;
     const upd=$('fvUpdated');
     upd.textContent=page.updated?(page.stale?'Last Verified ':'Updated ')+C.stamp(page.updated):'';
     upd.classList.toggle('is-stale',!!page.stale);

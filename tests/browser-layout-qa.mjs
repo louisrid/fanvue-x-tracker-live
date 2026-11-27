@@ -58,6 +58,8 @@ try{
    await page.evaluate(route=>{location.hash=route;},route);
    await page.waitForFunction(({route,title})=>location.hash.slice(1)===route&&document.getElementById('fvTitle')?.textContent===title&&document.querySelector('#fvPage .fv-chart .fv-hit'),{route,title});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   assert.equal(await page.locator('#fvTitleChip svg').count(),0,route+' no page-title icon');
+   assert.ok(await page.locator('#fvTitle').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=(innerWidth<768?30:44)),route+' larger title');
   };
   // Capture every page at every tested width before detailed assertions, even if later QA fails.
   {
@@ -148,7 +150,7 @@ try{
     const cards=all('#fvPage>.fv-strip>.fv-metric,#fvPage>.fv-chart-panel,#fvPage>.fv-home-discord,#fvPage>.fv-support'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row':',#fvPage>.fv-table-panel'));
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
     const bad=[];
-    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==2||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(!mobile&&e.classList.contains('fv-table-panel')?(width!==1||!['rgb(53, 53, 53)','rgb(64, 64, 64)'].includes(s.borderTopColor)):(width!==2||!['rgb(73, 73, 73)','rgb(90, 90, 90)'].includes(s.borderTopColor)))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
+    for(const e of cards){const s=css(e),width=parseFloat(s.borderTopWidth),key=e.classList.contains('fv-metric');if(key?(width!==3||ratio(s.borderTopColor,s.backgroundColor)<3):(width>0&&(!mobile&&e.classList.contains('fv-table-panel')?(width!==1||!['rgb(53, 53, 53)','rgb(64, 64, 64)'].includes(s.borderTopColor)):(width!==2||!['rgb(73, 73, 73)','rgb(90, 90, 90)'].includes(s.borderTopColor)))))bad.push({border:e.className,width,color:s.borderTopColor,bg:s.backgroundColor});}
     for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)!==0||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
     if(!mobile)for(const e of all('#fvPage .fv-table-panel tr.fv-row .fv-num'))if(css(e).backgroundColor!=='rgba(0, 0, 0, 0)')bad.push({desktopTablePill:e.textContent});
     return bad;
@@ -173,7 +175,7 @@ try{
     return {
      titleGap:rect(title).top-rect(top).bottom,belowTitle:rect(q('.fv-head-tools')).top-rect(title).bottom,
      afterHeader:rect(body).top-rect(head).bottom,sideMargins:[rect(body).left,innerWidth-rect(body).right],
-     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===2&&parseFloat(style(e).borderTopLeftRadius)>=10),
+     borders:panels.every(e=>e.classList.contains('fv-table-panel')?parseFloat(style(e).borderTopWidth)===0:parseFloat(style(e).borderTopWidth)===(e.classList.contains('fv-metric')?3:2)&&parseFloat(style(e).borderTopLeftRadius)>=10),
      labelTheme:labels.every(e=>style(e.lastElementChild).color===accent(e)),valueWhite:nums.every(white),heavy:nums.every(e=>Number(style(e).fontWeight)>=850),
      numericSizes:nums.filter(e=>e.textContent.trim().length<=5).map(e=>parseFloat(style(e).fontSize)),
      tableNumbers:all('#fvPage .fv-table tbody>tr.fv-row .fv-num').every(e=>Number(style(e).fontWeight)>=850&&parseFloat(style(e).fontSize)>=(e.hasAttribute('data-num-length')?12:14)),
@@ -186,7 +188,7 @@ try{
     };
    });
    assert.ok(result.titleGap>=0&&result.titleGap<=50,route+' compact title spacing '+JSON.stringify(result));
-   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-40)<=1,route+' space below title and header');
+   assert.ok(result.belowTitle>=10&&Math.abs(result.afterHeader-32)<=1,route+' space below title and header');
    assert.ok(Math.abs(result.sideMargins[0]-result.sideMargins[1])<=2,route+' balanced page margins');
    assert.ok(result.borders&&result.labelTheme&&result.valueWhite&&result.heavy,route+' bold white metrics and stronger borders '+JSON.stringify(result));
    assert.ok(result.numericSizes.every(n=>n>=(viewport.width>=360?28:24)),route+' large short KPI figures '+result.numericSizes);
@@ -265,8 +267,17 @@ try{
   const accountHeader=await page.locator('#acc-table thead').innerText().catch(()=> '');
   if(viewport.width>=768)assert.match(accountHeader,/Last Post/);
   await page.locator('#acc-table [data-search]').fill('unused');assert.equal(await page.locator('#acc-table .fv-account-plain').innerText(),'@unused');
-  await page.locator('#acc-table [data-xfilter="scope"]').selectOption('used');assert.equal(await page.locator('#acc-table .fv-account-plain').count(),0);
-  await page.locator('#acc-table [data-xfilter="scope"]').selectOption('');await page.locator('#acc-table [data-search]').fill('');
+  assert.equal(await page.locator('#acc-table .fv-filter,#acc-table [data-xfilter],#acc-table [data-filter]').count(),0,'no separate Accounts filters');
+  await page.locator('#acc-table [data-search]').fill('');
+  assert.equal(await page.locator('#acc-table th.is-user-sorted,#acc-table td.is-highlighted-number,#acc-table th[aria-sort="ascending"],#acc-table th[aria-sort="descending"]').count(),0,'neutral default Accounts order');
+  if(viewport.width>=768)await page.locator('#acc-table [data-sort="clicks"]').click();
+  else await page.locator('#acc-table [data-mobile-sort]').selectOption('clicks:-1');
+  const accountSort=await page.evaluate(()=>{
+   const t=document.querySelector('#acc-table'),cells=[...t.querySelectorAll('td.is-highlighted-number')],selected=getComputedStyle(t).getPropertyValue('--fv-selection').trim();
+   const rgb='rgb('+[1,3,5].map(i=>parseInt(selected.slice(i,i+2),16)).join(', ')+')';
+   return cells.length>0&&cells.every(e=>e.dataset.column==='clicks'&&e.querySelector('.fv-num')&&getComputedStyle(e.querySelector('.fv-num')).color===rgb);
+  });
+  assert.ok(accountSort,'Accounts uses shared explicit metric sort colour');
   await page.screenshot({path:dir+'/'+viewport.width+'-accounts.png',fullPage:true});
   const usedRow=page.locator('#acc-table .fv-row').filter({hasText:'@qa'}).first();
   if(await usedRow.count()){
@@ -301,7 +312,7 @@ try{
     const q=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],rect=e=>e.getBoundingClientRect(),css=e=>getComputedStyle(e);
     const nav=q('#fvPage>.fv-subnav'),active=nav.querySelector('[aria-current="page"]'),summary=q('.fv-home-community-strip'),cards=[...summary.children],main=q('#fvPage>.fv-strip>.fv-metric');
     const row=q('#home-comparison .fv-row'),metrics=[...row.querySelectorAll('td[data-column]:not(.is-name)')];
-    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===14&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===2,restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
+    return {singleRow:!q('#fvPage>.fv-executive-controls')&&all('#fvPage>.fv-subnav button').every(e=>Math.abs(rect(e).top-rect(active).top)<1),active:css(active).backgroundColor==='rgb(199, 22, 103)',tabFit:nav.scrollWidth<=nav.clientWidth+1,scope:q('#home-chart-t')?.parentElement.querySelector('.fv-chart-scope')?.textContent,restored:['rgb(55, 24, 40)','rgb(53, 23, 37)'].includes(css(main).backgroundColor)&&parseFloat(css(main).borderTopLeftRadius)===14&&['flex-start','start','flow-start'].includes(css(main).alignItems)&&parseFloat(css(main).borderLeftWidth)===3,restoredDetails:{bg:css(main).backgroundColor,radius:css(main).borderTopLeftRadius,align:css(main).alignItems,left:css(main).borderLeftWidth},compactCommunity:cards.every(e=>rect(e).height<=100)&&cards.every(e=>Math.abs(rect(e).top-rect(cards[0]).top)<1),compactRows:all('#home-comparison tbody>tr.fv-row').every(e=>rect(e).height<=160),rowHeights:all('#home-comparison tbody>tr.fv-row').map(e=>rect(e).height),grid:css(row).gridTemplateColumns,metricPairs:metrics.length===4&&Math.abs(rect(metrics[0]).top-rect(metrics[1]).top)<1&&Math.abs(rect(metrics[2]).top-rect(metrics[3]).top)<1&&rect(metrics[2]).top>rect(metrics[0]).top,
      summaryFits:cards.every(e=>rect(e).right<=rect(summary).right+1&&rect(e).left>=rect(summary).left-1)};
    });
    assert.ok(homeVisual.singleRow&&homeVisual.active&&homeVisual.tabFit, 'Home period row matches campaign layout '+JSON.stringify(homeVisual));
@@ -348,7 +359,12 @@ try{
    await nameCell.hover();
    assert.ok(await nameCell.evaluate(e=>[...e.closest('tr').cells].filter(x=>x!==e).every(x=>getComputedStyle(x).backgroundColor==='rgb(8, 6, 8)')),'campaign name highlights its row subtly');
    await page.mouse.move(0,0);
-   for(const route of ['all-accounts','discord']){
+   await page.evaluate(()=>location.hash='all-accounts');
+   const accountCell=page.locator('#acc-table tbody tr.fv-row td[data-column="clicks"]').first();
+   await accountCell.hover();
+   assert.ok(await accountCell.evaluate(e=>{const t=e.closest('table'),col=[...t.querySelectorAll('tbody>tr.fv-row td[data-column="clicks"]')],other=[...t.querySelectorAll('tbody>tr.fv-row td[data-column="views"]')];return col.every(x=>getComputedStyle(x).backgroundColor===(x===e?'rgb(25, 31, 39)':'rgb(7, 8, 9)'))&&other.every(x=>getComputedStyle(x).backgroundColor==='rgb(0, 0, 0)');}),'Accounts metric hover matches shared column rule');
+   await page.mouse.move(0,0);
+   for(const route of ['discord']){
     await page.evaluate(r=>{location.hash=r},route);
     const panel=route==='discord'?'#discord-table':'#acc-table';
     const recordCell=page.locator(panel+' tbody tr.fv-row td:not(.is-left):not(.fv-x-col)').first();
