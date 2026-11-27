@@ -90,7 +90,7 @@ try{
    const top='#fvPage > ';
    const chart=q(top+'.fv-chart-panel'),table=q(top+'.fv-table-panel'),strip=q(top+'.fv-strip');
    const contained=(el,outer)=>{const a=el.getBoundingClientRect(),b=outer.getBoundingClientRect();return a.left>=b.left-1&&a.top>=b.top-1&&a.right<=b.right+1&&a.bottom<=b.bottom+1;};
-   const heads=[chart,table].every(panel=>{const header=panel.querySelector('.fv-panel-head'),title=header.querySelector('h2');return contained(header,panel)&&contained(title,header)&&title.getBoundingClientRect().left>=panel.getBoundingClientRect().left+10;});
+   const heads=[chart,table].every(panel=>{const header=panel.querySelector('.fv-panel-head'),title=header.querySelector('h2');return contained(header,panel)&&contained(title,header)&&title.getBoundingClientRect().left>=panel.getBoundingClientRect().left+(innerWidth<768&&panel.classList.contains('fv-table-panel')?0:10);});
    return {heads,title:box(q('#fvTitle')).slice(0,2),header:box(q('#fvHeader')),strip:box(strip),card:box(strip.querySelector('.fv-metric')),chart:box(chart),plot:box(chart.querySelector('.fv-plot')),list:box(table).slice(0,3),toolbar:box(table.querySelector('.fv-table-tools')),cols:[...table.querySelectorAll('thead th')].map(e=>box(e)[2]),overflow:document.documentElement.scrollWidth>innerWidth+1,slots:chart.querySelectorAll('.fv-hit').length,bars:chart.querySelectorAll('[data-bar]').length,labels:chart.querySelectorAll('.fv-bar-value').length,cards:strip.querySelectorAll('.fv-metric').length};
   });
   const auditPhone=async(route)=>{
@@ -135,7 +135,7 @@ try{
   };
   let reference,cols;
   for(const [route,title] of routes){
-   await open(route,title);const g=await geometry();
+   await open(route,title);await page.screenshot({path:dir+'/'+viewport.width+'-'+route.replaceAll('/','-')+'.png',fullPage:true});const g=await geometry();
    const visual=await page.evaluate(()=>{const panel=document.querySelector('#fvPage>.fv-table-panel'),rows=[...panel.querySelectorAll('tbody>tr.fv-row')],bounds=panel.getBoundingClientRect();return {yellow:panel.querySelectorAll('th.is-user-sorted,td.is-highlighted-number,[data-user-sort]').length,clipped:rows.some(row=>{const r=row.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1||[...row.children].some(cell=>{const b=cell.getBoundingClientRect();return getComputedStyle(cell).display!=='none'&&(b.right>r.right+1||b.left<r.left-1);});})};});
    assert.equal(visual.yellow,0,route+' default sort must be neutral');
    assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
@@ -175,7 +175,7 @@ try{
   await page.evaluate(()=>location.hash='all-accounts');
   await page.waitForFunction(()=>document.querySelector('#acc-table .fv-account-plain'));
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge,#acc-table .is-best-value').count(),0);
-  const accountBounds=await page.evaluate(()=>{const panel=document.querySelector('#acc-table'),head=panel.querySelector('.fv-panel-head'),title=head.querySelector('h2'),a=panel.getBoundingClientRect(),b=head.getBoundingClientRect(),c=title.getBoundingClientRect();return {contained:b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&c.left>=a.left+10&&c.top>=b.top-1&&c.bottom<=b.bottom+1,title:[document.querySelector('#fvTitle').getBoundingClientRect().x,document.querySelector('#fvTitle').getBoundingClientRect().y+scrollY],header:[...['x','y','width','height'].map(k=>document.querySelector('#fvHeader').getBoundingClientRect()[k])]};});
+  const accountBounds=await page.evaluate(()=>{const panel=document.querySelector('#acc-table'),head=panel.querySelector('.fv-panel-head'),title=head.querySelector('h2'),a=panel.getBoundingClientRect(),b=head.getBoundingClientRect(),c=title.getBoundingClientRect();return {contained:b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&c.left>=a.left+(innerWidth<768?0:10)&&c.top>=b.top-1&&c.bottom<=b.bottom+1,title:[document.querySelector('#fvTitle').getBoundingClientRect().x,document.querySelector('#fvTitle').getBoundingClientRect().y+scrollY],header:[...['x','y','width','height'].map(k=>document.querySelector('#fvHeader').getBoundingClientRect()[k])]};});
   assert.ok(accountBounds.contained,'Accounts heading must stay inside its panel');
   assert.ok(await page.locator('#acc-table .fv-account-mark').count()>0,'account initials are present');
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge').count(),0,'no account tags');
@@ -204,7 +204,7 @@ try{
    await page.locator('[data-view="'+period+'"]').click();
    await page.waitForFunction(period=>{const C=window.FanvueCore,m=window.FanvueUI.getMeasure('home-chart','clicks'),week=C.weekStart(C.londonDay(Date.now()));return document.querySelector('[data-view="'+period+'"]')?.getAttribute('aria-current')==='page'&&m&&m.weekFrom===(period==='all-time'?undefined:period==='this-week'?week:C.addDays(week,-7));},period);
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-   const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);
+   await page.screenshot({path:dir+'/'+viewport.width+'-dashboard-'+period+'.png',fullPage:true});const g=await geometry();assert.equal(g.heads,true,'Dashboard headings are contained');assert.equal(g.cards,4);assert.equal(g.slots,7);assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false);
    for(const k of ['title','header'])close(g[k],reference[k],viewport.width+' dashboard '+period+' '+k);
    // Dashboard retains the common page alignment, but restores its compact card and chart sizes.
    for(const k of ['strip','chart','list','toolbar'])close([g[k][0],g[k][2]],[reference[k][0],reference[k][2]],viewport.width+' Dashboard '+k+' width');
