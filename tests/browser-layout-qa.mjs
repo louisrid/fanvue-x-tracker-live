@@ -119,7 +119,7 @@ try{
   const auditContrast=async(route)=>{
    const violations=await page.evaluate(()=>{
     const mobile=innerWidth<768,all=s=>[...document.querySelectorAll(s)],css=e=>getComputedStyle(e),rect=e=>e.getBoundingClientRect();
-    const lum=color=>{const x=color.match(/[\\d.]+/g).slice(0,3).map(n=>{const v=Number(n)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return x.reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);};
+    const lum=color=>{const x=color.match(/[0-9.]+/g).slice(0,3).map(n=>{const v=Number(n)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return x.reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);};
     const ratio=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
     const cards=all('#fvPage>.fv-strip>.fv-metric,#fvPage>.fv-chart-panel,#fvPage>.fv-home-discord,#fvPage>.fv-support'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row':',#fvPage>.fv-table-panel'));
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
