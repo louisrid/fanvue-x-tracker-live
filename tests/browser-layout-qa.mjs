@@ -100,6 +100,19 @@ try{
   assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false,'failure restores numbers');
   assert.equal(await page.evaluate(()=>window.qaRefreshCalls),2);
   await open('gta-vi','GTA VI');
+  // Period controls on every KPI page use real period state without altering the listing scope.
+  for(const [route,title] of routes){
+    await open(route,title);
+    const controls=page.locator('#fvPage>.fv-kpi-periods button');
+    assert.deepEqual(await controls.evaluateAll(es=>es.map(e=>e.dataset.period)),['this-week','last-week','all-time'],route+' period order');
+    for(const period of ['last-week','all-time','this-week']){
+      await page.locator('#fvPage>.fv-kpi-periods [data-period="'+period+'"]').click();
+      assert.equal(await page.locator('#fvPage>.fv-kpi-periods [aria-pressed="true"]').getAttribute('data-period'),period);
+      assert.equal(await page.locator('#fvPage>.fv-strip .fv-metric').count(),4);
+      assert.ok(await page.locator('#fvPage>.fv-kpi-periods').evaluate(e=>e.scrollWidth<=e.clientWidth+1),route+' period controls fit');
+    }
+  }
+  await open('gta-vi','GTA VI');
   // Capture every page at every tested width before detailed assertions, even if later QA fails.
   {
    await page.evaluate(()=>Promise.race([document.fonts?.ready||Promise.resolve(),new Promise(r=>setTimeout(r,2000))]));

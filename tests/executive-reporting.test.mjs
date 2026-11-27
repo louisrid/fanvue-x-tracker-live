@@ -233,3 +233,12 @@ test('GTA VI headline includes planned and committed allocations once, dated pla
  assert.equal(C.campaignSummary(next,'gta-vi').spend.value,300);
  assert.equal(C.campaignSummary(next,'gta-vi').paidSpend.value,200);
 });
+
+test('every campaign KPI group has the same period controls; GTA VI period spend uses dated allocations',()=>{
+ const now=C.londonDay(Date.now()),ws=C.weekStart(now),prior=C.addDays(ws,-7);
+ const rows=[{code:'current',campaign:'GTAM',publisher:'Current',paid:true,paidAt:now,cost:50},{code:'last',campaign:'GTAM',publisher:'Last',paid:true,paidAt:prior,cost:120},{code:'plan',campaign:'GTAM',publisher:'Future',paid:false,planned:true,plannedAt:now,cost:70}];
+ const ov={campaigns:[campaign('gta-mandy',rows,{plannedSpendKnown:70}),campaign('gta-qrts',[]),campaign('gta-originals',[]),campaign('x-articles',[]),campaign('article-rts',[]),campaign('of-terms',[]),campaign('guru-rts',[])]};
+ const a=app(ov),pages=['gta-vi','viral-qrts','x-articles','of-terms','guru-promotion','discord'];
+ for(const key of pages){const html=a.pages[key]({}).body;assert.deepEqual([...html.matchAll(/data-period="([^"]+)"/g)].map(m=>m[1]),['this-week','last-week','all-time'],key);assert.match(html,/data-period="this-week" aria-pressed="true"/);}
+ for(const key of ['gta-vi','viral-qrts']){for(const [period,amount] of [['this-week',120],['last-week',120],['all-time',240]]){const html=a.pages[key]({period}).body;assert.match(html,new RegExp('data-period="'+period+'" aria-pressed="true"'));const strip=html.split('aria-label="Key metrics"')[1]?.split('</section>')[0]||html;assert.ok(strip.includes('$'+amount),key+' '+period+' '+amount);}}
+});

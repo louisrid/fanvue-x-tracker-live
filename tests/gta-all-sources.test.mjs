@@ -192,12 +192,12 @@ test('a GTA report from before Instagram, or a group with no paid rows, never ma
   assert.equal(ov.campaigns.some(c=>c.id==='gta-instagram'),false);
   const s=C.campaignSummary(ov,'gta-vi');
   assert.equal(s.spend.state,'value');
-  assert.equal(s.paidSpend.value,350);assert.equal(s.spend.value,390);
+  assert.equal(s.paidSpend.value,350);assert.equal(s.spend.value,540);
   // A connected Instagram group with nothing paid adds $0 rather than a gap.
   const withEmpty=assembleCampaignOverview({gta:{data:{...old,instagram:group(['GTAIG'])}},of:{error:'x'},boosts:{error:'x'},dashboard:{error:'x'},articleRts:{error:'x'}});
   const s2=C.campaignSummary(withEmpty,'gta-vi');
   assert.equal(s2.spend.state,'value');
-  assert.equal(s2.paidSpend.value,350);assert.equal(s2.spend.value,390);
+  assert.equal(s2.paidSpend.value,350);assert.equal(s2.spend.value,540);
 });
 
 const uctx=vm.createContext({window:{FanvueCore:C},Intl,Date,Math,Number,String,Object,Array,Map,Set,JSON,RegExp,URL});

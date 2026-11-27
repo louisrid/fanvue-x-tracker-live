@@ -2757,3 +2757,8 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
 /* Missing finance dates are labelled, never presented as zero or an unexplained dash. */
 #fvShell .fv-metric-value.is-state .is-na{color:#FFF;font-weight:var(--fv-w-strong);font-size:var(--fv-fs-m)}
 #fvShell .fv-table .is-na{color:#FFF;font-weight:var(--fv-w-strong)}
+
+/* Consistent period controls for every headline KPI group. Keep group tabs and period state independent. */
+#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-width:0;min-height:42px;height:42px;max-height:42px;overflow:visible;margin:0!important;padding:0;background:none;border:0}
+#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods>button{display:flex;align-items:center;justify-content:center;min-width:0;height:40px;min-height:40px;padding:0 14px;border-radius:8px;box-shadow:none;font-weight:var(--fv-w-strong);white-space:nowrap}
+@media(max-width:767px){#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#fvShell #fvPage.fv-campaign-layout>.fv-kpi-periods>button{width:100%;padding:0 4px;height:40px;min-height:40px}}
