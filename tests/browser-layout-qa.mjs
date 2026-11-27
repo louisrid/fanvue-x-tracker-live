@@ -69,6 +69,7 @@ try{
    await open(route,title);const g=await geometry();
    const visual=await page.evaluate(()=>{const panel=document.querySelector('#fvPage>.fv-table-panel'),rows=[...panel.querySelectorAll('tbody>tr.fv-row')],bounds=panel.getBoundingClientRect();return {yellow:panel.querySelectorAll('th.is-user-sorted,td.is-sorted,[data-user-sort]').length,clipped:rows.some(row=>{const r=row.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1||[...row.children].some(cell=>{const b=cell.getBoundingClientRect();return getComputedStyle(cell).display!=='none'&&(b.right>r.right+1||b.left<r.left-1);});})};});
    assert.equal(visual.yellow,0,route+' default sort must be neutral');
+   assert.equal(await page.locator('#fvPage .fv-list-headline').count(),0,'no captions in listings');
    if(viewport.width<768)assert.equal(visual.clipped,false,route+' mobile rows must fit');
    assert.equal(g.heads,true,route+' headings must stay inside panels');assert.equal(g.cards,4,route+' four cards');assert.equal(g.slots,7,route+' seven dates');assert.ok(g.bars<=7);assert.equal(g.labels,0);assert.equal(g.overflow,false,route+' document overflow');
    if(!reference)reference=g;
@@ -93,6 +94,8 @@ try{
   assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge,#acc-table .is-best-value').count(),0);
   const accountBounds=await page.evaluate(()=>{const panel=document.querySelector('#acc-table'),head=panel.querySelector('.fv-panel-head'),title=head.querySelector('h2'),a=panel.getBoundingClientRect(),b=head.getBoundingClientRect(),c=title.getBoundingClientRect();return {contained:b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&c.left>=a.left+10&&c.top>=b.top-1&&c.bottom<=b.bottom+1,title:[document.querySelector('#fvTitle').getBoundingClientRect().x,document.querySelector('#fvTitle').getBoundingClientRect().y+scrollY],header:[...['x','y','width','height'].map(k=>document.querySelector('#fvHeader').getBoundingClientRect()[k])]};});
   assert.ok(accountBounds.contained,'Accounts heading must stay inside its panel');
+  assert.ok(await page.locator('#acc-table .fv-account-mark').count()>0,'account initials are present');
+  assert.equal(await page.locator('#acc-table .fv-account-tag,#acc-table .fv-value-badge').count(),0,'no account tags');
   if(viewport.width<768){
    const cards=await page.evaluate(()=>[...document.querySelectorAll('#acc-table tbody>tr.fv-row')].map(r=>({width:r.getBoundingClientRect().width,clipped:[...r.querySelectorAll('td[data-column]')].some(c=>getComputedStyle(c).display!=='none'&&c.getBoundingClientRect().right>r.getBoundingClientRect().right+1)})));
    assert.ok(cards.every(r=>r.width<=viewport.width-20&&!r.clipped),'mobile Accounts fits its panel');

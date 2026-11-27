@@ -8,43 +8,46 @@
 
   /* 16px stroke icon family (lucide-style geometry, drawn for this product). */
   const P={
-    home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/>',
+    home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
     discord:'<path d="M8.5 7.5c-1.4.3-2.6.8-3.7 1.5C3.6 11.2 3 13.6 3 16.4c1.2 1 2.6 1.7 4.3 2.1l1-1.6"/><path d="M15.5 7.5c1.4.3 2.6.8 3.7 1.5 1.2 2.2 1.8 4.6 1.8 7.4-1.2 1-2.6 1.7-4.3 2.1l-1-1.6"/><path d="M7.5 16.5c3 1.3 6 1.3 9 0"/><path d="M9 7.2c2-.5 4-.5 6 0"/><circle cx="9.2" cy="12.6" r="1.1"/><circle cx="14.8" cy="12.6" r="1.1"/>',
     x:'<path d="M4 4l16 16"/><path d="M20 4 4 20"/>',
     xmark:'<path d="M4 4h4.2l11.8 16h-4.2z"/><path d="M19.6 4 13.3 11M10.7 13 4.4 20"/>',
-    gamepad:'<path d="M7.5 7h9a4.5 4.5 0 0 1 4.4 3.6l.9 4.6a2.6 2.6 0 0 1-4.5 2.2L15 15H9l-2.3 2.4a2.6 2.6 0 0 1-4.5-2.2l.9-4.6A4.5 4.5 0 0 1 7.5 7Z"/><path d="M8 10v3M6.5 11.5h3"/><circle cx="15.5" cy="11" r=".6"/><circle cx="17.3" cy="12.8" r=".6"/>',
+    gamepad:'<rect x="3" y="7" width="18" height="11" rx="5.5"/><path d="M8 10v5M5.5 12.5h5M15 11h.1M18 14h.1"/>',
     layers:'<path d="m12 3 9 4.8-9 4.8-9-4.8z"/><path d="m3 12.2 9 4.8 9-4.8"/><path d="m3 16.4 9 4.6 9-4.6"/>',
     sparkles:'<path d="M12 3.5c.5 3.9 2.6 6 6.5 6.5-3.9.5-6 2.6-6.5 6.5-.5-3.9-2.6-6-6.5-6.5 3.9-.5 6-2.6 6.5-6.5Z"/><path d="M19 15.5v4M17 17.5h4"/>',
-    megaphone:'<path d="M3.5 10v4a1 1 0 0 0 1 1H7l7 4V5L7 9H4.5a1 1 0 0 0-1 1Z"/><path d="M7 15l1.5 5h2.5L10 15.6"/><path d="M17.5 9a4 4 0 0 1 0 6"/>',
-    wallet:'<path d="M4 7.5V18a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-3"/><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H17v2.5"/><path d="M20 11h-4a2 2 0 0 0 0 4h4z"/><path d="M4 7.5h15a1 1 0 0 1 1 1V11"/>',
-    eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/>',
-    cursor:'<path d="m5 4 13.5 6.2-5.8 1.9-2 5.9z"/><path d="m13 13 5 5"/>',
-    user:'<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+    megaphone:'<path d="M3 10v4a1 1 0 0 0 1 1h4l9 4V5L8 9H4a1 1 0 0 0-1 1ZM8 15l2 5M20 9v6"/>',
+    wallet:'<rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 9h18M16 14h2"/>',
+    eye:'<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+    cursor:'<path d="m5 3 14 9-7 1.5-3 6Z"/>',
+    user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v2"/>',
     shield:'<path d="M12 3 5 6v5.5c0 4.3 2.9 7.7 7 9.5 4.1-1.8 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
     check:'<circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/>',
     calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/>',
     refresh:'<path d="M20 11a8 8 0 0 0-14.3-4.6L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.6l1.7-2.1"/><path d="M20 20v-4.5h-4.5"/>',
+    select:'<path d="M6 8h12M8 12h8M10 16h4"/>',
+    sortAsc:'<path d="M10 6h4M8 12h8M5 18h14"/>',
+    sortDesc:'<path d="M5 6h14M8 12h8M10 18h4"/>',
     down:'<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>',
     right:'<path d="m9.5 6 6 6-6 6"/>',
     back:'<path d="m14.5 6-6 6 6 6"/>',
     left:'<path d="m14.5 6-6 6 6 6"/>',
     up:'<path d="m6.5 14.5 5.5-5.5 5.5 5.5"/>',
-    users:'<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15.5 5.2a3.5 3.5 0 0 1 0 6.6"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
-    trend:'<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+    users:'<circle cx="9" cy="7.5" r="3.5"/><path d="M2.5 20v-2a4.5 4.5 0 0 1 4.5-4.5h4a4.5 4.5 0 0 1 4.5 4.5v2M16 4.1a3.5 3.5 0 0 1 0 6.8M18 14a4.5 4.5 0 0 1 3.5 4.4V20"/>',
+    trend:'<path d="M4 20V4M4 20h16M8 15v-4M12 15V7M16 15v-6M20 15V4"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
     minus:'<path d="M5 12h14"/>',
     target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
     bars:'<path d="M5 20V12M10 20V5M15 20v-9M20 20v-5"/>',
     line:'<path d="m3.5 16 5-5 4 3.5 7.5-8"/><path d="M3.5 20.5h17"/>',
-    table:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M10 9.5v10"/>',
+    table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M10 9v11"/>',
     search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
-    external:'<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
+    external:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.1M10 6.5h.1"/>',
     menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
     grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
     close:'<path d="m6 6 12 12M18 6 6 18"/>',
     info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.1"/>',
     alert:'<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/>',
-    doc:'<path d="M6.5 3h8l4 4v13a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4.5h4.5M9 12h6M9 16h6"/>',
+    doc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
     clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
     link:'<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/>',
@@ -66,7 +69,7 @@
     zap:'<path d="M13 3 4.5 13.5H12L11 21l8.5-10.5H12z"/>',
     flag:'<path d="M5 21V4M5 4.5h11.5l-2 4 2 4H5"/>'
   };
-  const icon=(name,size=16)=>'<svg class="fv-icon" viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(P[name]||P.doc)+'</svg>';
+  const icon=(name,size=16)=>'<svg class="fv-icon" viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(P[name]||P.doc)+'</svg>';
 
   /* ---------- states ---------- */
   const STATE_LABEL={na:'Not available',notConnected:'Not connected',notTracked:'Not tracked',loading:'Loading'};
@@ -160,7 +163,7 @@
     const sel=measures.find(m=>m.key===state.measure)||measures[0];
     const type='bar';
     const select=measures.length>1?'<label class="fv-select"><span class="fv-sr">Chart metric</span><select data-chart-measure="'+esc(opts.id)+'">'+
-      measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('down',14)+'</label>':'';
+      measures.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===sel.key?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+icon('select',14)+'</label>':'';
     return '<section class="fv-panel fv-chart-panel" aria-labelledby="'+esc(opts.id)+'-t">'+panelHead(sel.title,'trend',select,opts.id+'-t')+
       '<div class="fv-chart" id="'+esc(opts.id)+'" data-type="'+type+'" data-measure="'+esc(sel.key)+'">'+chartBody(sel,type)+'</div>'+
       '</section>';
@@ -318,7 +321,7 @@
       const sorted=st.sort?.key===c.key,dir=sorted?(st.sort.dir>0?'ascending':'descending'):'none';
       const left=['name','text','status','link'].includes(c.type)||c.align==='left';
       if(c.type==='link'||c.nosort)return '<th scope="col" class="'+(left?'is-left':'')+(c.type==='link'?' is-link':'')+'">'+esc(c.label)+'</th>';
-      return '<th scope="col" class="'+(left?'is-left':'')+(sorted&&st.sort.user?' is-user-sorted':'')+'" data-column="'+esc(c.key)+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'up':'down',12):'')+'</span></button></th>';
+      return '<th scope="col" class="'+(left?'is-left':'')+(sorted&&st.sort.user?' is-user-sorted':'')+'" data-column="'+esc(c.key)+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'sortAsc':'sortDesc',16):'')+'</span></button></th>';
     }).join('')+(cfg.expand?'<th scope="col" class="fv-x-col"><span class="fv-sr">Details</span></th>':'')+'</tr>';
     // Optional grouping: rows stay in their sorted order inside each group, groups in order of first appearance.
     if(cfg.groupBy){const order=[],by=new Map();for(const r of rows){const k=cfg.groupBy(r);if(!by.has(k)){by.set(k,[]);order.push(k);}by.get(k).push(r);}rows=order.flatMap(k=>by.get(k));}
@@ -338,7 +341,7 @@
         return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'" data-column="'+esc(c.key)+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
       });
       const tr='<tr class="fv-row'+(open?' is-open':'')+(cfg.rowClass?' '+esc(cfg.rowClass(r)||''):'')+'">'+cells.join('')+
-        (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
+        (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'minus':'plus',18)+'</button></td>':'')+'</tr>';
       return head+tr+(cfg.expand&&open?'<tr class="fv-detail" id="'+esc(detailId)+'"><td colspan="'+(cols.length+1)+'"><div class="fv-detail-inner">'+cfg.expand(r)+'</div></td></tr>':'');
     }).join('');
     const empty=rows.length?'':all.length?
@@ -347,7 +350,7 @@
     const explicit=!!cfg.widths&&!hidden.length&&cfg.widths.length===cols.length+(cfg.expand?1:0);
     const placement=String(cfg.cls||'').includes('is-placement-list');
     const accounts=String(cfg.cls||'').includes('is-accounts');
-    const weights=placement&&cols.length===8&&cfg.expand?[112,206,78,100,100,102,96,60,44]:accounts&&cols.length===8&&cfg.expand?[112,210,100,100,100,94,76,100,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
+    const weights=placement&&cols.length===8&&cfg.expand?[94,218,72,92,108,98,88,70,44]:accounts&&cols.length===8&&cfg.expand?[94,218,92,108,98,88,70,106,44]:cols.map(columnWidth).concat(cfg.expand?[44]:[]);
     const totalWidth=weights.reduce((a,b)=>a+b,0);
     const widths=explicit?cfg.widths:weights.map(w=>(100*w/Math.max(1,totalWidth)).toFixed(3)+'%');
     const colgroup='<colgroup>'+widths.map(w=>'<col style="width:'+w+'">').join('')+'</colgroup>';
@@ -357,7 +360,7 @@
       const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'Descending':'Ascending');
       return '<option value="'+esc(v)+'"'+(selected?' selected':'')+'>'+esc(c.label+' · '+order)+'</option>';
     })).join('');
-    const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"'+(st.sort?.user?' data-user-sort="true"':'')+'><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('down',14)+'</label>':'';
+    const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"'+(st.sort?.user?' data-user-sort="true"':'')+'><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('select',14)+'</label>':'';
     const table=(rows.length||cfg.title==='Listings')?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table is-aligned" style="--min-w:'+minWidth+'px;--cols:'+cols.length+'">'+colgroup+'<thead>'+head+'</thead><tbody>'+ (rows.length?body:'<tr class="fv-empty-row"><td colspan="'+(cols.length+(cfg.expand?1:0))+'">'+empty+'</td></tr>')+'</tbody></table></div>':empty;
     // Only a Show all button when the list is cut short; no record counts (owner, 26 Nov).
     const count=limited?'<div class="fv-count"><button type="button" class="fv-show-all" data-show-all="'+esc(cfg.id)+'">Show all '+C.full(total)+'</button></div>':'';
@@ -371,8 +374,9 @@
   function extLink(url,label,{iconOnly=false}={}){
     const href=C.safeUrl(url);
     if(!href)return '';
-    return '<a class="fv-ext'+(iconOnly?' is-icon':'')+'" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(label)+' (opens in a new tab)">'+(iconOnly?'':esc(label))+icon('external',14)+'</a>';
+    return '<a class="fv-ext'+(iconOnly?' is-icon':'')+'" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(label)+' (opens in a new tab)">'+(iconOnly?'<span>View</span>':esc(label))+'</a>';
   }
+  const accountMark=name=>{const text=Array.from(String(name||'').replace(/^@/,'').trim()).find(ch=>/[\p{L}\p{N}]/u.test(ch))||'?';return '<span class="fv-account-mark" aria-hidden="true">'+esc(text.toUpperCase())+'</span>';};
   const marker=(iconName,colorKey,{plain=false}={})=>{
     const pal=C.PALETTE[colorKey]||C.PALETTE.slate;
     return plain?'<span class="fv-marker is-plain">'+icon(iconName,15)+'</span>':'<span class="fv-marker" style="background:'+pal.fill+'">'+icon(iconName,15)+'</span>';
@@ -408,6 +412,6 @@
     window.addEventListener('scroll',hideTip,{passive:true});
   }
 
-  window.FanvueUI=Object.freeze({icon,value,chipFor,reasonButton,strip,panelHead,chipIcon,chartPanel,chartBody,drawChart,getMeasure,tablePanel,weekSlots,detailGrid,status,extLink,marker,
+  window.FanvueUI=Object.freeze({icon,value,chipFor,reasonButton,strip,panelHead,chipIcon,chartPanel,chartBody,drawChart,getMeasure,tablePanel,weekSlots,detailGrid,status,extLink,marker,accountMark,
     inlineMetrics,supportLine,supportPanel,typeTag,bindTips,hideTip,formatValue,ageText,refreshAges,ICONS:Object.keys(P)});
 })();
