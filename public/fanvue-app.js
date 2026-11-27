@@ -804,7 +804,7 @@
 
   function captureFocus(){
     const a=document.activeElement;if(!a||!$('fvPage').contains(a))return null;
-    const attrs=['data-search','data-sort','data-expand','data-view','data-chart-type','data-chart-measure','data-filter','data-xfilter','data-mobile-sort','data-reset'];
+    const attrs=['data-search','data-sort','data-expand','data-view','data-chart-type','data-chart-measure','data-filter','data-xfilter','data-mobile-sort','data-filter-toggle','data-reset'];
     const attr=attrs.find(x=>a.hasAttribute(x));if(!attr)return null;
     return {attr,value:a.getAttribute(attr),table:a.getAttribute('data-table'),start:a.selectionStart,end:a.selectionEnd};
   }
@@ -987,7 +987,7 @@
     if(stable){
       table.querySelector('thead').replaceWith(fresh.querySelector('thead'));
       table.querySelector('tbody').replaceWith(fresh.querySelector('tbody'));
-      const a=old.querySelector('[data-mobile-sort]'),b=next.querySelector('[data-mobile-sort]');if(a&&b)a.value=b.value;
+      const a=old.querySelector('[data-mobile-sort]'),b=next.querySelector('[data-mobile-sort]');if(a&&b){a.value=b.value;a.toggleAttribute('data-user-sort',b.hasAttribute('data-user-sort'));}
       const before=old.querySelector('.fv-count'),after=next.querySelector('.fv-count');
       if(before&&after)before.replaceWith(after);else if(before)before.remove();else if(after)old.append(after);
       renderedSections.set(old,signature);
@@ -997,8 +997,10 @@
   }
   function onClick(e){
     const t=e.target;
+    const filterToggle=t.closest('[data-filter-toggle]');
+    if(filterToggle){const st=tableState(pageKey(),filterToggle.dataset.filterToggle);st.filtersOpen=!st.filtersOpen;filterToggle.setAttribute('aria-expanded',String(st.filtersOpen));filterToggle.closest('.fv-table-tools')?.querySelector('.fv-table-filters')?.classList.toggle('is-open',st.filtersOpen);return;}
     const sort=t.closest('[data-sort]');
-    if(sort){const st=tableState(pageKey(),sort.dataset.table),k=sort.dataset.sort;st.sort=st.sort?.key===k?{key:k,dir:-st.sort.dir}:{key:k,dir:k==='account'||k==='name'||k==='week'||k==='cpc'?1:-1};rerenderTable(sort.dataset.table);return;}
+    if(sort){const st=tableState(pageKey(),sort.dataset.table),k=sort.dataset.sort;st.sort=st.sort?.key===k?{key:k,dir:-st.sort.dir,user:true}:{key:k,dir:k==='account'||k==='name'||k==='week'||k==='cpc'?1:-1,user:true};rerenderTable(sort.dataset.table);return;}
     const exp=t.closest('[data-expand]');
     if(exp){const st=tableState(pageKey(),exp.dataset.table),k=exp.dataset.expand;if(st.expanded.has(k))st.expanded.delete(k);else st.expanded.add(k);rerenderTable(exp.dataset.table);return;}
     const view=t.closest('[data-view]');
@@ -1019,7 +1021,7 @@
   }
   function onChange(e){
     const sort=e.target.closest('[data-mobile-sort]');
-    if(sort){const [key,dir]=sort.value.split(':');if(key&&[1,-1].includes(Number(dir))){tableState(pageKey(),sort.dataset.mobileSort).sort={key,dir:Number(dir)};rerenderTable(sort.dataset.mobileSort);}return;}
+    if(sort){const [key,dir]=sort.value.split(':');if(key&&[1,-1].includes(Number(dir))){tableState(pageKey(),sort.dataset.mobileSort).sort={key,dir:Number(dir),user:true};rerenderTable(sort.dataset.mobileSort);}return;}
     const m=e.target.closest('[data-chart-measure]');
     if(m){const st=chartState(pageKey(),m.dataset.chartMeasure);st.measure=m.value;st.type='';rerender();return;}
     const xf=e.target.closest('[data-xfilter]');
@@ -1036,7 +1038,7 @@
     // Header icons are injected so static HTML stays text-only.
     $('fvRefresh').insertAdjacentHTML('afterbegin',U.icon('refresh',15));
     $('fvMenu').innerHTML=U.icon('grid',26);$('fvDrawerClose').innerHTML=U.icon('close',20);
-    $('fvBack').innerHTML=U.icon('back',14)+'<span>Back</span>';
+    $('fvBack').innerHTML=U.icon('back',14)+'<span>Back</span>';$('fvBack').setAttribute('aria-label','Back');
     $('fvBack').addEventListener('click',()=>history.back());
     U.bindTips(document.body);
     const page=$('fvPage');

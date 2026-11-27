@@ -296,7 +296,10 @@
     const views=cfg.views&&cfg.views.length>1?'<div class="fv-segments" role="group" aria-label="Table view">'+cfg.views.map(v=>'<button type="button" data-view="'+esc(v.key)+'" data-table="'+esc(cfg.id)+'" aria-pressed="'+(v.key===cfg.view)+'">'+esc(v.label)+'</button>').join('')+'</div>':'';
     const search=cfg.search?'<label class="fv-search">'+icon('search',15)+'<span class="fv-sr">Search</span><input type="search" placeholder="'+esc(cfg.searchPlaceholder||'Search')+'" autocomplete="off" data-search="'+esc(cfg.id)+'" value="'+esc(st.q||'')+'"></label>':'';
     const filters=cfg.filters||'';
-    const tools=views||search||filters?'<div class="fv-table-tools">'+search+views+filters+'</div>':'';
+    const activeFilters=Object.values(st.xf||{}).filter(Boolean).length+(st.filter?1:0);
+    const filterButton=filters?'<button class="fv-filter-toggle" type="button" data-filter-toggle="'+esc(cfg.id)+'" aria-expanded="'+!!st.filtersOpen+'" aria-controls="'+esc(cfg.id)+'-filters"'+(activeFilters?' data-filter-active="true"':'')+'>'+icon('filter',15)+'<span>Filters'+(activeFilters?' ('+activeFilters+')':'')+'</span></button>':'';
+    const filterFields=filters?'<div class="fv-table-filters'+(st.filtersOpen?' is-open':'')+'" id="'+esc(cfg.id)+'-filters">'+filters+'</div>':'';
+    const tools=views||search||filters?'<div class="fv-table-tools">'+search+filterButton+views+filterFields+'</div>':'';
     // Columns with no data for any record are hidden and listed once above the table.
     const hidden=[];
     const cols=(cfg.rows||[]).length&&cfg.hideEmpty!==false?cfg.columns.filter(c=>{
@@ -318,7 +321,7 @@
       const sorted=st.sort?.key===c.key,dir=sorted?(st.sort.dir>0?'ascending':'descending'):'none';
       const left=['name','text','status','link'].includes(c.type)||c.align==='left';
       if(c.type==='link'||c.nosort)return '<th scope="col" class="'+(left?'is-left':'')+(c.type==='link'?' is-link':'')+'">'+esc(c.label)+'</th>';
-      return '<th scope="col" class="'+(left?'is-left':'')+'" data-column="'+esc(c.key)+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'up':'down',12):'')+'</span></button></th>';
+      return '<th scope="col" class="'+(left?'is-left':'')+(sorted&&st.sort.user?' is-user-sorted':'')+'" data-column="'+esc(c.key)+'" aria-sort="'+dir+'"><button type="button" data-sort="'+esc(c.key)+'" data-table="'+esc(cfg.id)+'">'+esc(c.label)+'<span class="fv-sort" aria-hidden="true">'+(sorted?icon(st.sort.dir>0?'up':'down',12):'')+'</span></button></th>';
     }).join('')+(cfg.expand?'<th scope="col" class="fv-x-col"><span class="fv-sr">Details</span></th>':'')+'</tr>';
     // Optional grouping: rows stay in their sorted order inside each group, groups in order of first appearance.
     if(cfg.groupBy){const order=[],by=new Map();for(const r of rows){const k=cfg.groupBy(r);if(!by.has(k)){by.set(k,[]);order.push(k);}by.get(k).push(r);}rows=order.flatMap(k=>by.get(k));}
@@ -335,7 +338,7 @@
       const cells=cols.map(c=>{
         const left=['name','text','status','link'].includes(c.type)||c.align==='left';
         // data-label lets a row read as a labelled card on phones.
-        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+(st.sort?.key===c.key?' is-sorted':'')+'" data-column="'+esc(c.key)+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
+        return '<td class="'+(left?'is-left':'')+(c.type==='name'?' is-name':'')+(c.type==='link'?' is-link':'')+'" data-column="'+esc(c.key)+'" data-label="'+esc(c.label)+'">'+cellValue(c,r)+'</td>';
       });
       const tr='<tr class="fv-row'+(open?' is-open':'')+(cfg.rowClass?' '+esc(cfg.rowClass(r)||''):'')+'">'+cells.join('')+
         (cfg.expand?'<td class="fv-x-col"><button type="button" class="fv-expand" data-expand="'+esc(key)+'" data-table="'+esc(cfg.id)+'" aria-expanded="'+open+'" aria-controls="'+esc(detailId)+'" aria-label="'+(open?'Hide':'Show')+' details for '+esc(cfg.rowLabel?cfg.rowLabel(r):key)+'">'+icon(open?'down':'right',15)+'</button></td>':'')+'</tr>';
@@ -357,7 +360,7 @@
       const order=c.key==='age'?(dir===-1?'Newest':'Oldest'):(dir===-1?'Descending':'Ascending');
       return '<option value="'+esc(v)+'"'+(selected?' selected':'')+'>'+esc(c.label+' · '+order)+'</option>';
     })).join('');
-    const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('down',14)+'</label>':'';
+    const mobileSort=sortOptions?'<label class="fv-select fv-mobile-sort"><span class="fv-sr">Sort listings</span><select data-mobile-sort="'+esc(cfg.id)+'"'+(st.sort?.user?' data-user-sort="true"':'')+'><option value="">Sort listings</option>'+sortOptions+'</select>'+icon('down',14)+'</label>':'';
     const table=(rows.length||cfg.title==='Listings')?'<div class="fv-table-wrap" tabindex="0" role="region" aria-label="'+esc(cfg.title)+' table"><table data-no-sort class="fv-table is-aligned" style="--min-w:'+minWidth+'px;--cols:'+cols.length+'">'+colgroup+'<thead>'+head+'</thead><tbody>'+ (rows.length?body:'<tr class="fv-empty-row"><td colspan="'+(cols.length+(cfg.expand?1:0))+'">'+empty+'</td></tr>')+'</tbody></table></div>':empty;
     // Only a Show all button when the list is cut short; no record counts (owner, 26 Nov).
     const count=limited?'<div class="fv-count"><button type="button" class="fv-show-all" data-show-all="'+esc(cfg.id)+'">Show all '+C.full(total)+'</button></div>':'';
