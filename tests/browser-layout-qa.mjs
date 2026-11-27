@@ -125,11 +125,11 @@ try{
     const nums=all('#fvPage :is(.fv-metric-value,.fv-tile-value,.fv-inline-metrics,.fv-detail-grid,.fv-original-context) .fv-num'+(mobile?',#fvPage .fv-table-panel tbody>tr.fv-row .fv-num':''));
     const bad=[];
     for(const e of cards){const s=css(e);if(parseFloat(s.borderTopWidth)>0&&ratio(s.borderTopColor,s.backgroundColor)<3)bad.push({border:e.className,color:s.borderTopColor,bg:s.backgroundColor});}
-    for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor==='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)<100||ratio(s.color,s.backgroundColor)<4.5||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
+    for(const e of nums){const s=css(e),p=rect(e.parentElement),r=rect(e);if(s.backgroundColor!=='rgba(0, 0, 0, 0)'||parseFloat(s.borderTopLeftRadius)!==0||e.scrollWidth>e.clientWidth+1||r.width>p.width+1)bad.push({number:e.textContent,bg:s.backgroundColor,radius:s.borderTopLeftRadius,width:e.clientWidth,scroll:e.scrollWidth,parent:p.width});}
     if(!mobile)for(const e of all('#fvPage .fv-table-panel tr.fv-row .fv-num'))if(css(e).backgroundColor!=='rgba(0, 0, 0, 0)')bad.push({desktopTablePill:e.textContent});
     return bad;
    });
-   assert.equal(violations.length,0,route+' contrast / numeric pill contract '+JSON.stringify(violations));
+   assert.equal(violations.length,0,route+' contrast / plain numeric text contract '+JSON.stringify(violations));
   };
   const auditPhone=async(route)=>{
    await auditContrast(route);
