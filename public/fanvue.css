@@ -2348,7 +2348,7 @@ body.fv .article-modal :is(.history-row,.modal-link:not(.main-link),[class*="mod
 #fvShell[data-campaign-theme] #fvPage .fv-search:focus-within{border-color:var(--fv-selection)}
 #fvShell[data-campaign-theme] #fvPage .fv-home-discord .fv-panel-head{border-bottom-color:var(--fv-outline)}
 /* Keep equal page margins and a full black buffer above Back and title. */
-#fvShell #mainContent{padding-top:56px}
+#fvShell #mainContent{padding-top:72px}
 #fvShell #mainContent #fvBack:not([hidden]){margin-bottom:32px}
 #fvShell #mainContent #fvHeader{margin-bottom:40px}
 #fvShell #fvPage.fv-campaign-layout>.fv-strip{height:90px;min-height:90px;max-height:90px;grid-template-rows:90px}
@@ -2843,8 +2843,8 @@ body.fv .article-modal,body.fv .article-modal :is(.modal-content,.modal-link:not
    Neutral surfaces, fine outlines, quiet plain labels and one accent per campaign. */
 @media(max-width:767px){
  /* Keep a deliberate black buffer between the mobile masthead and page title. */
- #fvShell #mainContent{padding-top:32px}
- #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{top:32px}
+ #fvShell #mainContent{padding-top:48px}
+ #fvShell #mainContent:has(#fvPage:not([hidden])) #fvBack{top:48px}
  #fvShell #mainContent #fvHeader{margin-bottom:20px}
  #fvShell #fvHeader #fvTitle{letter-spacing:-.035em}
  #fvShell[data-campaign-theme] #fvHeader #fvRefresh{border-width:1px;border-radius:8px;box-shadow:none}
