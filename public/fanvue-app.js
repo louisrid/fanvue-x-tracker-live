@@ -1,7 +1,7 @@
 /* Fanvue Marketing Dashboard: shell, router and the eight pages (DESIGN §4).
    Presentation only. Data comes from the existing adapters: campaign-reporting.js
    (campaign-overview and Discord feeds) and app.js (dashboard, OF, GTA and boosts
-   feeds, record views, editors and refresh logic). Nothing here writes data. */
+   feeds, record views, editors and refresh logic). Only the explicit refresh action starts a server job. */
 (function(){
   'use strict';
   const C=window.FanvueCore,U=window.FanvueUI,esc=C.escapeHtml,M=C.M;
@@ -1093,7 +1093,7 @@
   const relevantJob=j=>!!j&&(allJob(j)||j.scope===scopeForRoute()||(j.scope==='x'&&['of','boosts'].includes(scopeForRoute())));
   const legacySelectors='#refreshXStats,#reloadAllButton,#gtaRefreshButton,#discordRefreshButton,#reportingRefreshButton,[data-refresh]';
   const scopeForLegacy=e=>e.id==='reloadAllButton'?'all':e.id==='gtaRefreshButton'?'gta':e.id==='discordRefreshButton'?'discord':e.id==='reportingRefreshButton'?'summary':e.dataset.refresh==='boosts'?'boosts':e.dataset.refresh==='of'?'of':'x';
-  let refreshStarting=false,refreshReading=null,lastRefreshRead=0,syncedRefreshId='',refreshSync=null;
+  let refreshStarting=false,refreshReading=null,lastRefreshRead=0,syncedRefreshId='',syncedRefreshResult=null,refreshSync=null,refreshGeneration=0;
   function syncRefreshUI(){
     const run=activeRefresh,busy=busyJob(run),here=!!run&&current.kind!=='records',affected=relevantJob(run);
     const page=$('fvPage'),btn=$('fvRefresh'),progress=$('fvRefreshProgress'),track=$('fvRefreshTrack'),status=$('fvRefreshStatus');
@@ -1132,7 +1132,7 @@
     if(!job){if(!refreshStarting&&!refreshSync){activeRefresh=null;syncRefreshUI();}return;}
     if(!job.id||!job.scope||!['queued','running','complete','failed'].includes(job.state))return;
     if(busyJob(job)){activeRefresh=job;syncRefreshUI();return;}
-    if(job.id===syncedRefreshId){if(!refreshSync){activeRefresh=job;syncRefreshUI();}return;}
+    if(job.id===syncedRefreshId){if(!refreshSync){activeRefresh=syncedRefreshResult||job;syncRefreshUI();}return;}
     if(refreshSync?.id===job.id)return refreshSync.promise;
     // Even a partial server refresh may contain newly verified data. Load the
     // saved reports before dropping the progress bar, never trigger new writes.
@@ -1154,7 +1154,7 @@
         if(outcomes.some(x=>x.status==='rejected'||x.value===false))result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};
       }catch{result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};}
       if(refreshSync!==token)return;
-      syncedRefreshId=job.id;refreshSync=null;
+      syncedRefreshId=job.id;syncedRefreshResult=result;refreshSync=null;
       if(activeRefresh?.id===job.id){activeRefresh=result;try{rerender();}finally{syncRefreshUI();}}
     })();
     return token.promise;
@@ -1162,12 +1162,12 @@
   function pullRefreshStatus(){
     if(refreshStarting)return Promise.resolve(null);
     if(refreshReading)return refreshReading;
-    lastRefreshRead=Date.now();
+    lastRefreshRead=Date.now();const generation=refreshGeneration;
     refreshReading=(async()=>{
       try{
         const res=await fetch(refreshEndpoint,{cache:'no-store',signal:AbortSignal.timeout(12000)});
         const data=await res.json();if(!res.ok||!data.ok)throw Error('Refresh status unavailable');
-        if(!refreshStarting)await acceptRefresh(data.refresh||null);
+        if(!refreshStarting&&generation===refreshGeneration)await acceptRefresh(data.refresh||null);
         return data.refresh||null;
       }catch{return undefined;}finally{refreshReading=null;}
     })();
@@ -1176,7 +1176,7 @@
   async function onRefresh(scope=scopeForRoute()){
     if(typeof scope!=='string')scope=scopeForRoute();
     if(refreshStarting||busyJob(activeRefresh))return;
-    refreshStarting=true;
+    refreshStarting=true;refreshGeneration++;
     const previous=activeRefresh;
     activeRefresh={scope,state:'queued',completed:0,total:scope==='all'?6:scope==='accounts'?7:scope==='summary'?1:2,label:'Starting refresh…',issues:[]};
     syncRefreshUI();
@@ -1187,7 +1187,7 @@
     }catch{
       // A closed connection can lose the POST response after the job was accepted.
       // Reconnect by reading status, never blindly resubmit the provider job.
-      refreshStarting=false;const job=await pullRefreshStatus();
+      refreshStarting=false;if(refreshReading)await refreshReading;const job=await pullRefreshStatus();
       if(!job||(!busyJob(job)&&job.id===previous?.id)){
         activeRefresh={scope,state:'failed',completed:0,total:1,label:'Latest available data',issues:['Refresh could not be confirmed. Retry when connected.']};syncRefreshUI();
       }

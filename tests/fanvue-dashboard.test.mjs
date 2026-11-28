@@ -222,8 +222,11 @@ test('both shared stylesheets are present and use the same small scale',()=>{
   assert.match(css,/--fv-bw:1px;/);
 });
 
-test('presentation layer only: the shell reads existing adapters and never posts data',()=>{
-  for(const src of [appJs,uiJs,readFileSync('public/fanvue-core.js','utf8')]){
+test('presentation layer reads existing adapters and only posts to start the durable refresh',()=>{
+  assert.match(appJs,/const refreshEndpoint='\/\.netlify\/functions\/tracker-refresh'/);
+  assert.equal((appJs.match(/fetch\(refreshEndpoint,/g)||[]).length,2);
+  assert.equal((appJs.match(/method:\s*['"]POST['"]/g)||[]).length,1);
+  for(const src of [appJs.replace(/fetch\(refreshEndpoint,\{[^\n]*\}\)/g,''),uiJs,readFileSync('public/fanvue-core.js','utf8')]){
     assert.doesNotMatch(src,/method:\s*['"]POST['"]/);
     assert.doesNotMatch(src,/fetch\(/);
     assert.doesNotMatch(src,/localStorage/);

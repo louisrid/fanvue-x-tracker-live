@@ -174,7 +174,11 @@ test('dashboard has exactly one visible large Reload All control and keeps targe
  assert.match(html,/id="fvRefreshStatus"/);
 // Owner (26 Nov): Home is named Dashboard; OnlyFans Terms is OF Terms; Guru X RTs is Guru RTs.
   assert.match(shell,/title:'Dashboard',refreshLabel:'Refresh All'/);
- assert.match(shell,/await app\.refresh\.all\(p=>progress\(offset\+p\.completed,p\.label,offset\+p\.total\)\)/);
+ assert.match(shell,/refreshScopes=\{'home':'all','all-accounts':'accounts'/);
+ assert.match(shell,/fetch\(refreshEndpoint,\{method:'POST'/);
+ const durable=readFileSync('netlify/lib/durable-refresh.mjs','utf8');
+ assert.match(durable,/all:\['x','gta','discord','of-read','boosts-read','overview'\]/);
+ assert.match(durable,/if\(plan.includes\('overview'\)\)await task\('overview'\)/);
  assert.match(app,/refresh:Object\.freeze\(\{all:reloadAllData,/);
  const start=app.indexOf('async function reloadAllData(');
  const end=app.indexOf('function applyDashboard(data)',start);

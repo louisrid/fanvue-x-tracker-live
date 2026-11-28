@@ -79,7 +79,7 @@ try{
   // Manual refresh: test the real UI against a deliberately controlled asynchronous source.
   await open('home','Dashboard');
   const geometryBefore=await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]}));
-  await page.locator('#fvRefresh').click();
+  await Promise.all([page.waitForResponse(r=>r.url().endsWith('/tracker-refresh')&&r.request().method()==='POST'),page.locator('#fvRefresh').click()]);
   await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing')&&!document.querySelector('#fvRefreshProgress').hidden);
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuemax'),'6');
@@ -109,7 +109,7 @@ try{
   assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false);
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
   assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Updated');
-  await page.locator('#fvRefresh').click();
+  await Promise.all([page.waitForResponse(r=>r.url().endsWith('/tracker-refresh')&&r.request().method()==='POST'),page.locator('#fvRefresh').click()]);
   await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing'));
   await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='0');
   qaJob={...qaJob,state:'failed',completed:6,label:'Latest available data',issues:['Saved readings retained']};
@@ -120,7 +120,7 @@ try{
   if(viewport.width===430){
     for(const [route,title,scope] of [['gta-vi','GTA VI','gta'],['viral-qrts','Viral QRTs','gta'],['x-articles','X Articles','x'],['of-terms','OF Terms','of'],['guru-promotion','Guru RTs','boosts'],['discord','Discord','discord'],['campaign/qa-campaign','QA Campaign','registry']]){
       await open(route,title);const calls=qaRefreshCalls;
-      await page.locator('#fvRefresh').click();await page.waitForFunction(()=>!document.querySelector('#fvRefreshProgress').hidden);
+      await Promise.all([page.waitForResponse(r=>r.url().endsWith('/tracker-refresh')&&r.request().method()==='POST'),page.locator('#fvRefresh').click()]);await page.waitForFunction(()=>!document.querySelector('#fvRefreshProgress').hidden);
       assert.equal(qaJob.scope,scope);assert.equal(qaRefreshCalls,calls+1);
       await page.close();page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
       await page.goto(base+'/#'+route);await page.waitForFunction(()=>!document.querySelector('#fvRefreshProgress').hidden&&document.querySelector('#fvRefresh').disabled);
