@@ -1,5 +1,5 @@
 import {randomUUID} from 'node:crypto';
-const KEY='latest-v1', TTL=16*60_000;
+const KEY='latest-v1', TTL=16*60_000, RESULT_TTL=5*60_000;
 export const active=job=>!!job&&['queued','running'].includes(job.state);
 const tasks={
  all:['x','gta','discord','of-read','boosts-read','overview'],
@@ -13,15 +13,18 @@ const labels={x:'Refreshing X metrics…',gta:'Refreshing GTA VI and Viral QRTs�
 export function makeCoordinator({store,dispatch,execute,clock=Date.now,uuid=randomUUID}){
   const now=()=>new Date(clock()).toISOString();
   async function status(){
-    const job=await store.get(KEY,{type:'json'});
-    if(active(job)&&job.expiresAt<=clock())return {...job,state:'failed',label:'Latest available data',issues:['Refresh expired; saved readings retained.'],finishedAt:now()};
+    let job=await store.get(KEY,{type:'json'});
+    if(!job)return null;
+    if(active(job)&&job.total>0&&job.completed>=job.total&&job.done?.length>=job.total)job={...job,state:job.issues?.length?'failed':'complete',label:job.issues?.length?'Latest available data':'Updated',finishedAt:job.lastProgressAt||job.startedAt};
+    else if(active(job)&&job.expiresAt<=clock())job={...job,state:'failed',label:'Latest available data',issues:['Refresh expired; saved readings retained.'],finishedAt:new Date(job.expiresAt).toISOString()};
+    if(!active(job)){const finished=Date.parse(job.finishedAt||job.startedAt||'');if(!Number.isFinite(finished)||clock()-finished>=RESULT_TTL)return null;}
     return job;
   }
   async function start(scope){
     if(!scopes.includes(scope))throw Error('Unsupported refresh scope');
     for(let attempt=0;attempt<4;attempt++){
       const prior=await store.getWithMetadata(KEY,{type:'json'});
-      if(active(prior?.data)&&prior.data.expiresAt>clock())return prior.data;
+      if(active(prior?.data)&&prior.data.expiresAt>clock()&&!(prior.data.total>0&&prior.data.completed>=prior.data.total&&prior.data.done?.length>=prior.data.total))return prior.data;
       const job={id:uuid(),scope,state:'queued',startedAt:now(),expiresAt:clock()+TTL,completed:0,total:tasks[scope].length,label:'Starting refresh…',issues:[],done:[]};
       const saved=await store.setJSON(KEY,job,prior?{onlyIfMatch:prior.etag}:{onlyIfNew:true});
       if(!saved.modified)continue;
@@ -57,7 +60,11 @@ export function makeCoordinator({store,dispatch,execute,clock=Date.now,uuid=rand
         if(result?.snapshot)Object.assign(snapshot,result.snapshot);
         if(result?.ok!==true)issue=result?.issue||labels[name].replace(/…$/,'')+' unavailable';
       }catch(e){console.warn('Refresh source failed:',name,String(e?.message||e));issue=labels[name].replace(/…$/,'')+' unavailable';}
-      await update(j=>({...j,completed:j.completed+1,done:[...j.done,name],issues:issue?[...j.issues,issue]:j.issues}));
+      await update(j=>{
+        const next={...j,completed:j.completed+1,done:[...j.done,name],issues:issue?[...j.issues,issue]:j.issues,lastProgressAt:now(),snapshot:{...snapshot}};
+        if(next.completed===next.total){next.state=next.issues.length?'failed':'complete';next.label=next.issues.length?'Latest available data':'Updated';next.finishedAt=now();}
+        return next;
+      });
     };
     try{
       const plan=tasks[job.scope];
@@ -66,7 +73,7 @@ export function makeCoordinator({store,dispatch,execute,clock=Date.now,uuid=rand
       await Promise.all(first.map(task));
       await Promise.all(plan.filter(n=>['of-read','boosts-read'].includes(n)).map(task));
       if(plan.includes('overview'))await task('overview');
-      await update(j=>({...j,state:j.issues.length?'failed':'complete',label:j.issues.length?'Latest available data':'Updated',finishedAt:now(),snapshot}));
+      // Last task writes terminal state and final progress in one atomic update.
     }catch(e){
       console.warn('Refresh orchestration failed:',String(e?.message||e));
       try{await update(j=>({...j,state:'failed',label:'Latest available data',issues:[...j.issues,'Refresh interrupted; saved readings retained.'],finishedAt:now(),snapshot}));}catch{}

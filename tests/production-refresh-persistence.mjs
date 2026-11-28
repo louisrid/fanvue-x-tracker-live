@@ -5,7 +5,7 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const busy=j=>j&&['queued','running'].includes(j.state);
 async function status(){const r=await fetch(endpoint,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Refresh API '+r.status);return (await r.json()).refresh;}
 let ready=false;
-for(let i=0;i<50;i++){try{const r=await fetch(base+'/?qa='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if((await r.text()).includes('20261128-durable-refresh-v65')){await status();ready=true;break;}}catch{}await pause(3000);}
+for(let i=0;i<50;i++){try{const r=await fetch(base+'/?qa='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if((await r.text()).includes('20261128-refresh-idle-v66')){await status();ready=true;break;}}catch{}await pause(3000);}
 assert.ok(ready,'new production version and refresh endpoint available');
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined,args:['--no-sandbox']});
 let ctx,page,posts=0;
@@ -48,7 +48,7 @@ try{
  assert.ok(['complete','failed'].includes(final.state));
  console.log('LIVE terminal job '+JSON.stringify({id:final.id,state:final.state,completed:final.completed,total:final.total,issues:final.issues,done:final.done}));
  await open('home');
- await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled&&['Updated','Latest available data'].includes(document.querySelector('#fvRefreshStatus').textContent),{},{timeout:120000});
+ await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled&&document.querySelector('#fvRefreshCount').textContent==='',{},{timeout:120000});
  assert.equal(posts,1,'completion rehydration is read-only');
  console.log('PASS live refresh continued through navigation, full tab closure, reopening, browser reload and detached completion');
 }finally{if(ctx)await ctx.close();await browser.close();}

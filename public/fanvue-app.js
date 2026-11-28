@@ -1088,12 +1088,26 @@
   const refreshEndpoint='/.netlify/functions/tracker-refresh';
   const refreshScopes={'home':'all','all-accounts':'accounts','gta-vi':'gta','viral-qrts':'gta','x-articles':'x','of-terms':'of','guru-promotion':'boosts','discord':'discord'};
   const scopeForRoute=()=>current.kind==='added'?'registry':refreshScopes[current.kind==='records'?RECORDS[current.key]?.parent:current.key]||'summary';
-  const busyJob=j=>!!j&&['queued','running','syncing'].includes(j.state);
+  const busyJob=j=>!!j&&['queued','running'].includes(j.state);
+  const REFRESH_RESET_MS=5*60_000,REFRESH_STALE_MS=30_000,REFRESH_SYNC_MS=20000;
+  const finishedRecently=j=>{const at=Date.parse(j?.finishedAt||'');return Number.isFinite(at)&&Date.now()-at<REFRESH_RESET_MS;};
+  const currentJob=j=>busyJob(j)&&(!Number.isFinite(j.expiresAt)||j.expiresAt>Date.now());
   const allJob=j=>j?.scope==='all'||j?.scope==='accounts';
   const relevantJob=j=>!!j&&(allJob(j)||j.scope===scopeForRoute()||(j.scope==='x'&&['of','boosts'].includes(scopeForRoute())));
   const legacySelectors='#refreshXStats,#reloadAllButton,#gtaRefreshButton,#discordRefreshButton,#reportingRefreshButton,[data-refresh]';
   const scopeForLegacy=e=>e.id==='reloadAllButton'?'all':e.id==='gtaRefreshButton'?'gta':e.id==='discordRefreshButton'?'discord':e.id==='reportingRefreshButton'?'summary':e.dataset.refresh==='boosts'?'boosts':e.dataset.refresh==='of'?'of':'x';
-  let refreshStarting=false,refreshReading=null,lastRefreshRead=0,syncedRefreshId='',syncedRefreshResult=null,refreshSync=null,refreshGeneration=0;
+  let refreshStarting=false,refreshReading=null,lastRefreshRead=0,lastRefreshConfirmed=0,syncedRefreshId='',syncedRefreshResult=null,refreshSync=null,refreshGeneration=0,refreshDeployment='',refreshHiddenAt=0;
+  function resetRefreshState(){
+    refreshGeneration++;
+    refreshReading?.controller.abort();refreshReading=null;
+    refreshStarting=false;refreshSync=null;activeRefresh=null;lastRefreshRead=0;lastRefreshConfirmed=0;
+    syncRefreshUI();
+  }
+  function observeDeployment(deployment){
+    if(!deployment)return;
+    if(refreshDeployment&&deployment!==refreshDeployment)resetRefreshState();
+    refreshDeployment=deployment;
+  }
   function syncRefreshUI(){
     const run=activeRefresh,busy=busyJob(run),here=!!run&&current.kind!=='records',affected=relevantJob(run);
     const page=$('fvPage'),btn=$('fvRefresh'),progress=$('fvRefreshProgress'),track=$('fvRefreshTrack'),status=$('fvRefreshStatus');
@@ -1109,7 +1123,7 @@
       else if(button.dataset.durableRefresh){delete button.dataset.durableRefresh;button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');}
     }
     for(const node of document.querySelectorAll('[data-x-refresh-status],#xRefreshStatus,#reloadAllStatus,#gtaRefreshStatus,#ofRefreshStatus,#boostRefreshStatus,#discordRefreshStatus')){
-      if(!run)continue;
+      if(!run){node.textContent='';node.removeAttribute('title');node.classList.remove('is-error','is-success');continue;}
       node.textContent=busy?run.label:(run.state==='complete'?'Updated':'Latest available data');
       node.title=(run.issues||[]).join('; ')||run.label;
       node.classList.toggle('is-error',run.state==='failed');node.classList.toggle('is-success',run.state==='complete');
@@ -1128,20 +1142,28 @@
     $('fvRefreshFill').style.width=(100*completed/total)+'%';
     status.textContent='';
   }
-  async function acceptRefresh(job){
-    if(!job){if(!refreshStarting&&!refreshSync){activeRefresh=null;syncRefreshUI();}return;}
-    if(!job.id||!job.scope||!['queued','running','complete','failed'].includes(job.state))return;
-    if(busyJob(job)){activeRefresh=job;syncRefreshUI();return;}
-    if(job.id===syncedRefreshId){if(!refreshSync){activeRefresh=syncedRefreshResult||job;syncRefreshUI();}return;}
-    if(refreshSync?.id===job.id)return refreshSync.promise;
-    // Even a partial server refresh may contain newly verified data. Load the
-    // saved reports before dropping the progress bar, never trigger new writes.
-    activeRefresh={...job,state:'syncing',label:'Loading verified data…'};
+  function acceptRefresh(job,{submitted=false}={}){
+    if(!job||!job.id||!job.scope||!['queued','running','complete','failed'].includes(job.state)){
+      if(!refreshStarting){activeRefresh=null;syncRefreshUI();}return;
+    }
+    if(currentJob(job)){
+      // All tasks settled, even if an older deployment missed its terminal write.
+      if(job.total>0&&job.completed>=job.total&&job.done?.length>=job.total){
+        job={...job,state:job.issues?.length?'failed':'complete',finishedAt:job.finishedAt||job.startedAt};
+      }else{activeRefresh=job;syncRefreshUI();return;}
+    }
+    if(busyJob(job)){activeRefresh=null;syncRefreshUI();return;}
+    const observed=submitted||activeRefresh?.id===job.id;
+    if(!observed&&!finishedRecently(job)){activeRefresh=null;syncRefreshUI();return;}
+    // Report hydration is read-only and never holds the progress bar at 6/6.
+    // A newly opened page starts idle, even when a recent job completed.
+    activeRefresh=observed?(job.id===syncedRefreshId?syncedRefreshResult||job:job):null;
     syncRefreshUI();
-    const token={id:job.id,promise:null};
-    refreshSync=token;
-    token.promise=(async()=>{
-      let result=job;
+    if(job.id===syncedRefreshId||refreshSync?.id===job.id)return;
+    const token={id:job.id,generation:refreshGeneration};
+    refreshSync=token;syncedRefreshId=job.id;syncedRefreshResult=job;
+    void (async()=>{
+      let result=job,timer;
       try{
         const scopes=job.scope==='all'||job.scope==='accounts'?['x','gta','of','boosts']:job.scope==='x'?['x','of','boosts']:['gta','of','boosts'].includes(job.scope)?[job.scope]:[];
         const calls=[];
@@ -1150,48 +1172,62 @@
         if(job.snapshot&&D.rep()?.acceptDiscordRefresh)D.rep().acceptDiscordRefresh(job.snapshot);
         if(job.scope==='accounts')calls.push(loadDirectory());
         if(job.scope==='registry')calls.push(window.FanvueCampaigns?.load?.());
-        const outcomes=await Promise.allSettled(calls);
-        if(outcomes.some(x=>x.status==='rejected'||x.value===false))result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};
+        const outcomes=await Promise.race([Promise.allSettled(calls),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),REFRESH_SYNC_MS);})]);
+        if(!outcomes||outcomes.some(x=>x.status==='rejected'||x.value===false))result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};
       }catch{result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};}
-      if(refreshSync!==token)return;
-      syncedRefreshId=job.id;syncedRefreshResult=result;refreshSync=null;
-      if(activeRefresh?.id===job.id){activeRefresh=result;try{rerender();}finally{syncRefreshUI();}}
+      finally{clearTimeout(timer);}
+      if(refreshSync!==token||token.generation!==refreshGeneration)return;
+      refreshSync=null;syncedRefreshResult=result;
+      if(activeRefresh?.id===job.id&&!busyJob(activeRefresh))activeRefresh=result;
+      try{rerender();}finally{syncRefreshUI();}
     })();
-    return token.promise;
   }
   function pullRefreshStatus(){
     if(refreshStarting)return Promise.resolve(null);
-    if(refreshReading)return refreshReading;
-    lastRefreshRead=Date.now();const generation=refreshGeneration;
-    refreshReading=(async()=>{
+    if(refreshReading)return refreshReading.promise;
+    lastRefreshRead=Date.now();
+    const token={generation:refreshGeneration,controller:new AbortController(),promise:null};
+    refreshReading=token;
+    token.promise=(async()=>{
+      const timer=setTimeout(()=>token.controller.abort(),12000);
       try{
-        const res=await fetch(refreshEndpoint,{cache:'no-store',signal:AbortSignal.timeout(12000)});
+        const res=await fetch(refreshEndpoint,{cache:'no-store',signal:token.controller.signal});
         const data=await res.json();if(!res.ok||!data.ok)throw Error('Refresh status unavailable');
-        if(!refreshStarting&&generation===refreshGeneration)await acceptRefresh(data.refresh||null);
+        if(!refreshStarting&&token.generation===refreshGeneration){
+          observeDeployment(data.deployment);lastRefreshConfirmed=Date.now();acceptRefresh(data.refresh||null);
+        }
         return data.refresh||null;
-      }catch{return undefined;}finally{refreshReading=null;}
+      }catch{
+        if(token.generation===refreshGeneration&&!refreshStarting&&busyJob(activeRefresh)&&
+           (!lastRefreshConfirmed||Date.now()-lastRefreshConfirmed>=REFRESH_STALE_MS||!currentJob(activeRefresh))){
+          activeRefresh=null;syncRefreshUI();
+        }
+        return undefined;
+      }finally{clearTimeout(timer);if(refreshReading===token)refreshReading=null;}
     })();
-    return refreshReading;
+    return token.promise;
   }
   async function onRefresh(scope=scopeForRoute()){
     if(typeof scope!=='string')scope=scopeForRoute();
     if(refreshStarting||busyJob(activeRefresh))return;
-    refreshStarting=true;refreshGeneration++;
+    refreshStarting=true;const generation=++refreshGeneration;
+    refreshReading?.controller.abort();refreshReading=null;refreshSync=null;
     const previous=activeRefresh;
     activeRefresh={scope,state:'queued',completed:0,total:scope==='all'?6:scope==='accounts'?7:scope==='summary'?1:2,label:'Starting refresh…',issues:[]};
     syncRefreshUI();
     try{
       const res=await fetch(refreshEndpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({scope}),cache:'no-store',keepalive:true,signal:AbortSignal.timeout(20000)});
       const data=await res.json();if(!res.ok||!data.ok||!data.refresh)throw Error('Refresh could not start');
-      refreshStarting=false;await acceptRefresh(data.refresh);
+      if(generation!==refreshGeneration)return;
+      refreshStarting=false;observeDeployment(data.deployment);lastRefreshConfirmed=Date.now();acceptRefresh(data.refresh,{submitted:true});
     }catch{
-      // A closed connection can lose the POST response after the job was accepted.
-      // Reconnect by reading status, never blindly resubmit the provider job.
-      refreshStarting=false;if(refreshReading)await refreshReading;const job=await pullRefreshStatus();
+      if(generation!==refreshGeneration)return;
+      refreshStarting=false;const job=await pullRefreshStatus();
+      if(generation!==refreshGeneration)return;
       if(!job||(!busyJob(job)&&job.id===previous?.id)){
         activeRefresh={scope,state:'failed',completed:0,total:1,label:'Latest available data',issues:['Refresh could not be confirmed. Retry when connected.']};syncRefreshUI();
       }
-    }finally{refreshStarting=false;}
+    }finally{if(generation===refreshGeneration)refreshStarting=false;}
   }
   // Table interactions do not destroy or redraw the chart, header, KPI cards or sidebar.
   function rerenderTable(id){
@@ -1267,10 +1303,22 @@
     window.setInterval(()=>U.refreshAges(page),1000);
     $('fvRefresh').addEventListener('click',()=>void onRefresh());
     document.addEventListener('click',e=>{const button=e.target.closest?.(legacySelectors);if(!button)return;e.preventDefault();e.stopImmediatePropagation();void onRefresh(scopeForLegacy(button));},true);
-    const wakeRefresh=()=>{if(!document.hidden)void pullRefreshStatus();};
+    const wakeRefresh=()=>{
+      if(document.hidden){if(!refreshHiddenAt)refreshHiddenAt=Date.now();return;}
+      const now=Date.now();
+      if((refreshHiddenAt&&now-refreshHiddenAt>=REFRESH_RESET_MS)||(lastRefreshRead&&now-lastRefreshRead>=REFRESH_RESET_MS))resetRefreshState();
+      refreshHiddenAt=0;
+      void pullRefreshStatus();
+    };
     document.addEventListener('visibilitychange',wakeRefresh);
+    window.addEventListener('pagehide',()=>{refreshHiddenAt=Date.now();});
     window.addEventListener('pageshow',wakeRefresh);window.addEventListener('focus',wakeRefresh);window.addEventListener('online',wakeRefresh);
-    window.setInterval(()=>{if(!document.hidden&&Date.now()-lastRefreshRead>=(busyJob(activeRefresh)?2000:12000))void pullRefreshStatus();},2000);
+    window.setInterval(()=>{
+      if(document.hidden){if(!refreshHiddenAt)refreshHiddenAt=Date.now();return;}
+      if((refreshHiddenAt&&Date.now()-refreshHiddenAt>=REFRESH_RESET_MS)||(lastRefreshRead&&Date.now()-lastRefreshRead>=REFRESH_RESET_MS)){wakeRefresh();return;}
+      if(activeRefresh&&!busyJob(activeRefresh)&&activeRefresh.finishedAt&&!finishedRecently(activeRefresh)){activeRefresh=null;syncRefreshUI();}
+      if(Date.now()-lastRefreshRead>=(busyJob(activeRefresh)?2000:12000))void pullRefreshStatus();
+    },2000);
     void pullRefreshStatus();
     // Feed updates keep the menu open; selecting a destination closes it.
     const setMenuOpen=(open,focus=false)=>{

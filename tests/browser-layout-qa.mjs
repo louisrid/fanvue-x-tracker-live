@@ -30,7 +30,7 @@ window.FanvueDirectory={state:{accounts:[{key:'X|unused',handle:'@unused',platfo
 const custom={slug:'qa-campaign',name:'QA Campaign',icon:'megaphone',color:'blue',status:'Live',dataLink:'qa-linked',links:[]};
 const template=readFileSync(path.join(publicDir,'index.html'),'utf8').replace(/<script src="[^"]+" defer><\/script>/g,match=>/\/fanvue-(core|ui|app|campaigns|payment-dates)\.js/.test(match)?match:'').replace('</head>','<script>'+fixture+'</script></head>');
 const types={'.js':'text/javascript','.css':'text/css','.html':'text/html','.json':'application/json'};
-let qaJob=null,qaRefreshCalls=0;
+let qaJob=null,qaRefreshCalls=0,qaDeployment='qa-v1';
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
  if(url.pathname==='/.netlify/functions/tracker-refresh'){
@@ -40,10 +40,10 @@ const server=http.createServer(async(req,res)=>{
      const {scope}=JSON.parse(raw);
      if(!qaJob||!['queued','running'].includes(qaJob.state)){
        qaRefreshCalls++;
-       qaJob={id:'qa-job-'+qaRefreshCalls,scope,state:'running',completed:0,total:scope==='all'?6:scope==='accounts'?7:scope==='summary'?1:2,label:'Refreshing sources…',issues:[]};
+       qaJob={id:'qa-job-'+qaRefreshCalls,scope,state:'running',completed:0,total:scope==='all'?6:scope==='accounts'?7:scope==='summary'?1:2,label:'Refreshing sources…',issues:[],startedAt:new Date().toISOString(),expiresAt:Date.now()+16*60_000};
      }
    }
-   return res.end(JSON.stringify({ok:true,refresh:qaJob}));
+   return res.end(JSON.stringify({ok:true,deployment:qaDeployment,refresh:qaJob}));
  }
  if(url.pathname==='/.netlify/functions/campaign-registry'){res.writeHead(200,{'content-type':'application/json'});return res.end(JSON.stringify({ok:true,campaigns:[custom],builtIns:{}}));}
  if(url.pathname==='/'){res.writeHead(200,{'content-type':'text/html'});return res.end(template);}
@@ -62,7 +62,7 @@ writeFileSync(path.join(preview,'index.html'),template);writeFileSync(path.join(
 function close(a,b,label){for(let i=0;i<a.length;i++)assert.ok(Math.abs(a[i]-b[i])<=1.1,label+': '+a+' vs '+b);}
 try{
  for(const viewport of [{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:740},{width:1440,height:900},{width:1024,height:768}]){
-  qaJob=null;qaRefreshCalls=0;
+  qaJob=null;qaRefreshCalls=0;qaDeployment='qa-v1';
   const context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<768,hasTouch:viewport.width<768});
   let page=await context.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -104,15 +104,40 @@ try{
    assert.equal(qaRefreshCalls,1,'closing and reopening tab resumes the same server job');
    await open('home','Dashboard');
   }
-  qaJob={...qaJob,state:'complete',completed:6,label:'Updated'};
+  if(viewport.width===430){
+    // A deployment change must reattach a genuinely running job.
+    qaDeployment='qa-v2';
+    const reply=page.waitForResponse(r=>r.url().endsWith('/tracker-refresh')&&r.request().method()==='GET');
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await reply;
+    await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='3');
+    assert.equal(qaRefreshCalls,1,'deployment change never restarts a real job');
+  }
+  // A stuck report download must not keep a completed server job at 6/6.
+  await page.evaluate(()=>{window.XTrackerApp.syncVerifiedRefresh=()=>new Promise(()=>{});});
+  qaJob={...qaJob,state:'complete',completed:6,label:'Updated',finishedAt:new Date().toISOString()};
   await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
   assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false);
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
   assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Updated');
+  if(viewport.width===430){
+    // Simulate a suspended tab waking after six minutes.
+    await page.evaluate(()=>{const real=Date.now.bind(Date);Date.now=()=>real()+6*60_000;window.dispatchEvent(new Event('focus'));});
+    await page.waitForFunction(()=>document.querySelector('#fvRefreshStatus').textContent===''&&document.querySelector('#fvRefreshProgress').hidden);
+    assert.equal(await page.locator('#fvRefreshCount').innerText(),'');
+    assert.equal(await page.locator('#fvRefresh').isDisabled(),false);
+    // The same completed job on a newly opened document must start idle.
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
+    const reply=page.waitForResponse(r=>r.url().endsWith('/tracker-refresh')&&r.request().method()==='GET');
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await reply;
+    await page.waitForFunction(()=>document.querySelector('#fvRefreshStatus').textContent===''&&document.querySelector('#fvRefreshProgress').hidden);
+    assert.equal(await page.locator('#fvRefreshCount').innerText(),'');
+    assert.equal(qaRefreshCalls,1,'fresh load never starts a job');
+  }
   await Promise.all([page.waitForResponse(r=>r.url().endsWith('/tracker-refresh')&&r.request().method()==='POST'),page.locator('#fvRefresh').click()]);
   await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing'));
   await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='0');
-  qaJob={...qaJob,state:'failed',completed:6,label:'Latest available data',issues:['Saved readings retained']};
+  qaJob={...qaJob,state:'failed',completed:6,label:'Latest available data',issues:['Saved readings retained'],finishedAt:new Date().toISOString()};
   await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
   assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Latest available data');
   assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false,'failure restores numbers');
@@ -125,7 +150,7 @@ try{
       await page.close();page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
       await page.goto(base+'/#'+route);await page.waitForFunction(()=>!document.querySelector('#fvRefreshProgress').hidden&&document.querySelector('#fvRefresh').disabled);
       assert.equal(qaRefreshCalls,calls+1,'reopen never restarts '+route);
-      qaJob={...qaJob,state:'complete',completed:qaJob.total,label:'Updated'};
+      qaJob={...qaJob,state:'complete',completed:qaJob.total,label:'Updated',finishedAt:new Date().toISOString()};
       await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
     }
   }

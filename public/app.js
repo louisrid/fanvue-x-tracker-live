@@ -1703,9 +1703,10 @@ window.XTrackerApp=Object.freeze({
   load:force=>load(force),loadOf:force=>loadOfReport(force),loadGta:force=>loadGtaReport(force),loadBoosts:force=>loadBoosts(force),
   syncVerifiedRefresh:async scopes=>{
     const pause=ms=>new Promise(r=>setTimeout(r,ms));
+    const waitUntilIdle=async busy=>{const until=Date.now()+15000;while(busy()&&Date.now()<until)await pause(100);return !busy();};
     const tasks=[];
-    if(scopes.includes('x'))tasks.push((async()=>{while(state.loading)await pause(100);return load(false);})());
-    if(scopes.includes('of'))tasks.push((async()=>{while(state.ofLoading)await pause(100);return loadOfReport(false,false);})());
+    if(scopes.includes('x'))tasks.push((async()=>{if(!await waitUntilIdle(()=>state.loading))return false;return load(false);})());
+    if(scopes.includes('of'))tasks.push((async()=>{if(!await waitUntilIdle(()=>state.ofLoading))return false;return loadOfReport(false,false);})());
     if(scopes.includes('gta'))tasks.push((async()=>{if(gtaState.loading)await gtaState.loading;await loadGtaReport(true,{reuse:true});return !gtaState.error&&!!gtaState.report?.ready;})());
     if(scopes.includes('boosts'))tasks.push((async()=>{await loadBoosts(true);return !boostsState.error&&boostsState.loaded;})());
     return (await Promise.allSettled(tasks)).every(r=>r.status==='fulfilled'&&r.value===true);

@@ -29,3 +29,17 @@ test('expired jobs cannot execute and a new refresh may start',async()=>{
  const old=await c.start('gta');now+=17*60_000;assert.equal((await c.status()).state,'failed');await c.run(old.id);assert.equal(executed,0);
  const fresh=await c.start('discord');assert.notEqual(fresh.id,old.id);await c.run(fresh.id);assert.equal(executed,2);
 });
+
+test('finished and expired jobs age out without deleting saved data, and old fully settled jobs never remain busy',async()=>{
+ const store=memory();let now=1000,ids=0;
+ const c=makeCoordinator({store,clock:()=>now,uuid:()=>String(++ids),dispatch:async()=>{},execute:async()=>({ok:true})});
+ const job=await c.start('all');await c.run(job.id);
+ const done=await c.status();assert.equal(done.state,'complete');assert.equal(done.completed,done.total);
+ now+=5*60_000;assert.equal(await c.status(),null);assert.equal((await store.get()).id,job.id);
+ const next=await c.start('gta');
+ await store.setJSON('latest-v1',{...next,state:'running',completed:2,done:['gta','overview'],issues:[],lastProgressAt:new Date(now).toISOString()});
+ assert.equal((await c.status()).state,'complete');
+ const another=await c.start('discord');assert.notEqual(another.id,next.id);
+ now=another.expiresAt+1000;const expired=await c.status();assert.equal(expired.state,'failed');
+ now+=5*60_000;assert.equal(await c.status(),null);
+});
