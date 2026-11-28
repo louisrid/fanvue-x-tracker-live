@@ -953,7 +953,6 @@
   }
 
   let lastHeader='',renderedRoute='',activeRefresh=null;
-  const refreshRouteKey=()=>current.kind+':'+current.key;
   const renderedSections=new WeakMap();
   // Preserve unchanged sections during feed updates, filters and sorting.
   const sectionSignature=el=>el.outerHTML.replace(/(<time\b[^>]*data-age-at="[^"]+"[^>]*>)[^<]*(<\/time>)/g,'$1$2');
@@ -1084,81 +1083,115 @@
     render();
     if(changedPage)window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
   }
-  // Progress follows completed source operations. Never invent percentages from elapsed time.
+  // The server owns every manual refresh. The browser only starts, observes and
+  // displays it; closing/reloading a tab never owns or cancels provider work.
+  const refreshEndpoint='/.netlify/functions/tracker-refresh';
+  const refreshScopes={'home':'all','all-accounts':'accounts','gta-vi':'gta','viral-qrts':'gta','x-articles':'x','of-terms':'of','guru-promotion':'boosts','discord':'discord'};
+  const scopeForRoute=()=>current.kind==='added'?'registry':refreshScopes[current.kind==='records'?RECORDS[current.key]?.parent:current.key]||'summary';
+  const busyJob=j=>!!j&&['queued','running','syncing'].includes(j.state);
+  const allJob=j=>j?.scope==='all'||j?.scope==='accounts';
+  const relevantJob=j=>!!j&&(allJob(j)||j.scope===scopeForRoute()||(j.scope==='x'&&['of','boosts'].includes(scopeForRoute())));
+  const legacySelectors='#refreshXStats,#reloadAllButton,#gtaRefreshButton,#discordRefreshButton,#reportingRefreshButton,[data-refresh]';
+  const scopeForLegacy=e=>e.id==='reloadAllButton'?'all':e.id==='gtaRefreshButton'?'gta':e.id==='discordRefreshButton'?'discord':e.id==='reportingRefreshButton'?'summary':e.dataset.refresh==='boosts'?'boosts':e.dataset.refresh==='of'?'of':'x';
+  let refreshStarting=false,refreshReading=null,lastRefreshRead=0,syncedRefreshId='',refreshSync=null;
   function syncRefreshUI(){
-    const run=activeRefresh,here=!!run&&run.route===refreshRouteKey()&&current.kind!=='records',busy=!!run?.busy;
-    const page=$('fvPage'),btn=$('fvRefresh'),progress=$('fvRefreshProgress'),track=$('fvRefreshTrack');
+    const run=activeRefresh,busy=busyJob(run),here=!!run&&current.kind!=='records',affected=relevantJob(run);
+    const page=$('fvPage'),btn=$('fvRefresh'),progress=$('fvRefreshProgress'),track=$('fvRefreshTrack'),status=$('fvRefreshStatus');
     btn.disabled=busy;btn.classList.toggle('is-busy',busy&&here);
     if(busy&&here)btn.setAttribute('aria-busy','true');else btn.removeAttribute('aria-busy');
-    page.classList.toggle('is-kpi-refreshing',busy&&here);
+    page.classList.toggle('is-kpi-refreshing',busy&&here&&affected);
     for(const strip of page.querySelectorAll(':scope>.fv-panel.fv-strip')){
-      if(busy&&here)strip.setAttribute('aria-busy','true');else strip.removeAttribute('aria-busy');
+      if(busy&&here&&affected)strip.setAttribute('aria-busy','true');else strip.removeAttribute('aria-busy');
     }
-    progress.hidden=!here;
-    if(!here){$('fvRefreshFill').style.width='0%';$('fvRefreshCount').textContent='';$('fvRefreshStage').textContent='';track.setAttribute('aria-valuemax','1');track.setAttribute('aria-valuenow','0');track.removeAttribute('aria-valuetext');return;}
-    const completed=Math.min(run.total,Math.max(0,run.completed));
-    $('fvRefreshStage').textContent=run.label;
-    $('fvRefreshCount').textContent=completed+' / '+run.total;
-    track.setAttribute('aria-valuemax',String(run.total));track.setAttribute('aria-valuenow',String(completed));
-    track.setAttribute('aria-valuetext',completed+' of '+run.total+' refresh tasks completed');
-    $('fvRefreshFill').style.width=(100*completed/run.total)+'%';
-    $('fvRefreshStatus').textContent='';
+    // Legacy record views use the same job and must not launch separate POSTs.
+    for(const button of document.querySelectorAll(legacySelectors)){
+      if(busy){button.disabled=true;button.dataset.durableRefresh='1';button.classList.toggle('is-refreshing',scopeForLegacy(button)===run.scope||allJob(run));button.setAttribute('aria-busy','true');}
+      else if(button.dataset.durableRefresh){delete button.dataset.durableRefresh;button.disabled=false;button.classList.remove('is-refreshing');button.removeAttribute('aria-busy');}
+    }
+    for(const node of document.querySelectorAll('[data-x-refresh-status],#xRefreshStatus,#reloadAllStatus,#gtaRefreshStatus,#ofRefreshStatus,#boostRefreshStatus,#discordRefreshStatus')){
+      if(!run)continue;
+      node.textContent=busy?run.label:(run.state==='complete'?'Updated':'Latest available data');
+      node.title=(run.issues||[]).join('; ')||run.label;
+      node.classList.toggle('is-error',run.state==='failed');node.classList.toggle('is-success',run.state==='complete');
+    }
+    progress.hidden=!(busy&&here&&!btn.hidden);
+    if(progress.hidden){
+      $('fvRefreshFill').style.width='0%';$('fvRefreshCount').textContent='';$('fvRefreshStage').textContent='';track.setAttribute('aria-valuemax','1');track.setAttribute('aria-valuenow','0');track.removeAttribute('aria-valuetext');
+      if(run&&!busy&&affected){const ok=run.state==='complete';status.textContent=ok?'Updated':'Latest available data';status.className='fv-refresh-status '+(ok?'is-ok':'is-error');status.title=(run.issues||[]).join('; ')||status.textContent;status.setAttribute('aria-label',status.textContent);}
+      else{status.textContent='';status.className='fv-refresh-status';status.removeAttribute('title');status.removeAttribute('aria-label');}
+      return;
+    }
+    const total=Math.max(1,run.total||1),completed=Math.min(total,Math.max(0,run.completed||0));
+    $('fvRefreshStage').textContent=run.label||'Refreshing connected sources…';
+    $('fvRefreshCount').textContent=completed+' / '+total;
+    track.setAttribute('aria-valuemax',String(total));track.setAttribute('aria-valuenow',String(completed));track.setAttribute('aria-valuetext',completed+' of '+total+' refresh tasks completed');
+    $('fvRefreshFill').style.width=(100*completed/total)+'%';
+    status.textContent='';
   }
-  async function onRefresh(){
-    if(activeRefresh?.busy)return;
-    const route=current,k=route.kind==='page'?route.key:'',status=$('fvRefreshStatus'),app=D.app(),rep=D.rep();
-    const all=k==='home'||k==='all-accounts',offset=k==='all-accounts'?1:0;
-    const run={route:refreshRouteKey(),busy:true,completed:0,total:all?6+offset:2,label:'Starting refresh…'};
-    activeRefresh=run;
-    function progress(completed,label,total=run.total){
-      if(activeRefresh!==run)return;
-      run.total=Math.max(1,total);run.completed=Math.min(run.total,Math.max(run.completed,completed));run.label=label;
-      syncRefreshUI();
-    }
+  async function acceptRefresh(job){
+    if(!job){if(!refreshStarting&&!refreshSync){activeRefresh=null;syncRefreshUI();}return;}
+    if(!job.id||!job.scope||!['queued','running','complete','failed'].includes(job.state))return;
+    if(busyJob(job)){activeRefresh=job;syncRefreshUI();return;}
+    if(job.id===syncedRefreshId){if(!refreshSync){activeRefresh=job;syncRefreshUI();}return;}
+    if(refreshSync?.id===job.id)return refreshSync.promise;
+    // Even a partial server refresh may contain newly verified data. Load the
+    // saved reports before dropping the progress bar, never trigger new writes.
+    activeRefresh={...job,state:'syncing',label:'Loading verified data…'};
     syncRefreshUI();
-    let message='',error=false;
+    const token={id:job.id,promise:null};
+    refreshSync=token;
+    token.promise=(async()=>{
+      let result=job;
+      try{
+        const scopes=job.scope==='all'||job.scope==='accounts'?['x','gta','of','boosts']:job.scope==='x'?['x','of','boosts']:['gta','of','boosts'].includes(job.scope)?[job.scope]:[];
+        const calls=[];
+        if(scopes.length&&D.app()?.syncVerifiedRefresh)calls.push(D.app().syncVerifiedRefresh(scopes));
+        if(job.scope!=='discord'&&D.rep()?.syncVerifiedRefresh)calls.push(D.rep().syncVerifiedRefresh());
+        if(job.snapshot&&D.rep()?.acceptDiscordRefresh)D.rep().acceptDiscordRefresh(job.snapshot);
+        if(job.scope==='accounts')calls.push(loadDirectory());
+        if(job.scope==='registry')calls.push(window.FanvueCampaigns?.load?.());
+        const outcomes=await Promise.allSettled(calls);
+        if(outcomes.some(x=>x.status==='rejected'||x.value===false))result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};
+      }catch{result={...job,state:'failed',issues:[...(job.issues||[]),'Saved reports could not all be reloaded in this tab.']};}
+      if(refreshSync!==token)return;
+      syncedRefreshId=job.id;refreshSync=null;
+      if(activeRefresh?.id===job.id){activeRefresh=result;try{rerender();}finally{syncRefreshUI();}}
+    })();
+    return token.promise;
+  }
+  function pullRefreshStatus(){
+    if(refreshStarting)return Promise.resolve(null);
+    if(refreshReading)return refreshReading;
+    lastRefreshRead=Date.now();
+    refreshReading=(async()=>{
+      try{
+        const res=await fetch(refreshEndpoint,{cache:'no-store',signal:AbortSignal.timeout(12000)});
+        const data=await res.json();if(!res.ok||!data.ok)throw Error('Refresh status unavailable');
+        if(!refreshStarting)await acceptRefresh(data.refresh||null);
+        return data.refresh||null;
+      }catch{return undefined;}finally{refreshReading=null;}
+    })();
+    return refreshReading;
+  }
+  async function onRefresh(scope=scopeForRoute()){
+    if(typeof scope!=='string')scope=scopeForRoute();
+    if(refreshStarting||busyJob(activeRefresh))return;
+    refreshStarting=true;
+    const previous=activeRefresh;
+    activeRefresh={scope,state:'queued',completed:0,total:scope==='all'?6:scope==='accounts'?7:scope==='summary'?1:2,label:'Starting refresh…',issues:[]};
+    syncRefreshUI();
     try{
-      if(all){
-        if(offset){progress(0,'Refreshing publisher directory…');await loadDirectory();progress(1,'Refreshing X articles…');}
-        if(!app?.refresh?.all)throw Error('Refresh service unavailable');
-        const result=await app.refresh.all(p=>progress(offset+p.completed,p.label,offset+p.total));
-        const s=app.status?.('reloadAllStatus');message=s?.text||'';error=result===false||!!s?.error;
-      }else if(k==='discord'){
-        progress(0,'Refreshing Discord members and clicks…');
-        const ok=await rep?.refreshDiscord?.(true,p=>progress(p.completed,p.label,p.total));
-        progress(2,'Discord checks complete');error=ok!==true;message=error?'Discord sources unavailable; last verified figures kept.':'';
-      }else{
-        if(route.kind==='added'){
-          progress(0,'Refreshing campaign details…');
-          const ok=await hooks.refresh?.(route);error=!ok;message=ok?'':'Campaign registry unavailable; last saved details kept.';
-        }else{
-          const fn={'x-articles':'x','gta-vi':'gta','viral-qrts':'gta','of-terms':'of','guru-promotion':'boosts'}[k];
-          const ids={'x-articles':'xRefreshStatus','gta-vi':'gtaRefreshStatus','viral-qrts':'gtaRefreshStatus','of-terms':'ofRefreshStatus','guru-promotion':'boostRefreshStatus'};
-          progress(0,'Refreshing campaign metrics…');
-          if(fn){if(!app?.refresh?.[fn])throw Error('Refresh service unavailable');const result=await app.refresh[fn](label=>progress(0,label));const s=app.status?.(ids[k]);message=s?.text||'';error=result===false||!!s?.error;}
-        }
-        progress(1,'Updating campaign summary…');
-        const ok=await rep?.reload?.();
-        if(ok===false){error=true;message=(message?message+' ':'')+'Campaign summary kept from last verified data.';}
-        progress(2,'Campaign checks complete');
+      const res=await fetch(refreshEndpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({scope}),cache:'no-store',keepalive:true,signal:AbortSignal.timeout(20000)});
+      const data=await res.json();if(!res.ok||!data.ok||!data.refresh)throw Error('Refresh could not start');
+      refreshStarting=false;await acceptRefresh(data.refresh);
+    }catch{
+      // A closed connection can lose the POST response after the job was accepted.
+      // Reconnect by reading status, never blindly resubmit the provider job.
+      refreshStarting=false;const job=await pullRefreshStatus();
+      if(!job||(!busyJob(job)&&job.id===previous?.id)){
+        activeRefresh={scope,state:'failed',completed:0,total:1,label:'Latest available data',issues:['Refresh could not be confirmed. Retry when connected.']};syncRefreshUI();
       }
-    }catch(e){error=true;message=String(e?.message||'Refresh failed; last verified figures kept.');}
-    finally{
-      run.busy=false;
-      const label=error?(D.overview()||D.gta().report?'Latest available data':'Refresh unavailable'):'Updated';
-      if(!error)run.completed=run.total;
-      run.label=label;
-      // Re-render before releasing the spinner. Even failed refreshes restore the verified numbers.
-      try{rerender();}finally{
-        syncRefreshUI();
-        setTimeout(()=>{
-          if(activeRefresh!==run)return;activeRefresh=null;syncRefreshUI();
-          if(refreshRouteKey()!==run.route)return;
-          status.className='fv-refresh-status '+(error?'is-error':'is-ok');
-          status.title=message||label;status.textContent=label;status.setAttribute('aria-label',label+(message?': '+message:''));
-        },450);
-      }
-    }
+    }finally{refreshStarting=false;}
   }
   // Table interactions do not destroy or redraw the chart, header, KPI cards or sidebar.
   function rerenderTable(id){
@@ -1198,7 +1231,7 @@
     if(ct){const st=chartState(pageKey(),ct.dataset.chart);st.type=ct.dataset.chartType;rerender();return;}
      const reset=t.closest('[data-reset]');
     if(reset){const st=tableState(pageKey(),reset.dataset.reset);st.q='';st.filter='';if(st.xf)for(const k of Object.keys(st.xf))st.xf[k]='';rerender();return;}
-    if(t.closest('[data-retry]')){void D.rep()?.reload?.();return;}
+    if(t.closest('[data-retry]')){void onRefresh('summary');return;}
   }
   const pageKey=()=>current.kind==='page'?current.key:'added:'+current.key;
   const defaultView=k=>({'home':'this-week','x-articles':'overview','gta-vi':'overview','of-terms':'overview',discord:'weekly-history','guru-promotion':'overview','viral-qrts':'overview'}[k]||'');
@@ -1232,7 +1265,13 @@
     const page=$('fvPage');
     page.addEventListener('click',onClick);page.addEventListener('input',onInput);page.addEventListener('change',onChange);
     window.setInterval(()=>U.refreshAges(page),1000);
-    $('fvRefresh').addEventListener('click',onRefresh);
+    $('fvRefresh').addEventListener('click',()=>void onRefresh());
+    document.addEventListener('click',e=>{const button=e.target.closest?.(legacySelectors);if(!button)return;e.preventDefault();e.stopImmediatePropagation();void onRefresh(scopeForLegacy(button));},true);
+    const wakeRefresh=()=>{if(!document.hidden)void pullRefreshStatus();};
+    document.addEventListener('visibilitychange',wakeRefresh);
+    window.addEventListener('pageshow',wakeRefresh);window.addEventListener('focus',wakeRefresh);window.addEventListener('online',wakeRefresh);
+    window.setInterval(()=>{if(!document.hidden&&Date.now()-lastRefreshRead>=(busyJob(activeRefresh)?2000:12000))void pullRefreshStatus();},2000);
+    void pullRefreshStatus();
     // Feed updates keep the menu open; selecting a destination closes it.
     const setMenuOpen=(open,focus=false)=>{
       $('fvShell').classList.toggle('is-nav-open',open);

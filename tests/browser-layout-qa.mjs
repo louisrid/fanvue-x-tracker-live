@@ -30,8 +30,21 @@ window.FanvueDirectory={state:{accounts:[{key:'X|unused',handle:'@unused',platfo
 const custom={slug:'qa-campaign',name:'QA Campaign',icon:'megaphone',color:'blue',status:'Live',dataLink:'qa-linked',links:[]};
 const template=readFileSync(path.join(publicDir,'index.html'),'utf8').replace(/<script src="[^"]+" defer><\/script>/g,match=>/\/fanvue-(core|ui|app|campaigns|payment-dates)\.js/.test(match)?match:'').replace('</head>','<script>'+fixture+'</script></head>');
 const types={'.js':'text/javascript','.css':'text/css','.html':'text/html','.json':'application/json'};
-const server=http.createServer((req,res)=>{
+let qaJob=null,qaRefreshCalls=0;
+const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
+ if(url.pathname==='/.netlify/functions/tracker-refresh'){
+   res.setHeader('content-type','application/json');res.setHeader('cache-control','no-store');
+   if(req.method==='POST'){
+     let raw='';for await(const chunk of req)raw+=chunk;
+     const {scope}=JSON.parse(raw);
+     if(!qaJob||!['queued','running'].includes(qaJob.state)){
+       qaRefreshCalls++;
+       qaJob={id:'qa-job-'+qaRefreshCalls,scope,state:'running',completed:0,total:scope==='all'?6:scope==='accounts'?7:scope==='summary'?1:2,label:'Refreshing sources…',issues:[]};
+     }
+   }
+   return res.end(JSON.stringify({ok:true,refresh:qaJob}));
+ }
  if(url.pathname==='/.netlify/functions/campaign-registry'){res.writeHead(200,{'content-type':'application/json'});return res.end(JSON.stringify({ok:true,campaigns:[custom],builtIns:{}}));}
  if(url.pathname==='/'){res.writeHead(200,{'content-type':'text/html'});return res.end(template);}
  const p=path.resolve(publicDir,'.'+url.pathname);
@@ -49,9 +62,11 @@ writeFileSync(path.join(preview,'index.html'),template);writeFileSync(path.join(
 function close(a,b,label){for(let i=0;i<a.length;i++)assert.ok(Math.abs(a[i]-b[i])<=1.1,label+': '+a+' vs '+b);}
 try{
  for(const viewport of [{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:740},{width:1440,height:900},{width:1024,height:768}]){
-  const page=await browser.newPage({viewport,deviceScaleFactor:1,isMobile:viewport.width<768,hasTouch:viewport.width<768});
+  qaJob=null;qaRefreshCalls=0;
+  const context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<768,hasTouch:viewport.width<768});
+  let page=await context.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.route('**/*',route=>/^(https:\/\/fonts\.(googleapis|gstatic)\.com\/)/.test(route.request().url())||route.request().url().startsWith(base)?route.continue():route.abort());
+  await context.route('**/*',route=>/^(https:\/\/fonts\.(googleapis|gstatic)\.com\/)/.test(route.request().url())||route.request().url().startsWith(base)?route.continue():route.abort());
   await page.goto(base+'/#gta-vi');await page.waitForFunction(()=>window.FanvueCampaigns?.state?.loaded);
   const open=async(route,title)=>{
    await page.mouse.move(0,0);
@@ -64,11 +79,6 @@ try{
   // Manual refresh: test the real UI against a deliberately controlled asynchronous source.
   await open('home','Dashboard');
   const geometryBefore=await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]}));
-  await page.evaluate(()=>{
-   window.qaRefreshCalls=0;window.qaRefreshError=false;
-   window.XTrackerApp.refresh={all:cb=>{window.qaRefreshCalls++;cb({completed:0,total:6,label:'Refreshing sources…'});window.qaRefreshProgress=cb;return new Promise(resolve=>window.qaRefreshFinish=()=>resolve(!window.qaRefreshError));}};
-   window.XTrackerApp.status=()=>({error:window.qaRefreshError,text:window.qaRefreshError?'Saved readings retained':'All sources updated'});
-  });
   await page.locator('#fvRefresh').click();
   await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing')&&!document.querySelector('#fvRefreshProgress').hidden);
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
@@ -77,28 +87,48 @@ try{
   assert.ok(await page.locator('#fvPage>.fv-strip .fv-metric-label').first().isVisible());
   assert.ok(await page.locator('#home-comparison tbody .fv-row').first().isVisible());
   assert.deepEqual(await page.locator('#fvPage>.fv-strip .fv-metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]})),geometryBefore,'refresh preserves KPI geometry');
-  await page.evaluate(()=>window.qaRefreshProgress({completed:3,total:6,label:'Updating sources…'}));
-  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'3');
+  qaJob={...qaJob,completed:3,label:'Updating sources…'};
+  await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='3');
   assert.equal(await page.locator('#fvRefreshFill').evaluate(e=>e.style.width),'50%');
   await page.screenshot({path:dir+'/refresh-'+viewport.width+'.png',fullPage:true});
   if(viewport.width===430||viewport.width===1440){
-   await open('gta-vi','GTA VI');assert.equal(await page.locator('#fvRefreshProgress').isVisible(),false);assert.equal(await page.locator('#fvRefresh').isDisabled(),true);
+   await open('gta-vi','GTA VI');assert.equal(await page.locator('#fvRefreshProgress').isVisible(),true);assert.equal(await page.locator('#fvRefresh').isDisabled(),true);
    await open('home','Dashboard');assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'3');
+   await page.reload({waitUntil:'domcontentloaded'});
+   await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='3');
+   assert.equal(qaRefreshCalls,1,'reload attaches without restarting');
+   await page.close();page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+   await page.goto(base+'/#gta-vi');
+   await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='3');
+   assert.equal(await page.locator('#fvRefresh').isDisabled(),true);
+   assert.equal(qaRefreshCalls,1,'closing and reopening tab resumes the same server job');
+   await open('home','Dashboard');
   }
-  await page.evaluate(()=>window.qaRefreshFinish());
+  qaJob={...qaJob,state:'complete',completed:6,label:'Updated'};
   await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
   assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false);
   assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0');
   assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Updated');
-  await page.evaluate(()=>{window.qaRefreshError=true;});
   await page.locator('#fvRefresh').click();
   await page.waitForFunction(()=>document.querySelector('#fvPage').classList.contains('is-kpi-refreshing'));
-  assert.equal(await page.locator('#fvRefreshTrack').getAttribute('aria-valuenow'),'0','second refresh starts from zero');
-  await page.evaluate(()=>window.qaRefreshFinish());
+  await page.waitForFunction(()=>document.querySelector('#fvRefreshTrack').getAttribute('aria-valuenow')==='0');
+  qaJob={...qaJob,state:'failed',completed:6,label:'Latest available data',issues:['Saved readings retained']};
   await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
   assert.equal(await page.locator('#fvRefreshStatus').innerText(),'Latest available data');
   assert.equal(await page.locator('#fvPage').evaluate(e=>e.classList.contains('is-kpi-refreshing')),false,'failure restores numbers');
-  assert.equal(await page.evaluate(()=>window.qaRefreshCalls),2);
+  assert.equal(qaRefreshCalls,2);
+  if(viewport.width===430){
+    for(const [route,title,scope] of [['gta-vi','GTA VI','gta'],['viral-qrts','Viral QRTs','gta'],['x-articles','X Articles','x'],['of-terms','OF Terms','of'],['guru-promotion','Guru RTs','boosts'],['discord','Discord','discord'],['campaign/qa-campaign','QA Campaign','registry']]){
+      await open(route,title);const calls=qaRefreshCalls;
+      await page.locator('#fvRefresh').click();await page.waitForFunction(()=>!document.querySelector('#fvRefreshProgress').hidden);
+      assert.equal(qaJob.scope,scope);assert.equal(qaRefreshCalls,calls+1);
+      await page.close();page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(base+'/#'+route);await page.waitForFunction(()=>!document.querySelector('#fvRefreshProgress').hidden&&document.querySelector('#fvRefresh').disabled);
+      assert.equal(qaRefreshCalls,calls+1,'reopen never restarts '+route);
+      qaJob={...qaJob,state:'complete',completed:qaJob.total,label:'Updated'};
+      await page.waitForFunction(()=>document.querySelector('#fvRefreshProgress').hidden&&!document.querySelector('#fvRefresh').disabled);
+    }
+  }
   await open('gta-vi','GTA VI');
   // Period controls on every KPI page use real period state without altering the listing scope.
   for(const [route,title] of routes){
@@ -456,6 +486,6 @@ try{
   }
   assert.deepEqual(errors,[],'browser errors at '+viewport.width);
   console.log('PASS '+viewport.width+'px: '+routes.length+' campaign/community views, Accounts, Dashboard, sorting, filters, seven-day charts');
-  await page.close();
+  await context.close();
  }
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

@@ -1256,12 +1256,12 @@ function renderGtaReport(){globalThis.dispatchEvent?.(new CustomEvent('xtracker:
   el('gtaPublishers').innerHTML=ready?section(originals?'Published standalone posts':'Published QRTs',posted):'<div class="empty-state">GTA VI data is temporarily unavailable.</div>';
   renderGtaQuotedSources();
 }
-async function loadGtaReport(force=false){
+async function loadGtaReport(force=false,{reuse=false}={}){
   if(gtaState.loading)return gtaState.loading;
   if(!force&&Date.now()-gtaState.lastLoadAt<45000&&gtaState.report?.ready)return;
   gtaState.lastLoadAt=Date.now();
   gtaState.loading=(async()=>{
-    try{const response=await fetch('/.netlify/functions/gta-report'+(force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(30000)}),data=await response.json();
+    try{const response=await fetch('/.netlify/functions/gta-report'+(reuse?'?reuse=1':force?'?refresh=1':''),{cache:'no-store',signal:AbortSignal.timeout(30000)}),data=await response.json();
       if(!response.ok||!validReport(data,'publishers','ready'))throw new Error(data.error||'GTA VI report unavailable');
       if(gtaState.report?.publishers?.length&&data.publishers.length===0&&(!force||data.sourceStale))
         throw new Error('Source temporarily empty; preserving saved GTA VI publishers');
@@ -1701,6 +1701,15 @@ window.XTrackerApp=Object.freeze({
   gta:()=>({report:gtaState.report,error:gtaState.error,loading:Boolean(gtaState.loading),refreshing:gtaState.refreshing}),
   boosts:()=>({tweets:boostsState.tweets,loaded:boostsState.loaded,error:boostsState.error}),
   load:force=>load(force),loadOf:force=>loadOfReport(force),loadGta:force=>loadGtaReport(force),loadBoosts:force=>loadBoosts(force),
+  syncVerifiedRefresh:async scopes=>{
+    const pause=ms=>new Promise(r=>setTimeout(r,ms));
+    const tasks=[];
+    if(scopes.includes('x'))tasks.push((async()=>{while(state.loading)await pause(100);return load(false);})());
+    if(scopes.includes('of'))tasks.push((async()=>{while(state.ofLoading)await pause(100);return loadOfReport(false,false);})());
+    if(scopes.includes('gta'))tasks.push((async()=>{if(gtaState.loading)await gtaState.loading;await loadGtaReport(true,{reuse:true});return !gtaState.error&&!!gtaState.report?.ready;})());
+    if(scopes.includes('boosts'))tasks.push((async()=>{await loadBoosts(true);return !boostsState.error&&boostsState.loaded;})());
+    return (await Promise.allSettled(tasks)).every(r=>r.status==='fulfilled'&&r.value===true);
+  },
   refresh:Object.freeze({all:reloadAllData,x:refreshXStats,of:refreshOfReport,gta:refreshGtaReport,boosts:refreshBoostStats}),
   status:id=>{const node=el(id);return {text:node.textContent||'',summary:node.dataset?.summary||'',error:node.classList.contains('is-error')};},
   showRecords:page=>route(page||'',false),

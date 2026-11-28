@@ -368,7 +368,7 @@
     status.title=state.data?'Last checked '+date(state.data.checkedAt):'';
     panel.innerHTML=state.data?content():empty(state.error||'Loading…');
   }
-  async function load(force=false,{reuseReports=false}={}){
+  async function load(force=false,{reuseReports=false,cachedOnly=false}={}){
     if(state.loading)return state.loading;
     if(!force&&state.data&&Date.now()-state.lastLoadAt<45000){render();return !state.error&&!state.data.stale&&Object.values(state.data.sourceHealth||{}).every(s=>s.ok)&&!state.data.campaigns.some(c=>c.dataWarning||c.sourceStale);}
     state.loading=(async()=>{
@@ -376,7 +376,7 @@
         let data;
         for(let attempt=0;attempt<2;attempt++){
           try{
-            const res=await fetch('/.netlify/functions/campaign-overview'+(force&&!attempt?'?refresh=1'+(reuseReports?'&reuse=1':''):''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
+            const res=await fetch('/.netlify/functions/campaign-overview'+(force&&!cachedOnly&&!attempt?'?refresh=1'+(reuseReports?'&reuse=1':''):''),{cache:'no-store',signal:AbortSignal.timeout(45000)});
             data=await res.json();
             if(!res.ok||!validOverview(data))throw Object.assign(Error(data?.error||'Campaign reporting temporarily unavailable'),{permanent:!res.ok&&res.status<500&&![408,429].includes(res.status)});
             break;
@@ -450,6 +450,18 @@
       void load();
     },
     reload:options=>load(true,options),
+    syncVerifiedRefresh:async()=>{if(state.loading)await state.loading;return load(true,{cachedOnly:true});},
+    acceptDiscordRefresh:snapshot=>{
+      const members=snapshot?.members,clicks=snapshot?.clicks;
+      if(validMembers(members)&&(!state.discordMembers?.latest?.date||members.latest.date>=state.discordMembers.latest.date)&&(!state.discordMembers?.checkedAt||members.checkedAt>=state.discordMembers.checkedAt)){
+        state.discordMembers=members;window.XTrackerLastGood?.write('discord-members',members,validMembers);
+      }
+      if(validClicks(clicks)&&(!state.discordClicks||clicks.source!==state.discordClicks.source||clicks.total>=state.discordClicks.total)&&(!state.discordClicks?.checkedAt||clicks.checkedAt>=state.discordClicks.checkedAt)){
+        state.discordClicks=clicks;window.XTrackerLastGood?.write('discord-course-clicks',clicks,validClicks);
+      }
+      state.discordVisited=true;state.discordLastLoadAt=Date.now();state.discordError=!validMembers(members)||!validClicks(clicks);
+      if(state.tab==='discord')render();window.dispatchEvent(new Event('xtracker:discord'));
+    },
     ensure:()=>load(),
     getCampaign:id=>item(id),
     // Read-only accessors for the redesigned shell (fanvue-app.js).
